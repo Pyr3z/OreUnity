@@ -185,13 +185,13 @@ namespace Bore
 
     private static bool CalcIsTablet()
     {
-    #if UNITY_EDITOR
-
-      return false;
-
-    #elif AD_MEDIATION_MAX
+    #if AD_MEDIATION_MAX
 
       return MaxSdkUtils.IsTablet();
+
+    #elif UNITY_EDITOR
+
+      return false;
 
     #else
 
