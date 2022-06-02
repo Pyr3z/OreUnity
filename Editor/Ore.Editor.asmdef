@@ -1,15 +1,17 @@
 {
-    "name": "Bore-Ore",
+    "name": "Ore.Editor",
     "rootNamespace": "Bore",
     "references": [
-        "GUID:a4cfc1a18fa3a469b96d885db522f42e"
+        "GUID:003a62cf52b30d24388538d6e0151df6"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": true,
+    "autoReferenced": false,
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false
