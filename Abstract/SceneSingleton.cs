@@ -1,4 +1,4 @@
-/*  @file       Bore/Runtime/AbstractTypes/SceneSingleton.cs
+/*  @file       Abstract/SceneSingleton.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-02-17
  */
@@ -10,7 +10,6 @@ namespace Bore.Abstract
 {
   // TODO remove temporary type spoofs
   using SceneRef      = UnityEngine.SceneManagement.Scene;
-  using DelayedEvent  = UnityEngine.Events.UnityEvent;
 
 
   /// <summary>

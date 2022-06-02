@@ -1,4 +1,4 @@
-/*  @file       Bore/Runtime/DataTypes/DeviceSpec.cs
+/*  @file       Objects/DeviceSpec.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-01-10
  */

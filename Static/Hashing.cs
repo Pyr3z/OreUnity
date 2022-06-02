@@ -1,4 +1,4 @@
-﻿/** @file   Runtime/StaticTypes/Hashing.cs
+﻿/** @file   Static/Hashing.cs
     @author levianperez\@gmail.com
     @author levi\@leviperez.dev
     @date   2020-06-06

@@ -1,4 +1,4 @@
-﻿/** @file   Runtime/StaticTypes/Bitwise+CTZ.cs
+﻿/** @file   Static/Bitwise+CTZ.cs
     @author levianperez\@gmail.com
     @author levi\@leviperez.dev
     @date   2020-06-06

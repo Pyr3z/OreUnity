@@ -1,4 +1,4 @@
-/*  @file       Bore/Runtime/DataTypes/VersionID.cs
+/*  @file       Objects/VersionID.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2021-11-08
  */
@@ -28,7 +28,7 @@ namespace Bore
       if (extra > 0)
         str = str.Remove(extra);
 
-      float digs = str.CountDigits();
+      float digs = Parsing.CountDigits(str);
 
       return (digs / str.Length) > PCT_THRESHOLD;
     }

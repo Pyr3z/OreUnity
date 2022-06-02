@@ -1,4 +1,4 @@
-/*  @file       Ore/Abstract/OAsset.cs
+/*  @file       Abstract/OAsset.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-02-17
  */

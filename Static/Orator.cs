@@ -1,18 +1,18 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+/** @file   Static/Orator.cs
+    @author levianperez\@gmail.com
+    @author levi\@leviperez.dev
+    @date   2022-01-01
+**/
 
-public class Koonsole : MonoBehaviour
+
+namespace Bore
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+  public static class Orator
+  {
+
+
+
+  } // end static class Orator
+
 }

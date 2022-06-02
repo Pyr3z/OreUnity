@@ -1,17 +1,13 @@
-/*  @file       Bore/Runtime/AbstractTypes/OAssetSingleton.cs
+/** @file       Abstract/OAssetSingleton.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-02-17
- */
+**/
 
 using UnityEngine;
 
 
 namespace Bore.Abstract
 {
-  // TODO remove temporary type spoofs
-  using DelayedEvent = UnityEngine.Events.UnityEvent;
-
-
   /// <summary>
   ///   Base class for singleton objects which exists without a formal "parent"
   ///   to which it is dependendent. (no scene, no GameObject.)

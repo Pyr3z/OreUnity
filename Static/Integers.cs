@@ -1,4 +1,4 @@
-﻿/** @file   Runtime/StaticTypes/Integers.cs
+﻿/** @file   Static/Integers.cs
     @author levianperez\@gmail.com
     @author levi\@leviperez.dev
     @date   2020-06-06

@@ -1,4 +1,4 @@
-/** @file     Bore/Runtime/OConfig.cs
+/** @file     Objects/OConfig.cs
  *  @author   Levi Perez (levi\@leviperez.dev)
  *  @date     2022-03-23
 **/
