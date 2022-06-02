@@ -1,7 +1,7 @@
-/*  @file       Attributes/ReadOnlyAttribute.cs
+/** @file       Attributes/ReadOnlyAttribute.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2021-12-20
- */
+**/
 
 
 namespace Bore

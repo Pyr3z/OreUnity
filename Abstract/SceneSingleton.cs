@@ -1,7 +1,7 @@
-/*  @file       Abstract/SceneSingleton.cs
+/** @file       Abstract/SceneSingleton.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-02-17
- */
+**/
 
 using UnityEngine;
 

@@ -1,7 +1,7 @@
-/*  @file       Static/EditorBridge.cs
+/** @file       Static/EditorBridge.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-02-28
- */
+**/
 
 #if UNITY_EDITOR // periodically test me by flipping with '!'
 

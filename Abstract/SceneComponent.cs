@@ -1,7 +1,7 @@
-/*  @file       Abstract/SceneComponent.cs
+/** @file       Abstract/SceneComponent.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-01-20
- */
+**/
 
 using System.Collections;
 
