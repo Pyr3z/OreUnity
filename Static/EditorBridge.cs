@@ -26,7 +26,7 @@ namespace Bore
     {
       if (!IsMainAsset(asset))
       {
-        Debug.LogWarning($"Object \"{asset}\" is not a main asset reference and cannot be preloaded.");
+        //Debug.LogWarning($"Object \"{asset}\" is not a main asset reference and cannot be preloaded.");
         return false;
       }
 
@@ -55,6 +55,7 @@ namespace Bore
 
       if (changed)
       {
+        buffer.RemoveAll(obj => !obj);
         PlayerSettings.SetPreloadedAssets(buffer.ToArray());
       }
 
