@@ -8,19 +8,54 @@
 **/
 
 using StringBuilder = System.Text.StringBuilder;
+using Encoding      = System.Text.Encoding;
+using Convert       = System.Convert;
 
 
 namespace Bore
 {
   public static class Strings
   {
+    public static Encoding DefaultEncoding { get; set; } = Encoding.Unicode;
+
     public static readonly char[] WHITESPACES = { ' ', '\t', '\n', '\r', '\v' };
+
 
 
     public static bool IsEmpty(this string str)
     {
       return str == null || str.Length == 0;
     }
+
+
+    public static byte[] ToBytes(this string str, Encoding encoding = null)
+    {
+      if (IsEmpty(str))
+        return new byte[0];
+
+      return (encoding ?? DefaultEncoding).GetBytes(str);
+    }
+
+
+    public static string FromBytes(byte[] bytes, Encoding encoding = null)
+    {
+      if (bytes == null || bytes.Length == 0)
+        return string.Empty;
+
+      return (encoding ?? DefaultEncoding).GetString(bytes);
+    }
+
+
+    public static string ToBase64(this string str, Encoding encoding = null)
+    {
+      return Convert.ToBase64String(ToBytes(str, encoding));
+    }
+
+    public static string ParseBase64(this string str, Encoding encoding = null)
+    {
+      return FromBytes(Convert.FromBase64String(str), encoding);
+    }
+
 
     public static string MakeGUID()
     {
