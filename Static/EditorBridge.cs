@@ -70,7 +70,7 @@ namespace Bore
       var preloaded = new List<Object>(PlayerSettings.GetPreloadedAssets());
       var set = new HashSet<Object>(preloaded);
 
-      set.Remove(null);
+      set.RemoveWhere(obj => !obj);
 
       int changed = 0;
       int i = preloaded.Count;
