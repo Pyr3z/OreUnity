@@ -20,57 +20,172 @@ namespace Bore
 
   public static class Filesystem
   {
+
     #region FUNDAMENTAL FILE I/O
-    public static bool TryWriteText(string path, string text, Encoding encoding = null)
+
+    public static bool TryWriteObject(string filepath, object obj)
     {
-      return false;
+      #if DEBUG // default value for "pretty print JSON" relies on debug build status
+      return TryWriteObject(filepath, obj, pretty: true);
+      #else
+      return TryWriteObject(filepath, obj, pretty: false);
+      #endif
     }
 
-    public static bool TryReadText(string path, out string text, Encoding encoding = null)
+    public static bool TryWriteObject(string filepath, object obj, bool pretty)
     {
+      if (obj == null)
+      {
+        LastException = new System.ArgumentNullException("obj");
+        return false;
+      }
+
       try
       {
-        text = File.ReadAllText(path, encoding ?? Strings.DefaultEncoding);
+        MakePathTo(filepath);
+
+        string json = JsonUtility.ToJson(obj, pretty);
+
+        if (json.IsEmpty() || json[0] != '{')
+        {
+          LastException = new UnanticipatedException("JsonUtility.ToJson returned a bad JSON string.");
+          return false;
+        }
+
+        File.WriteAllBytes(filepath, json.ToBytes(Encoding.Unicode));
 
         LastException = null;
         return true;
       }
       catch (System.Exception ex)
       {
-        switch (ex)
+        if (ex is IOException)
         {
-          case IOException ioex:
-            // anticipated case
-            break;
-          default:
-            // unanticipated case
-            ex = new UnhandledException(ex);
-            break;
+          LastException = ex;
+        }
+        else
+        {
+          LastException = new UnanticipatedException(ex);
         }
 
-        LastException = ex;
-        text = string.Empty;
         return false;
       }
     }
 
-
-    public static bool TryWriteBinary(string path, byte[] data)
+    public static bool TryWriteText(string filepath, string text, Encoding encoding = null)
     {
+      return TryWriteBinary(filepath, text.ToBytes(encoding));
+    }
+
+    public static bool TryReadText(string filepath, out string text, Encoding encoding = null)
+    {
+      if (TryReadBinary(filepath, out byte[] data))
+      {
+        text = Strings.FromBytes(data, encoding);
+        return true;
+      }
+
+      text = null;
       return false;
     }
 
-    public static bool TryReadBinary(string path, out byte[] data)
+    public static bool TryWriteBinary(string filepath, byte[] data)
     {
-      data = null;
-      return false;
+      try
+      {
+        MakePathTo(filepath);
+
+        File.WriteAllBytes(filepath, data);
+        
+        LastException = null;
+        return true;
+      }
+      catch (System.Exception ex)
+      {
+        if (ex is IOException)
+        {
+          LastException = ex;
+        }
+        else
+        {
+          LastException = new UnanticipatedException(ex);
+        }
+
+        return false;
+      }
     }
-    #endregion FUNDAMENTAL FILE I/O
+
+    public static bool TryReadBinary(string filepath, out byte[] data)
+    {
+      try
+      {
+        data = File.ReadAllBytes(filepath);
+        LastException = null;
+        return true;
+      }
+      catch (System.Exception ex)
+      {
+        if (ex is IOException)
+        {
+          LastException = ex;
+        }
+        else
+        {
+          LastException = new UnanticipatedException(ex);
+        }
+
+        data = null;
+        return false;
+      }
+    }
+
+    public static bool TryMakePathTo(string filepath)
+    {
+      try
+      {
+        MakePathTo(filepath);
+        LastException = null;
+        return true;
+      }
+      catch (System.Exception ex)
+      {
+        if (ex is IOException)
+        {
+          LastException = ex;
+        }
+        else
+        {
+          LastException = new UnanticipatedException(ex);
+        }
+
+        return false;
+      }
+    }
+
+    public static void MakePathTo(string filepath)
+    {
+      if (Paths.IsValidPath(filepath) && Paths.ExtractDirectoryPath(filepath, out string dirpath))
+      {
+        if (!Directory.Exists(dirpath) && !Directory.CreateDirectory(dirpath).Exists)
+        {
+          throw new IOException($"Could not create directory \"{dirpath}\".");
+        }
+      }
+      else
+      {
+        throw new System.ArgumentException($"Invalid path string \"{filepath}\".", "filepath");
+      }
+    }
+
+    public static bool PathExists(string path)
+    {
+      return File.Exists(path) || Directory.Exists(path);
+    }
+
+#endregion FUNDAMENTAL FILE I/O
 
 
-
-
-    #region INFO & DEBUGGING
+#region INFO & DEBUGGING
 
     public enum IOResult
     {
@@ -146,10 +261,10 @@ namespace Bore
       }
     }
 
-    #endregion INFO & DEBUGGING
+#endregion INFO & DEBUGGING
 
 
-    #region PRIVATE
+#region PRIVATE
 
     private const int EXCEPTION_RING_SZ = 4;
     private static System.Exception[] s_ExceptionRingBuf = new System.Exception[EXCEPTION_RING_SZ];
@@ -161,7 +276,7 @@ namespace Bore
       set => s_ExceptionRingBuf[++s_ExceptionRingIdx % EXCEPTION_RING_SZ] = value;
     }
 
-    #endregion PRIVATE
+#endregion PRIVATE
 
   } // end static class Filesystem
 
@@ -173,17 +288,14 @@ namespace Bore
 // TODO move outta here, use proper test framework
 namespace Bore.Tests
 {
-
-  [InitializeOnLoad]
   internal static class TestFilesystem
   {
-    static TestFilesystem()
-    {
-      EditorApplication.delayCall += Run;
-    }
 
+    [MenuItem("Ore/Tests/Filesystem")]
     private static void Run()
     {
+      Debug.Log("--- TEST BEGIN");
+
       // set up test data
 
       (string path, string text)[] texts =
@@ -195,18 +307,21 @@ namespace Bore.Tests
 
       (string path, byte[] data)[] datas =
       {
-        ("koobox.png",            UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/koobox-icon.png").EncodeToPNG()),
+        ("koobox.png",            AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/bore~.png").EncodeToPNG()),
         ($"{texts[1].path}.bin",  texts[1].text.ToBase64().ToBytes()),
       };
 
+      string pre = "./Temp/TestFilesystem";
 
       // run tests
 
       // text tests:
       foreach (var (path, text) in texts)
       {
-        if (!Filesystem.TryWriteText(path, text) ||
-            !Filesystem.TryReadText(path, out string read))
+        string fullpath = $"{pre}/{path}";
+
+        if (!Filesystem.TryWriteText(fullpath, text) ||
+            !Filesystem.TryReadText(fullpath, out string read))
         {
           Filesystem.LogLastException();
           continue;
@@ -214,24 +329,26 @@ namespace Bore.Tests
 
         if (!string.Equals(text, read, System.StringComparison.Ordinal))
         {
-          Debug.LogError($"TEST ERROR: text file input and output differ.\n\t IN:{text}\n\tOUT:{read}");
+          Debug.LogError($"TEST ERROR: text file input and output differ (\"{path}\").\n\t IN:{text}\n\tOUT:{read}");
         }
       }
 
       // binary tests:
       foreach (var (path, data) in datas)
       {
-        if (!Filesystem.TryWriteBinary(path, data) ||
-            !Filesystem.TryReadBinary(path, out byte[] read))
+        string fullpath = $"{pre}/{path}";
+
+        if (!Filesystem.TryWriteBinary(fullpath, data) ||
+            !Filesystem.TryReadBinary(fullpath, out byte[] read))
         {
           Filesystem.LogLastException();
           continue;
         }
 
-        int ilen = texts.Length, rlen = read.Length;
-        if (ilen != rlen)
+        int ilen = data.Length, olen = read.Length;
+        if (ilen != olen)
         {
-          Debug.LogError($"TEST: binary file byte array lengths differ.\n\t INLEN: {ilen}\n\tOUTLEN: {rlen}");
+          Debug.LogError($"TEST: binary file byte array lengths differ. (\"{path}\")\n\t INLEN: {ilen}\n\tOUTLEN: {olen}");
           continue;
         }
 
@@ -247,11 +364,11 @@ namespace Bore.Tests
 
         if (diffs > 0)
         {
-          Debug.LogError($"TEST: binary input and output differ.\n\tNUM DIFFS: {diffs}");
+          Debug.LogError($"TEST: binary input and output differ. (\"{path}\")\n\tNUM DIFFS: {diffs}");
         }
       }
 
-      EditorApplication.delayCall -= Run;
+      Debug.Log("--- TEST END");
     }
 
   } // end internal static class TestFilesystem
