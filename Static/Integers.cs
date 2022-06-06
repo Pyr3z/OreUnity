@@ -118,6 +118,11 @@ namespace Bore
       return idx;
     }
 
+    public static int WrapIndex(this int i, int sz)
+    {
+      return (i % sz + sz) % sz;
+    }
+
 
     public static int RandomIndex(int size)
     {

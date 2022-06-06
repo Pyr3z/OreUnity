@@ -20,19 +20,19 @@ namespace Bore
 
   public static class Filesystem
   {
-    private static System.Exception s_LastException;
-
-
     #region FUNDAMENTAL FILE I/O
     public static bool TryWriteText(string path, string text, Encoding encoding = null)
     {
       return false;
     }
+
     public static bool TryReadText(string path, out string text, Encoding encoding = null)
     {
       try
       {
         text = File.ReadAllText(path, encoding ?? Strings.DefaultEncoding);
+
+        LastException = null;
         return true;
       }
       catch (System.Exception ex)
@@ -40,17 +40,18 @@ namespace Bore
         switch (ex)
         {
           case IOException ioex:
+            // anticipated case
             break;
           default:
+            // unanticipated case
             ex = new UnhandledException(ex);
             break;
         }
 
-        s_LastException = ex;
+        LastException = ex;
+        text = string.Empty;
+        return false;
       }
-
-      text = string.Empty;
-      return false;
     }
 
 
@@ -58,6 +59,7 @@ namespace Bore
     {
       return false;
     }
+
     public static bool TryReadBinary(string path, out byte[] data)
     {
       data = null;
@@ -70,50 +72,96 @@ namespace Bore
 
     #region INFO & DEBUGGING
 
-    public enum IOFailReason
+    public enum IOResult
     {
-      None,
+      None = -1,
+      Success,
       PathNotFound,
-      Permissions,
+      PathNotValid,
+      NotPermitted,
       DiskFull,
-      Unknown
+      UnknownFailure
     }
 
-    public static IOFailReason GetLastFailReason()
+    public static IOResult GetLastIOResult()
     {
-      switch (s_LastException)
+      if (s_ExceptionRingIdx == 0)
+        return IOResult.None;
+
+      switch (LastException)
       {
         case null:
-          return IOFailReason.None;
+          return IOResult.Success;
 
         case FileNotFoundException _ :
         case DirectoryNotFoundException _ :
         case DriveNotFoundException _ :
-          return IOFailReason.PathNotFound;
+          return IOResult.PathNotFound;
 
         case IOException iox :
-          if (iox.Message.ToLowerInvariant().Contains("disk full"))
-          {
-            return IOFailReason.DiskFull;
-          }
-          else
-          {
-            goto default;
-          }
+        {
+          string msg = iox.Message.ToLowerInvariant();
+
+          if (msg.Contains("disk full"))
+            return IOResult.DiskFull;
+          if (msg.Contains("permission"))
+            return IOResult.NotPermitted;
+          if (msg.Contains("invalid"))
+            return IOResult.PathNotValid;
+
+          return IOResult.UnknownFailure;
+        }
 
         default:
-          return IOFailReason.Unknown;
+          return IOResult.UnknownFailure;
       }
     }
 
-    [System.Diagnostics.Conditional("DEBUG")]
-    public static void LogLastError()
+    public static bool TryGetLastException(out System.Exception ex)
     {
-      if (s_LastException != null)
-        Debug.LogException(s_LastException);
+      // funky for-loop is necessary to preserve actual order of buffer reads
+      for (int i = 0; i < EXCEPTION_RING_SZ; ++i)
+      {
+        int idx = (s_ExceptionRingIdx - i) % EXCEPTION_RING_SZ;
+        if (idx < 0)
+          break;
+
+        if (s_ExceptionRingBuf[idx] != null)
+        {
+          ex = s_ExceptionRingBuf[idx];
+          return true;
+        }
+      }
+
+      ex = null;
+      return false; ;
+    }
+
+    [System.Diagnostics.Conditional("DEBUG")]
+    public static void LogLastException()
+    {
+      if (TryGetLastException(out System.Exception ex))
+      {
+        Debug.LogException(ex);
+      }
     }
 
     #endregion INFO & DEBUGGING
+
+
+    #region PRIVATE
+
+    private const int EXCEPTION_RING_SZ = 4;
+    private static System.Exception[] s_ExceptionRingBuf = new System.Exception[EXCEPTION_RING_SZ];
+    private static int                s_ExceptionRingIdx = 0;
+
+    private static System.Exception LastException
+    {
+      get => s_ExceptionRingBuf[  s_ExceptionRingIdx % EXCEPTION_RING_SZ];
+      set => s_ExceptionRingBuf[++s_ExceptionRingIdx % EXCEPTION_RING_SZ] = value;
+    }
+
+    #endregion PRIVATE
 
   } // end static class Filesystem
 
@@ -160,7 +208,7 @@ namespace Bore.Tests
         if (!Filesystem.TryWriteText(path, text) ||
             !Filesystem.TryReadText(path, out string read))
         {
-          Filesystem.LogLastError();
+          Filesystem.LogLastException();
           continue;
         }
 
@@ -176,7 +224,7 @@ namespace Bore.Tests
         if (!Filesystem.TryWriteBinary(path, data) ||
             !Filesystem.TryReadBinary(path, out byte[] read))
         {
-          Filesystem.LogLastError();
+          Filesystem.LogLastException();
           continue;
         }
 
