@@ -4,6 +4,9 @@
 **/
 
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 
 namespace Bore.Abstract
@@ -72,11 +75,18 @@ namespace Bore.Abstract
 
         if (!s_Current.m_IsReplaceable)
         {
-          Destroy(this);
+          if (Application.isEditor)
+            DestroyImmediate(this);
+          else
+            Destroy(this);
+
           return false;
         }
 
-        Destroy(s_Current);
+        if (Application.isEditor)
+          DestroyImmediate(s_Current);
+        else
+          Destroy(s_Current);
       }
 
       s_Current = self;
@@ -87,5 +97,54 @@ namespace Bore.Abstract
     }
 
   } // end class OAssetSingleton
+
+
+#if UNITY_EDITOR
+  // TODO move to Editor folder
+  internal static class OAssetSingletons
+  {
+    private const string DEFAULT_ASSET_PATH = "Assets/";
+
+
+    [InitializeOnLoadMethod]
+    private static void Validate()
+    {
+      foreach (var t in TypeCache.GetTypesDerivedFrom(typeof(OAssetSingleton<>)))
+      {
+        ValidateEditorObject(t);
+      }
+    }
+
+    private static void ValidateEditorObject(System.Type tself)
+    {
+      if (tself == null || tself.IsAbstract)
+        return;
+
+      var load = Resources.FindObjectsOfTypeAll(tself);
+      if (load.Length > 0)
+        return;
+
+      string filepath = DEFAULT_ASSET_PATH + tself.Name + ".asset";
+
+      if (AssetDatabase.LoadAssetAtPath(filepath, tself))
+        return;
+
+      if (Filesystem.TryMakePathTo(filepath))
+      {
+        var instance = ScriptableObject.CreateInstance(tself);
+
+        Debug.Assert(instance);
+
+        AssetDatabase.CreateAsset(instance, filepath);
+        AssetDatabase.SaveAssetIfDirty(instance);
+        AssetDatabase.ImportAsset(filepath);
+
+        Debug.Log($"OAssetSingleton: Created new <{tself.Name}> at {filepath}");
+      }
+    }
+
+  }
+
+#endif // UNITY_EDITOR
 
 }
