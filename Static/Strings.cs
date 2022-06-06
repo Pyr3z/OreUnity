@@ -18,6 +18,7 @@ namespace Bore
   {
     public static Encoding DefaultEncoding { get; set; } = Encoding.Unicode;
 
+
     public static readonly char[] WHITESPACES = { ' ', '\t', '\n', '\r', '\v' };
 
 
