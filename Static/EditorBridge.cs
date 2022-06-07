@@ -62,38 +62,6 @@ namespace Bore
       return true;
     }
 
-
-    // TODO this functionality is probably better compartmentalized elsewhere:
-    [InitializeOnLoadMethod]
-    private static void ValidateEditor()
-    {
-      var preloaded = new List<Object>(PlayerSettings.GetPreloadedAssets());
-      var set = new HashSet<Object>(preloaded);
-
-      set.RemoveWhere(obj => !obj);
-
-      int changed = 0;
-      int i = preloaded.Count;
-      while (i --> 0)
-      {
-        if (!set.Contains(preloaded[i]))
-        {
-          preloaded.RemoveAt(i);
-          ++changed;
-        }
-        else
-        {
-          set.Remove(preloaded[i]);
-        }
-      }
-
-      if (changed > 0)
-      {
-        Debug.Log($"{nameof(EditorBridge)}: Cleaning up {changed} null / duplicate \"Preloaded Asset\" entries.");
-        PlayerSettings.SetPreloadedAssets(preloaded.ToArray());
-      }
-    }
-
   } // end static class EditorBridge
 
 }
