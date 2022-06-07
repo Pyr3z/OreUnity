@@ -4,20 +4,26 @@
     @date   2022-06-01
 **/
 
+using UnityEngine;
+
+using TimeSpan  = System.TimeSpan;
+
 
 namespace Bore
 {
 
   public static class Parsing
   {
+    public static readonly Color32 DefaultColor32 = Color.magenta;
 
-    public static bool TryParseTimezoneOffset(string str, out System.TimeSpan span)
+
+    public static bool TryParseTimezoneOffset(string str, out TimeSpan span)
     {
       // EXPECTED FORMAT REGEX: @"([+-])?([0-9]{2})(?:[:]?([0-9]{2}))?"
 
       if (TryParseTimezoneOffset(str, out float hours))
       {
-        span = System.TimeSpan.FromHours(hours);
+        span = TimeSpan.FromHours(hours);
         return true;
       }
 
@@ -79,6 +85,79 @@ namespace Bore
       return true;
     }
 
+
+    public static bool TryParseColor32(string hex, out Color32 color)
+    {
+      color = DefaultColor32;
+
+      if (hex == null || hex.Length < 2)
+        return false;
+
+      int i = 0;
+
+      if (hex[0] == '#')
+      {
+        ++i;
+      }
+      
+      if (hex[i] == '0' && (hex[i + 1] == 'x' || hex[i + 1] == 'X'))
+      {
+        if (i + 3 < hex.Length)
+          i += 2;
+        else
+          return false;
+      }
+
+      char hexhi, hexlo;
+      byte write = 0x00;
+
+      bool special_syntax = ( hex[0] == '#' && hex.Length - i < 5 );
+      
+      int j = 0;
+      while (j < 4 && i < hex.Length - 1)
+      {
+        if (special_syntax)
+        {
+          // special HTML syntax: makes 
+          hexhi = hexlo = hex[i++];
+        }
+        else
+        {
+          hexhi = hex[i++];
+          hexlo = hex[i++];
+        }
+
+        if (TryParseHexByte(hexhi, hexlo, ref write))
+        {
+          color[j++] = write;
+        }
+        else
+        {
+          break;
+        }
+      }
+
+      while (j < 3) // fill in the remainder
+        color[j++] = 0x00;
+      if (j == 3)
+        color[j] = 0xFF;
+
+      return true;
+    }
+
+
+    public static bool TryParseHexByte(char ascii_hi, char ascii_lo, ref byte write)
+    {
+      if (!TryParseHexNybble(ascii_hi, ref write))
+        return false;
+
+      write <<= 4;
+      return TryParseHexNybble(ascii_lo, ref write);
+    }
+
+
+  #region PRIVATE SECTION
+
     private static int PartialParsePositive(string str, int start, int len, int ceil, out int val)
     {
       const uint OVERFLOW_BYTE = 0xF0000000u;
@@ -105,6 +184,42 @@ namespace Bore
 
       return (i - start).AtLeast(0); // returns number of characters parsed
     }
+
+    private static bool TryParseHexNybble(char ascii, ref byte write)
+    {
+      const byte CLEAR_LO = 0xF0;
+
+      if (ascii < '0')
+        return false;
+
+      if (ascii <= '9')
+      {
+        write = (byte)((write & CLEAR_LO) | (ascii - '0'));
+        return true;
+      }
+
+      if (ascii < 'A')
+        return false;
+
+      if (ascii <= 'F')
+      {
+        write = (byte)((write & CLEAR_LO) | (ascii - 'A' + 10));
+        return true;
+      }
+
+      if (ascii < 'a')
+        return false;
+
+      if (ascii <= 'f')
+      {
+        write = (byte)((write & CLEAR_LO) | (ascii - 'a' + 10));
+        return true;
+      }
+
+      return false;
+    }
+
+  #endregion PRIVATE SECTION
 
   } // end static class Parsing
 

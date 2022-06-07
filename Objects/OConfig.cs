@@ -6,7 +6,7 @@
 namespace Bore
 {
 
-  public class OConfig : Abstract.Asset
+  public class OConfig : OAsset
   {
     // TODO
   }

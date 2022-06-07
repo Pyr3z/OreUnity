@@ -24,7 +24,7 @@ namespace Bore.Editor
 
     public static void ValidateOAssetSingletons()
     {
-      foreach (var tself in TypeCache.GetTypesDerivedFrom(typeof(Abstract.OAssetSingleton<>)))
+      foreach (var tself in TypeCache.GetTypesDerivedFrom(typeof(OAssetSingleton<>)))
       {
         if (tself == null || tself.IsAbstract)
           continue;

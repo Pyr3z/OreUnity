@@ -1,4 +1,4 @@
-/** @file       Abstract/SceneComponent.cs
+/** @file       Abstract/OComponent.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-01-20
 **/
@@ -8,62 +8,20 @@ using System.Collections;
 using UnityEngine;
 
 
-namespace Bore.Abstract
+namespace Bore
 {
   using Action    = System.Action;
   using Condition = System.Func<bool>;
 
 
   /// <summary>
-  ///   Base class for MonoBehaviour components of GameObjects
+  ///   Base class for Bore MonoBehaviour components of GameObjects
   ///   (AKA "Scene objects").
   /// </summary>
-  public abstract class SceneComponent : MonoBehaviour
+  public abstract class OComponent : MonoBehaviour
   {
 
-    #region     Static Section
-
-    public static IEnumerator InvokeNextFrame(Action action)
-    {
-      yield return new WaitForEndOfFrame();
-      action();
-    }
-
-    public static IEnumerator InvokeNextFrameIf(Action action, Condition condition)
-    {
-      yield return new WaitForEndOfFrame();
-
-      if (condition())
-        action();
-    }
-
-    public static IEnumerator InvokeNextFrameIf(Action action, Condition condition, Action else_action)
-    {
-      yield return new WaitForEndOfFrame();
-
-      if (condition())
-        action();
-      else
-        else_action();
-    }
-
-    public static IEnumerator InvokeInSeconds(Action action, float s)
-    {
-      if (s < Floats.EPSILON)
-      {
-        action();
-      }
-      else
-      {
-        yield return new WaitForSeconds(s);
-        action();
-      }
-    }
-
-    #endregion  Static Section
-
-
-    #region     UnityEvent Actions
+  #region EVENT CALLBACK ACTIONS
 
     [System.Diagnostics.Conditional("DEBUG")]
     public void DebugLog(string message)
@@ -105,16 +63,64 @@ namespace Bore.Abstract
 
     public void DestroySelf(float in_seconds = 0f)
     {
-      Destroy(this, in_seconds);
+      if (Application.isEditor && in_seconds.IsZero())
+        DestroyImmediate(this);
+      else
+        Destroy(this, in_seconds);
     }
 
     public void DestroyGameObject(float in_seconds = 0f)
     {
-      Destroy(gameObject, in_seconds);
+      if (Application.isEditor && in_seconds.IsZero())
+        DestroyImmediate(gameObject);
+      else
+        Destroy(gameObject, in_seconds);
     }
 
-    #endregion  UnityEvent Actions
+  #endregion  EVENT CALLBACK ACTIONS
 
-  } // end class SceneComponent
+
+  #region STATIC SECTION
+
+    protected static IEnumerator InvokeNextFrame(Action action)
+    {
+      yield return new WaitForEndOfFrame();
+      action();
+    }
+
+    protected static IEnumerator InvokeNextFrameIf(Action action, Condition condition)
+    {
+      yield return new WaitForEndOfFrame();
+
+      if (condition())
+        action();
+    }
+
+    protected static IEnumerator InvokeNextFrameIf(Action action, Condition condition, Action else_action)
+    {
+      yield return new WaitForEndOfFrame();
+
+      if (condition())
+        action();
+      else
+        else_action();
+    }
+
+    protected static IEnumerator InvokeInSeconds(Action action, float s)
+    {
+      if (s < Floats.EPSILON)
+      {
+        action();
+      }
+      else
+      {
+        yield return new WaitForSeconds(s);
+        action();
+      }
+    }
+
+  #endregion STATIC SECTION
+
+  } // end class OComponent
 
 }

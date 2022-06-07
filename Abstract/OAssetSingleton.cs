@@ -4,12 +4,11 @@
 **/
 
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
+
+using UnityEvent = UnityEngine.Events.UnityEvent;
 
 
-namespace Bore.Abstract
+namespace Bore
 {
   /// <summary>
   ///   Base class for singleton objects which exists without a formal "parent"
@@ -23,6 +22,7 @@ namespace Bore.Abstract
   {
     public static TSelf Current => s_Current;
     private static TSelf s_Current;
+    public static TSelf Instance => s_Current; // compatibility API
 
 
     public static bool IsActive       => s_Current;
@@ -38,7 +38,7 @@ namespace Bore.Abstract
     protected HideFlags m_AdvancedFlags = HideFlags.DontUnloadUnusedAsset;
 
     [SerializeField]
-    protected DelayedEvent m_OnAfterInitialized = new DelayedEvent();
+    protected UnityEvent m_OnAfterInitialized = new UnityEvent();
 
 
 
