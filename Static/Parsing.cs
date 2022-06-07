@@ -4,67 +4,12 @@
     @date   2022-06-01
 **/
 
-using StringBuilder = System.Text.StringBuilder;
-
 
 namespace Bore
 {
 
   public static class Parsing
   {
-
-    public static int Count(string str, params char[] chars)
-    {
-      int count = 0;
-
-      foreach (char check in chars)
-      {
-        foreach (char c in str)
-        {
-          // fuh
-          if (string.CompareOrdinal(c.ToString(), check.ToString()) == 0)
-            ++count;
-        }
-      }
-
-      return count;
-    }
-
-    public static int CountDigits(string str)
-    {
-      int count = 0;
-
-      foreach (char c in str)
-      {
-        if (char.IsDigit(c))
-          ++count;
-      }
-
-      return count;
-    }
-
-    public static int CountContiguousDigits(string str)
-    {
-      int count = 0, max = 0;
-
-      foreach (char c in str)
-      {
-        if (char.IsDigit(c))
-        {
-          ++count;
-        }
-        else if (c == '.') { } // no-op
-        else if (count > 0)
-        {
-          if (max < count)
-            max = count;
-          count = 0;
-        }
-      }
-
-      return max < count ? count : max;
-    }
-
 
     public static bool TryParseTimezoneOffset(string str, out System.TimeSpan span)
     {

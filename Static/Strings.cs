@@ -7,6 +7,8 @@
       Utilities for C# string manipulation & generic parsing.
 **/
 
+using System.Collections.Generic;
+
 using StringBuilder = System.Text.StringBuilder;
 using Encoding      = System.Text.Encoding;
 using Convert       = System.Convert;
@@ -120,6 +122,57 @@ namespace Bore
       }
 
       return bob.ToString();
+    }
+
+
+    public static int CountAny(string str, params char[] chars)
+    {
+      var charset = new HashSet<char>(chars);
+
+      int count = 0;
+
+      foreach (char c in str)
+      {
+        if (charset.Contains(c))
+          ++count;
+      }
+
+      return count;
+    }
+
+    public static int CountDigits(string str)
+    {
+      int count = 0;
+
+      foreach (char c in str)
+      {
+        if (char.IsDigit(c))
+          ++count;
+      }
+
+      return count;
+    }
+
+    public static int CountContiguousDigits(string str)
+    {
+      int count = 0, max = 0;
+
+      foreach (char c in str)
+      {
+        if (char.IsDigit(c))
+        {
+          ++count;
+        }
+        else if (c == '.') { } // no-op
+        else if (count > 0)
+        {
+          if (max < count)
+            max = count;
+          count = 0;
+        }
+      }
+
+      return max < count ? count : max;
     }
 
   } // end static class Strings

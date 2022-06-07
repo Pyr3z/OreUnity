@@ -28,7 +28,7 @@ namespace Bore
       if (extra > 0)
         str = str.Remove(extra);
 
-      float digs = Parsing.CountDigits(str);
+      float digs = Strings.CountDigits(str);
 
       return (digs / str.Length) > PCT_THRESHOLD;
     }
