@@ -20,13 +20,13 @@ namespace Bore
 
     private static void OnActiveSceneChanged(Scene prev, Scene next)
     {
-      var buddy = Current;
-      if (!buddy)
-        buddy = Instantiate();
+      var curr = Current;
+      if (!curr)
+        curr = Instantiate();
 
-      Debug.Assert(buddy, "!!buddy");
+      Debug.Assert(curr, "!!buddy");
 
-      buddy.SetDontDestroyOnLoad(!next.isLoaded);
+      curr.SetDontDestroyOnLoad(!next.isLoaded);
     }
 
     private static ActiveScene Instantiate()
@@ -34,18 +34,18 @@ namespace Bore
       Debug.Assert(!Current);
 
       var obj = new GameObject($"[{nameof(ActiveScene)}]");
-      obj.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
-      obj.isStatic = true;
+      obj.hideFlags = HideFlags.DontSave;
+      obj.isStatic  = true;
 
       var bud = obj.AddComponent<ActiveScene>();
-
       Debug.Assert(Current == bud, nameof(ActiveScene) + " instantiation");
 
-      Orator.Log($"Instantiated runtime <{nameof(ActiveScene)}>!");
+      bud.m_IsReplaceable = true;
 
+      Orator.Log($"Instantiated runtime <{nameof(ActiveScene)}>!");
       return bud;
     }
 
-  }
+  } // end class ActiveScene
 
 }
