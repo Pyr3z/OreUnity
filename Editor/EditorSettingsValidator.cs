@@ -17,9 +17,41 @@ namespace Bore.Editor
   {
     static EditorSettingsValidator()
     {
+      ValidateOAssetSingletons();
       ValidatePreloadedAssets();
     }
 
+
+    public static void ValidateOAssetSingletons()
+    {
+      foreach (var tself in TypeCache.GetTypesDerivedFrom(typeof(Abstract.OAssetSingleton<>)))
+      {
+        if (tself == null || tself.IsAbstract)
+          continue;
+
+        var load = Resources.FindObjectsOfTypeAll(tself);
+        if (load.Length > 0)
+          continue;
+
+        string filepath = $"Assets/{tself.Name}.asset";
+
+        if (AssetDatabase.LoadAssetAtPath(filepath, tself))
+          continue;
+
+        if (Filesystem.TryMakePathTo(filepath))
+        {
+          var instance = ScriptableObject.CreateInstance(tself);
+
+          Debug.Assert(instance);
+
+          AssetDatabase.CreateAsset(instance, filepath);
+          AssetDatabase.SaveAssetIfDirty(instance);
+          AssetDatabase.ImportAsset(filepath);
+
+          Debug.Log($"OAssetSingleton: Created new <{tself.Name}> at {filepath}");
+        }
+      }
+    }
 
     public static void ValidatePreloadedAssets()
     {
