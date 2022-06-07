@@ -8,7 +8,7 @@ namespace Bore
 
   public class OConfig : Abstract.Asset
   {
-
+    // TODO
   }
 
 } // end class OConfig

@@ -2,6 +2,8 @@
     @author levianperez\@gmail.com
     @author levi\@leviperez.dev
     @date   2022-06-03
+
+    @brief  A new generic exception type with mega self-documentation in mind.
 **/
 
 namespace Bore
