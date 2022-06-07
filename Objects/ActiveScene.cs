@@ -1,6 +1,9 @@
 ﻿/** @file       Objects/ActiveScene.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-06
+ *
+ *  A Scene Singleton that sticks to the current "Active Scene", even as this
+ *  status moves around among different loaded Scenes.
 **/
 
 using UnityEngine;
