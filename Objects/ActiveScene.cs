@@ -1,4 +1,4 @@
-﻿/** @file       Objects/SceneBuddy.cs
+﻿/** @file       Objects/ActiveScene.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-06
 **/
@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 namespace Bore
 {
 
-  public sealed class SceneBuddy : OSingleton<SceneBuddy>
+  public sealed class ActiveScene : OSingleton<ActiveScene>
   {
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void RegisterGlobalCallbacks()
@@ -24,22 +24,24 @@ namespace Bore
       if (!buddy)
         buddy = Instantiate();
 
-      Debug.Assert(!!buddy, "!!buddy");
+      Debug.Assert(buddy, "!!buddy");
 
       buddy.SetDontDestroyOnLoad(!next.isLoaded);
     }
 
-    private static SceneBuddy Instantiate()
+    private static ActiveScene Instantiate()
     {
       Debug.Assert(!Current);
 
-      var obj = new GameObject($"[{nameof(SceneBuddy)}]");
+      var obj = new GameObject($"[{nameof(ActiveScene)}]");
       obj.hideFlags = HideFlags.DontSave | HideFlags.NotEditable;
       obj.isStatic = true;
 
-      var bud = obj.AddComponent<SceneBuddy>();
+      var bud = obj.AddComponent<ActiveScene>();
 
-      Debug.Assert(Current == bud, nameof(SceneBuddy) + " instantiation");
+      Debug.Assert(Current == bud, nameof(ActiveScene) + " instantiation");
+
+      Orator.Log($"Instantiated runtime <{nameof(ActiveScene)}>!");
 
       return bud;
     }

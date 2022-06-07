@@ -50,7 +50,7 @@ namespace Bore
 
     public bool TryInvoke()
     {
-      return TryInvokeOn(SceneBuddy.Current);
+      return TryInvokeOn(ActiveScene.Current);
     }
 
     public bool TryInvokeOn(GameObject obj)

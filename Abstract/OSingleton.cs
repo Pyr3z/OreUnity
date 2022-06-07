@@ -69,9 +69,13 @@ namespace Bore
 
     public void ValidateInitialization()
     {
+      #if DEBUG
       Debug.Assert(s_Current == this,   "Current == this");
       Debug.Assert(m_IsInitialized,     "IsInitialized");
       Debug.Assert(isActiveAndEnabled,  "isActiveAndEnabled");
+
+      Orator.Log($"{nameof(TSelf)} initialized.");
+      #endif
     }
 
 
