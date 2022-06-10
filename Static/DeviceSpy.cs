@@ -229,7 +229,7 @@ namespace Bore
       // Android and Android-like devices are pretty standard here
       if (type.StartsWith("ARM", strcmp))
       {
-        if (type.Substring(3, 2) == "64")
+        if (type.Substring(3, 2) == "64" || System.Environment.Is64BitOperatingSystem)
           return ABIArch.ARM64;
         else
           return ABIArch.ARM;
