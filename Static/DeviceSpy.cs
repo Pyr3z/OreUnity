@@ -160,7 +160,7 @@ namespace Bore
 
     private static (float off, string str) GetTimezoneUTCOffset()
     {
-      var offset = System.TimeZone.CurrentTimeZone.GetUtcOffset(System.DateTime.Now);
+      var offset = System.TimeZoneInfo.Local.GetUtcOffset(System.DateTime.Now);
       return ((float)offset.TotalHours, $"{(offset.Hours <= 0 ? "" : "+")}{offset.Hours:00}{offset.Minutes:00}");
     }
 
