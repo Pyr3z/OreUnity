@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEditor;
 
 
-namespace Bore.Editor
+namespace Bore
 {
 
   [InitializeOnLoad]

@@ -8,11 +8,11 @@ using UnityEngine;
 using UnityEditor;
 
 
-namespace Bore.Editor
+namespace Bore
 {
 
   [CustomPropertyDrawer(typeof(ReadOnlyAttribute))]
-  public sealed class ReadOnlyDrawer : DecoratorDrawer
+  internal class ReadOnlyDrawer : DecoratorDrawer
   {
     public override void OnGUI(Rect pos)
     {
