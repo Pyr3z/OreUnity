@@ -13,6 +13,7 @@ using UnityEngine.SceneManagement;
 namespace Bore
 {
 
+  [DefaultExecutionOrder(-500)]
   public sealed class ActiveScene : OSingleton<ActiveScene>
   {
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -27,7 +28,7 @@ namespace Bore
       if (!curr)
         curr = Instantiate();
 
-      Debug.Assert(curr, "!!buddy");
+      Debug.Assert(curr, $"!!{nameof(ActiveScene)}.Current");
 
       curr.SetDontDestroyOnLoad(!next.isLoaded);
     }
