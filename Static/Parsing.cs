@@ -17,6 +17,19 @@ namespace Bore
     public static readonly Color32 DefaultColor32 = Color.magenta;
 
 
+    public static bool TryParseNextIndex(string str, out int idx)
+    {
+      idx = -1;
+
+      int idx_start = str.IndexOf('[') + 1;
+      int idx_len = str.IndexOf(']', idx_start) - idx_start;
+
+      return idx_len > 0 &&
+              int.TryParse(str.Substring(idx_start, idx_len), out idx) &&
+              idx >= 0;
+    }
+
+
     public static bool TryParseTimezoneOffset(string str, out TimeSpan span)
     {
       // EXPECTED FORMAT REGEX: @"([+-])?([0-9]{2})(?:[:]?([0-9]{2}))?"
