@@ -16,12 +16,12 @@ namespace Bore
 
   public static class Integers
   {
-    // Maximum 1D array size, slightly smaller than int.MaxValue
-    public const int MAX_1D_SIZE    = 2146435069;
+    // Maximum 1D array size, slightly smaller than int.MaxValue (grabbed from decompiled System.Array)
+    public const int MAX_ARRAY_SZ    = 2146435069;
 
     // logical 2D arrays assume a square grid:
-    public const int MAX_2D_SIZE    = 46329; // floor(sqrt(MAX_1D_SIZE))
-    public const int MAX_2D_EXTENT  = 23164; // MAX_2D_SIZE / 2
+    public const int MAX_ARRAY2D_SZ     = 46329; // floor(sqrt(MAX_ARRAY_SZ))
+    public const int MAX_ARRAY2D_EXTENT = 23164; // MAX_ARRAY2D_SZ / 2
 
 
     public static int CalcDecimalDigits(int self)
@@ -139,7 +139,7 @@ namespace Bore
       if (size < 4)
         return 1;
       else
-        return AtMost(size / 2, MAX_2D_EXTENT, warn: true);
+        return AtMost(size / 2, MAX_ARRAY2D_EXTENT, warn: true);
     }
 
     public static int CalcExtent(uint size)
@@ -147,7 +147,7 @@ namespace Bore
       if (size < 4u)
         return 1;
       else
-        return AtMost((int)(size / 2), MAX_2D_EXTENT, warn: true);
+        return AtMost((int)(size / 2), MAX_ARRAY2D_EXTENT, warn: true);
     }
 
 

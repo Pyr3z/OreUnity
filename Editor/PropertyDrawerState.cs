@@ -44,6 +44,39 @@ namespace Bore
 
   #region STATIC
 
+    public static void Restore<TState>(SerializedProperty root_property, out TState state)
+      where TState : PropertyDrawerState, new()
+    {
+      uint id = root_property.GetPropertyHash();
+
+      if (s_StateMap.TryGetValue(id, out PropertyDrawerState basestate) && basestate != null)
+      {
+        state = (TState)basestate;
+        if (state.NeedsUpdate)
+        {
+          state.UpdateProperty(root_property);
+          state.IsStale = false;
+        }
+        else
+        {
+          state.RenewLifespan();
+          state.IsStale = true;
+        }
+      }
+      else
+      {
+        s_StateMap[id] = state = new TState();
+        state.UpdateProperty(root_property);
+
+        if (s_InspectorTracker == null)
+        {
+          s_InspectorTracker = ActiveEditorTracker.sharedTracker;
+          EditorApplication.update += TickStaleStates;
+        }
+      }
+    }
+
+
     private const int RESET_LIFESPAN_TICKS = 100; // in Editor ticks
 
     // TODO: replace lame Dictionary with Levi's badass HashMap
@@ -61,8 +94,19 @@ namespace Bore
       {
         if (TickedStateIsExpired(kvp.Value))
         {
-
+          expireds.Add(kvp.Key);
         }
+      }
+
+      // perform removal
+      foreach (var uid in expireds)
+      {
+        s_StateMap.Remove(uid);
+      }
+
+      if (s_StateMap.Count == 0)
+      {
+        EditorApplication.update -= TickStaleStates;
       }
     }
 
