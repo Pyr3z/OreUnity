@@ -77,7 +77,7 @@ namespace Bore
     }
 
 
-    private const int RESET_LIFESPAN_TICKS = 8; // in Editor ticks
+    private const int RESET_LIFESPAN_TICKS = 64; // in Editor ticks
 
     // TODO: replace lame Dictionary with Levi's badass HashMap
     private static readonly Dictionary<uint, PropertyDrawerState> s_StateMap = new Dictionary<uint, PropertyDrawerState>();
