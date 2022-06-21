@@ -28,7 +28,7 @@ namespace Bore
     }
 
 
-    [SerializeField]
+    [SerializeField] [HideInInspector]
     private bool m_IsEnabled;
 
     [SerializeField]

@@ -9,7 +9,7 @@ namespace Bore
 
   public interface IEvent
   {
-    bool IsEnabled { get; }
+    bool IsEnabled { get; set; }
     void Invoke();
     bool TryInvoke();
   }

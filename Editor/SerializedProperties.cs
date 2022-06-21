@@ -25,6 +25,11 @@ namespace Bore
       return SerializedProperty.EqualContents(null, prop);
     }
 
+    public static bool IsArrayElement(this SerializedProperty prop)
+    {
+      return prop.propertyPath.EndsWith("]");
+    }
+
     public static uint GetPropertyHash(this SerializedProperty prop)
     {
       if (IsDisposed(prop))
