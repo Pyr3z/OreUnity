@@ -52,7 +52,7 @@ namespace Bore
       if (s_StateMap.TryGetValue(id, out PropertyDrawerState basestate) && basestate != null)
       {
         state = (TState)basestate;
-        if (state.NeedsUpdate)
+        if (state.NeedsUpdate || !SerializedProperty.EqualContents(state.m_RootProp, root_property))
         {
           state.UpdateProperty(root_property);
           state.IsStale = false;
@@ -67,17 +67,17 @@ namespace Bore
       {
         s_StateMap[id] = state = new TState();
         state.UpdateProperty(root_property);
+      }
 
-        if (s_InspectorTracker == null)
-        {
-          s_InspectorTracker = ActiveEditorTracker.sharedTracker;
-          EditorApplication.update += TickStaleStates;
-        }
+      if (s_InspectorTracker == null)
+      {
+        s_InspectorTracker = ActiveEditorTracker.sharedTracker;
+        EditorApplication.update += TickStaleStates;
       }
     }
 
 
-    private const int RESET_LIFESPAN_TICKS = 100; // in Editor ticks
+    private const int RESET_LIFESPAN_TICKS = 8; // in Editor ticks
 
     // TODO: replace lame Dictionary with Levi's badass HashMap
     private static readonly Dictionary<uint, PropertyDrawerState> s_StateMap = new Dictionary<uint, PropertyDrawerState>();

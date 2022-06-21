@@ -22,7 +22,16 @@ namespace Bore
       // I HAD TO SCOUR THE SOURCE CODE IN ORDER TO FIGURE OUT THAT
       // I COULD CHECK FOR DISPOSAL THIS WAY:
 
-      return SerializedProperty.EqualContents(null, prop);
+      try
+      {
+        return SerializedProperty.EqualContents(null, prop) || !SerializedProperty.EqualContents(prop, prop);
+        // (this checks the internal C++ pointer if it's nullptr.)
+        // (the 2nd call checks for mroe recent (Unity 2020) fuckery, and is what throws the NRE.)
+      }
+      catch (System.NullReferenceException)
+      {
+        return true;
+      }
     }
 
     public static bool IsArrayElement(this SerializedProperty prop)

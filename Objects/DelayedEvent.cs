@@ -34,7 +34,7 @@ namespace Bore
     [SerializeField]
     private bool m_ScaledTime = true;
 
-    [SerializeField] // TODO implement custom drawers
+    [SerializeField] // TODO implement [ToggleFloat] custom drawer
     private float m_DelaySeconds = -1f;
 
 
