@@ -21,7 +21,7 @@ namespace Bore
   /// <typeparam name="TSelf">
   ///   Successor should pass its own type (CRTP).
   /// </typeparam>
-  public abstract class OSingleton<TSelf> : OComponent
+  public abstract class OSingleton<TSelf> : OComponent, IImmortalSingleton
     where TSelf : OSingleton<TSelf>
   {
     public static TSelf Current  => s_Current;

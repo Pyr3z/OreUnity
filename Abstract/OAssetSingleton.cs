@@ -1,6 +1,20 @@
 /** @file       Abstract/OAssetSingleton.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-02-17
+ *  
+ *  @brief      Base class for singleton objects which exists without a
+ *              formal "parent" to which it is dependendent.
+ *
+ *  @remark     No scene, No GameObject ;)
+ *  
+ *  @remark     For non-abstract, non-generic subclasses, an asset
+ *              (ScriptableObject) is auto-generated on Editor reload
+ *              if an instance does not already exist (or cannot be found
+ *              in a standard locaton).
+ *
+ *  @TODO Implement a class attribute, [AssetPathAttribute(string)], which
+ *        gives subclasses the ability to define an explicit location for
+ *        where (or where not) their singleton asset should exist.
 **/
 
 using UnityEngine;
@@ -13,6 +27,7 @@ namespace Bore
   /// <summary>
   ///   Base class for singleton objects which exists without a formal "parent"
   ///   to which it is dependendent. (no scene, no GameObject.)
+  ///   Auto-instantiated on Editor reload if an instance does not exist.
   /// </summary>
   /// <typeparam name="TSelf">
   ///   Successor should pass its own type (CRTP).
@@ -20,22 +35,25 @@ namespace Bore
   public abstract class OAssetSingleton<TSelf> : OAsset
     where TSelf : OAssetSingleton<TSelf>
   {
-    public static TSelf Current => s_Current;
-    private static TSelf s_Current;
+    public static TSelf Current  => s_Current;
     public static TSelf Instance => s_Current; // compatibility API
+
+    private static TSelf s_Current;
 
 
     public static bool IsActive       => s_Current;
     public static bool IsReplaceable  => !s_Current || s_Current.m_IsReplaceable;
 
 
-  [Header("Asset Singleton")]
+  [Header("Asset Singleton Properties")]
     [SerializeField]
-    protected bool m_IsRequiredOnLaunch = false;
+    private bool        m_IsRequiredOnLaunch  = false;
     [SerializeField]
-    protected bool m_IsReplaceable      = false;
+    protected bool      m_IsReplaceable       = false;
     [SerializeField]
-    protected HideFlags m_AdvancedFlags = HideFlags.DontUnloadUnusedAsset;
+    protected HideFlags m_AdvancedFlags       = HideFlags.DontUnloadUnusedAsset;
+
+    [Space]
 
     [SerializeField]
     protected UnityEvent m_OnAfterInitialized = new UnityEvent();
