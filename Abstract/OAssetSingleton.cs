@@ -62,8 +62,10 @@ namespace Bore
 
     protected virtual void OnEnable()
     {
-      OnValidate();
-      _ = TryInitialize((TSelf)this);
+      if (!TryInitialize((TSelf)this))
+      {
+        Orator.Warn("OAssetSingleton failed to initialize!", this);
+      }
     }
 
     protected virtual void OnDisable()
@@ -78,13 +80,13 @@ namespace Bore
     {
       this.hideFlags = m_AdvancedFlags;
 
-      EditorBridge.TrySetPreloadedAsset(this, m_IsRequiredOnLaunch);
+      _ = EditorBridge.TrySetPreloadedAsset(this, m_IsRequiredOnLaunch);
     }
 
 
     protected bool TryInitialize(TSelf self)
     {
-      Debug.Assert(this == self, "Proper usage: this.TryInitialize(this)");
+      Orator.Assert.IsTrue(this == self, "Proper usage: this.TryInitialize(this)", this);
 
       if (s_Current)
       {
@@ -94,7 +96,7 @@ namespace Bore
         if (!s_Current.m_IsReplaceable)
         {
           if (Application.isEditor)
-            DestroyImmediate(this);
+            DestroyImmediate(this, allowDestroyingAssets: true);
           else
             Destroy(this);
 
@@ -102,7 +104,7 @@ namespace Bore
         }
 
         if (Application.isEditor)
-          DestroyImmediate(s_Current);
+          DestroyImmediate(s_Current, allowDestroyingAssets: true);
         else
           Destroy(s_Current);
       }

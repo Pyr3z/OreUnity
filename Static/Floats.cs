@@ -23,6 +23,7 @@ namespace Bore
     public const float SQRT_MAX = 1.844674352e+19f;   // precomputed 32-bit IEEE max squarable value
     
     public const float PI       = 3.1415926535897931f;
+    public const float IPI      = 1f / PI;
     public const float PIPI     = 2 * PI;
     public const float IPIPI    = 1f / PIPI;
 
@@ -53,6 +54,14 @@ namespace Bore
     }
 
 
+    public static float ErrorPercent(float actual, float expected)
+    {
+      if (expected == 0f)
+        return float.PositiveInfinity;
+      else
+        return Math.Abs( (actual - expected) / expected );
+    }
+
     public static bool Approximately(this float a, float b)
     {
       return (a -= b) * a < EPSILON2;
@@ -61,6 +70,16 @@ namespace Bore
     public static bool Approximately(this float a, float b, float epsilon)
     {
       return (a -= b) * a < epsilon * epsilon;
+    }
+
+    public static bool Relatively(this float a, float b)
+    {
+      return ErrorPercent(a, b) <= EPSILON;
+    }
+
+    public static bool Relatively(this float a, float b, float error)
+    {
+      return ErrorPercent(a, b) <= error;
     }
 
     public static bool IsZero(this float val)

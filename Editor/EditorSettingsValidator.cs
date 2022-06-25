@@ -46,7 +46,7 @@ namespace Bore
         if (Filesystem.TryMakePathTo(filepath))
         {
           var instance = ScriptableObject.CreateInstance(tself);
-          if (Orator.AssertFails(instance))
+          if (Orator.Assert.Fails(instance))
             continue;
 
           AssetDatabase.CreateAsset(instance, filepath);

@@ -67,22 +67,21 @@ namespace Bore
     private bool m_IsInitialized = false;
 
 
-    public void ValidateInitialization()
+    [System.Diagnostics.Conditional("DEBUG")]
+    public void ValidateInitialization() // good to call as a listener to "On First Initialized"
     {
-      #if DEBUG
-      Debug.Assert(s_Current == this,   "Current == this");
-      Debug.Assert(m_IsInitialized,     "IsInitialized");
-      Debug.Assert(isActiveAndEnabled,  "isActiveAndEnabled");
+      Orator.Assert.IsTrue(s_Current == this,  this);
+      Orator.Assert.IsTrue(m_IsInitialized,    this);
+      Orator.Assert.IsTrue(isActiveAndEnabled, this);
 
-      Orator.Log($"{nameof(TSelf)} initialized.");
-      #endif
+      Orator.Log($"\"{name}\" initialized.", this);
     }
 
 
     protected virtual void OnEnable()
     {
-      bool ok = TryInitialize((TSelf)this) && m_IsInitialized;
-      Debug.Assert(ok, "TryInitialize()");
+      bool ok = TryInitialize((TSelf)this);
+      Orator.Assert.IsTrue(ok, this);
 
       // TODO re-enable this logic once logging & SceneAware are reimplemented
 

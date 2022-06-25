@@ -1,6 +1,6 @@
 {
   "name":         "dev.leviperez.ore",
-  "version":      "1.1.0",
+  "version":      "1.1.1",
 
   "displayName":  "[Ore]",
   "description":  "Dependency-free core package for Bore use.",
