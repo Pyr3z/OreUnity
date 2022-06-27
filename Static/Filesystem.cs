@@ -21,7 +21,7 @@ namespace Bore
   public static class Filesystem
   {
 
-    #region FUNDAMENTAL FILE I/O
+#region FUNDAMENTAL FILE I/O
 
     public static bool TryWriteObject(string filepath, object obj)
     {

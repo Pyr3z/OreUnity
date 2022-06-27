@@ -43,7 +43,7 @@ namespace Bore
 
     public static bool ExtractBasePath(string filepath, out string basepath)
     {
-      basepath = null;
+      basepath = filepath;
       if (filepath.IsEmpty())
         return false;
 
@@ -58,41 +58,45 @@ namespace Bore
       return basepath.Length > 0;
     }
 
-    public static bool ExtractDirectoryPath(string filepath, out string dirpath)
+    public static bool ExtractDirectoryPath(string filepath, out string dirpath, bool trailing_slash = false)
     {
-      dirpath = null;
+      dirpath = filepath;
       if (filepath.IsEmpty())
         return false;
 
       filepath = filepath.TrimEnd(DirectorySeparators);
 
-      int slash = 1 + filepath.LastIndexOfAny(DirectorySeparators);
-      if (slash < 1)
-        return false;
+      int slash = filepath.LastIndexOfAny(DirectorySeparators);
+      if (slash > 0)
+        dirpath = filepath.Remove(slash);
+      if (trailing_slash)
+        dirpath += '/';
 
-      dirpath = filepath.Remove(slash);
       return dirpath.Length > 0;
     }
 
-    public static bool Decompose(string filepath, out string dirpath, out string basepath)
+    public static bool Decompose(string filepath, out string dirpath, out string basepath, bool trailing_slash = true)
     {
-      dirpath = basepath = null;
+      dirpath = basepath = filepath;
       if (filepath.IsEmpty())
         return false;
 
       filepath = filepath.TrimEnd(DirectorySeparators);
 
-      int slash = 1 + filepath.LastIndexOfAny(DirectorySeparators);
-      if (slash < 1)
+      int slash = filepath.LastIndexOfAny(DirectorySeparators);
+      if (slash < 0)
       {
-        dirpath   = "./";
+        dirpath   = ".";
         basepath  = filepath;
       }
       else
       {
         dirpath   = filepath.Remove(slash);
-        basepath  = filepath.Substring(slash);
+        basepath  = filepath.Substring(slash + 1);
       }
+
+      if (trailing_slash)
+        dirpath += '/';
 
       return basepath.Length > 0 && dirpath.Length > 0;
     }
