@@ -12,6 +12,8 @@ namespace Bore
 
   public class FoldoutHeader : GUI.Scope
   {
+    const bool FIX_LABEL_WIDTH = false;
+
     public static bool Open(Rect total, GUIContent content, SerializedProperty prop, out FoldoutHeader header, int indent = -1)
     {
       return prop.isExpanded = header = new FoldoutHeader(total, content, prop.isExpanded, prop.IsArrayElement(), indent);
@@ -34,20 +36,19 @@ namespace Bore
       {
         pos.xMin += 5f;
         InspectorDrawers.PushLabelWidth(EditorGUIUtility.labelWidth - 8f);
-        indent -= 1;
+        indent -= 2;
       }
 
       if (indent > 0)
       {
-        pos.xMin += indent * InspectorDrawers.STD_INDENT;
-        InspectorDrawers.PushIndentLevel(indent - 1, fix_label_width: false);
+        InspectorDrawers.PushIndentLevel(indent, FIX_LABEL_WIDTH);
       }
 
       Indent        = indent;
       Rect          = pos;
-      IsOpen        = EditorGUI.BeginFoldoutHeaderGroup(pos, is_open, content);
       IsVanilla     = true;
       IsListElement = is_list_el;
+      IsOpen        = EditorGUI.BeginFoldoutHeaderGroup(pos, is_open, content);
     }
 
 
@@ -59,7 +60,7 @@ namespace Bore
         GUILayout.EndVertical();
 
       if (Indent > 0)
-        InspectorDrawers.PopIndentLevel(fix_label_width: false);
+        InspectorDrawers.PopIndentLevel(FIX_LABEL_WIDTH);
 
       if (IsListElement)
         InspectorDrawers.PopLabelWidth();

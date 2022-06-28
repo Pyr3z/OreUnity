@@ -28,12 +28,16 @@ namespace Bore
     }
 
 
-    [SerializeField] [HideInInspector]
+    [SerializeField, HideInInspector]
     private bool m_IsEnabled;
+
+    [SerializeField, HideInInspector]
+    private MonoBehaviour m_Context; // auto-assigned in EventDrawer.cs
+    [SerializeField, HideInInspector]
+    private bool m_RunInGlobalContext;
 
     [SerializeField]
     private bool m_ScaledTime = true;
-
     [SerializeField] // TODO implement [ToggleFloat] custom drawer
     private float m_DelaySeconds = -1f;
 
@@ -45,27 +49,14 @@ namespace Bore
     new public void Invoke()
     {
       bool ok = TryInvoke();
-      Debug.Assert(ok, "TryInvoke()");
+      Orator.Assert.IsTrue(ok, nameof(TryInvoke));
     }
 
     public bool TryInvoke()
     {
-      return TryInvokeOn(ActiveScene.Current);
-    }
-
-    public bool TryInvokeOn(GameObject obj)
-    {
-      if (m_IsEnabled)
-      {
-        if (m_DelaySeconds < Floats.EPSILON)
-          base.Invoke();
-        else if (m_Invocation == null && obj && obj.TryGetComponent(out MonoBehaviour component) && component.isActiveAndEnabled)
-          m_Invocation = component.StartCoroutine(DelayedInvokeCoroutine());
-        else
-          return false;
-      }
-
-      return true;
+      if (m_RunInGlobalContext)
+        return TryInvokeOn(ActiveScene.Current);
+      return TryInvokeOn(m_Context);
     }
 
     public bool TryInvokeOn(MonoBehaviour component)

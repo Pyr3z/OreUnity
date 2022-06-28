@@ -19,6 +19,8 @@
 
 #pragma warning disable CS0414
 
+using System.Collections.Generic;
+
 using UnityEngine;
 
 using ConditionalAttribute          = System.Diagnostics.ConditionalAttribute;
@@ -34,6 +36,9 @@ namespace Bore
   [DefaultExecutionOrder(-1337)]
   public sealed class Orator : OAssetSingleton<Orator>, IImmortalSingleton
   {
+
+#region instance fields
+
     [System.Serializable]
     private struct LogFormatDef
     {
@@ -49,7 +54,6 @@ namespace Bore
       // rich text etc... (TODO)
     } // end struct LogFormatDef
 
-#region instance fields
 
     // compile-time default values:
 
@@ -109,10 +113,10 @@ namespace Bore
       m_FormattedAssertMessage  = null;
     }
 
-    #endregion
+#endregion
 
 
-    #region instance methods
+#region instance methods
 
     /* IDE1006 => public member name does not match style guide */
 #pragma warning disable IDE1006
@@ -228,10 +232,10 @@ namespace Bore
 #pragma warning restore IDE1006
 
 
-    #endregion
+#endregion
 
 
-    #region PUBLIC STATIC METHODS
+#region PUBLIC STATIC METHODS
 
     public static string Prefix
     {
@@ -275,7 +279,7 @@ namespace Bore
       if (Instance)
         Instance.reached(ctx);
       else
-        Debug.Log($"{DEFAULT_KONSOLE_PREFIX}{DEFAULT_REACHED_MSG} (name=\"{ctx}\")");
+        Debug.Log($"{DEFAULT_KONSOLE_PREFIX}{DEFAULT_REACHED_MSG} (name=\"{ctx}\")", ctx);
     }
 
     public static void Reached(string msg)
@@ -300,7 +304,7 @@ namespace Bore
       if (Instance)
         Instance.log(msg, ctx);
       else
-        Debug.Log($"{DEFAULT_KONSOLE_PREFIX}{msg} (name=\"{ctx}\")");
+        Debug.Log($"{DEFAULT_KONSOLE_PREFIX}{msg} (name=\"{ctx}\")", ctx);
     }
 
 
@@ -317,7 +321,7 @@ namespace Bore
       if (Instance)
         Instance.warn(msg, ctx);
       else
-        Debug.LogWarning($"{DEFAULT_KONSOLE_PREFIX}{msg} (name=\"{ctx}\")");
+        Debug.LogWarning($"{DEFAULT_KONSOLE_PREFIX}{msg} (name=\"{ctx}\")", ctx);
     }
 
 
@@ -334,7 +338,7 @@ namespace Bore
       if (Instance)
         Instance.error(msg, ctx);
       else
-        Debug.LogError($"{DEFAULT_KONSOLE_PREFIX}{msg} (name=\"{ctx}\")");
+        Debug.LogError($"{DEFAULT_KONSOLE_PREFIX}{msg} (name=\"{ctx}\")", ctx);
     }
 
 #endregion
@@ -381,7 +385,7 @@ namespace Bore
         if (Instance)
           Instance.assertFailed(ctx);
         else
-          Debug.LogAssertion(ctx);
+          Debug.LogAssertion(string.Empty, ctx);
 
         return true;
       }
@@ -389,6 +393,33 @@ namespace Bore
       public static bool Fails(bool assertion, string msg, Object ctx = null)
       {
         if (assertion)
+          return false;
+
+        if (Instance)
+          Instance.assertFailed(msg, ctx);
+        else
+          Debug.LogAssertion(msg, ctx);
+
+        return true;
+      }
+
+      
+      public static bool FailsNullCheck(object obj, Object ctx = null)
+      {
+        if (!(obj is null))
+          return false;
+
+        if (Instance)
+          Instance.assertFailed(ctx);
+        else
+          Debug.LogAssertion(string.Empty, ctx);
+
+        return true;
+      }
+
+      public static bool FailsNullCheck(object obj, string msg, Object ctx = null)
+      {
+        if (!(obj is null))
           return false;
 
         if (Instance)

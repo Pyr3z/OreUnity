@@ -7,6 +7,7 @@
 using UnityEngine;
 
 using TimeSpan  = System.TimeSpan;
+using Predicate = System.Func<string, bool>;
 
 
 namespace Bore
@@ -15,6 +16,26 @@ namespace Bore
   public static class Parsing
   {
     public static readonly Color32 DefaultColor32 = Color.magenta;
+
+
+    public static bool FindLine(string rawtext, Predicate where, out string line)
+    {
+      line = null;
+
+      if (where != null)
+      {
+        foreach (var l in rawtext.Split(new char[] { '\n' }, System.StringSplitOptions.None))
+        {
+          if (where(l))
+          {
+            line = l;
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
 
 
     public static bool TryParseNextIndex(string str, out int idx)

@@ -1,6 +1,9 @@
 ﻿/** @file       Editor/PropertyDrawerState.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-15
+ *  
+ *  @brief      A base class for tracking/caching states for
+ *              non-trivial "Drawer" implementations.
 **/
 
 using System.Collections.Generic;
@@ -18,25 +21,41 @@ namespace Bore
 
   #region INSTANCE
 
-    public bool NeedsUpdate => m_RootProp.IsDisposed();
     public bool IsStale { get; protected set; }
 
 
     public void UpdateProperty(SerializedProperty root_property)
     {
       m_RootProp = root_property;
-      UpdateDetails();
+      OnUpdateProperty();
       RenewLifespan();
     }
 
-    public void RenewLifespan() => m_Lifespan = RESET_LIFESPAN_TICKS;
 
+    protected bool NeedsUpdate => m_RootProp.IsDisposed();
 
-    protected abstract void UpdateDetails();
+    protected abstract void OnUpdateProperty(); // <-- 1 required override
 
+    protected virtual void OnUpdateHeight() { } // <-- 1 optional override
 
-    protected SerializedProperty m_RootProp;
+    protected bool CheckFails(out SerializedProperty root_property)
+    {
+      if (Orator.Assert.Fails(!m_RootProp.IsDisposed()))
+      {
+        root_property = null; // output null = extra safety measure
+        return true;          // failed
+      }
+      else
+      {
+        root_property = m_RootProp;
+        return false;
+      }
+    }
 
+    protected void RenewLifespan() => m_Lifespan = RESET_LIFESPAN_TICKS;
+
+    // private fields (subclasses likely add more)
+    private SerializedProperty m_RootProp;
     private int m_Lifespan;
 
   #endregion INSTANCE

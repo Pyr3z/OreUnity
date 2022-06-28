@@ -22,35 +22,47 @@ namespace Bore
     private const float STD_PAD_HALF      = STD_PAD / 2f;
     private const float UNEXPANDED_HEIGHT = STD_LINE_HEIGHT + STD_PAD;
 
-    internal class DrawerState : PropertyDrawerState
+    private class DrawerState : PropertyDrawerState
     {
       public IEvent Event;
       public int    ChildCount;
       public float  ExtraHeight;
       public string EventLabel;
 
-      protected override void UpdateDetails()
+      public SerializedProperty RunInGlobalContext, Context;
+
+      protected override void OnUpdateProperty()
       {
-        _ = m_RootProp.TryGetUnderlyingValue(out Event);
+        if (CheckFails(out SerializedProperty root))
+          return;
+
+        _ = root.TryGetUnderlyingValue(out Event);
 
         ChildCount = 0;
         ExtraHeight = UNEXPANDED_HEIGHT;
 
-        var iterator = m_RootProp.FindPropertyRelative(UNITYEVENT_LAST_PROPERTY);
+        var iterator = root.FindPropertyRelative(UNITYEVENT_LAST_PROPERTY);
 
         while (iterator.NextVisible(false) &&
-               iterator.depth == m_RootProp.depth + 1 &&
-               iterator.propertyPath.StartsWith(m_RootProp.propertyPath))
+               iterator.depth == root.depth + 1 &&
+               iterator.propertyPath.StartsWith(root.propertyPath))
         {
           ExtraHeight += EditorGUI.GetPropertyHeight(iterator, iterator.isExpanded) + STD_PAD;
           ++ChildCount;
         }
 
-        EventLabel = $"{Event.GetType().Name}: {m_RootProp.displayName}";
+        EventLabel = $"{Event.GetType().Name}: {root.displayName}";
+
+        // done filling state.
+
+        AutoUpdateHiddenFields(root);
       }
 
       public void UpdateExtraHeight()
       {
+        if (CheckFails(out SerializedProperty root))
+          return;
+
         IsStale = false;
 
         if (ChildCount == 0)
@@ -58,7 +70,10 @@ namespace Bore
 
         ExtraHeight = UNEXPANDED_HEIGHT;
 
-        var iterator = m_RootProp.FindPropertyRelative(UNITYEVENT_LAST_PROPERTY);
+        if (Context != null && RunInGlobalContext != null)
+          ExtraHeight += STD_LINE_HEIGHT + STD_PAD;
+
+        var iterator = root.FindPropertyRelative(UNITYEVENT_LAST_PROPERTY);
 
         int i = 0;
         while (i++ < ChildCount && iterator.NextVisible(false))
@@ -69,10 +84,44 @@ namespace Bore
 
       public SerializedProperty GetChildIterator()
       {
-        if (ChildCount == 0)
+        if (ChildCount == 0 || CheckFails(out SerializedProperty root))
           return null;
-        return m_RootProp.FindPropertyRelative(UNITYEVENT_LAST_PROPERTY);
+
+        return root.FindPropertyRelative(UNITYEVENT_LAST_PROPERTY);
       }
+
+
+      private void AutoUpdateHiddenFields(SerializedProperty root)
+      {
+        // MonoBehaviour m_Context
+        Context = root.FindPropertyRelative("m_Context");
+        if (Orator.Assert.Fails(Context != null && Context.propertyType == SerializedPropertyType.ObjectReference))
+        {
+          Context = null;
+        }
+        else
+        {
+          if (root.serializedObject.targetObject is MonoBehaviour owner)
+            Context.objectReferenceValue = owner;
+          else
+            Context = null;
+        }
+
+        // bool m_RunInGlobalContext
+        RunInGlobalContext = root.FindPropertyRelative("m_RunInGlobalContext");
+        if (Orator.Assert.Fails(RunInGlobalContext != null && RunInGlobalContext.propertyType == SerializedPropertyType.Boolean))
+        {
+          RunInGlobalContext = null;
+        }
+        else
+        {
+          if (Context == null)
+            RunInGlobalContext.boolValue = false;
+        }
+
+        root.serializedObject.ApplyModifiedProperties();
+      }
+
     } // end internal class DrawerState
 
 
@@ -95,24 +144,56 @@ namespace Bore
         Undo.RecordObject(prop.serializedObject.targetObject, btn_label);
         
         state.Event.IsEnabled = !state.Event.IsEnabled;
+        prop.serializedObject.Update();
 
         return;
       }
 
       if (!state.Event.IsEnabled)
+      {
         label.text += LABEL_SUFFIX_DISABLED;
+      }
 
       // now do foldout header:
       pos.x = total.x;
       pos.xMax = btn_begin - STD_PAD * 2;
 
-      if (FoldoutHeader.Open(pos, label, prop, out FoldoutHeader header, prop.depth))
+      EditorGUI.BeginDisabledGroup(!state.Event.IsEnabled);
+      
+      if (FoldoutHeader.Open(pos, label, prop, out FoldoutHeader header, prop.depth + 1))
       {
         pos.x     = header.Rect.x;
         pos.xMax  = total.xMax;
         pos.y    += pos.height + STD_PAD;
 
-        EditorGUI.BeginDisabledGroup(!state.Event.IsEnabled);
+        // draw the optional field for "Run In Global Context" bool (if applicable)
+        if (state.RunInGlobalContext != null)
+        {
+          label.text = state.RunInGlobalContext.displayName;
+          pos.height = STD_LINE_HEIGHT;
+
+          pos.xMax = InspectorDrawers.LabelEndX;
+
+          _ = EditorGUI.PropertyField(pos, state.RunInGlobalContext, label);
+
+          if (state.Context != null)
+          {
+            pos.x = pos.xMax + STD_LINE_HEIGHT;
+            pos.xMax = total.xMax;
+
+            if (state.RunInGlobalContext.boolValue)
+              label.text = "→ will run on Runtime <ActiveScene>";
+            else
+              label.text = $"→ will run on this <{state.Context.objectReferenceValue.GetType().Name}>";
+            
+            EditorGUI.LabelField(pos, label);
+
+            pos.x = header.Rect.x;
+          }
+
+          pos.xMax = total.xMax;
+          pos.y += pos.height + STD_PAD;
+        }
 
         // get the property iterator for our extra members:
         var child_prop = state.GetChildIterator();
@@ -140,9 +221,9 @@ namespace Bore
 
         label.text = state.EventLabel;
         base.OnGUI(pos, prop, label);
-
-        EditorGUI.EndDisabledGroup();
       }
+
+      EditorGUI.EndDisabledGroup();
 
       header.Rect.yMax = pos.yMax + STD_PAD;
       header.Dispose();
