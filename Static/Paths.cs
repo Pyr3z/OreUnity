@@ -64,11 +64,11 @@ namespace Bore
       if (filepath.IsEmpty())
         return false;
 
-      filepath = filepath.TrimEnd(DirectorySeparators);
+      dirpath = filepath.TrimEnd(DirectorySeparators);
 
-      int slash = filepath.LastIndexOfAny(DirectorySeparators);
+      int slash = dirpath.LastIndexOfAny(DirectorySeparators);
       if (slash > 0)
-        dirpath = filepath.Remove(slash);
+        dirpath = dirpath.Remove(slash);
       if (trailing_slash)
         dirpath += '/';
 
@@ -81,18 +81,17 @@ namespace Bore
       if (filepath.IsEmpty())
         return false;
 
-      filepath = filepath.TrimEnd(DirectorySeparators);
+      dirpath = filepath.TrimEnd(DirectorySeparators);
 
-      int slash = filepath.LastIndexOfAny(DirectorySeparators);
+      int slash = dirpath.LastIndexOfAny(DirectorySeparators);
       if (slash < 0)
       {
-        dirpath   = ".";
-        basepath  = filepath;
+        dirpath = ".";
       }
       else
       {
-        dirpath   = filepath.Remove(slash);
-        basepath  = filepath.Substring(slash + 1);
+        dirpath  = dirpath.Remove(slash);
+        basepath = dirpath.Substring(slash + 1);
       }
 
       if (trailing_slash)
