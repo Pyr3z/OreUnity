@@ -1,4 +1,4 @@
-﻿/** @file       Editor/InspectorDrawers.cs
+﻿/** @file       Editor/Drawers.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-20
 **/
@@ -12,10 +12,10 @@ using UnityEditor;
 namespace Bore
 {
 
-  public static class InspectorDrawers
+  public static class Drawers
   {
 
-    public static float Indent      => EditorGUI.indentLevel * STD_INDENT;
+    public static float Indent          => EditorGUI.indentLevel * STD_INDENT;
 
     // TODO this is defunct in reorderable lists!
     public static float LabelStartX     => STD_INDENT_0 + EditorGUI.indentLevel * STD_INDENT;
@@ -132,6 +132,6 @@ namespace Bore
       PushIndentLevel(EditorGUI.indentLevel + delta, fix_label_width);
     }
 
-  } // end static class InspectorDrawers
+  } // end static class Drawers
 
 }

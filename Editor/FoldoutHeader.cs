@@ -35,13 +35,13 @@ namespace Bore
       if (is_list_el)
       {
         pos.xMin += 5f;
-        InspectorDrawers.PushLabelWidth(EditorGUIUtility.labelWidth - 8f);
+        Drawers.PushLabelWidth(EditorGUIUtility.labelWidth - 8f);
         indent -= 2;
       }
 
       if (indent > 0)
       {
-        InspectorDrawers.PushIndentLevel(indent, FIX_LABEL_WIDTH);
+        Drawers.PushIndentLevel(indent, FIX_LABEL_WIDTH);
       }
 
       Indent        = indent;
@@ -60,10 +60,10 @@ namespace Bore
         GUILayout.EndVertical();
 
       if (Indent > 0)
-        InspectorDrawers.PopIndentLevel(FIX_LABEL_WIDTH);
+        Drawers.PopIndentLevel(FIX_LABEL_WIDTH);
 
       if (IsListElement)
-        InspectorDrawers.PopLabelWidth();
+        Drawers.PopLabelWidth();
     }
 
   } // end class FoldoutHeader

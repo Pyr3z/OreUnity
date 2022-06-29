@@ -17,8 +17,8 @@ namespace Bore
     private const string UNITYEVENT_LAST_PROPERTY = "m_PersistentCalls";
     private const string LABEL_SUFFIX_DISABLED = " (event disabled)";
     
-    private const float STD_PAD           = InspectorDrawers.STD_PAD;
-    private const float STD_LINE_HEIGHT   = InspectorDrawers.STD_LINE_HEIGHT;
+    private const float STD_PAD           = Drawers.STD_PAD;
+    private const float STD_LINE_HEIGHT   = Drawers.STD_LINE_HEIGHT;
     private const float STD_PAD_HALF      = STD_PAD / 2f;
     private const float UNEXPANDED_HEIGHT = STD_LINE_HEIGHT + STD_PAD;
 
@@ -130,7 +130,7 @@ namespace Bore
       PropertyDrawerState.Restore(prop, out DrawerState state);
 
       // enable/disable button
-      float btn_begin = InspectorDrawers.FieldStartX + InspectorDrawers.FieldWidth * 0.45f;
+      float btn_begin = Drawers.FieldStartX + Drawers.FieldWidth * 0.45f;
       var pos = new Rect(btn_begin, total.y + STD_PAD_HALF, total.xMax - btn_begin, STD_LINE_HEIGHT);
 
       string btn_label;
@@ -172,7 +172,7 @@ namespace Bore
           label.text = state.RunInGlobalContext.displayName;
           pos.height = STD_LINE_HEIGHT;
 
-          pos.xMax = InspectorDrawers.LabelEndX;
+          pos.xMax = Drawers.LabelEndX;
 
           _ = EditorGUI.PropertyField(pos, state.RunInGlobalContext, label);
 
@@ -182,7 +182,7 @@ namespace Bore
             pos.xMax = total.xMax;
 
             if (state.RunInGlobalContext.boolValue)
-              label.text = "→ will run on Runtime <ActiveScene>";
+              label.text = $"→ will run on Runtime <{nameof(ActiveScene)}>";
             else
               label.text = $"→ will run on this <{state.Context.objectReferenceValue.GetType().Name}>";
             
@@ -216,7 +216,7 @@ namespace Bore
         }
 
         // finally, draw the vanilla event interface:
-        pos.xMin += InspectorDrawers.Indent;
+        pos.xMin += Drawers.Indent;
         pos.yMax  = total.yMax;
 
         label.text = state.EventLabel;

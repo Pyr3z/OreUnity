@@ -24,7 +24,7 @@ namespace Bore
     public float Delay
     {
       get => m_DelaySeconds.AtLeast(0f);
-      set => m_DelaySeconds = value.AtLeast(0f);
+      set => m_DelaySeconds = value;
     }
 
 
