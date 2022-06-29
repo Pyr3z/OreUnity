@@ -19,12 +19,10 @@
 
 #pragma warning disable CS0414
 
-using System.Collections.Generic;
+using System.Diagnostics;
+using System.ComponentModel;
 
 using UnityEngine;
-
-using ConditionalAttribute          = System.Diagnostics.ConditionalAttribute;
-using DebuggerStepThroughAttribute  = System.Diagnostics.DebuggerStepThroughAttribute;
 
 using Debug       = UnityEngine.Debug;
 using UnityAssert = UnityEngine.Assertions.Assert;
@@ -32,7 +30,7 @@ using UnityAssert = UnityEngine.Assertions.Assert;
 
 namespace Bore
 {
-  [DebuggerStepThrough]
+  //[DebuggerStepThrough]
   [DefaultExecutionOrder(-1337)]
   public sealed class Orator : OAssetSingleton<Orator>, IImmortalSingleton
   {
@@ -56,6 +54,8 @@ namespace Bore
 
 
     // compile-time default values:
+
+    private const EditorBrowsableState INSTANCE_BROWSABLE_POLICY = EditorBrowsableState.Never;
 
     private const string    DEFAULT_KONSOLE_PREFIX        = "[Orator] ";
     private const LogOption DEFAULT_LOG_LOGOPT            = LogOption.NoStacktrace;
@@ -83,7 +83,7 @@ namespace Bore
     [SerializeField]
     private bool m_AssertionsRaiseExceptions = DEFAULT_ASSERT_EXCEPTIONS;      // TODO
     [SerializeField]
-    private bool m_ForceAssertionsInRelease  = DEFAULT_ASSERTIONS_IN_RELEASE;  // TODO
+    private bool m_ForceAssertionsInRelease = DEFAULT_ASSERTIONS_IN_RELEASE;  // TODO
 
     [Space]
 
@@ -122,12 +122,15 @@ namespace Bore
 #pragma warning disable IDE1006
     // lowercase function names = convention for instance versions of static methods
 
+
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void reached()
     {
       // TODO improved stacktrace info from PyroDK
       Debug.LogFormat(m_ReachedFormat.LogType, m_ReachedFormat.LogOption, this, "{0}", ReachedMessage);
     }
 
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void reached(Object ctx)
     {
       if (!ctx) ctx = this;
@@ -136,6 +139,7 @@ namespace Bore
       Debug.LogFormat(m_ReachedFormat.LogType, m_ReachedFormat.LogOption, ctx, "{0}", ReachedMessage);
     }
 
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void reached(string msg)
     {
       msg ??= string.Empty;
@@ -144,6 +148,7 @@ namespace Bore
       Debug.LogFormat(m_ReachedFormat.LogType, m_ReachedFormat.LogOption, this, "{0} \"{1}\"", ReachedMessage, msg);
     }
 
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void reached(string msg, Object ctx)
     {
       msg ??= string.Empty;
@@ -154,11 +159,13 @@ namespace Bore
     }
 
 
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void assertFailed()
     {
       Debug.LogFormat(m_AssertionFailedFormat.LogType, m_AssertionFailedFormat.LogOption, this, "{0}", AssertMessage);
     }
 
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void assertFailed(Object ctx)
     {
       if (!ctx) ctx = this;
@@ -166,6 +173,7 @@ namespace Bore
       Debug.LogFormat(m_AssertionFailedFormat.LogType, m_AssertionFailedFormat.LogOption, ctx, "{0}", AssertMessage);
     }
 
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void assertFailed(string msg)
     {
       msg ??= string.Empty;
@@ -173,6 +181,7 @@ namespace Bore
       Debug.LogFormat(m_AssertionFailedFormat.LogType, m_AssertionFailedFormat.LogOption, this, "{0} \"{1}\"", AssertMessage, msg);
     }
 
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void assertFailed(string msg, Object ctx)
     {
       msg ??= string.Empty;
@@ -182,6 +191,7 @@ namespace Bore
     }
 
 
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void log(string msg)
     {
       msg ??= string.Empty;
@@ -189,6 +199,7 @@ namespace Bore
       Debug.LogFormat(LogType.Log, m_LogStackTracePolicy, this, "{0}{1}", m_OratorPrefix, msg);
     }
 
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void log(string msg, Object ctx)
     {
       msg ??= string.Empty;
@@ -198,6 +209,7 @@ namespace Bore
     }
 
 
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void warn(string msg)
     {
       msg ??= string.Empty;
@@ -205,6 +217,7 @@ namespace Bore
       Debug.LogFormat(LogType.Warning, LogOption.None, this, "{0}{1}", m_OratorPrefix, msg);
     }
 
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void warn(string msg, Object ctx)
     {
       msg ??= string.Empty;
@@ -214,6 +227,7 @@ namespace Bore
     }
 
 
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void error(string msg)
     {
       msg ??= string.Empty;
@@ -221,6 +235,7 @@ namespace Bore
       Debug.LogFormat(LogType.Error, LogOption.None, this, "{0}{1}", m_OratorPrefix, msg);
     }
 
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void error(string msg, Object ctx)
     {
       msg ??= string.Empty;

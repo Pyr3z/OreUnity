@@ -176,20 +176,27 @@ namespace Bore
 
           _ = EditorGUI.PropertyField(pos, state.RunInGlobalContext, label);
 
-          if (state.Context != null)
+          // draw context reference (read-only info)
+          pos.x = pos.xMax + STD_LINE_HEIGHT;
+          pos.xMax = total.xMax;
+
+          if (state.RunInGlobalContext.boolValue)
           {
-            pos.x = pos.xMax + STD_LINE_HEIGHT;
-            pos.xMax = total.xMax;
-
-            if (state.RunInGlobalContext.boolValue)
-              label.text = $"→ will run on Runtime <{nameof(ActiveScene)}>";
-            else
-              label.text = $"→ will run on this <{state.Context.objectReferenceValue.GetType().Name}>";
-            
-            EditorGUI.LabelField(pos, label);
-
-            pos.x = header.Rect.x;
+            label.text = $"→ will run on Runtime {Styles.ColorText(nameof(ActiveScene), Styles.Dark.ReferenceTypeName)}";
           }
+          else if (state.Context != null && state.Context.objectReferenceValue)
+          {
+            label.text = $"→ will run on this {Styles.ColorText(state.Context.objectReferenceValue.GetType().Name, Styles.Dark.ReferenceTypeName)}";
+          }
+          else
+          {
+            Orator.Error($"{nameof(EventDrawer)} failed to set a valid context reference when one was expected.", prop.serializedObject.targetObject);
+            label.text = Styles.ColorText("ERR: bad serial context", Styles.Dark.Error);
+          }
+
+          EditorGUI.LabelField(pos, label);
+
+          pos.x = header.Rect.x;
 
           pos.xMax = total.xMax;
           pos.y += pos.height + STD_PAD;
