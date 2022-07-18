@@ -5,7 +5,10 @@
 
 namespace Bore
 {
-
+  /// <summary>
+  /// Marks a Singleton as unkillable, meaning it cannot be destroyed,
+  /// even in the Editor.
+  /// </summary>
   public interface IImmortalSingleton
   {
     // primarily a type tag, a.k.a. policy sugar.

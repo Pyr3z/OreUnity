@@ -80,13 +80,19 @@ namespace Bore
     {
       this.hideFlags = m_AdvancedFlags;
 
+      if (this is IImmortalSingleton)
+      {
+        m_IsReplaceable       = false;
+        m_IsRequiredOnLaunch  = true;
+      }
+
       _ = EditorBridge.TrySetPreloadedAsset(this, m_IsRequiredOnLaunch);
     }
 
 
     protected bool TryInitialize(TSelf self)
     {
-      Orator.Assert.IsTrue(this == self, "Proper usage: this.TryInitialize(this)", this);
+      Orator.Assert.True(this == self, "Proper usage: this.TryInitialize(this)", this);
 
       if (s_Current)
       {

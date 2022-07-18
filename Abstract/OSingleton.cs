@@ -21,6 +21,7 @@ namespace Bore
   /// <typeparam name="TSelf">
   ///   Successor should pass its own type (CRTP).
   /// </typeparam>
+  [DisallowMultipleComponent]
   public abstract class OSingleton<TSelf> : OComponent
     where TSelf : OSingleton<TSelf>
   {
@@ -41,9 +42,6 @@ namespace Bore
     }
 
 
-    public bool IsInitialized => m_IsInitialized;
-
-
 
   [Header("Scene Singleton")]
 
@@ -53,14 +51,11 @@ namespace Bore
     [SerializeField]
     protected bool m_IsReplaceable      = false;
 
-    //[SerializeField]
-    //protected bool m_NullOnDisable      = true;
-
     [SerializeField]
     protected bool m_DontDestroyOnLoad  = false;
 
     [SerializeField]
-    protected DelayedEvent m_OnFirstInitialized = new DelayedEvent();
+    protected DelayedEvent m_OnFirstInitialized = DelayedEvent.WithApproximateFrameDelay(1);
 
 
     [System.NonSerialized]
@@ -70,18 +65,15 @@ namespace Bore
     [System.Diagnostics.Conditional("DEBUG")]
     public void ValidateInitialization() // good to call as a listener to "On First Initialized"
     {
-      Orator.Assert.IsTrue(s_Current == this,  this);
-      Orator.Assert.IsTrue(m_IsInitialized,    this);
-      Orator.Assert.IsTrue(isActiveAndEnabled, this);
-
-      Orator.Log($"\"{name}\" initialized.", this);
+      Orator.Assert.AllTrue(this, s_Current == this, m_IsInitialized, isActiveAndEnabled);
+      Orator.Log($"VALIDATED: Initialization", this);
     }
 
 
     protected virtual void OnEnable()
     {
       bool ok = TryInitialize((TSelf)this);
-      Orator.Assert.IsTrue(ok, this);
+      Orator.Assert.True(ok, this);
 
       // TODO re-enable this logic once logging & SceneAware are reimplemented
 
@@ -120,7 +112,7 @@ namespace Bore
 
     protected bool TryInitialize(TSelf self)
     {
-      if (Orator.Assert.Fails(this == self, $"Proper usage: {nameof(TryInitialize)}(this)", self))
+      if (Orator.Assert.Fails(this == self, $"Proper usage: {nameof(TryInitialize)}(this)", ctx: self))
       {
         return false;
       }

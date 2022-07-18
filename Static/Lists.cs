@@ -24,7 +24,7 @@ namespace Bore
     }
 
 
-    public static T PopFront<T>(this IList<T> list) // V BAD
+    public static T PopFront<T>(this IList<T> list) // DEF_UNITY_ASSERTIONS BAD
     {
       T result = list[0];
       list.RemoveAt(0);
