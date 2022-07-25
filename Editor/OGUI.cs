@@ -1,4 +1,4 @@
-﻿/** @file       Editor/Drawers.cs
+﻿/** @file       Editor/OGUI.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-20
 **/
@@ -12,7 +12,7 @@ using UnityEditor;
 namespace Bore
 {
 
-  public static class Drawers
+  public static class OGUI
   {
 
     public static float Indent          => EditorGUI.indentLevel * STD_INDENT;
@@ -20,9 +20,8 @@ namespace Bore
     // TODO this is defunct in reorderable lists!
     public static float LabelStartX     => STD_INDENT_0 + EditorGUI.indentLevel * STD_INDENT;
     public static float LabelEndX       => FieldStartX - STD_PAD;
-    public static float LabelWidth      => EditorGUIUtility.labelWidth;
-    public static float LabelWidthRaw   => s_LabelWidthStack.Front(fallback: EditorGUIUtility.labelWidth);
-    public static float LabelWidthHalf  => LabelWidth * 0.45f;
+    public static float LabelWidthRaw   => LabelWidth.Stack.Front(fallback: EditorGUIUtility.labelWidth);
+    public static float LabelWidthHalf  => EditorGUIUtility.labelWidth * 0.45f;
 
     public static float FieldStartX     => FieldStartXRaw;
     public static float FieldStartXRaw  => FieldEndX * 0.45f - STD_INDENT_0;
@@ -57,9 +56,14 @@ namespace Bore
 
 
 
-    public static class LabelWidthStack
+    public static class LabelWidth
     {
       internal static List<float> Stack = new List<float>(4);
+
+      public static float Peek()
+      {
+        return Stack.Back(fallback: EditorGUIUtility.labelWidth);
+      }
 
       public static void Push(float width)
       {
@@ -69,63 +73,112 @@ namespace Bore
 
       public static void Pop()
       {
-        if (Stack.Count > 0)
-        {
+        if (Stack.IsEmpty())
+          EditorGUIUtility.labelWidth = -1f; // makes it use the default (150f)
+        else
           EditorGUIUtility.labelWidth = Stack.PopBack();
-        }
       }
 
       public static void Reset()
       {
-        if (Stack.Count > 0)
+        if (Stack.IsEmpty())
+        {
+          EditorGUIUtility.labelWidth = -1f; // makes it use the default (150f)
+        }
+        else
         {
           EditorGUIUtility.labelWidth = Stack[0];
           Stack.Clear();
         }
       }
-    }
-
-    private static List<float> s_LabelWidthStack = new List<float>();
-    public static void PushLabelWidth(float width)
-    {
-      s_LabelWidthStack.PushBack(EditorGUIUtility.labelWidth);
-      EditorGUIUtility.labelWidth = width;
-    }
-    public static void PopLabelWidth()
-    {
-      if (s_LabelWidthStack.Count > 0)
-      {
-        EditorGUIUtility.labelWidth = s_LabelWidthStack.PopBack();
-      }
-    }
-    public static void ResetLabelWidth()
-    {
-      if (s_LabelWidthStack.Count > 0)
-      {
-        EditorGUIUtility.labelWidth = s_LabelWidthStack[0];
-        s_LabelWidthStack.Clear();
-      }
-    }
+    } // end static class LabelWidth
 
 
-    private static List<TextAnchor> s_LabelAlignmentStack = new List<TextAnchor>();
-    public static void PushLabelAlign(TextAnchor align)
+    public static class LabelAlign
     {
-      s_LabelAlignmentStack.PushBack(EditorStyles.label.alignment);
-      EditorStyles.label.alignment = /* Styles.Label.alignment = */ align;
-    }
-    public static void PopLabelAlign()
-    {
-      if (s_LabelAlignmentStack.Count > 0)
-      {
-        EditorStyles.label.alignment = /* Styles.Label.alignment = */ s_LabelAlignmentStack.PopBack();
-      }
-      else
-      {
-        EditorStyles.label.alignment = /* Styles.Label.alignment = */ TextAnchor.MiddleLeft;
-      }
-    }
+      public static TextAnchor DEFAULT => Styles.Defaults.Label.alignment;
 
+      internal static List<TextAnchor> Stack = new List<TextAnchor>(4);
+
+      public static TextAnchor Peek()
+      {
+        return Stack.Back(fallback: DEFAULT);
+      }
+
+      public static void Push(TextAnchor align)
+      {
+        Stack.PushBack(EditorStyles.label.alignment);
+        EditorStyles.label.alignment = align;
+      }
+
+      public static void Pop()
+      {
+        if (Stack.IsEmpty())
+          EditorStyles.label.alignment = Stack.PopBack();
+        else
+          EditorStyles.label.alignment = DEFAULT;
+      }
+
+      public static void Reset()
+      {
+        if (Stack.IsEmpty())
+        {
+          EditorStyles.label.alignment = DEFAULT;
+        }
+        else
+        {
+          EditorStyles.label.alignment = Stack[0];
+          Stack.Clear();
+        }
+      }
+
+    } // end static class LabelAlign
+
+
+    public static class IndentLevel
+    {
+      internal static List<int> Stack = new List<int>(4);
+
+      public static void Push(int lvl, bool fix_label_width = true)
+      {
+        if (lvl < 0)
+          lvl = 0;
+
+        Stack.PushBack(EditorGUI.indentLevel);
+
+        EditorGUI.indentLevel = lvl;
+
+        if (fix_label_width)
+          LabelWidth.Push(LabelWidthRaw - STD_INDENT * lvl);
+      }
+
+      public static void Pop(bool fix_label_width = true)
+      {
+        if (Stack.IsEmpty())
+        {
+          EditorGUI.indentLevel = Stack.PopBack();
+        }
+        else
+        {
+          EditorGUI.indentLevel = 0;
+        }
+
+        if (fix_label_width)
+          LabelWidth.Pop();
+      }
+
+      public static void Reset()
+      {
+        Stack.Clear();
+        EditorGUI.indentLevel = 0;
+      }
+
+      public static void Increase(bool fix_label_width = true, int delta = 1)
+      {
+        Push(EditorGUI.indentLevel + delta, fix_label_width);
+      }
+
+    } // end static class IndentLevel
 
     private static List<int> s_IndentLvlStack = new List<int>();
     public static void PushIndentLevel(int lvl, bool fix_label_width = true)
@@ -138,7 +191,7 @@ namespace Bore
       EditorGUI.indentLevel = lvl;
 
       if (fix_label_width)
-        LabelWidthStack.Push(LabelWidthRaw - STD_INDENT * lvl);
+        LabelWidth.Push(LabelWidthRaw - STD_INDENT * lvl);
     }
     public static void PopIndentLevel(bool fix_label_width = true)
     {
@@ -147,7 +200,7 @@ namespace Bore
         EditorGUI.indentLevel = s_IndentLvlStack.PopBack();
 
         if (fix_label_width)
-          LabelWidthStack.Pop();
+          LabelWidth.Pop();
       }
     }
     public static void ResetIndentLevel()
@@ -160,6 +213,6 @@ namespace Bore
       PushIndentLevel(EditorGUI.indentLevel + delta, fix_label_width);
     }
 
-  } // end static class Drawers
+  } // end static class OGUI
 
 }

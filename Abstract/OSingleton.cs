@@ -65,7 +65,7 @@ namespace Bore
     [System.Diagnostics.Conditional("DEBUG")]
     public void ValidateInitialization() // good to call as a listener to "On First Initialized"
     {
-      Orator.Assert.AllTrue(this, s_Current == this, m_IsInitialized, isActiveAndEnabled);
+      OAssert.AllTrue(this, s_Current == this, m_IsInitialized, isActiveAndEnabled);
       Orator.Log($"VALIDATED: Initialization", this);
     }
 
@@ -73,7 +73,7 @@ namespace Bore
     protected virtual void OnEnable()
     {
       bool ok = TryInitialize((TSelf)this);
-      Orator.Assert.True(ok, this);
+      OAssert.True(ok, this);
 
       // TODO re-enable this logic once logging & SceneAware are reimplemented
 
@@ -112,7 +112,7 @@ namespace Bore
 
     protected bool TryInitialize(TSelf self)
     {
-      if (Orator.Assert.Fails(this == self, $"Proper usage: {nameof(TryInitialize)}(this)", ctx: self))
+      if (OAssert.Fails(this == self, $"Proper usage: {nameof(TryInitialize)}(this)", ctx: self))
       {
         return false;
       }

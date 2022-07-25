@@ -92,7 +92,7 @@ namespace Bore
 
     protected bool TryInitialize(TSelf self)
     {
-      Orator.Assert.True(this == self, "Proper usage: this.TryInitialize(this)", this);
+      OAssert.True(this == self, "Proper usage: this.TryInitialize(this)", this);
 
       if (s_Current)
       {

@@ -73,7 +73,7 @@ namespace Bore
 
     public IEnumerator<T> GetEnumerator()
     {
-      if (Orator.Assert.FailsNullChecks(m_Items, m_Validator))
+      if (OAssert.FailsNullChecks(m_Items, m_Validator))
         yield break;
 
       foreach (var item in m_Items)

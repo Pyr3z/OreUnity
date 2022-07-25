@@ -17,8 +17,8 @@ namespace Bore
     private const string UNITYEVENT_LAST_PROPERTY = "m_PersistentCalls";
     private const string LABEL_SUFFIX_DISABLED = " (event disabled)";
     
-    private const float STD_PAD           = Drawers.STD_PAD;
-    private const float STD_LINE_HEIGHT   = Drawers.STD_LINE_HEIGHT;
+    private const float STD_PAD           = OGUI.STD_PAD;
+    private const float STD_LINE_HEIGHT   = OGUI.STD_LINE_HEIGHT;
     private const float STD_PAD_HALF      = STD_PAD / 2f;
     private const float UNEXPANDED_HEIGHT = STD_LINE_HEIGHT + STD_PAD;
 
@@ -95,7 +95,7 @@ namespace Bore
       {
         // MonoBehaviour m_Context
         Context = root.FindPropertyRelative("m_Context");
-        if (Orator.Assert.Fails(Context != null && Context.propertyType == SerializedPropertyType.ObjectReference))
+        if (OAssert.Fails(Context != null && Context.propertyType == SerializedPropertyType.ObjectReference))
         {
           Context = null;
         }
@@ -109,7 +109,7 @@ namespace Bore
 
         // bool m_RunInGlobalContext
         RunInGlobalContext = root.FindPropertyRelative("m_RunInGlobalContext");
-        if (Orator.Assert.Fails(RunInGlobalContext != null && RunInGlobalContext.propertyType == SerializedPropertyType.Boolean))
+        if (OAssert.Fails(RunInGlobalContext != null && RunInGlobalContext.propertyType == SerializedPropertyType.Boolean))
         {
           RunInGlobalContext = null;
         }
@@ -130,7 +130,7 @@ namespace Bore
       PropertyDrawerState.Restore(prop, out DrawerState state);
 
       // enable/disable button
-      float btn_begin = Drawers.FieldStartX + Drawers.FieldWidth * 0.45f;
+      float btn_begin = OGUI.FieldStartX + OGUI.FieldWidth * 0.45f;
       var pos = new Rect(btn_begin, total.y + STD_PAD_HALF, total.xMax - btn_begin, STD_LINE_HEIGHT);
 
       string btn_label;
@@ -172,7 +172,7 @@ namespace Bore
           label.text = state.RunInGlobalContext.displayName;
           pos.height = STD_LINE_HEIGHT;
 
-          pos.xMax = Drawers.LabelEndX;
+          pos.xMax = OGUI.LabelEndX;
 
           _ = EditorGUI.PropertyField(pos, state.RunInGlobalContext, label);
 
@@ -223,7 +223,7 @@ namespace Bore
         }
 
         // finally, draw the vanilla event interface:
-        pos.xMin += Drawers.Indent;
+        pos.xMin += OGUI.Indent;
         pos.yMax  = total.yMax;
 
         label.text = state.EventLabel;

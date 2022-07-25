@@ -56,27 +56,31 @@ namespace Bore
 
     // compile-time default values:
 
-    private const EditorBrowsableState INSTANCE_BROWSABLE_POLICY = EditorBrowsableState.Never;
+    internal const EditorBrowsableState INSTANCE_BROWSABLE_POLICY = EditorBrowsableState.Never;
 
-    private const string    DEFAULT_KONSOLE_PREFIX        = "[Orator] ";
-    private const LogOption DEFAULT_LOG_LOGOPT            = LogOption.NoStacktrace;
+    internal const string    DEFAULT_KONSOLE_PREFIX        = "[" + nameof(Orator) + "]";
+    internal const LogOption DEFAULT_LOG_LOGOPT            = LogOption.NoStacktrace;
+    internal const bool      DEFAULT_INCLUDE_CONTEXT       = true;
 
-    private const string    DEFAULT_REACHED_MSG           = "Reached!";
-    private const LogType   DEFAULT_REACHED_LOGTYPE       = LogType.Warning;
-    private const LogOption DEFAULT_REACHED_LOGOPT        = LogOption.None;
+    internal const string    DEFAULT_REACHED_MSG           = "<b>Reached!</b>";
+    internal const LogType   DEFAULT_REACHED_LOGTYPE       = LogType.Warning;
+    internal const LogOption DEFAULT_REACHED_LOGOPT        = LogOption.None;
 
-    private const LogType   DEFAULT_ASSERT_LOGTYPE        = LogType.Assert;
-    private const string    DEFAULT_ASSERT_MSG            = "Assertion failed!";
-    private const LogOption DEFAULT_ASSERT_LOGOPT         = LogOption.None;
+    internal const LogType   DEFAULT_ASSERT_LOGTYPE        = LogType.Assert;
+    internal const string    DEFAULT_ASSERT_MSG            = "<b>Assertion failed!</b>";
+    internal const LogOption DEFAULT_ASSERT_LOGOPT         = LogOption.None;
 
-    private const bool      DEFAULT_ASSERT_EXCEPTIONS     = false;
-    private const bool      DEFAULT_ASSERTIONS_IN_RELEASE = false;
+    internal const bool      DEFAULT_ASSERT_EXCEPTIONS     = false;
+    internal const bool      DEFAULT_ASSERTIONS_IN_RELEASE = false;
 
 
   [Header("Orator Properties")]
 
     [SerializeField]
     private string m_OratorPrefix = DEFAULT_KONSOLE_PREFIX;
+
+    [SerializeField]
+    private bool m_IncludeContextInMessages = DEFAULT_INCLUDE_CONTEXT;
 
     [SerializeField]
     private LogOption m_LogStackTracePolicy = DEFAULT_LOG_LOGOPT;
@@ -127,7 +131,7 @@ namespace Bore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void reached()
     {
-      reached("", this);
+      reached(string.Empty, null);
     }
 
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
@@ -139,17 +143,10 @@ namespace Bore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void reached(string msg, Object ctx = null)
     {
-      if (!ctx)
-      {
-        ctx   = this;
-        msg ??= string.Empty;
-      }
-      else
-      {
-        msg = $"{msg} ({ctx})";
-      }
+      FixupMessageContext(ref msg, ref ctx);
 
       // TODO improved stacktrace info from PyroDK
+
       Debug.LogFormat(m_ReachedFormat.LogType, m_ReachedFormat.LogOption, ctx, "{0} {1}", ReachedMessage, msg);
     }
 
@@ -157,7 +154,7 @@ namespace Bore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void assertionFailed()
     {
-      assertionFailed("", this);
+      assertionFailed(string.Empty, null);
     }
 
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
@@ -169,24 +166,36 @@ namespace Bore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void assertionFailed(string msg, Object ctx = null)
     {
-      if (!ctx)
-      {
-        ctx   = this;
-        msg ??= string.Empty;
-      }
-      else
-      {
-        msg = $"{msg} ({ctx})";
-      }
+      FixupMessageContext(ref msg, ref ctx);
+
+      // TODO improved stacktrace info from PyroDK
 
       if (m_AssertionsRaiseExceptions)
-      {
         throw new AssException(AssertMessage, msg);
-      }
       else
-      {
         Debug.LogFormat(m_AssertionFailedFormat.LogType, m_AssertionFailedFormat.LogOption, ctx, "{0} {1}", AssertMessage, msg);
-      }
+    }
+
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
+    public void assertionFailedNoThrow()
+    {
+      assertionFailedNoThrow(string.Empty, null);
+    }
+
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
+    public void assertionFailedNoThrow(Object ctx, string msg = null)
+    {
+      assertionFailedNoThrow(msg, ctx);
+    }
+
+    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
+    public void assertionFailedNoThrow(string msg, Object ctx = null)
+    {
+      FixupMessageContext(ref msg, ref ctx);
+
+      // TODO improved stacktrace info from PyroDK
+
+      Debug.LogFormat(m_AssertionFailedFormat.LogType, m_AssertionFailedFormat.LogOption, ctx, "{0} {1}", AssertMessage, msg);
     }
 
 
@@ -199,17 +208,9 @@ namespace Bore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void log(string msg, Object ctx = null)
     {
-      if (!ctx)
-      {
-        ctx   = this;
-        msg ??= string.Empty;
-      }
-      else
-      {
-        msg = $"{msg} ({ctx})";
-      }
+      FixupMessageContext(ref msg, ref ctx);
 
-      Debug.LogFormat(LogType.Log, m_LogStackTracePolicy, ctx, "{0}{1}", m_OratorPrefix, msg);
+      Debug.LogFormat(LogType.Log, m_LogStackTracePolicy, ctx, "{0} {1}", m_OratorPrefix, msg);
     }
 
 
@@ -222,17 +223,9 @@ namespace Bore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void warn(string msg, Object ctx = null)
     {
-      if (!ctx)
-      {
-        ctx   = this;
-        msg ??= string.Empty;
-      }
-      else
-      {
-        msg = $"{msg} ({ctx})";
-      }
+      FixupMessageContext(ref msg, ref ctx);
 
-      Debug.LogFormat(LogType.Warning, LogOption.None, ctx, "{0}{1}", m_OratorPrefix, msg);
+      Debug.LogFormat(LogType.Warning, LogOption.None, ctx, "{0} {1}", m_OratorPrefix, msg);
     }
 
 
@@ -245,17 +238,9 @@ namespace Bore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void error(string msg, Object ctx = null)
     {
-      if (!ctx)
-      {
-        ctx   = this;
-        msg ??= string.Empty;
-      }
-      else
-      {
-        msg = $"{msg} ({ctx})";
-      }
+      FixupMessageContext(ref msg, ref ctx);
 
-      Debug.LogFormat(LogType.Error, LogOption.None, ctx, "{0}{1}", m_OratorPrefix, msg);
+      Debug.LogFormat(LogType.Error, LogOption.None, ctx, "{0} {1}", m_OratorPrefix, msg);
     }
 
 #pragma warning restore IDE1006
@@ -300,7 +285,7 @@ namespace Bore
       if (Instance)
         Instance.reached();
       else
-        Debug.Log($"{DEFAULT_KONSOLE_PREFIX}{DEFAULT_REACHED_MSG}");
+        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {DEFAULT_REACHED_MSG}");
     }
 
     public static void Reached(Object ctx)
@@ -308,7 +293,7 @@ namespace Bore
       if (Instance)
         Instance.reached(ctx);
       else
-        Debug.Log($"{DEFAULT_KONSOLE_PREFIX}{DEFAULT_REACHED_MSG} (name=\"{ctx}\")", ctx);
+        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {DEFAULT_REACHED_MSG} (name=\"{ctx}\")", ctx);
     }
 
     public static void Reached(string msg)
@@ -316,7 +301,7 @@ namespace Bore
       if (Instance)
         Instance.reached(msg);
       else
-        Debug.Log($"{DEFAULT_KONSOLE_PREFIX}{DEFAULT_REACHED_MSG} \"{msg}\"");
+        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {DEFAULT_REACHED_MSG} \"{msg}\"");
     }
 
 
@@ -325,7 +310,7 @@ namespace Bore
       if (Instance)
         Instance.log(msg);
       else
-        Debug.Log($"{DEFAULT_KONSOLE_PREFIX}{msg}");
+        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {msg}");
     }
 
     public static void Log(string msg, Object ctx)
@@ -333,7 +318,7 @@ namespace Bore
       if (Instance)
         Instance.log(msg, ctx);
       else
-        Debug.Log($"{DEFAULT_KONSOLE_PREFIX}{msg} (name=\"{ctx}\")", ctx);
+        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
     }
 
 
@@ -342,7 +327,7 @@ namespace Bore
       if (Instance)
         Instance.warn(msg);
       else
-        Debug.LogWarning($"{DEFAULT_KONSOLE_PREFIX}{msg}");
+        Debug.LogWarning($"{DEFAULT_KONSOLE_PREFIX} {msg}");
     }
 
     public static void Warn(string msg, Object ctx)
@@ -350,7 +335,7 @@ namespace Bore
       if (Instance)
         Instance.warn(msg, ctx);
       else
-        Debug.LogWarning($"{DEFAULT_KONSOLE_PREFIX}{msg} (name=\"{ctx}\")", ctx);
+        Debug.LogWarning($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
     }
 
 
@@ -359,7 +344,7 @@ namespace Bore
       if (Instance)
         Instance.error(msg);
       else
-        Debug.LogError($"{DEFAULT_KONSOLE_PREFIX}{msg}");
+        Debug.LogError($"{DEFAULT_KONSOLE_PREFIX} {msg}");
     }
 
     public static void Error(string msg, Object ctx)
@@ -367,7 +352,7 @@ namespace Bore
       if (Instance)
         Instance.error(msg, ctx);
       else
-        Debug.LogError($"{DEFAULT_KONSOLE_PREFIX}{msg} (name=\"{ctx}\")", ctx);
+        Debug.LogError($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
     }
 
 #endregion
@@ -375,153 +360,11 @@ namespace Bore
 
 #region STATIC ASSERTION API
 
-    public /* static */ class Assert
+    public /* static */ sealed class Assert : OAssert
     {
-      protected const string DEF_UNITY_ASSERTIONS = "UNITY_ASSERTIONS";
 
-
-      [Conditional(DEF_UNITY_ASSERTIONS)]
-      public static void True(bool assertion, Object ctx = null)
-      {
-        if (!assertion)
-        {
-          if (Instance)
-            Instance.assertionFailed(ctx);
-          else
-            Debug.LogAssertion(ctx);
-        }
-      }
-
-      [Conditional(DEF_UNITY_ASSERTIONS)]
-      public static void True(bool assertion, string msg, Object ctx = null)
-      {
-        if (!assertion)
-        {
-          if (Instance)
-            Instance.assertionFailed(msg, ctx);
-          else
-            Debug.LogAssertion(msg, ctx);
-        }
-      }
-
-
-      [Conditional(DEF_UNITY_ASSERTIONS)]
-      public static void AllTrue(params bool[] assertions)
-      {
-        for (int i = 0, ilen = assertions?.Length ?? 0; i < ilen; ++i)
-        {
-          if (!assertions[i])
-          {
-            if (Instance)
-              Instance.assertionFailed(msg: $"condition ({i+1}/{ilen})");
-            else
-              Debug.LogAssertion($"{DEFAULT_ASSERT_MSG} condition ({i+1}/{ilen})");
-            return;
-          }
-        }
-      }
-
-      [Conditional(DEF_UNITY_ASSERTIONS)]
-      public static void AllTrue(Object ctx, params bool[] assertions)
-      {
-        for (int i = 0, ilen = assertions?.Length ?? 0; i < ilen; ++i)
-        {
-          if (!assertions[i])
-          {
-            if (Instance)
-              Instance.assertionFailed(msg: $"condition ({i+1}/{ilen})", ctx);
-            else
-              Debug.LogAssertion($"{DEFAULT_ASSERT_MSG} condition ({i+1}/{ilen})", ctx);
-            return;
-          }
-        }
-      }
-
-
-    #if UNITY_ASSERTIONS
-      // these shouldn't be compiled out, because their bool return values have logical meaning
-
-      public static bool Fails(bool assertion, Object ctx = null)
-      {
-        if (assertion)
-          return false;
-      
-        if (Instance)
-          Instance.assertionFailed(ctx);
-        else
-          Debug.LogAssertion(string.Empty, ctx);
-
-        return true;
-      }
-
-      public static bool Fails(bool assertion, string msg, Object ctx = null)
-      {
-        if (assertion)
-          return false;
-
-        if (Instance)
-          Instance.assertionFailed(msg, ctx);
-        else
-          Debug.LogAssertion(msg, ctx);
-
-        return true;
-      }
-
-      
-      public static bool FailsNullCheck(object obj, Object ctx = null)
-      {
-        if (!(obj is null))
-          return false;
-
-        if (Instance)
-          Instance.assertionFailed(ctx);
-        else
-          Debug.LogAssertion(string.Empty, ctx);
-
-        return true;
-      }
-
-      public static bool FailsNullCheck(object obj, string msg, Object ctx = null)
-      {
-        if (!(obj is null))
-          return false;
-
-        if (Instance)
-          Instance.assertionFailed(msg, ctx);
-        else
-          Debug.LogAssertion(msg, ctx);
-
-        return true;
-      }
-
-      public static bool FailsNullChecks(params object[] objs)
-      {
-        for (int i = 0, ilen = objs?.Length ?? 0; i < ilen; ++i)
-        {
-          if (objs[i] is null)
-          {
-            if (Instance)
-              Instance.assertionFailed(msg: $"null check ({i+1}/{ilen})");
-            else
-              Debug.LogAssertion($"{DEFAULT_ASSERT_MSG} null check ({i + 1}/{ilen})");
-            return true;
-          }
-        }
-
-        return false;
-      }
-
-    #else // !UNITY_ASSERTIONS
-      
-      #pragma warning disable IDE0060
-      public static bool Fails(bool assertion) => false;
-      public static bool Fails(bool assertion, object msg) => false;
-      public static bool FailsNullCheck(object obj, Object ctx = null)
-      public static bool FailsNullCheck(object obj, string msg, Object ctx = null) => false;
-      public static bool FailsNullChecks(params object[] objs) => false;
-      #pragma warning restore IDE0060
-
-    #endif // UNITY_ASSERTIONS
+      // implementation now in `Static/OAssert.cs`.
+      // You can still use this interface via `Orator.Assert.X()`, but `OAssert.X()` is shorter.
 
     } // end static class Assert
 
@@ -539,7 +382,7 @@ namespace Bore
       {
         if (m_FormattedReachedMessage == null)
         {
-          m_FormattedReachedMessage = $"{m_OratorPrefix}{m_ReachedFormat.BaseMessage}";
+          m_FormattedReachedMessage = $"{m_OratorPrefix} {m_ReachedFormat.BaseMessage}";
           // TODO rich text
         }
 
@@ -554,13 +397,41 @@ namespace Bore
       {
         if (m_FormattedAssertMessage == null)
         {
-          m_FormattedAssertMessage = $"{m_OratorPrefix}{m_AssertionFailedFormat.BaseMessage}";
+          m_FormattedAssertMessage = $"{m_OratorPrefix} {m_AssertionFailedFormat.BaseMessage}";
           // TODO rich text
         }
 
         return m_FormattedAssertMessage;
       }
     }
+
+    private void FixupMessageContext(ref string msg, ref Object ctx)
+    {
+      if (!ctx)
+      {
+        ctx   = this;
+        msg ??= string.Empty;
+      }
+      else if (m_IncludeContextInMessages)
+      {
+        msg = $"[{ctx.GetType().Name}] {msg}\n(name: \"{ctx.name}\")";
+      }
+      else if (msg == null)
+      {
+        msg = string.Empty;
+      }
+    }
+
+#if UNITY_EDITOR
+    [UnityEditor.MenuItem("Ore/Tests/Orator Logs")]
+    private static void Menu_TestLogs()
+    {
+      Reached();
+      Log("message");
+      Warn("warning");
+      Error("error");
+    }
+#endif // UNITY_EDITOR
 
 #endregion
 

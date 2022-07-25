@@ -35,13 +35,13 @@ namespace Bore
       if (is_list_el)
       {
         pos.xMin += 5f;
-        Drawers.PushLabelWidth(EditorGUIUtility.labelWidth - 8f);
+        OGUI.LabelWidth.Push(EditorGUIUtility.labelWidth - 8f);
         indent -= 2;
       }
 
       if (indent > 0)
       {
-        Drawers.PushIndentLevel(indent, FIX_LABEL_WIDTH);
+        OGUI.PushIndentLevel(indent, FIX_LABEL_WIDTH);
       }
 
       Indent        = indent;
@@ -60,10 +60,10 @@ namespace Bore
         GUILayout.EndVertical();
 
       if (Indent > 0)
-        Drawers.PopIndentLevel(FIX_LABEL_WIDTH);
+        OGUI.PopIndentLevel(FIX_LABEL_WIDTH);
 
       if (IsListElement)
-        Drawers.PopLabelWidth();
+        OGUI.LabelWidth.Pop();
     }
 
   } // end class FoldoutHeader

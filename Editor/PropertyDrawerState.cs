@@ -40,7 +40,7 @@ namespace Bore
 
     protected bool CheckFails(out SerializedProperty root_property)
     {
-      if (Orator.Assert.Fails(!m_RootProp.IsDisposed()))
+      if (OAssert.Fails(!m_RootProp.IsDisposed()))
       {
         root_property = null; // output null = extra safety measure
         return true;          // failed

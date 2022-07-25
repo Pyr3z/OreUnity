@@ -27,7 +27,22 @@ namespace Bore
     {
       try
       {
+        OAssert.NotNull(EditorStyles.label);
+
+        Defaults.Label = new GUIStyle(EditorStyles.label);
+
         EditorStyles.label.richText = true;
+
+        // get compiled default label width
+        float restore_lw = EditorGUIUtility.labelWidth;
+        bool  restore_hm = EditorGUIUtility.hierarchyMode;
+        EditorGUIUtility.labelWidth     = -1f;
+        EditorGUIUtility.hierarchyMode  = false;
+
+        Defaults.LabelWidth = EditorGUIUtility.labelWidth;
+
+        EditorGUIUtility.labelWidth     = restore_lw;
+        EditorGUIUtility.hierarchyMode  = restore_hm;
 
         if (s_DelayDelayTried)
         {
@@ -55,6 +70,13 @@ namespace Bore
       return $"<color=#{color.ToHex()}>{text}</color>";
     }
 
+
+    public static class Defaults
+    {
+      public static GUIStyle Label = null;
+
+      public static float LabelWidth = 150f;
+    }
 
     public static class Dark
     {

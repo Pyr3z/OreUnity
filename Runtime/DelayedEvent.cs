@@ -81,7 +81,7 @@ namespace Bore
     new public void Invoke()
     {
       bool ok = TryInvoke();
-      Orator.Assert.True(ok, nameof(TryInvoke), m_Context);
+      OAssert.True(ok, nameof(TryInvoke), m_Context);
     }
 
     public bool TryInvoke()

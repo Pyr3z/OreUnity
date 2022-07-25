@@ -13,6 +13,12 @@ namespace Bore
   public static class Lists
   {
 
+    public static bool IsEmpty<T>(this IList<T> list)
+    {
+      return list == null || list.Count == 0;
+    }
+
+
     public static void PushFront<T>(this IList<T> list, T item)
     {
       list.Insert(0, item);
