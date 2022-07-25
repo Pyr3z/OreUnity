@@ -55,7 +55,7 @@ namespace Bore
     protected bool m_DontDestroyOnLoad  = false;
 
     [SerializeField]
-    protected DelayedEvent m_OnFirstInitialized = DelayedEvent.WithApproximateFrameDelay(1);
+    protected DelayedEvent m_OnFirstInitialized = DelayedEvent.WithApproximateFrameDelay(1, 60f);
 
 
     [System.NonSerialized]

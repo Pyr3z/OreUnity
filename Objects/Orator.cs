@@ -375,9 +375,9 @@ namespace Bore
 
 #region STATIC ASSERTION API
 
-    public static class Assert
+    public /* static */ class Assert
     {
-      private const string DEF_UNITY_ASSERTIONS = "UNITY_ASSERTIONS";
+      protected const string DEF_UNITY_ASSERTIONS = "UNITY_ASSERTIONS";
 
 
       [Conditional(DEF_UNITY_ASSERTIONS)]

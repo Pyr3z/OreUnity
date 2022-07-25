@@ -57,6 +57,34 @@ namespace Bore
 
 
 
+    public static class LabelWidthStack
+    {
+      internal static List<float> Stack = new List<float>(4);
+
+      public static void Push(float width)
+      {
+        Stack.PushBack(EditorGUIUtility.labelWidth);
+        EditorGUIUtility.labelWidth = width;
+      }
+
+      public static void Pop()
+      {
+        if (Stack.Count > 0)
+        {
+          EditorGUIUtility.labelWidth = Stack.PopBack();
+        }
+      }
+
+      public static void Reset()
+      {
+        if (Stack.Count > 0)
+        {
+          EditorGUIUtility.labelWidth = Stack[0];
+          Stack.Clear();
+        }
+      }
+    }
+
     private static List<float> s_LabelWidthStack = new List<float>();
     public static void PushLabelWidth(float width)
     {
@@ -110,7 +138,7 @@ namespace Bore
       EditorGUI.indentLevel = lvl;
 
       if (fix_label_width)
-        PushLabelWidth(LabelWidthRaw - STD_INDENT * lvl);
+        LabelWidthStack.Push(LabelWidthRaw - STD_INDENT * lvl);
     }
     public static void PopIndentLevel(bool fix_label_width = true)
     {
@@ -119,7 +147,7 @@ namespace Bore
         EditorGUI.indentLevel = s_IndentLvlStack.PopBack();
 
         if (fix_label_width)
-          PopLabelWidth();
+          LabelWidthStack.Pop();
       }
     }
     public static void ResetIndentLevel()

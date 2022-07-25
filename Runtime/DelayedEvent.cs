@@ -71,9 +71,9 @@ namespace Bore
       m_ScaledTime    = is_scaled;
     }
 
-    public static DelayedEvent WithApproximateFrameDelay(int frames)
+    public static DelayedEvent WithApproximateFrameDelay(int frames, float target_fps)
     {
-      return new DelayedEvent(seconds:    (float)frames / Application.targetFrameRate,
+      return new DelayedEvent(seconds:    frames / target_fps,
                               is_scaled:  false);
     }
 
