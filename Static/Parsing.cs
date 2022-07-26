@@ -1,20 +1,56 @@
 ﻿/** @file   Static/Parsing.cs
-    @author levianperez\@gmail.com
-    @author levi\@leviperez.dev
-    @date   2022-06-01
+ *  @author levianperez\@gmail.com
+ *  @author levi\@leviperez.dev
+ *  @date   2022-06-01
 **/
 
 using UnityEngine;
 
-using TimeSpan  = System.TimeSpan;
+using TimeSpan = System.TimeSpan;
+using Predicate = System.Func<string, bool>;
 
 
-namespace Bore
+namespace Ore
 {
-
+  /// <summary>
+  /// Utilities for parsing strings into other data types.
+  /// </summary>
   public static class Parsing
   {
     public static readonly Color32 DefaultColor32 = Color.magenta;
+
+
+    public static bool FindLine(string rawtext, Predicate where, out string line)
+    {
+      line = null;
+
+      if (where != null)
+      {
+        foreach (var l in rawtext.Split(new char[] { '\n' }, System.StringSplitOptions.None))
+        {
+          if (where(l))
+          {
+            line = l;
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+
+
+    public static bool TryParseNextIndex(string str, out int idx)
+    {
+      idx = -1;
+
+      int idx_start = str.IndexOf('[') + 1;
+      int idx_len = str.IndexOf(']', idx_start) - idx_start;
+
+      return idx_len > 0 &&
+              int.TryParse(str.Substring(idx_start, idx_len), out idx) &&
+              idx >= 0;
+    }
 
 
     public static bool TryParseTimezoneOffset(string str, out TimeSpan span)
@@ -40,7 +76,7 @@ namespace Bore
       int i = 0, ilen = str.Length;
       bool negative = false;
       char c = '\0';
-      
+
       while (i < ilen)
       {
         c = str[i];
@@ -76,7 +112,7 @@ namespace Bore
         inc = PartialParsePositive(str, i, 2, ceil: 59, out part);
 
         if (inc > 0 && part > 0)
-          hours += (part / 60f);
+          hours += part / 60f;
       }
 
       if (negative)
@@ -96,10 +132,8 @@ namespace Bore
       int i = 0;
 
       if (hex[0] == '#')
-      {
         ++i;
-      }
-      
+
       if (hex[i] == '0' && (hex[i + 1] == 'x' || hex[i + 1] == 'X'))
       {
         if (i + 3 < hex.Length)
@@ -111,16 +145,14 @@ namespace Bore
       char hexhi, hexlo;
       byte write = 0x00;
 
-      bool special_syntax = ( hex[0] == '#' && hex.Length - i < 5 );
-      
+      bool special_syntax = hex[0] == '#' && hex.Length - i < 5;
+
       int j = 0;
       while (j < 4 && i < hex.Length - 1)
       {
         if (special_syntax)
-        {
           // special HTML syntax: makes 
           hexhi = hexlo = hex[i++];
-        }
         else
         {
           hexhi = hex[i++];
@@ -128,9 +160,7 @@ namespace Bore
         }
 
         if (TryParseHexByte(hexhi, hexlo, ref write))
-        {
           color[j++] = write;
-        }
         else
         {
           break;
@@ -156,7 +186,7 @@ namespace Bore
     }
 
 
-  #region PRIVATE SECTION
+    #region PRIVATE SECTION
 
     private static int PartialParsePositive(string str, int start, int len, int ceil, out int val)
     {
@@ -174,7 +204,7 @@ namespace Bore
         if ((val & OVERFLOW_BYTE) != 0)
           return 0;
 
-        val = (10 * val) + (c - '0'); // elevate previous digits, add new 1s place
+        val = 10 * val + (c - '0'); // elevate previous digits, add new 1s place
 
         if (val < 0 || val > ceil) // overflow
           return 0;
@@ -194,7 +224,7 @@ namespace Bore
 
       if (ascii <= '9')
       {
-        write = (byte)((write & CLEAR_LO) | (ascii - '0'));
+        write = (byte)(write & CLEAR_LO | ascii - '0');
         return true;
       }
 
@@ -203,7 +233,7 @@ namespace Bore
 
       if (ascii <= 'F')
       {
-        write = (byte)((write & CLEAR_LO) | (ascii - 'A' + 10));
+        write = (byte)(write & CLEAR_LO | ascii - 'A' + 10);
         return true;
       }
 
@@ -212,14 +242,14 @@ namespace Bore
 
       if (ascii <= 'f')
       {
-        write = (byte)((write & CLEAR_LO) | (ascii - 'a' + 10));
+        write = (byte)(write & CLEAR_LO | ascii - 'a' + 10);
         return true;
       }
 
       return false;
     }
 
-  #endregion PRIVATE SECTION
+    #endregion PRIVATE SECTION
 
   } // end static class Parsing
 

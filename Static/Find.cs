@@ -6,16 +6,15 @@
 using UnityEngine;
 
 
-namespace Bore
+namespace Ore
 {
 
-  public static class Find
+  public static class Find // TODO either flesh out or delete API
   {
 
     public static bool Any<T>(out T obj) where T : Object
     {
-      obj = null;
-      return obj;
+      throw new System.NotImplementedException($"The entire {nameof(Find)} class is not implemented.");
     }
 
   } // end static class Find

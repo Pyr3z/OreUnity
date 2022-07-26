@@ -7,13 +7,12 @@ using System.Collections;
 
 using UnityEngine;
 
+using Action = System.Action;
+using Condition = System.Func<bool>;
 
-namespace Bore
+
+namespace Ore
 {
-  using Action    = System.Action;
-  using Condition = System.Func<bool>;
-
-
   /// <summary>
   ///   Base class for Bore MonoBehaviour components of GameObjects
   ///   (AKA "Scene objects").
@@ -21,7 +20,7 @@ namespace Bore
   public abstract class OComponent : MonoBehaviour
   {
 
-  #region EVENT CALLBACK ACTIONS
+    #region EVENT CALLBACK ACTIONS
 
     [System.Diagnostics.Conditional("DEBUG")]
     public void DebugLog(string message)
@@ -49,7 +48,7 @@ namespace Bore
         Debug.LogWarning($"{GetType().Name} \"{name}\" : Missing Prefab reference!");
     }
 
-    
+
     public void ToggleSelf()
     {
       enabled = !enabled;
@@ -77,10 +76,10 @@ namespace Bore
         Destroy(gameObject, in_seconds);
     }
 
-  #endregion  EVENT CALLBACK ACTIONS
+    #endregion  EVENT CALLBACK ACTIONS
 
 
-  #region STATIC SECTION
+    #region STATIC SECTION
 
     protected static IEnumerator InvokeNextFrame(Action action)
     {
@@ -109,9 +108,7 @@ namespace Bore
     protected static IEnumerator InvokeInSeconds(Action action, float s)
     {
       if (s < Floats.EPSILON)
-      {
         action();
-      }
       else
       {
         yield return new WaitForSeconds(s);
@@ -119,7 +116,7 @@ namespace Bore
       }
     }
 
-  #endregion STATIC SECTION
+    #endregion STATIC SECTION
 
   } // end class OComponent
 

@@ -1,7 +1,7 @@
 ﻿/** @file   Static/Filesystem.cs
-    @author levianperez\@gmail.com
-    @author levi\@leviperez.dev
-    @date   2022-06-03
+ *  @author levianperez\@gmail.com
+ *  @author levi\@leviperez.dev
+ *  @date   2022-06-03
 **/
 
 using System.IO;
@@ -9,13 +9,13 @@ using System.IO;
 using UnityEngine;
 
 #if UNITY_EDITOR
-using UnityEditor;
+using UnityEditor; // TODO will remove when tests are moved out
 #endif
 
 using Encoding = System.Text.Encoding;
 
 
-namespace Bore
+namespace Ore
 {
 
   public static class Filesystem
@@ -96,7 +96,7 @@ namespace Bore
         MakePathTo(filepath);
 
         File.WriteAllBytes(filepath, data);
-        
+
         LastException = null;
         return true;
       }
@@ -167,9 +167,8 @@ namespace Bore
       if (Paths.IsValidPath(filepath) && Paths.ExtractDirectoryPath(filepath, out string dirpath))
       {
         if (!Directory.Exists(dirpath) && !Directory.CreateDirectory(dirpath).Exists)
-        {
           throw new IOException($"Could not create directory \"{dirpath}\".");
-        }
+        // else fallthrough
       }
       else
       {
@@ -182,10 +181,10 @@ namespace Bore
       return File.Exists(path) || Directory.Exists(path);
     }
 
-#endregion FUNDAMENTAL FILE I/O
+    #endregion FUNDAMENTAL FILE I/O
 
 
-#region INFO & DEBUGGING
+    #region INFO & DEBUGGING
 
     public enum IOResult
     {
@@ -208,12 +207,12 @@ namespace Bore
         case null:
           return IOResult.Success;
 
-        case FileNotFoundException _ :
-        case DirectoryNotFoundException _ :
-        case DriveNotFoundException _ :
+        case FileNotFoundException _:
+        case DirectoryNotFoundException _:
+        case DriveNotFoundException _:
           return IOResult.PathNotFound;
 
-        case IOException iox :
+        case IOException iox:
         {
           string msg = iox.Message.ToLowerInvariant();
 
@@ -255,28 +254,26 @@ namespace Bore
     [System.Diagnostics.Conditional("DEBUG")]
     public static void LogLastException()
     {
-      if (TryGetLastException(out System.Exception ex))
-      {
+      if (TryGetLastException(out var ex))
         Debug.LogException(ex);
-      }
     }
 
-#endregion INFO & DEBUGGING
+    #endregion INFO & DEBUGGING
 
 
-#region PRIVATE
+    #region PRIVATE
 
     private const int EXCEPTION_RING_SZ = 4;
     private static System.Exception[] s_ExceptionRingBuf = new System.Exception[EXCEPTION_RING_SZ];
-    private static int                s_ExceptionRingIdx = 0;
+    private static int s_ExceptionRingIdx = 0;
 
     private static System.Exception LastException
     {
-      get => s_ExceptionRingBuf[  s_ExceptionRingIdx % EXCEPTION_RING_SZ];
+      get => s_ExceptionRingBuf[s_ExceptionRingIdx % EXCEPTION_RING_SZ];
       set => s_ExceptionRingBuf[++s_ExceptionRingIdx % EXCEPTION_RING_SZ] = value;
     }
 
-#endregion PRIVATE
+    #endregion PRIVATE
 
   } // end static class Filesystem
 
@@ -286,7 +283,7 @@ namespace Bore
 #if UNITY_EDITOR
 
 // TODO move outta here, use proper test framework
-namespace Bore.Tests
+namespace Ore.Tests
 {
   internal static class TestFilesystem
   {
@@ -328,9 +325,7 @@ namespace Bore.Tests
         }
 
         if (!string.Equals(text, read, System.StringComparison.Ordinal))
-        {
           Debug.LogError($"TEST ERROR: text file input and output differ (\"{path}\").\n\t IN:{text}\n\tOUT:{read}");
-        }
       }
 
       // binary tests:
@@ -363,9 +358,7 @@ namespace Bore.Tests
         }
 
         if (diffs > 0)
-        {
           Debug.LogError($"TEST: binary input and output differ. (\"{path}\")\n\tNUM DIFFS: {diffs}");
-        }
       }
 
       Debug.Log("--- TEST END");

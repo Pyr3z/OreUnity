@@ -9,12 +9,13 @@ using UnityEngine;
 using UnityEditor;
 
 
-namespace Bore
+namespace Ore.Editor
 {
 
   [InitializeOnLoad]
   public static class EditorSettingsValidator
   {
+
     static EditorSettingsValidator()
     {
       ValidateOAssetSingletons();
@@ -22,38 +23,42 @@ namespace Bore
     }
 
 
-    public static void ValidateOAssetSingletons()
+    internal static void ValidateOAssetSingletons()
     {
       foreach (var tself in TypeCache.GetTypesDerivedFrom(typeof(OAssetSingleton<>)))
       {
-        if (tself == null || tself.IsAbstract)
+        if (tself == null || tself.IsAbstract || tself.IsGenericType)
           continue;
 
         var load = Resources.FindObjectsOfTypeAll(tself);
         if (load.Length > 0)
           continue;
 
-        string filepath = $"Assets/{tself.Name}.asset";
+        string filepath = $"Assets/{tself.Name}.asset"; // TODO implement AssetPathAttribute for specifying location
 
         if (AssetDatabase.LoadAssetAtPath(filepath, tself))
           continue;
 
+        if (Filesystem.PathExists(filepath))
+          filepath = AssetDatabase.GenerateUniqueAssetPath(filepath);
+        // (typically appends incremental numbers to filename until unique)
+
         if (Filesystem.TryMakePathTo(filepath))
         {
           var instance = ScriptableObject.CreateInstance(tself);
-
-          Debug.Assert(instance);
+          if (OAssert.Fails(instance))
+            continue;
 
           AssetDatabase.CreateAsset(instance, filepath);
           AssetDatabase.SaveAssetIfDirty(instance);
-          AssetDatabase.ImportAsset(filepath);
+          AssetDatabase.ImportAsset(filepath); // overkill?
 
-          Debug.Log($"OAssetSingleton: Created new <{tself.Name}> at {filepath}");
+          Orator.Log($"OAssetSingleton: Created new <{tself.Name}> at {filepath}");
         }
       }
     }
 
-    public static void ValidatePreloadedAssets()
+    internal static void ValidatePreloadedAssets()
     {
       var preloaded = new List<Object>(PlayerSettings.GetPreloadedAssets());
       var set = new HashSet<Object>(preloaded);
@@ -77,7 +82,7 @@ namespace Bore
 
       if (changed > 0)
       {
-        Debug.Log($"{nameof(EditorBridge)}: Cleaning up {changed} null / duplicate \"Preloaded Asset\" entries.");
+        Orator.Log($"{nameof(EditorBridge)}: Cleaning up {changed} null / duplicate \"Preloaded Asset\" entries.");
         PlayerSettings.SetPreloadedAssets(preloaded.ToArray());
       }
     }

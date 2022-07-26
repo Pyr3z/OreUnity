@@ -6,10 +6,11 @@
 using UnityEngine;
 
 
-namespace Bore
+namespace Ore
 {
-
-
+  /// <summary>
+  /// TODO: unfinished class, might get cut now that we have `DeviceSpy`.
+  /// </summary>
   [System.Serializable]
   public sealed class DeviceSpec
   {
@@ -31,7 +32,7 @@ namespace Bore
 
     private DeviceSpec()
     {
-      
+
     }
 
   } // end class DeviceSpec

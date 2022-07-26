@@ -1,12 +1,14 @@
 ﻿/** @file   Static/Hashing.cs
-    @author levianperez\@gmail.com
-    @author levi\@leviperez.dev
-    @date   2020-06-06
+ *  @author levi\@leviperez.dev
+ *  @date   2020-06-06
 **/
 
-namespace Bore
-{
 
+namespace Ore
+{
+  /// <summary>
+  /// Utility functions for making/combining hash codes.
+  /// </summary>
   public static class Hashing
   {
 
@@ -18,22 +20,22 @@ namespace Bore
 
     public static uint MixHashes(uint h0, uint h1)
     {
-      return (h0 + ((h0 << 5) | (h0 >> 27))) ^ h1;
+      return h0 + (h0 << 5 | h0 >> 27) ^ h1;
     }
     public static uint MixHashes(int h0, int h1) => MixHashes((uint)h0, (uint)h1);
 
     public static uint MixHashes(uint h0, uint h1, uint h2)
     {
-        h0 = (h0 + ((h0 << 5) | (h0 >> 27))) ^ h1;
-      return (h0 + ((h0 << 5) | (h0 >> 27))) ^ h2;
+      h0 = h0 + (h0 << 5 | h0 >> 27) ^ h1;
+      return h0 + (h0 << 5 | h0 >> 27) ^ h2;
     }
     public static uint MixHashes(int h0, int h1, int h2) => MixHashes((uint)h0, (uint)h1, (uint)h2);
 
     public static uint MixHashes(uint h0, uint h1, uint h2, uint h3)
     {
-        h0 = (h0 + ((h0 << 5) | (h0 >> 27))) ^ h1;
-        h0 = (h0 + ((h0 << 5) | (h0 >> 27))) ^ h2;
-      return (h0 + ((h0 << 5) | (h0 >> 27))) ^ h3;
+      h0 = h0 + (h0 << 5 | h0 >> 27) ^ h1;
+      h0 = h0 + (h0 << 5 | h0 >> 27) ^ h2;
+      return h0 + (h0 << 5 | h0 >> 27) ^ h3;
     }
     public static uint MixHashes(int h0, int h1, int h2, int h3) => MixHashes((uint)h0, (uint)h1, (uint)h2, (uint)h3);
 

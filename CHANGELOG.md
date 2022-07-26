@@ -5,9 +5,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-
 ## [Unreleased]
-- Added Editor helpers simplified and migrated from Levi's PyroDK.
+- X
+
+## [2.0.0] - 2022-07-25
+- BREAKING: Moved: ALL code from namespace `Bore` and to namespaces `Ore` and `Ore.Editor`.
+- Moved: `Editor/Drawers.cs` -> `Editor/OGUI.cs` (associated functions are now also nested as appropriate).
+- Added: `Ore.Editor.FoldoutHeader` + tested it on `DelayedEvent`'s custom property drawer.
+- Added: `Ore.Editor.Styles` <- tried to not go too deep on this API / default usage.
+- Added: the `Orator` & `OAssert` APIs, should be ready for most use cases now!
+- Improved: `DelayedEvents`, `Orator`, pre-existing editor utilities.
+- Fixed: all editor warnings.
+
+
+## [1.1.0] - 2022-06-23
+- Added: Editor helpers simplified and migrated from Levi's PyroDK.
+- Refactor: Package structure (public C# interface is (mostly) unaffected).
+- Added: Simplified versions of PyroDK static utilities (Bitwise.cs, Integers.cs, Floats.cs, Hashing.cs, etc)
+- Added: Safe and defensive API for file IO (Static/Filesystem.cs)
+- Added: DeviceSpy (e.g. used by LAUD deciders)
+- Added: ActiveScene (Scene singleton) (useful for starting Coroutines from anywhere)
 
 
 ## [1.0.0] - 2022-05-17

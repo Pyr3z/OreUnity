@@ -6,19 +6,18 @@
 using UnityEngine;
 
 
-namespace Bore
+namespace Ore
 {
 
   public static class DeviceSpy
   {
     public enum ABIArch
     {
-      ARM     = 0,
-      ARM64   = 1,
-      x86     = 2,
-      x86_64  = 3,
+      ARM = 0,
+      ARM64 = 1,
+      x86 = 2,
+      x86_64 = 3,
     }
-
 
 
     public static VersionID OSVersion
@@ -123,29 +122,29 @@ namespace Bore
     }
 
 
-    private static VersionID  s_OSVersion       = null;
-    private static string     s_Brand           = null;
-    private static string     s_Model           = null;
-    private static string     s_TimezoneUTCStr  = null;
-    private static float?     s_TimezoneOffset  = null;
-    private static float?     s_DiagonalInches  = null;
-    private static float?     s_AspectRatio     = null;
-    private static bool?      s_IsTablet        = null;
-    private static bool?      s_IsBlueStacks    = null;
-    private static ABIArch?   s_ABIArch         = null;
+    private static VersionID s_OSVersion = null;
+    private static string s_Brand = null;
+    private static string s_Model = null;
+    private static string s_TimezoneUTCStr = null;
+    private static float? s_TimezoneOffset = null;
+    private static float? s_DiagonalInches = null;
+    private static float? s_AspectRatio = null;
+    private static bool? s_IsTablet = null;
+    private static bool? s_IsBlueStacks = null;
+    private static ABIArch? s_ABIArch = null;
 
 
     private static (string make, string model) GetMakeModel()
     {
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
 
       return ("UNITY_EDITOR", SystemInfo.deviceModel);
 
-    #elif UNITY_IOS
+#elif UNITY_IOS
 
       return ("Apple", SystemInfo.deviceModel);
 
-    #else
+#else
 
       string makemodel = SystemInfo.deviceModel;
 
@@ -155,7 +154,7 @@ namespace Bore
 
       return (makemodel.Remove(split), makemodel.Substring(split + 1));
 
-    #endif
+#endif
     }
 
     private static (float off, string str) GetTimezoneUTCOffset()
@@ -166,7 +165,7 @@ namespace Bore
 
     private static float CalcScreenDiagonalInches()
     {
-      float w = Screen.width  / Screen.dpi;
+      float w = Screen.width / Screen.dpi;
       float h = Screen.height / Screen.dpi;
       return Mathf.Sqrt(w * w + h * h);
     }
@@ -174,9 +173,7 @@ namespace Bore
     private static float CalcAspectRatio()
     {
       if (Screen.height < Screen.width)
-      {
         return Screen.width / Screen.height;
-      }
       else
       {
         return Screen.height / Screen.width;
@@ -185,46 +182,46 @@ namespace Bore
 
     private static bool CalcIsTablet()
     {
-    #if AD_MEDIATION_MAX
+#if AD_MEDIATION_MAX
 
       return MaxSdkUtils.IsTablet();
 
-    #elif UNITY_EDITOR
+#elif UNITY_EDITOR
 
       return false;
 
-    #else
+#else
 
       return Model.Contains("iPad") || CalcIsTabletByScreenSize();
 
-    #endif
+#endif
     }
 
     private static bool CalcIsTabletByScreenSize()
     {
       const float MIN_DIAGONAL_INCHES = 6.5f;
-      const float MAX_ASPECT_RATIO    = 2.0f;
+      const float MAX_ASPECT_RATIO = 2.0f;
       return DiagonalInches > MIN_DIAGONAL_INCHES && AspectRatio < MAX_ASPECT_RATIO;
     }
 
     private static bool CalcIsBlueStacks()
     {
-    #if !UNITY_EDITOR && UNITY_ANDROID
+#if !UNITY_EDITOR && UNITY_ANDROID
       foreach (string dir in new string[]{  "/sdcard/windows/BstSharedFolder",
                                             "/mnt/windows/BstSharedFolder" })
       {
         if (System.IO.Directory.Exists(dir))
           return true;
       }
-    #endif
+#endif
 
       return false;
     }
 
     private static ABIArch CalcABIArch()
     {
-      string  type    = SystemInfo.processorType;
-      var     strcmp  = System.StringComparison.OrdinalIgnoreCase;
+      string type = SystemInfo.processorType;
+      var strcmp = System.StringComparison.OrdinalIgnoreCase;
 
       // Android and Android-like devices are pretty standard here
       if (type.StartsWith("ARM", strcmp))

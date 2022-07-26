@@ -1,15 +1,18 @@
 ﻿/** @file   Static/Paths.cs
-    @author levianperez\@gmail.com
-    @author levi\@leviperez.dev
-    @date   2022-06-03
+ *  @author levianperez\@gmail.com
+ *  @author levi\@leviperez.dev
+ *  @date   2022-06-03
 **/
 
 using Path = System.IO.Path;
 using StringComparer = System.StringComparer;
 
-namespace Bore
-{
 
+namespace Ore
+{
+  /// <summary>
+  /// Utilities for handling filesystem path strings.
+  /// </summary>
   public static class Paths
   {
     public const int MaxLength = 260;
@@ -20,11 +23,11 @@ namespace Bore
       LameDirectorySeparator
     };
 
-    public const char DirectorySeparator      = '/';  // Path.AltDirectorySeparatorChar
-    public const char LameDirectorySeparator  = '\\'; // Path.DirectorySeparatorChar
+    public const char DirectorySeparator = '/';  // Path.AltDirectorySeparatorChar
+    public const char LameDirectorySeparator = '\\'; // Path.DirectorySeparatorChar
 
-    public static readonly char[] InvalidFileNameChars  = Path.GetInvalidFileNameChars();
-    public static readonly char[] InvalidPathChars      = Path.GetInvalidPathChars();
+    public static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars();
+    public static readonly char[] InvalidPathChars = Path.GetInvalidPathChars();
 
     public static readonly StringComparer Comparer = StringComparer.InvariantCulture;
 
@@ -36,14 +39,14 @@ namespace Bore
 
     public static bool IsValidFileName(string filename)
     {
-      return  ExtractBasePath(filename, out string name) &&
+      return ExtractBasePath(filename, out string name) &&
               name.IndexOfAny(InvalidFileNameChars) < 0;
     }
 
 
     public static bool ExtractBasePath(string filepath, out string basepath)
     {
-      basepath = null;
+      basepath = filepath;
       if (filepath.IsEmpty())
         return false;
 
@@ -58,41 +61,42 @@ namespace Bore
       return basepath.Length > 0;
     }
 
-    public static bool ExtractDirectoryPath(string filepath, out string dirpath)
+    public static bool ExtractDirectoryPath(string filepath, out string dirpath, bool trailing_slash = false)
     {
-      dirpath = null;
+      dirpath = filepath;
       if (filepath.IsEmpty())
         return false;
 
-      filepath = filepath.TrimEnd(DirectorySeparators);
+      dirpath = filepath.TrimEnd(DirectorySeparators);
 
-      int slash = 1 + filepath.LastIndexOfAny(DirectorySeparators);
-      if (slash < 1)
-        return false;
+      int slash = dirpath.LastIndexOfAny(DirectorySeparators);
+      if (slash > 0)
+        dirpath = dirpath.Remove(slash);
+      if (trailing_slash)
+        dirpath += '/';
 
-      dirpath = filepath.Remove(slash);
       return dirpath.Length > 0;
     }
 
-    public static bool Decompose(string filepath, out string dirpath, out string basepath)
+    public static bool Decompose(string filepath, out string dirpath, out string basepath, bool trailing_slash = true)
     {
-      dirpath = basepath = null;
+      dirpath = basepath = filepath;
       if (filepath.IsEmpty())
         return false;
 
-      filepath = filepath.TrimEnd(DirectorySeparators);
+      dirpath = filepath.TrimEnd(DirectorySeparators);
 
-      int slash = 1 + filepath.LastIndexOfAny(DirectorySeparators);
-      if (slash < 1)
-      {
-        dirpath   = "./";
-        basepath  = filepath;
-      }
+      int slash = dirpath.LastIndexOfAny(DirectorySeparators);
+      if (slash < 0)
+        dirpath = ".";
       else
       {
-        dirpath   = filepath.Remove(slash);
-        basepath  = filepath.Substring(slash);
+        dirpath = dirpath.Remove(slash);
+        basepath = dirpath.Substring(slash + 1);
       }
+
+      if (trailing_slash)
+        dirpath += '/';
 
       return basepath.Length > 0 && dirpath.Length > 0;
     }
