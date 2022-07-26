@@ -5,11 +5,11 @@
 
 using UnityEditor;
 
-using IList     = System.Collections.IList;
+using IList = System.Collections.IList;
 using FieldInfo = System.Reflection.FieldInfo;
 
 
-namespace Bore
+namespace Ore.Editor
 {
 
   public static class SerializedProperties
@@ -41,7 +41,7 @@ namespace Bore
 
     public static uint GetPropertyHash(this SerializedProperty prop)
     {
-      if (IsDisposed(prop))
+      if (prop.IsDisposed())
       {
         Orator.Log("Called GetPropertyHash() on a disposed SerializedProperty!");
         return 0;
@@ -112,11 +112,9 @@ namespace Bore
         }
 
         // Find the FieldInfo of the target we are currently looking at:
-        if (!boxed_value.GetType().TryGetSerializableField(field_name, out FieldInfo field))
-        {
+        if (!boxed_value.GetType().TryGetSerializableField(field_name, out var field))
           // Early-out opportunity:
           return false;
-        }
 
         // Step finished.
         boxed_value = field.GetValue(boxed_value);

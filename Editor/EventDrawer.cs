@@ -7,33 +7,33 @@ using UnityEngine;
 using UnityEditor;
 
 
-namespace Bore
+namespace Ore.Editor
 {
 
-  [CustomPropertyDrawer(typeof(IEvent),       useForChildren: true)] // shit, doesn't work..
+  [CustomPropertyDrawer(typeof(IEvent), useForChildren: true)] // shit, doesn't work..
   [CustomPropertyDrawer(typeof(DelayedEvent), useForChildren: true)] // ... gotta be explicit.
   internal class EventDrawer : UnityEditorInternal.UnityEventDrawer
   {
     private const string UNITYEVENT_LAST_PROPERTY = "m_PersistentCalls";
     private const string LABEL_SUFFIX_DISABLED = " (event disabled)";
-    
-    private const float STD_PAD           = OGUI.STD_PAD;
-    private const float STD_LINE_HEIGHT   = OGUI.STD_LINE_HEIGHT;
-    private const float STD_PAD_HALF      = STD_PAD / 2f;
+
+    private const float STD_PAD = OGUI.STD_PAD;
+    private const float STD_LINE_HEIGHT = OGUI.STD_LINE_HEIGHT;
+    private const float STD_PAD_HALF = STD_PAD / 2f;
     private const float UNEXPANDED_HEIGHT = STD_LINE_HEIGHT + STD_PAD;
 
     private class DrawerState : PropertyDrawerState
     {
       public IEvent Event;
-      public int    ChildCount;
-      public float  ExtraHeight;
+      public int ChildCount;
+      public float ExtraHeight;
       public string EventLabel;
 
       public SerializedProperty RunInGlobalContext, Context;
 
       protected override void OnUpdateProperty()
       {
-        if (CheckFails(out SerializedProperty root))
+        if (CheckFails(out var root))
           return;
 
         _ = root.TryGetUnderlyingValue(out Event);
@@ -60,7 +60,7 @@ namespace Bore
 
       public void UpdateExtraHeight()
       {
-        if (CheckFails(out SerializedProperty root))
+        if (CheckFails(out var root))
           return;
 
         IsStale = false;
@@ -84,7 +84,7 @@ namespace Bore
 
       public SerializedProperty GetChildIterator()
       {
-        if (ChildCount == 0 || CheckFails(out SerializedProperty root))
+        if (ChildCount == 0 || CheckFails(out var root))
           return null;
 
         return root.FindPropertyRelative(UNITYEVENT_LAST_PROPERTY);
@@ -96,9 +96,7 @@ namespace Bore
         // MonoBehaviour m_Context
         Context = root.FindPropertyRelative("m_Context");
         if (OAssert.Fails(Context != null && Context.propertyType == SerializedPropertyType.ObjectReference))
-        {
           Context = null;
-        }
         else
         {
           if (root.serializedObject.targetObject is MonoBehaviour owner)
@@ -110,9 +108,7 @@ namespace Bore
         // bool m_RunInGlobalContext
         RunInGlobalContext = root.FindPropertyRelative("m_RunInGlobalContext");
         if (OAssert.Fails(RunInGlobalContext != null && RunInGlobalContext.propertyType == SerializedPropertyType.Boolean))
-        {
           RunInGlobalContext = null;
-        }
         else
         {
           if (Context == null)
@@ -142,7 +138,7 @@ namespace Bore
       if (GUI.Button(pos, btn_label))
       {
         Undo.RecordObject(prop.serializedObject.targetObject, btn_label);
-        
+
         state.Event.IsEnabled = !state.Event.IsEnabled;
         prop.serializedObject.Update();
 
@@ -150,21 +146,19 @@ namespace Bore
       }
 
       if (!state.Event.IsEnabled)
-      {
         label.text += LABEL_SUFFIX_DISABLED;
-      }
 
       // now do foldout header:
       pos.x = total.x;
       pos.xMax = btn_begin - STD_PAD * 2;
 
       EditorGUI.BeginDisabledGroup(!state.Event.IsEnabled);
-      
-      if (FoldoutHeader.Open(pos, label, prop, out FoldoutHeader header, prop.depth + 1))
+
+      if (FoldoutHeader.Open(pos, label, prop, out var header, prop.depth + 1))
       {
-        pos.x     = header.Rect.x;
-        pos.xMax  = total.xMax;
-        pos.y    += pos.height + STD_PAD;
+        pos.x = header.Rect.x;
+        pos.xMax = total.xMax;
+        pos.y += pos.height + STD_PAD;
 
         // draw the optional field for "Run In Global Context" bool (if applicable)
         if (state.RunInGlobalContext != null)
@@ -181,9 +175,7 @@ namespace Bore
           pos.xMax = total.xMax;
 
           if (state.RunInGlobalContext.boolValue)
-          {
             label.text = $"→ will run on Runtime {Styles.ColorText(nameof(ActiveScene), Styles.Dark.ReferenceTypeName)}";
-          }
           else if (state.Context != null && state.Context.objectReferenceValue)
           {
             label.text = $"→ will run on this {Styles.ColorText(state.Context.objectReferenceValue.GetType().Name, Styles.Dark.ReferenceTypeName)}";
@@ -224,7 +216,7 @@ namespace Bore
 
         // finally, draw the vanilla event interface:
         pos.xMin += OGUI.Indent;
-        pos.yMax  = total.yMax;
+        pos.yMax = total.yMax;
 
         label.text = state.EventLabel;
         base.OnGUI(pos, prop, label);

@@ -4,12 +4,12 @@
 **/
 
 
-namespace Bore
+namespace Ore
 {
 
   public sealed class ReadOnlyAttribute : UnityEngine.PropertyAttribute
   {
-    // editor code in Bore/Editor/ReadOnlyDrawer.cs (it's super simple)
+    // editor code in Editor/ReadOnlyDrawer.cs (it's super simple)
   }
 
 }

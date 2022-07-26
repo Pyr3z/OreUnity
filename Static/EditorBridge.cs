@@ -11,7 +11,7 @@ using UnityEngine;
 using UnityEditor;
 
 
-namespace Bore
+namespace Ore
 {
 
   public static class EditorBridge
@@ -25,13 +25,11 @@ namespace Bore
     public static bool TrySetPreloadedAsset(Object asset, bool set)
     {
       if (!IsMainAsset(asset))
-      {
         //Debug.LogWarning($"Object \"{asset}\" is not a main asset reference and cannot be preloaded.");
         return false;
-      }
 
-      var   buffer  = new List<Object>(PlayerSettings.GetPreloadedAssets());
-      bool  changed = set;
+      var buffer = new List<Object>(PlayerSettings.GetPreloadedAssets());
+      bool changed = set;
 
       if (set)
       {
@@ -42,7 +40,7 @@ namespace Bore
       else
       {
         int i = buffer.Count;
-        while (i --> 0)
+        while (i-- > 0)
         {
           if (buffer[i] == asset)
           {

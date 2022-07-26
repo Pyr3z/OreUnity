@@ -1,18 +1,19 @@
 ﻿/** @file   Static/Bitwise+CTZ.cs
-    @author levianperez\@gmail.com
-    @author levi\@leviperez.dev
-    @date   2020-06-06
-
-    @brief
-      Implements [CTZ](https://en.wikipedia.org/wiki/Find_first_set)
-      using precomputed "De Bruijn" lookups I generated in C.
-
-    @remark
-      If you supply the preprocessor define "BITWISE_CTZ_NOJUMP", this
-      implementation will swap to using a shittier algorithm! :D
+ *  @author levianperez\@gmail.com
+ *  @author levi\@leviperez.dev
+ *  @date   2020-06-06
+ *
+ *  @brief
+ *    Implements [CTZ](https://en.wikipedia.org/wiki/Find_first_set)
+ *    using precomputed "De Bruijn" lookups I generated in C.
+ *
+ *  @remark
+ *    If you supply the preprocessor define "BITWISE_CTZ_NOJUMP", this
+ *    implementation will swap to using a shittier algorithm! :D
 **/
 
-namespace Bore
+
+namespace Ore
 {
   public static partial class Bitwise
   {

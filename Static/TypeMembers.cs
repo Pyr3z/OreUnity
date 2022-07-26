@@ -1,47 +1,50 @@
 ﻿/** @file   Static/TypeMembers.cs
-    @author levianperez\@gmail.com
-    @author levi\@leviperez.dev
-    @date   2022-06-20
+ *  @author levianperez\@gmail.com
+ *  @author levi\@leviperez.dev
+ *  @date   2022-06-20
 **/
 
 using System.Reflection;
+
 using UnityEngine;
 
 using Type = System.Type;
 
 
-namespace Bore
+namespace Ore
 {
-
+  /// <summary>
+  /// Reflection utilities for type (class/struct) members ported from PyroDK.
+  /// </summary>
   public static class TypeMembers
   {
 
-    public const BindingFlags       ALL = BindingFlags.Instance  |
-                                          BindingFlags.Static    |
-                                          BindingFlags.Public    |
-                                          BindingFlags.NonPublic;
+    public const BindingFlags        ALL =  BindingFlags.Instance |
+                                            BindingFlags.Static   |
+                                            BindingFlags.Public   |
+                                            BindingFlags.NonPublic;
 
-    public const BindingFlags  ALL_DECL = ALL                    |
-                                          BindingFlags.DeclaredOnly;
+    public const BindingFlags   ALL_DECL =  ALL                   |
+                                            BindingFlags.DeclaredOnly;
 
-    public const BindingFlags  INSTANCE = BindingFlags.Instance  |
-                                          BindingFlags.Public    |
-                                          BindingFlags.NonPublic;
+    public const BindingFlags   INSTANCE =  BindingFlags.Instance |
+                                            BindingFlags.Public   |
+                                            BindingFlags.NonPublic;
 
-    public const BindingFlags    STATIC = BindingFlags.Static    |
-                                          BindingFlags.Public    |
-                                          BindingFlags.NonPublic;
+    public const BindingFlags     STATIC =  BindingFlags.Static   |
+                                            BindingFlags.Public   |
+                                            BindingFlags.NonPublic;
 
-    public const BindingFlags    PUBLIC = BindingFlags.Public    |
-                                          BindingFlags.Instance  |
-                                          BindingFlags.Static;
+    public const BindingFlags     PUBLIC =  BindingFlags.Public   |
+                                            BindingFlags.Instance |
+                                            BindingFlags.Static;
 
-    public const BindingFlags NONPUBLIC = BindingFlags.Instance  |
-                                          BindingFlags.Static    |
-                                          BindingFlags.NonPublic;
+    public const BindingFlags  NONPUBLIC =  BindingFlags.Instance |
+                                            BindingFlags.Static   |
+                                            BindingFlags.NonPublic;
 
-    public const BindingFlags     ENUMS = BindingFlags.Static    |
-                                          BindingFlags.Public;
+    public const BindingFlags      ENUMS =  BindingFlags.Static   |
+                                            BindingFlags.Public;
 
 
     public static bool IsDefined<T>(this MemberInfo member, bool inherit = true)
@@ -62,22 +65,22 @@ namespace Bore
       field = type?.GetField(name, blags);
       return field != null;
     }
-    
+
     public static bool TryGetSerializableField(this Type type, string name, out FieldInfo field)
     {
-      return TryGetField(type, name, out field, INSTANCE) &&
-             ( field.IsPublic || field.IsDefined<SerializeField>() );
+      return type.TryGetField(name, out field, INSTANCE) &&
+             (field.IsPublic || field.IsDefined<SerializeField>());
     }
 
     public static bool TryGetInternalField(this Type type, string name, out FieldInfo field)
     {
-      return TryGetField(type, name, out field, NONPUBLIC);
+      return type.TryGetField(name, out field, NONPUBLIC);
     }
 
 
     public static bool TryGetStaticValue<T>(this Type type, string name, out T value)
     {
-      if (type.TryGetField(name, out FieldInfo field, STATIC) &&
+      if (type.TryGetField(name, out var field, STATIC) &&
           typeof(T).IsAssignableFrom(field.FieldType))
       {
         value = (T)field.GetValue(null);

@@ -7,13 +7,13 @@ using UnityEngine;
 using UnityEditor;
 
 
-namespace Bore
+namespace Ore.Editor
 {
 
   public class AssetValidator : UnityEditor.AssetModificationProcessor
   {
-                         /* IDE0051 => "private method is unused" */
-    #pragma warning disable IDE0051
+                     /* IDE0051 => "private method is unused" */
+#pragma warning disable IDE0051
 
     /* Available messages: (https://docs.unity3d.com/ScriptReference/AssetModificationProcessor.html)
      *  static bool CanOpenForEdit(string[] paths, List<string> outbadpaths, StatusQueryOptions opts)
@@ -26,7 +26,7 @@ namespace Bore
      *  static void OnWillSaveAssets(string[] paths)
      */
 
-    private static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions _ )
+    private static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions _)
     {
       var asset = AssetDatabase.LoadAssetAtPath<Asset>(path);
 
@@ -39,7 +39,7 @@ namespace Bore
       return AssetDeleteResult.DidNotDelete;
     }
 
-    #pragma warning restore IDE0051
+#pragma warning restore IDE0051
 
   } // end private class AssetValidator
 

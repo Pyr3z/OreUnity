@@ -1,13 +1,14 @@
 ﻿/** @file   Static/Bitwise.cs
-    @author levianperez\@gmail.com
-    @author levi\@leviperez.dev
-    @date   2020-06-06
-
-    @brief
-      Fast bitwise utilities and syntax sugars.
+ *  @author levianperez\@gmail.com
+ *  @author levi\@leviperez.dev
+ *  @date   2020-06-06
+ *
+ *  @brief
+ *    Fast bitwise utilities and syntax sugars for it.
 **/
 
-namespace Bore
+
+namespace Ore
 {
   public static partial class Bitwise
   {

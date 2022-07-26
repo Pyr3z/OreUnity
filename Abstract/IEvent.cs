@@ -3,8 +3,10 @@
  *  @date       2022-06-06
 **/
 
+using Action = UnityEngine.Events.UnityAction;
 
-namespace Bore
+
+namespace Ore
 {
 
   public interface IEvent
@@ -12,6 +14,15 @@ namespace Bore
     bool IsEnabled { get; set; }
     void Invoke();
     bool TryInvoke();
+
+
+    #region UnityEvent throughface
+
+    void AddListener(Action action);
+    void RemoveListener(Action action);
+    void RemoveAllListeners();
+
+    #endregion UnityEvent throughface
   }
 
 }

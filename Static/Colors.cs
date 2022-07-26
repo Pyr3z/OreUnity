@@ -9,7 +9,7 @@
 using UnityEngine;
 
 
-namespace Bore
+namespace Ore
 {
 
   public static class Colors
@@ -22,8 +22,8 @@ namespace Bore
 
     public static Color32 FromInt32(int i)
     {
-      return new Color32(r: (byte)(i       & 0xFF),
-                         g: (byte)(i >>  8 & 0xFF),
+      return new Color32(r: (byte)(i & 0xFF),
+                         g: (byte)(i >> 8 & 0xFF),
                          b: (byte)(i >> 16 & 0xFF),
                          a: (byte)(i >> 24 & 0xFF));
     }
@@ -36,7 +36,7 @@ namespace Bore
 
     public static Color32 FromHex(string hex)
     {
-      _ = Parsing.TryParseColor32(hex, out Color32 c); // Do or do not;
+      _ = Parsing.TryParseColor32(hex, out var c); // Do or do not;
       return c;                                        // there is no "Try".
     }
 
@@ -49,7 +49,7 @@ namespace Bore
     public static bool IsDefault(this Color32 c)
     {
       // no == operator for Color32, so:
-      return ToInt32(c) == 0x00000000;
+      return c.ToInt32() == 0x00000000;
     }
 
   } // end static class Colors

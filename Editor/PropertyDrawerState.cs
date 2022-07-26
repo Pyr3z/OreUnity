@@ -13,13 +13,13 @@ using UnityEditor;
 using Debug = UnityEngine.Debug;
 
 
-namespace Bore
+namespace Ore.Editor
 {
 
   public abstract class PropertyDrawerState
   {
 
-  #region INSTANCE
+    #region INSTANCE
 
     public bool IsStale { get; protected set; }
 
@@ -58,17 +58,17 @@ namespace Bore
     private SerializedProperty m_RootProp;
     private int m_Lifespan;
 
-  #endregion INSTANCE
+    #endregion INSTANCE
 
 
-  #region STATIC
+    #region STATIC
 
     public static void Restore<TState>(SerializedProperty root_property, out TState state)
       where TState : PropertyDrawerState, new()
     {
       uint id = root_property.GetPropertyHash();
 
-      if (s_StateMap.TryGetValue(id, out PropertyDrawerState basestate) && basestate != null)
+      if (s_StateMap.TryGetValue(id, out var basestate) && basestate != null)
       {
         state = (TState)basestate;
         if (state.NeedsUpdate || !SerializedProperty.EqualContents(state.m_RootProp, root_property))
@@ -112,9 +112,7 @@ namespace Bore
       foreach (var kvp in s_StateMap)
       {
         if (TickedStateIsExpired(kvp.Value))
-        {
           expireds.Add(kvp.Key);
-        }
       }
 
       // perform removal
@@ -124,18 +122,16 @@ namespace Bore
       }
 
       if (s_StateMap.Count == 0)
-      {
         EditorApplication.update -= TickStaleStates;
-      }
     }
 
     private static bool TickedStateIsExpired(PropertyDrawerState state)
     {
       return --state.m_Lifespan <= 0 &&
-             ( state.NeedsUpdate || s_InspectorTracker.activeEditors.Length == 0 );
+             (state.NeedsUpdate || s_InspectorTracker.activeEditors.Length == 0);
     }
 
-  #endregion STATIC
+    #endregion STATIC
 
   } // end abstract class PropertyDrawerState
 

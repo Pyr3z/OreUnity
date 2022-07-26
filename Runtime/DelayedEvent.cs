@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEvent = UnityEngine.Events.UnityEvent;
 
 
-namespace Bore
+namespace Ore
 {
 
   [System.Serializable]
@@ -38,8 +38,8 @@ namespace Bore
     }
 
 
-    private const bool  DEFAULT_SCALED_TIME     = true;
-    private const float DEFAULT_DELAY_SECONDS   = -1f;
+    private const bool DEFAULT_SCALED_TIME = true;
+    private const float DEFAULT_DELAY_SECONDS = -1f;
     private const float MIN_DELAY_SECONDS_ASYNC = 1f / 90f;
 
 
@@ -67,14 +67,14 @@ namespace Bore
     public DelayedEvent(float seconds = DEFAULT_DELAY_SECONDS, bool is_scaled = DEFAULT_SCALED_TIME)
       : base()
     {
-      m_DelaySeconds  = seconds;
-      m_ScaledTime    = is_scaled;
+      m_DelaySeconds = seconds;
+      m_ScaledTime = is_scaled;
     }
 
     public static DelayedEvent WithApproximateFrameDelay(int frames, float target_fps)
     {
-      return new DelayedEvent(seconds:    frames / target_fps,
-                              is_scaled:  false);
+      return new DelayedEvent(seconds: frames / target_fps,
+                              is_scaled: false);
     }
 
 

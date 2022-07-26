@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 
-namespace Bore
+namespace Ore
 {
 
   [DefaultExecutionOrder(-500)]
@@ -39,7 +39,7 @@ namespace Bore
 
       var obj = new GameObject($"[{nameof(ActiveScene)}]");
       obj.hideFlags = HideFlags.DontSave;
-      obj.isStatic  = true;
+      obj.isStatic = true;
 
       var bud = obj.AddComponent<ActiveScene>();
       Debug.Assert(Current == bud, nameof(ActiveScene) + " instantiation");

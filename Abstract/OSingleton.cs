@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 using SceneRef = UnityEngine.SceneManagement.Scene;
 
 
-namespace Bore
+namespace Ore
 {
 
 
@@ -25,14 +25,14 @@ namespace Bore
   public abstract class OSingleton<TSelf> : OComponent
     where TSelf : OSingleton<TSelf>
   {
-    public static TSelf Current  => s_Current;
+    public static TSelf Current => s_Current;
     private static TSelf s_Current;
     public static TSelf Instance => s_Current; // compatibility API
 
 
-    public static bool IsActive             => s_Current && s_Current.isActiveAndEnabled;
-    public static bool IsReplaceable        => !s_Current || s_Current.m_IsReplaceable;
-    public static bool IsDontDestroyOnLoad  => s_Current && s_Current.m_DontDestroyOnLoad;
+    public static bool IsActive => s_Current && s_Current.isActiveAndEnabled;
+    public static bool IsReplaceable => !s_Current || s_Current.m_IsReplaceable;
+    public static bool IsDontDestroyOnLoad => s_Current && s_Current.m_DontDestroyOnLoad;
 
 
     public static bool FindInstance(out TSelf instance)
@@ -43,16 +43,16 @@ namespace Bore
 
 
 
-  [Header("Scene Singleton")]
+    [Header("Scene Singleton")]
 
     [SerializeField] // [RequiredReference(DisableIfPrefab = true)]
     protected SceneRef m_OwningScene;
 
     [SerializeField]
-    protected bool m_IsReplaceable      = false;
+    protected bool m_IsReplaceable = false;
 
     [SerializeField]
-    protected bool m_DontDestroyOnLoad  = false;
+    protected bool m_DontDestroyOnLoad = false;
 
     [SerializeField]
     protected DelayedEvent m_OnFirstInitialized = DelayedEvent.WithApproximateFrameDelay(1, 60f);
@@ -92,17 +92,13 @@ namespace Bore
     protected virtual void OnDisable()
     {
       if (s_Current == this)
-      {
         s_Current = null;
-      }
     }
 
     protected virtual void OnValidate()
     {
       if (m_DontDestroyOnLoad)
-      {
         m_OwningScene = default;
-      }
       else
       {
         m_OwningScene = gameObject.scene;
@@ -113,10 +109,8 @@ namespace Bore
     protected bool TryInitialize(TSelf self)
     {
       if (OAssert.Fails(this == self, $"Proper usage: {nameof(TryInitialize)}(this)", ctx: self))
-      {
         return false;
-      }
-      
+
       if (s_Current && s_Current != self)
       {
         if (!s_Current.m_IsReplaceable)
@@ -134,13 +128,11 @@ namespace Bore
         return true;
 
       if (m_DontDestroyOnLoad)
-      {
         DontDestroyOnLoad(gameObject);
-      }
 
       m_OwningScene = gameObject.scene;
 
-      return ( m_IsInitialized = m_OnFirstInitialized.TryInvokeOn(this) );
+      return m_IsInitialized = m_OnFirstInitialized.TryInvokeOn(this);
     }
 
 
@@ -152,9 +144,7 @@ namespace Bore
         return;
 
       if (set)
-      {
         DontDestroyOnLoad(gameObject);
-      }
       else
       {
         SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());

@@ -3,13 +3,14 @@
  *  @date       2022-06-20
 **/
 
-using System.Collections;
 using System.Collections.Generic;
 
 
-namespace Bore
+namespace Ore
 {
-
+  /// <summary>
+  /// Utilities and generic extensions for `IList<T>` containers. 
+  /// </summary>
   public static class Lists
   {
 
@@ -32,21 +33,21 @@ namespace Bore
 
     public static T PopFront<T>(this IList<T> list) // DEF_UNITY_ASSERTIONS BAD
     {
-      T result = list[0];
+      var result = list[0];
       list.RemoveAt(0);
       return result;
     }
 
     public static T PopBack<T>(this IList<T> list)
     {
-      T result = list[list.Count - 1];
+      var result = list[list.Count - 1];
       list.RemoveAt(list.Count - 1);
       return result;
     }
 
     public static T[] PopBack<T>(this IList<T> list, int count)
     {
-      T[] result = new T[count];
+      var result = new T[count];
 
       int i = 0, j = list.Count;
       while (count-- > 0 && j > 0)

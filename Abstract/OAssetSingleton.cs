@@ -22,7 +22,7 @@ using UnityEngine;
 using UnityEvent = UnityEngine.Events.UnityEvent;
 
 
-namespace Bore
+namespace Ore
 {
   /// <summary>
   ///   Base class for singleton objects which exists without a formal "parent"
@@ -35,23 +35,23 @@ namespace Bore
   public abstract class OAssetSingleton<TSelf> : OAsset
     where TSelf : OAssetSingleton<TSelf>
   {
-    public static TSelf Current  => s_Current;
+    public static TSelf Current => s_Current;
     public static TSelf Instance => s_Current; // compatibility API
 
     private static TSelf s_Current;
 
 
-    public static bool IsActive       => s_Current;
-    public static bool IsReplaceable  => !s_Current || s_Current.m_IsReplaceable;
+    public static bool IsActive => s_Current;
+    public static bool IsReplaceable => !s_Current || s_Current.m_IsReplaceable;
 
 
-  [Header("Asset Singleton Properties")]
+    [Header("Asset Singleton Properties")]
     [SerializeField]
-    private bool        m_IsRequiredOnLaunch  = false;
+    private bool m_IsRequiredOnLaunch = false;
     [SerializeField]
-    protected bool      m_IsReplaceable       = false;
+    protected bool m_IsReplaceable = false;
     [SerializeField]
-    protected HideFlags m_AdvancedFlags       = HideFlags.DontUnloadUnusedAsset;
+    protected HideFlags m_AdvancedFlags = HideFlags.DontUnloadUnusedAsset;
 
     [Space]
 
@@ -63,27 +63,23 @@ namespace Bore
     protected virtual void OnEnable()
     {
       if (!TryInitialize((TSelf)this))
-      {
         Orator.Warn("OAssetSingleton failed to initialize!", this);
-      }
     }
 
     protected virtual void OnDisable()
     {
       if (s_Current == this)
-      {
         s_Current = null;
-      }
     }
 
     protected virtual void OnValidate()
     {
-      this.hideFlags = m_AdvancedFlags;
+      hideFlags = m_AdvancedFlags;
 
       if (this is IImmortalSingleton)
       {
-        m_IsReplaceable       = false;
-        m_IsRequiredOnLaunch  = true;
+        m_IsReplaceable = false;
+        m_IsRequiredOnLaunch = true;
       }
 
       _ = EditorBridge.TrySetPreloadedAsset(this, m_IsRequiredOnLaunch);

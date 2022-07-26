@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEditor;
 
 
-namespace Bore
+namespace Ore.Editor
 {
 
   [InitializeOnLoad]
@@ -35,19 +35,17 @@ namespace Bore
 
         // get compiled default label width
         float restore_lw = EditorGUIUtility.labelWidth;
-        bool  restore_hm = EditorGUIUtility.hierarchyMode;
-        EditorGUIUtility.labelWidth     = -1f;
-        EditorGUIUtility.hierarchyMode  = false;
+        bool restore_hm = EditorGUIUtility.hierarchyMode;
+        EditorGUIUtility.labelWidth = -1f;
+        EditorGUIUtility.hierarchyMode = false;
 
         Defaults.LabelWidth = EditorGUIUtility.labelWidth;
 
-        EditorGUIUtility.labelWidth     = restore_lw;
-        EditorGUIUtility.hierarchyMode  = restore_hm;
+        EditorGUIUtility.labelWidth = restore_lw;
+        EditorGUIUtility.hierarchyMode = restore_hm;
 
         if (s_DelayDelayTried)
-        {
           EditorApplication.update -= DelayInitialize;
-        }
       }
       catch (System.NullReferenceException ex)
       {
@@ -81,13 +79,13 @@ namespace Bore
     public static class Dark
     {
 
-      public static readonly Color32 Error              = Colors.FromHex("#CA2622FF");
+      public static readonly Color32 Error = Colors.FromHex("#CA2622FF");
 
-      public static readonly Color32 Comment            = Colors.FromHex("#57A64AFF");
+      public static readonly Color32 Comment = Colors.FromHex("#57A64AFF");
 
-      public static readonly Color32 ReferenceTypeName  = Colors.FromHex("#4EC9B1FF");
+      public static readonly Color32 ReferenceTypeName = Colors.FromHex("#4EC9B1FF");
 
-      public static readonly Color32 ValueTypeName      = Colors.FromHex("#86C691FF");
+      public static readonly Color32 ValueTypeName = Colors.FromHex("#86C691FF");
 
     } // end static class Dark
 

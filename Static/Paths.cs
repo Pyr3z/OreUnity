@@ -1,15 +1,18 @@
 ﻿/** @file   Static/Paths.cs
-    @author levianperez\@gmail.com
-    @author levi\@leviperez.dev
-    @date   2022-06-03
+ *  @author levianperez\@gmail.com
+ *  @author levi\@leviperez.dev
+ *  @date   2022-06-03
 **/
 
 using Path = System.IO.Path;
 using StringComparer = System.StringComparer;
 
-namespace Bore
-{
 
+namespace Ore
+{
+  /// <summary>
+  /// Utilities for handling filesystem path strings.
+  /// </summary>
   public static class Paths
   {
     public const int MaxLength = 260;
@@ -20,11 +23,11 @@ namespace Bore
       LameDirectorySeparator
     };
 
-    public const char DirectorySeparator      = '/';  // Path.AltDirectorySeparatorChar
-    public const char LameDirectorySeparator  = '\\'; // Path.DirectorySeparatorChar
+    public const char DirectorySeparator = '/';  // Path.AltDirectorySeparatorChar
+    public const char LameDirectorySeparator = '\\'; // Path.DirectorySeparatorChar
 
-    public static readonly char[] InvalidFileNameChars  = Path.GetInvalidFileNameChars();
-    public static readonly char[] InvalidPathChars      = Path.GetInvalidPathChars();
+    public static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars();
+    public static readonly char[] InvalidPathChars = Path.GetInvalidPathChars();
 
     public static readonly StringComparer Comparer = StringComparer.InvariantCulture;
 
@@ -36,7 +39,7 @@ namespace Bore
 
     public static bool IsValidFileName(string filename)
     {
-      return  ExtractBasePath(filename, out string name) &&
+      return ExtractBasePath(filename, out string name) &&
               name.IndexOfAny(InvalidFileNameChars) < 0;
     }
 
@@ -85,12 +88,10 @@ namespace Bore
 
       int slash = dirpath.LastIndexOfAny(DirectorySeparators);
       if (slash < 0)
-      {
         dirpath = ".";
-      }
       else
       {
-        dirpath  = dirpath.Remove(slash);
+        dirpath = dirpath.Remove(slash);
         basepath = dirpath.Substring(slash + 1);
       }
 

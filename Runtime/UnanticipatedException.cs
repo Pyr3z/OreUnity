@@ -1,14 +1,14 @@
 ﻿/** @file   Objects/UnanticipatedException.cs
-    @author levianperez\@gmail.com
-    @author levi\@leviperez.dev
-    @date   2022-06-03
-
-    @brief  A new generic exception type with mega self-documentation in mind.
+ *  @author levi\@leviperez.dev
+ *  @date   2022-06-03
 **/
 
-namespace Bore
-{
 
+namespace Ore
+{
+  /// <summary>
+  /// A Bore-made generic exception type for self-documenting our own impossible error cases.
+  /// </summary>
   public sealed class UnanticipatedException : System.NotImplementedException
   {
 

@@ -7,10 +7,11 @@ using UnityEngine;
 using UnityEditor;
 
 
-namespace Bore
+namespace Ore.Editor
 {
 
-  public class ReferencePaletteWindow : Editor
+  // TODO neat idea, probably for a separate package
+  public class ReferencePaletteWindow : UnityEditor.Editor
   {
 
 

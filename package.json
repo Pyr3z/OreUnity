@@ -1,9 +1,9 @@
 {
   "name":         "dev.leviperez.ore",
-  "version":      "1.1.1",
+  "version":      "2.0.0",
 
   "displayName":  "[Ore]",
-  "description":  "Dependency-free core package for Bore use.",
+  "description":  "Core package intended for Bore use, and (ideally) free of any hard dependencies.",
   "unity":        "2020.3",
 
   "author": {
@@ -12,6 +12,6 @@
 
   "repository": {
     "type": "git",
-    "url":  "https://gitlab.com/UnityOre/ore.git#gp/release"
+    "url":  "https://leviperez.dev/unity/ore.git#gp/v2.0.0"
   }
 }

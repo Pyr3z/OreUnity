@@ -3,7 +3,8 @@
  *  @date     2022-03-23
 **/
 
-namespace Bore
+
+namespace Ore
 {
 
   public class OConfig : OAsset

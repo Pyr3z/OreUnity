@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEditor;
 
 
-namespace Bore
+namespace Ore.Editor
 {
 
   [InitializeOnLoad]
@@ -41,7 +41,7 @@ namespace Bore
 
         if (Filesystem.PathExists(filepath))
           filepath = AssetDatabase.GenerateUniqueAssetPath(filepath);
-                 // (typically appends incremental numbers to filename until unique)
+        // (typically appends incremental numbers to filename until unique)
 
         if (Filesystem.TryMakePathTo(filepath))
         {

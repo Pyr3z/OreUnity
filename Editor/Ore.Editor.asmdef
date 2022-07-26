@@ -1,6 +1,6 @@
 {
     "name": "Ore.Editor",
-    "rootNamespace": "Bore",
+    "rootNamespace": "Ore.Editor",
     "references": [
         "GUID:003a62cf52b30d24388538d6e0151df6"
     ],

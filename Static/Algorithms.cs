@@ -8,7 +8,7 @@
 using System.Collections.Generic;
 
 
-namespace Bore
+namespace Ore
 {
 
   public static class Algorithms
@@ -19,9 +19,9 @@ namespace Bore
     /// </summary>
     public static void Swap<T>(this IList<T> list, int idx1, int idx2)
     {
-      T temp      = list[idx1];
-      list[idx1]  = list[idx2];
-      list[idx2]  = temp;
+      var temp = list[idx1];
+      list[idx1] = list[idx2];
+      list[idx2] = temp;
     }
 
 
@@ -39,15 +39,15 @@ namespace Bore
     {
       list.Add(push);
 
-      int child   = list.Count - 1;
-      int parent  = (child - 1) / 2;
+      int child = list.Count - 1;
+      int parent = (child - 1) / 2;
 
       // heapify up
       while (child > 0 && cmp(list[child], list[parent]) > 0)
       {
-        Swap(list, child, parent);
+        list.Swap(child, parent);
 
-        child  = parent;
+        child = parent;
         parent = (parent - 1) / 2;
       }
     }
@@ -62,7 +62,7 @@ namespace Bore
 
       if (last > 1)
       {
-        Swap(list, 0, last);
+        list.Swap(0, last);
         list.RemoveAt(last);
         HeapifyDown(list, 0, cmp);
       }
@@ -75,8 +75,8 @@ namespace Bore
       // This is way faster than the recursive version!
 
       int count = list.Count;
-      int last  = (count - 1 - 1) / 2;
-      int max   = node;
+      int last = (count - 1 - 1) / 2;
+      int max = node;
 
       while (node <= last)
       {
@@ -92,7 +92,7 @@ namespace Bore
         if (max == node)
           return;
 
-        Swap(list, node, max);
+        list.Swap(node, max);
 
         node = max;
       }
@@ -116,7 +116,7 @@ namespace Bore
       if (max == node)
         return;
 
-      Swap(list, node, max);
+      list.Swap(node, max);
 
       if (max <= (list.Count - 1 - 1) / 2)
         HeapifyDownRecursive(list, max, cmp); // <--

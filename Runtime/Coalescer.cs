@@ -13,7 +13,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 
-namespace Bore
+namespace Ore
 {
 
   public class Coalescer<T> : IEnumerable<T>
@@ -22,8 +22,8 @@ namespace Bore
     public static bool DefaultValidator(T item) => !Equals(item, default(T));
 
 
-    private IEnumerable<T>  m_Items;
-    private Validator       m_Validator;
+    private IEnumerable<T> m_Items;
+    private Validator m_Validator;
 
 
     public Coalescer(params T[] items)
@@ -32,7 +32,7 @@ namespace Bore
     }
     public Coalescer(IEnumerable<T> items, Validator validator = null)
     {
-      m_Items     = items     ?? new T[0];
+      m_Items = items ?? new T[0];
       m_Validator = validator ?? DefaultValidator;
     }
 

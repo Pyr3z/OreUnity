@@ -1,18 +1,20 @@
 /** @file   Static/Floats.cs
-    @author levianperez\@gmail.com
-    @author levi\@leviperez.dev
-    @date   2020-06-06
-
-    @brief
-      Utilities for native IEEE floating-point primitives.
+ *  @author levianperez\@gmail.com
+ *  @author levi\@leviperez.dev
+ *  @date   2020-06-06
+ *
+ *  @brief
+ *    Utilities for native IEEE floating-point primitives.
 **/
-
 
 using Math = System.Math;
 
 
-namespace Bore
+namespace Ore
 {
+  /// <summary>
+  /// Utilities for native IEEE floating-point primitives.
+  /// </summary>
   public static class Floats
   {
     // my chosen epsilon that is accurate enough for most game applications:
@@ -21,7 +23,7 @@ namespace Bore
 
     public const float SQRT2    = 1.414213562373095f; // precomputed because sqrt(2) is super common.
     public const float SQRT_MAX = 1.844674352e+19f;   // precomputed 32-bit IEEE max squarable value
-    
+
     public const float PI       = 3.1415926535897931f;
     public const float IPI      = 1f / PI;
     public const float PIPI     = 2 * PI;
@@ -32,25 +34,25 @@ namespace Bore
     {
       // "stretches" the normalized value `t` so that 1.0 corresponds to 2 * PI,
       // then uses cosine to produce an oscillating value between 0.0 and 1.0
-      return Clamp01(((float)Math.Cos(t * PIPI) - 1f) * 0.5f);
+      return (((float)Math.Cos(t * PIPI) - 1f) * 0.5f).Clamp01();
     }
 
     public static float InverseSinusoidalParameter(float t)
     {
-      return ((float)Math.Acos(-2f * t + 1f)) * IPIPI;
+      return (float)Math.Acos(-2f * t + 1f) * IPIPI;
     }
 
     public static float SmoothStepParameter(float t)
     {
       if (t < 0f) return 0f;
       if (1f < t) return 1f;
-      return (t * t) * (3f - 2f * t);
+      return t * t * (3f - 2f * t);
     }
 
 
     public static float SinusoidalLoop(float a, float b, float t)
     {
-      return LerpedTo(a, b, SinusoidalParameter(t));
+      return a.LerpedTo(b, SinusoidalParameter(t));
     }
 
 
@@ -59,7 +61,7 @@ namespace Bore
       if (expected == 0f)
         return float.PositiveInfinity;
       else
-        return Math.Abs( (actual - expected) / expected );
+        return Math.Abs((actual - expected) / expected);
     }
 
     public static bool Approximately(this float a, float b)
@@ -92,17 +94,17 @@ namespace Bore
       return val * val < epsilon * epsilon;
     }
 
-  #if ENABLE_UNSAFE
+#if ENABLE_UNSAFE
     public static unsafe bool IsNegativeZero(this float val)
     {
       return (*(int*)(&val) & 0x80000000) == 0x80000000;
     }
-  #else
+#else
     public static bool IsNegativeZero(this float val)
     {
-      return val == 0f && System.BitConverter.GetBytes(val)[sizeof(float)-1] == 0x80;
+      return val == 0f && System.BitConverter.GetBytes(val)[sizeof(float) - 1] == 0x80;
     }
-  #endif // ENABLE_UNSAFE
+#endif // ENABLE_UNSAFE
 
     public static bool IsNaN(this float val)
     {
@@ -140,7 +142,7 @@ namespace Bore
       if (float.IsNaN(val))
         return finite;
       if (float.IsInfinity(val))
-        return (0f < val) ? finite : -finite;
+        return 0f < val ? finite : -finite;
 
       return val;
     }
@@ -150,7 +152,7 @@ namespace Bore
       if (float.IsNaN(val) || !float.IsPositiveInfinity(val * val))
         return val;
 
-      return Sign(val) * SQRT_MAX;
+      return val.Sign() * SQRT_MAX;
     }
 
 
@@ -192,7 +194,7 @@ namespace Bore
 
     public static float Sqrt(this float val)
     {
-      return (float)System.Math.Sqrt(val);
+      return (float)Math.Sqrt(val);
     }
 
     public static float Clamp(this float val, float min, float max)
@@ -215,12 +217,12 @@ namespace Bore
 
     public static float AtMost(this float val, float most)
     {
-      return (most < val) ? most : val;
+      return most < val ? most : val;
     }
 
     public static float AtLeast(this float val, float least)
     {
-      return (val < least) ? least : val;
+      return val < least ? least : val;
     }
 
     public static float SqueezedNaN(this float val)

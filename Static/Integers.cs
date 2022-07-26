@@ -1,32 +1,35 @@
 ﻿/** @file   Static/Integers.cs
-    @author levianperez\@gmail.com
-    @author levi\@leviperez.dev
-    @date   2020-06-06
-
-    @brief
-      Provides utilities for native integral primitives and other types that
-      implement `System.IConvertible`.
+ *  @author levianperez\@gmail.com
+ *  @author levi\@leviperez.dev
+ *  @date   2020-06-06
+ *
+ *  @brief
+ *    Provides utilities for native integral primitives and other types that
+ *    implement `System.IConvertible`.
 **/
 
+using IConvertible = System.IConvertible;
 
-namespace Bore
+
+namespace Ore
 {
-  using IConvertible = System.IConvertible;
-
-
+  /// <summary>
+  /// Provides utilities for native integral primitives and other types that
+  /// implement `System.IConvertible`.
+  /// </summary>
   public static class Integers
   {
     // Maximum 1D array size, slightly smaller than int.MaxValue (grabbed from decompiled System.Array)
-    public const int MAX_ARRAY_SZ    = 2146435069;
+    public const int MAX_ARRAY_SZ = 2146435069;
 
     // logical 2D arrays assume a square grid:
-    public const int MAX_ARRAY2D_SZ     = 46329; // floor(sqrt(MAX_ARRAY_SZ))
+    public const int MAX_ARRAY2D_SZ = 46329; // floor(sqrt(MAX_ARRAY_SZ))
     public const int MAX_ARRAY2D_EXTENT = 23164; // MAX_ARRAY2D_SZ / 2
 
 
     public static int CalcDecimalDigits(int self)
     {
-      return ( self < 10 ) ? 1 : (int)System.Math.Log10(self - 1) + 1;
+      return self < 10 ? 1 : (int)System.Math.Log10(self - 1) + 1;
     }
 
     public static string MakeIndexPreformattedString(int size)
@@ -38,12 +41,12 @@ namespace Bore
     public static long Abs(this long self) // branchless!
     {
       long mask = self >> 63;
-      return (self + mask) ^ mask;
+      return self + mask ^ mask;
     }
-    public static int  Abs(this int self)
+    public static int Abs(this int self)
     {
       int mask = self >> 31;
-      return (self + mask) ^ mask;
+      return self + mask ^ mask;
     }
 
 
@@ -54,29 +57,27 @@ namespace Bore
 
     public static int SignNoZero(this int self)
     {
-      return (self < 0) ? -1 : 1;
+      return self < 0 ? -1 : 1;
     }
 
 
     public static int AtLeast(this int self, int min)
     {
-      return (self < min) ? min : self;
+      return self < min ? min : self;
     }
 
     public static int AtMost(this int self, int max)
     {
-      return (self > max) ? max : self;
+      return self > max ? max : self;
     }
 
-    #pragma warning disable IDE0060 // unused parameter 'warn'
     public static int AtLeast(this int self, int min, bool warn)
     {
       if (self < min)
       {
-        /* Commenting out functionality from PyroDX: */
-        //#if DEBUG
-        //if (warn) Logging.WarnReached();
-        //#endif
+#if UNITY_ASSERTIONS
+        OAssert.False(warn, $"{self} < {min}");
+#endif
         return min;
       }
 
@@ -87,21 +88,19 @@ namespace Bore
     {
       if (max < self)
       {
-        /* Commenting out functionality from PyroDX: */
-        //#if DEBUG
-        //if (warn) Logging.WarnReached();
-        //#endif
+#if UNITY_ASSERTIONS
+        OAssert.False(warn, $"{max} < {self}");
+#endif
         return max;
       }
 
       return self;
     }
-    #pragma warning restore IDE0060 // unused parameter 'warn'
 
 
     public static int Clamp(this int self, int min, int max)
     {
-      return (self < min) ? min : (self > max) ? max : self;
+      return self < min ? min : self > max ? max : self;
     }
 
 
@@ -139,7 +138,7 @@ namespace Bore
       if (size < 4)
         return 1;
       else
-        return AtMost(size / 2, MAX_ARRAY2D_EXTENT, warn: true);
+        return (size / 2).AtMost(MAX_ARRAY2D_EXTENT, warn: true);
     }
 
     public static int CalcExtent(uint size)
@@ -147,7 +146,7 @@ namespace Bore
       if (size < 4u)
         return 1;
       else
-        return AtMost((int)(size / 2), MAX_ARRAY2D_EXTENT, warn: true);
+        return ((int)(size / 2)).AtMost(MAX_ARRAY2D_EXTENT, warn: true);
     }
 
 
@@ -187,7 +186,7 @@ namespace Bore
       return self & mask.ToInt64(null);
     }
 
-    public static int  Mask<TFlag>(this int self, TFlag mask)
+    public static int Mask<TFlag>(this int self, TFlag mask)
       where TFlag : unmanaged, IConvertible
     {
       return self & mask.ToInt32(null);
@@ -258,7 +257,7 @@ namespace Bore
 
     public static bool IsEven(this long self)
     {
-      return ( (self & long.MinValue) == 0 ) == ( (self & 1) == 0 );
+      return (self & long.MinValue) == 0 == ((self & 1) == 0);
     }
 
     public static bool IsEven(this ulong self)
@@ -269,7 +268,7 @@ namespace Bore
 
     public static bool IsEven(this int self)
     {
-      return ( (self & int.MinValue) == 0 ) == ( (self & 1) == 0 );
+      return (self & int.MinValue) == 0 == ((self & 1) == 0);
     }
 
     public static bool IsEven(this uint self)
@@ -282,7 +281,7 @@ namespace Bore
     {
       return self != 0;
     }
-    public static int  ToInt(this bool self)
+    public static int ToInt(this bool self)
     {
       return self ? 1 : 0;
     }
@@ -290,46 +289,46 @@ namespace Bore
 
     public static int Truncate(this ulong self)
     {
-      return (0 < self) ? 1 : 0;
+      return 0 < self ? 1 : 0;
     }
 
     public static int Truncate(this uint self)
     {
-      return (0 < self) ? 1 : 0;
+      return 0 < self ? 1 : 0;
     }
 
 
     public static int Truncate(this long self)
     {
-      return (self == 0) ? 0 : 1;
+      return self == 0 ? 0 : 1;
     }
 
     public static int Truncate(this int self)
     {
-      return (self == 0) ? 0 : 1;
+      return self == 0 ? 0 : 1;
     }
 
 
 
     public static int NOT(this ulong self)
     {
-      return (0 < self) ? 0 : 1;
+      return 0 < self ? 0 : 1;
     }
 
     public static int NOT(this uint self)
     {
-      return (0 < self) ? 0 : 1;
+      return 0 < self ? 0 : 1;
     }
 
 
     public static int NOT(this long self)
     {
-      return (self == 0) ? 1 : 0;
+      return self == 0 ? 1 : 0;
     }
 
     public static int NOT(this int self)
     {
-      return (self == 0) ? 1 : 0;
+      return self == 0 ? 1 : 0;
     }
 
   } // end static class Integers

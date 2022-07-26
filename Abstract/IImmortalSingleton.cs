@@ -3,7 +3,8 @@
  *  @date       2022-06-21
 **/
 
-namespace Bore
+
+namespace Ore
 {
   /// <summary>
   /// Marks a Singleton as unkillable, meaning it cannot be destroyed,

@@ -17,39 +17,35 @@
             (which typically call the instance methods on the singleton).
 **/
 
-#pragma warning disable CS0414
-
-using System.Diagnostics;
 using System.ComponentModel;
 
 using UnityEngine;
 
 using Debug         = UnityEngine.Debug;
-using UnityAssert   = UnityEngine.Assertions.Assert;
 using AssException  = UnityEngine.Assertions.AssertionException;
 
 
-namespace Bore
+namespace Ore
 {
   //[DebuggerStepThrough]
   [DefaultExecutionOrder(-1337)]
   public sealed class Orator : OAssetSingleton<Orator>, IImmortalSingleton
   {
 
-#region instance fields
+    #region instance fields
 
     [System.Serializable]
     private struct LogFormatDef
     {
       [SerializeField]
-      public LogType    LogType;
+      public LogType LogType;
       [SerializeField]
-      public LogOption  LogOption;
+      public LogOption LogOption;
       [SerializeField, Delayed]
-      public string     BaseMessage;
+      public string BaseMessage;
 
       [SerializeField]
-      public Color32    RichTextColor;
+      public Color32 RichTextColor;
       // rich text etc... (TODO)
     } // end struct LogFormatDef
 
@@ -58,23 +54,23 @@ namespace Bore
 
     internal const EditorBrowsableState INSTANCE_BROWSABLE_POLICY = EditorBrowsableState.Never;
 
-    internal const string    DEFAULT_KONSOLE_PREFIX        = "[" + nameof(Orator) + "]";
-    internal const LogOption DEFAULT_LOG_LOGOPT            = LogOption.NoStacktrace;
-    internal const bool      DEFAULT_INCLUDE_CONTEXT       = true;
+    internal const string DEFAULT_KONSOLE_PREFIX = "[" + nameof(Orator) + "]";
+    internal const LogOption DEFAULT_LOG_LOGOPT = LogOption.NoStacktrace;
+    internal const bool DEFAULT_INCLUDE_CONTEXT = true;
 
-    internal const string    DEFAULT_REACHED_MSG           = "<b>Reached!</b>";
-    internal const LogType   DEFAULT_REACHED_LOGTYPE       = LogType.Warning;
-    internal const LogOption DEFAULT_REACHED_LOGOPT        = LogOption.None;
+    internal const string DEFAULT_REACHED_MSG = "<b>Reached!</b>";
+    internal const LogType DEFAULT_REACHED_LOGTYPE = LogType.Warning;
+    internal const LogOption DEFAULT_REACHED_LOGOPT = LogOption.None;
 
-    internal const LogType   DEFAULT_ASSERT_LOGTYPE        = LogType.Assert;
-    internal const string    DEFAULT_ASSERT_MSG            = "<b>Assertion failed!</b>";
-    internal const LogOption DEFAULT_ASSERT_LOGOPT         = LogOption.None;
+    internal const LogType DEFAULT_ASSERT_LOGTYPE = LogType.Assert;
+    internal const string DEFAULT_ASSERT_MSG = "<b>Assertion failed!</b>";
+    internal const LogOption DEFAULT_ASSERT_LOGOPT = LogOption.None;
 
-    internal const bool      DEFAULT_ASSERT_EXCEPTIONS     = false;
-    internal const bool      DEFAULT_ASSERTIONS_IN_RELEASE = false;
+    internal const bool DEFAULT_ASSERT_EXCEPTIONS = false;
+    internal const bool DEFAULT_ASSERTIONS_IN_RELEASE = false;
 
 
-  [Header("Orator Properties")]
+    [Header("Orator Properties")]
 
     [SerializeField]
     private string m_OratorPrefix = DEFAULT_KONSOLE_PREFIX;
@@ -93,18 +89,20 @@ namespace Bore
     [Space]
 
     [SerializeField]
-    private LogFormatDef m_ReachedFormat = new LogFormatDef {
-      LogType     = DEFAULT_REACHED_LOGTYPE,
-      LogOption   = DEFAULT_REACHED_LOGOPT,
+    private LogFormatDef m_ReachedFormat = new LogFormatDef
+    {
+      LogType = DEFAULT_REACHED_LOGTYPE,
+      LogOption = DEFAULT_REACHED_LOGOPT,
       BaseMessage = DEFAULT_REACHED_MSG
     };
 
     [Space]
 
     [SerializeField]
-    private LogFormatDef m_AssertionFailedFormat = new LogFormatDef {
-      LogType     = DEFAULT_ASSERT_LOGTYPE,
-      LogOption   = DEFAULT_ASSERT_LOGOPT,
+    private LogFormatDef m_AssertionFailedFormat = new LogFormatDef
+    {
+      LogType = DEFAULT_ASSERT_LOGTYPE,
+      LogOption = DEFAULT_ASSERT_LOGOPT,
       BaseMessage = DEFAULT_ASSERT_MSG
     };
 
@@ -115,17 +113,17 @@ namespace Bore
 
       // reset cached message strings
       m_FormattedReachedMessage = null;
-      m_FormattedAssertMessage  = null;
+      m_FormattedAssertMessage = null;
     }
 
-#endregion
+    #endregion
 
 
-#region instance methods
+    #region instance methods
 
-                     /* IDE1006 => public member name does not match style guide */
+    /* IDE1006 => public member name does not match style guide */
 #pragma warning disable IDE1006
-// lowercase function names = convention for instance versions of static methods
+    // lowercase function names = convention for instance versions of static methods
 
 
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
@@ -246,10 +244,10 @@ namespace Bore
 #pragma warning restore IDE1006
 
 
-#endregion
+    #endregion
 
 
-#region PUBLIC STATIC METHODS
+    #region PUBLIC STATIC METHODS
 
     public static string Prefix
     {
@@ -355,10 +353,10 @@ namespace Bore
         Debug.LogError($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
     }
 
-#endregion
+    #endregion
 
 
-#region STATIC ASSERTION API
+    #region STATIC ASSERTION API
 
     public /* static */ sealed class Assert : OAssert
     {
@@ -368,10 +366,10 @@ namespace Bore
 
     } // end static class Assert
 
-#endregion
+    #endregion
 
 
-#region (private section)
+    #region (private section)
 
     // TODO fancy formatting w/ PyroDK.RichText API
 
@@ -381,10 +379,7 @@ namespace Bore
       get
       {
         if (m_FormattedReachedMessage == null)
-        {
           m_FormattedReachedMessage = $"{m_OratorPrefix} {m_ReachedFormat.BaseMessage}";
-          // TODO rich text
-        }
 
         return m_FormattedReachedMessage;
       }
@@ -396,10 +391,7 @@ namespace Bore
       get
       {
         if (m_FormattedAssertMessage == null)
-        {
           m_FormattedAssertMessage = $"{m_OratorPrefix} {m_AssertionFailedFormat.BaseMessage}";
-          // TODO rich text
-        }
 
         return m_FormattedAssertMessage;
       }
@@ -409,7 +401,7 @@ namespace Bore
     {
       if (!ctx)
       {
-        ctx   = this;
+        ctx = this;
         msg ??= string.Empty;
       }
       else if (m_IncludeContextInMessages)
@@ -433,7 +425,7 @@ namespace Bore
     }
 #endif // UNITY_EDITOR
 
-#endregion
+    #endregion
 
   } // end class Orator
 

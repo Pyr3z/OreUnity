@@ -7,20 +7,19 @@
 
 using UnityEngine;
 
-using Conditional = System.Diagnostics.ConditionalAttribute;
+using Conditional  = System.Diagnostics.ConditionalAttribute;
+using UnityAssert  = UnityEngine.Assertions.Assert;
+using AssException = UnityEngine.Assertions.AssertionException;
 
-using UnityAssert   = UnityEngine.Assertions.Assert;
-using AssException  = UnityEngine.Assertions.AssertionException;
 
-
-namespace Bore
+namespace Ore
 {
 
   public /* static */ class OAssert
   {
-    private static Orator  Orator => Orator.Instance;
-    private const string    DEF_UNITY_ASSERTIONS = "UNITY_ASSERTIONS";
-    private const string    MSG_NO_KONSOLE = "(note: " + nameof(Bore.Orator) + " not available)";
+    private static Orator Orator => Orator.Instance;
+    private const string DEF_UNITY_ASSERTIONS = "UNITY_ASSERTIONS";
+    private const string MSG_NO_KONSOLE = "(note: " + nameof(Ore.Orator) + " not available)";
 
     private static readonly string NL = System.Environment.NewLine;
     private static readonly string FMT_NO_KONSOLE = "[OAssert] {0} {1}" + NL + "{2}";
@@ -60,9 +59,9 @@ namespace Bore
 
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
-    public static void True(bool assertion, Object ctx = null)
+    public static void True(bool value, Object ctx = null)
     {
-      if (!assertion)
+      if (!value)
       {
         if (Orator)
           Orator.assertionFailed(BoolFailMessage(expected: true), ctx);
@@ -74,9 +73,9 @@ namespace Bore
     }
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
-    public static void True(bool assertion, string msg, Object ctx = null)
+    public static void True(bool value, string msg, Object ctx = null)
     {
-      if (!assertion)
+      if (!value)
       {
         if (Orator)
           Orator.assertionFailed(msg, ctx);
@@ -87,22 +86,48 @@ namespace Bore
       }
     }
 
-
     [Conditional(DEF_UNITY_ASSERTIONS)]
-    public static void AllTrue(params bool[] assertions)
+    public static void False(bool value, Object ctx = null)
     {
-      AllTrue(null, assertions);
+      if (value)
+      {
+        if (Orator)
+          Orator.assertionFailed(BoolFailMessage(expected: false), ctx);
+        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+          throw new AssException(MSG_NO_KONSOLE, BoolFailMessage(expected: false, ctx));
+        else
+          LogNoOrator(BoolFailMessage(expected: false, ctx));
+      }
+    }
+
+    public static void False(bool value, string msg, Object ctx = null)
+    {
+      if (value)
+      {
+        if (Orator)
+          Orator.assertionFailed(msg, ctx);
+        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+          throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
+        else
+          LogNoOrator(MessageContext(msg, ctx));
+      }
     }
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
-    public static void AllTrue(Object ctx, params bool[] assertions)
+    public static void AllTrue(params bool[] values)
     {
-      for (int i = 0, ilen = assertions?.Length ?? 0; i < ilen; ++i)
+      AllTrue(null, values);
+    }
+
+    [Conditional(DEF_UNITY_ASSERTIONS)]
+    public static void AllTrue(Object ctx, params bool[] values)
+    {
+      for (int i = 0, ilen = values?.Length ?? 0; i < ilen; ++i)
       {
-        if (!assertions[i])
+        if (!values[i])
         {
           if (Orator)
-            Orator.assertionFailed($"# {i+1}/{ilen}: {BoolFailMessage(expected: true)}", ctx);
+            Orator.assertionFailed($"# {i + 1}/{ilen}: {BoolFailMessage(expected: true)}", ctx);
           else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
             throw new AssException(MSG_NO_KONSOLE, $"{BoolFailMessage(expected: true, ctx)}{NL}(parameter: {i + 1}/{ilen})");
           else
@@ -148,7 +173,7 @@ namespace Bore
     {
       if (assertion)
         return false;
-      
+
       if (Orator)
         Orator.assertionFailedNoThrow(BoolFailMessage(expected: true), ctx);
       else
@@ -170,7 +195,7 @@ namespace Bore
       return true;
     }
 
-      
+
     public static bool FailsNullCheck(object obj, Object ctx = null)
     {
       if (!(obj is null))

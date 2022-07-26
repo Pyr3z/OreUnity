@@ -6,16 +6,13 @@
 using UnityEngine;
 
 
-namespace Bore
+namespace Ore
 {
 
   [System.Serializable]
   public sealed class VersionID :
     System.IComparable<VersionID>,
     System.IEquatable<VersionID>
-//#if UNITY_EDITOR
-//  , ISerializationCallbackReceiver
-//#endif
   {
     public static bool FuzzyValidate(string str)
     {
@@ -30,30 +27,28 @@ namespace Bore
 
       float digs = Strings.CountDigits(str);
 
-      return (digs / str.Length) > PCT_THRESHOLD;
+      return digs / str.Length > PCT_THRESHOLD;
     }
 
     public static string ExtractOSVersion(string from)
     {
       string[] vers = from.Split(Strings.WHITESPACES, System.StringSplitOptions.RemoveEmptyEntries);
 
-    //#if UNITY_ANDROID
+      //#if UNITY_ANDROID
       foreach (var ver in vers)
       {
         if (ver.StartsWith("API-"))
           return ver.Substring(4);
       }
-    //#endif
+      //#endif
 
       // walk back, looking for something useful
       int i = vers.Length;
-      while (i --> 0)
+      while (i-- > 0)
       {
         string ver = vers[i];
         if (FuzzyValidate(ver))
-        {
           return ver;
-        }
       }
 
       return "1"; // non-zero but shitty OS version number, too shitty to pass any checks
@@ -61,8 +56,8 @@ namespace Bore
 
 
 
-    public bool IsValid         => m_OrderedHash >= 0;
-    public int  ComponentCount  => m_Vers.Length;
+    public bool IsValid => m_OrderedHash >= 0;
+    public int ComponentCount => m_Vers.Length;
 
     public int Major => m_Vers[0];
     public int Minor => m_Vers[1 % m_Vers.Length]; // lazy safety
@@ -77,19 +72,21 @@ namespace Bore
 
     private const int NYBBLE = 4; // bits in half a byte
 
-    private const uint HASH_MASK_MAJOR = 0x0FF00000;
-    private const uint HASH_MASK_MINOR = 0x000FF000;
-    private const uint HASH_MASK_PATCH = 0x00000FF0;
-    private const uint HASH_MASK_EXTRA = 0x0000000F;
+    // internal: these masks document succinctly the byte layout of VersionID ordered hashes.
+    internal const uint HASH_MASK_MAJOR = 0x0FF00000;
+    internal const uint HASH_MASK_MINOR = 0x000FF000;
+    internal const uint HASH_MASK_PATCH = 0x00000FF0;
+    internal const uint HASH_MASK_EXTRA = 0x0000000F;
+
 
     [SerializeField]
-    private string  m_String;
+    private string m_String;
 
     [SerializeField]
-    private int     m_OrderedHash;
+    private int m_OrderedHash;
 
     [SerializeField]
-    private int[]   m_Vers = new int[] { 0 };
+    private int[] m_Vers = new int[] { 0 };
 
 
 
@@ -119,9 +116,7 @@ namespace Bore
       for (int i = 0; i < len; ++i)
       {
         if (!int.TryParse(splits[i], out m_Vers[i]))
-        {
           m_Vers[i] = splits[i].Length * -1;
-        }
       }
 
       m_String = ver;
@@ -132,7 +127,7 @@ namespace Bore
     private int CalcOrderedHash(int end)
     {
       int bitpos = 8 * sizeof(uint) - NYBBLE; // reserve top nybble
-      int len    = m_Vers.Length;
+      int len = m_Vers.Length;
       int hash;
 
       // use bottom 2 nybbles of major version as MSB
@@ -184,9 +179,9 @@ namespace Bore
       if (m_OrderedHash < other.m_OrderedHash)
         return -1;
       if (other.m_OrderedHash < m_OrderedHash)
-        return  1;
+        return 1;
       else
-        return  0;
+        return 0;
     }
 
     public override bool Equals(object other)
@@ -205,34 +200,34 @@ namespace Bore
     }
 
 
-    public static implicit operator string (VersionID vstr)
+    public static implicit operator string(VersionID vstr)
     {
       return vstr.m_String;
     }
 
-    public static implicit operator VersionID (string ver)
+    public static implicit operator VersionID(string ver)
     {
       return new VersionID(ver);
     }
 
-    public static bool operator < (VersionID lhs, VersionID rhs)
+    public static bool operator <(VersionID lhs, VersionID rhs)
     {
       return lhs is object && rhs is object && lhs.m_OrderedHash < rhs.m_OrderedHash;
     }
 
-    public static bool operator > (VersionID lhs, VersionID rhs)
+    public static bool operator >(VersionID lhs, VersionID rhs)
     {
       return lhs is object && rhs is object && rhs.m_OrderedHash < lhs.m_OrderedHash;
     }
 
-    public static bool operator == (VersionID lhs, VersionID rhs)
+    public static bool operator ==(VersionID lhs, VersionID rhs)
     {
-      return lhs?.Equals(rhs) ?? (rhs is null);
+      return lhs?.Equals(rhs) ?? rhs is null;
     }
 
-    public static bool operator != (VersionID lhs, VersionID rhs)
+    public static bool operator !=(VersionID lhs, VersionID rhs)
     {
-      return !( lhs?.Equals(rhs) ?? (rhs is null) );
+      return !(lhs?.Equals(rhs) ?? rhs is null);
     }
 
   } // end class VersionID

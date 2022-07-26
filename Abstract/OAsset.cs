@@ -6,7 +6,7 @@
 using UnityEngine;
 
 
-namespace Bore
+namespace Ore
 {
 
   /// <summary>
