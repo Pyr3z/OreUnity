@@ -422,6 +422,8 @@ namespace Ore
       Log("message");
       Warn("warning");
       Error("error");
+      Assert.True(false, Instance);
+      Log("(post-assert failure)");
     }
 #endif // UNITY_EDITOR
 

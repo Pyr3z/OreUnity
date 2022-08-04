@@ -16,14 +16,14 @@ using System.Collections.Generic;
 namespace Ore
 {
 
-  public class Coalescer<T> : IEnumerable<T>
+  public struct Coalescer<T> : IEnumerable<T>
   {
     public delegate bool Validator(T item);
     public static bool DefaultValidator(T item) => !Equals(item, default(T));
 
 
-    private IEnumerable<T> m_Items;
-    private Validator m_Validator;
+    private IEnumerable<T>  m_Items;
+    private Validator       m_Validator;
 
 
     public Coalescer(params T[] items)
@@ -85,6 +85,13 @@ namespace Ore
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-  } // end class Coalescer<T>
+
+    public static implicit operator T (Coalescer<T> coal)
+    {
+      _ = coal.TryCoalesce(out T item);
+      return item;
+    }
+
+  } // end struct Coalescer<T>
 
 }
