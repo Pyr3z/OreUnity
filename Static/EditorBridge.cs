@@ -24,12 +24,11 @@ namespace Ore
 
     public static bool TrySetPreloadedAsset(Object asset, bool set)
     {
-      if (!IsMainAsset(asset))
-        //Debug.LogWarning($"Object \"{asset}\" is not a main asset reference and cannot be preloaded.");
+      if (OAssert.Fails(IsMainAsset(asset), $"Object \"{asset}\" is not a main asset Object and cannot be preloaded."))
         return false;
 
-      var buffer = new List<Object>(PlayerSettings.GetPreloadedAssets());
-      bool changed = set;
+      var   buffer  = new List<Object>(PlayerSettings.GetPreloadedAssets());
+      bool  changed = set;
 
       if (set)
       {
@@ -40,7 +39,7 @@ namespace Ore
       else
       {
         int i = buffer.Count;
-        while (i-- > 0)
+        while (i --> 0)
         {
           if (buffer[i] == asset)
           {
@@ -51,9 +50,8 @@ namespace Ore
         }
       }
 
-      if (changed)
+      if (buffer.RemoveAll(obj => !obj) > 0 || changed)
       {
-        buffer.RemoveAll(obj => !obj);
         PlayerSettings.SetPreloadedAssets(buffer.ToArray());
       }
 

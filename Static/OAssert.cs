@@ -5,6 +5,8 @@
  *  @remark     Moved from Orator.Assert (which is backwards-maintained).
 **/
 
+using System.Collections.Generic;
+
 using UnityEngine;
 
 using Conditional  = System.Diagnostics.ConditionalAttribute;
@@ -86,32 +88,6 @@ namespace Ore
       }
     }
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
-    public static void False(bool value, Object ctx = null)
-    {
-      if (value)
-      {
-        if (Orator)
-          Orator.assertionFailed(BoolFailMessage(expected: false), ctx);
-        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-          throw new AssException(MSG_NO_KONSOLE, BoolFailMessage(expected: false, ctx));
-        else
-          LogNoOrator(BoolFailMessage(expected: false, ctx));
-      }
-    }
-
-    public static void False(bool value, string msg, Object ctx = null)
-    {
-      if (value)
-      {
-        if (Orator)
-          Orator.assertionFailed(msg, ctx);
-        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-          throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
-        else
-          LogNoOrator(MessageContext(msg, ctx));
-      }
-    }
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllTrue(params bool[] values)
@@ -136,6 +112,61 @@ namespace Ore
         }
       }
     }
+
+
+    [Conditional(DEF_UNITY_ASSERTIONS)]
+    public static void False(bool value, Object ctx = null)
+    {
+      if (value)
+      {
+        if (Orator)
+          Orator.assertionFailed(BoolFailMessage(expected: false), ctx);
+        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+          throw new AssException(MSG_NO_KONSOLE, BoolFailMessage(expected: false, ctx));
+        else
+          LogNoOrator(BoolFailMessage(expected: false, ctx));
+      }
+    }
+
+    [Conditional(DEF_UNITY_ASSERTIONS)]
+    public static void False(bool value, string msg, Object ctx = null)
+    {
+      if (value)
+      {
+        if (Orator)
+          Orator.assertionFailed(msg, ctx);
+        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+          throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
+        else
+          LogNoOrator(MessageContext(msg, ctx));
+      }
+    }
+
+
+    [Conditional(DEF_UNITY_ASSERTIONS)]
+    public static void AllFalse(params bool[] values)
+    {
+      AllFalse(null, values);
+    }
+
+    [Conditional(DEF_UNITY_ASSERTIONS)]
+    public static void AllFalse(Object ctx, params bool[] values)
+    {
+      for (int i = 0, ilen = values?.Length ?? 0; i < ilen; ++i)
+      {
+        if (values[i])
+        {
+          if (Orator)
+            Orator.assertionFailed($"# {i + 1}/{ilen}: {BoolFailMessage(expected: false)}", ctx);
+          else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+            throw new AssException(MSG_NO_KONSOLE, $"{BoolFailMessage(expected: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
+          else
+            Debug.LogAssertion($"{BoolFailMessage(expected: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
+          return;
+        }
+      }
+    }
+
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void NotNull(object reference, Object ctx = null)
@@ -166,8 +197,87 @@ namespace Ore
     }
 
 
+    [Conditional(DEF_UNITY_ASSERTIONS)]
+    public static void AllNotNull(params object[] references)
+    {
+      AllNotNull(null, references);
+    }
+
+    [Conditional(DEF_UNITY_ASSERTIONS)]
+    public static void AllNotNull(Object ctx, params object[] references)
+    {
+      for (int i = 0, ilen = references?.Length ?? 0; i < ilen; ++i)
+      {
+        if (references[i] == null)
+        {
+          if (Orator)
+            Orator.assertionFailed($"# {i + 1}/{ilen}: {NullFailMessage(expected_null: false)}", ctx);
+          else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+            throw new AssException(MSG_NO_KONSOLE, $"{NullFailMessage(expected_null: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
+          else
+            Debug.LogAssertion($"{NullFailMessage(expected_null: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
+          return;
+        }
+      }
+    }
+
+
+    [Conditional(DEF_UNITY_ASSERTIONS)]
+    public static void NotEmpty<T>(ICollection<T> list, Object ctx = null)
+    {
+      if (list == null || list.Count == 0)
+      {
+        if (Orator)
+          Orator.assertionFailed(CollectionEmptyMessage(expected_empty: false), ctx);
+        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+          throw new AssException(MSG_NO_KONSOLE, CollectionEmptyMessage(expected_empty: false, ctx));
+        else
+          Debug.LogAssertion(CollectionEmptyMessage(expected_empty: false, ctx), ctx);
+      }
+    }
+
+    [Conditional(DEF_UNITY_ASSERTIONS)]
+    public static void NotEmpty<T>(ICollection<T> list, string msg, Object ctx = null)
+    {
+      if (list == null || list.Count == 0)
+      {
+        if (Orator)
+          Orator.assertionFailed(msg, ctx);
+        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+          throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
+        else
+          Debug.LogAssertion(MessageContext(msg, ctx), ctx);
+      }
+    }
+
+    [Conditional(DEF_UNITY_ASSERTIONS)]
+    public static void AllNotEmpty<T>(params ICollection<T>[] lists)
+    {
+      AllNotEmpty(null, lists);
+    }
+
+    [Conditional(DEF_UNITY_ASSERTIONS)]
+    public static void AllNotEmpty<T>(Object ctx, params ICollection<T>[] lists)
+    {
+      for (int i = 0, ilen = lists?.Length ?? 0; i < ilen; ++i)
+      {
+        if (lists[i] == null || lists[i].Count == 0)
+        {
+          if (Orator)
+            Orator.assertionFailed($"# {i + 1}/{ilen}: {CollectionEmptyMessage(expected_empty: false)}", ctx);
+          else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+            throw new AssException(MSG_NO_KONSOLE, $"{CollectionEmptyMessage(expected_empty: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
+          else
+            Debug.LogAssertion($"{CollectionEmptyMessage(expected_empty: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
+          return;
+        }
+      }
+    }
+
+
 #if UNITY_ASSERTIONS
-    // these shouldn't be compiled out, because their bool return values have logical meaning
+// This section shouldn't be compiled out, because their bool return values have logical meaning.
+// It also shouldn't throw exceptions, even if Orator has "Assertions Throw Exceptions" turned on.
 
     public static bool Fails(bool assertion, Object ctx = null)
     {
@@ -285,6 +395,24 @@ namespace Ore
           return $"[{nameof(OAssert)}] Value was NOT null  (expected: null).";
         else
           return $"[{nameof(OAssert)}] Value was null  (expected: NOT null).";
+      }
+    }
+
+    private static string CollectionEmptyMessage(bool expected_empty, Object ctx = null)
+    {
+      if (ctx)
+      {
+        if (expected_empty)
+          return $"[{ctx.GetType().Name}] Collection was NOT empty  (expected: EMPTY, context: \"{ctx.name}\").";
+        else
+          return $"[{ctx.GetType().Name}] Collection was EMPTY  (expected: NOT empty, context: \"{ctx.name}\").";
+      }
+      else
+      {
+        if (expected_empty)
+          return $"[{nameof(OAssert)}] Collection was NOT empty  (expected: EMPTY).";
+        else
+          return $"[{nameof(OAssert)}] Collection was EMPTY  (expected: NOT empty).";
       }
     }
 

@@ -27,6 +27,8 @@ namespace Ore
 
     public static void MakeHeap<T>(this IList<T> list, System.Comparison<T> cmp)
     {
+      OAssert.AllNotNull(list, cmp);
+
       // `node` is the index of the last non-leaf node.
       // We start there and iterate backwards because any leaf nodes can be skipped.
       for (int node = (list.Count - 1 - 1) / 2; node >= 0; --node)
@@ -37,23 +39,27 @@ namespace Ore
 
     public static void PushHeap<T>(this IList<T> list, T push, System.Comparison<T> cmp)
     {
-      list.Add(push);
+      OAssert.AllNotNull(list, cmp);
 
-      int child = list.Count - 1;
+      int child  = list.Count;
       int parent = (child - 1) / 2;
+
+      list.Add(push);
 
       // heapify up
       while (child > 0 && cmp(list[child], list[parent]) > 0)
       {
         list.Swap(child, parent);
 
-        child = parent;
+        child  = parent;
         parent = (parent - 1) / 2;
       }
     }
 
     public static T PopHeap<T>(this IList<T> list, System.Comparison<T> cmp)
     {
+      OAssert.AllNotNull(list, cmp);
+
       int last = list.Count - 1;
       if (last < 0)
         return default;
@@ -72,11 +78,13 @@ namespace Ore
 
     public static void HeapifyDown<T>(IList<T> list, int node, System.Comparison<T> cmp)
     {
+      OAssert.AllNotNull(list, cmp);
+
       // This is way faster than the recursive version!
 
       int count = list.Count;
-      int last = (count - 1 - 1) / 2;
-      int max = node;
+      int last  = (count - 1 - 1) / 2;
+      int max   = node;
 
       while (node <= last)
       {
@@ -101,6 +109,8 @@ namespace Ore
     [System.Obsolete("This version is way slower than the non-recursive version! (UnityUpgradable) -> HeapifyDown<T>(*)")]
     public static void HeapifyDownRecursive<T>(IList<T> list, int node, System.Comparison<T> cmp)
     {
+      OAssert.AllNotNull(list, cmp);
+
       // eww, recursion!
 
       int max = node;

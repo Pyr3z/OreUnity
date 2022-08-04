@@ -13,10 +13,13 @@ namespace Ore
   {
     public enum ABIArch
     {
-      ARM = 0,
-      ARM64 = 1,
-      x86 = 2,
-      x86_64 = 3,
+      ARM     = 0,
+      ARM64   = 1,
+      x86     = 2, // x86* = ChromeOS
+      x86_64  = 3,
+
+      ARMv7   = ARM,
+      ARM32   = ARM,
     }
 
 
@@ -122,16 +125,16 @@ namespace Ore
     }
 
 
-    private static VersionID s_OSVersion = null;
-    private static string s_Brand = null;
-    private static string s_Model = null;
-    private static string s_TimezoneUTCStr = null;
-    private static float? s_TimezoneOffset = null;
-    private static float? s_DiagonalInches = null;
-    private static float? s_AspectRatio = null;
-    private static bool? s_IsTablet = null;
-    private static bool? s_IsBlueStacks = null;
-    private static ABIArch? s_ABIArch = null;
+    private static VersionID  s_OSVersion       = null;
+    private static string     s_Brand           = null;
+    private static string     s_Model           = null;
+    private static string     s_TimezoneUTCStr  = null;
+    private static float?     s_TimezoneOffset  = null;
+    private static float?     s_DiagonalInches  = null;
+    private static float?     s_AspectRatio     = null;
+    private static bool?      s_IsTablet        = null;
+    private static bool?      s_IsBlueStacks    = null;
+    private static ABIArch?   s_ABIArch         = null;
 
 
     private static (string make, string model) GetMakeModel()
@@ -165,7 +168,7 @@ namespace Ore
 
     private static float CalcScreenDiagonalInches()
     {
-      float w = Screen.width / Screen.dpi;
+      float w = Screen.width  / Screen.dpi;
       float h = Screen.height / Screen.dpi;
       return Mathf.Sqrt(w * w + h * h);
     }
@@ -175,9 +178,7 @@ namespace Ore
       if (Screen.height < Screen.width)
         return Screen.width / Screen.height;
       else
-      {
         return Screen.height / Screen.width;
-      }
     }
 
     private static bool CalcIsTablet()
@@ -220,8 +221,9 @@ namespace Ore
 
     private static ABIArch CalcABIArch()
     {
-      string type = SystemInfo.processorType;
       var strcmp = System.StringComparison.OrdinalIgnoreCase;
+      
+      string type = SystemInfo.processorType;
 
       // Android and Android-like devices are pretty standard here
       if (type.StartsWith("ARM", strcmp))

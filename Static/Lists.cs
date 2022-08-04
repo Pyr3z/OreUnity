@@ -3,6 +3,7 @@
  *  @date       2022-06-20
 **/
 
+using System.Collections;
 using System.Collections.Generic;
 
 
@@ -14,7 +15,7 @@ namespace Ore
   public static class Lists
   {
 
-    public static bool IsEmpty<T>(this IList<T> list)
+    public static bool IsEmpty<T>(this ICollection<T> list)
     {
       return list == null || list.Count == 0;
     }
@@ -22,17 +23,21 @@ namespace Ore
 
     public static void PushFront<T>(this IList<T> list, T item)
     {
+      OAssert.NotNull(list, nameof(list));
       list.Insert(0, item);
     }
 
     public static void PushBack<T>(this IList<T> list, T item)
     {
+      OAssert.NotNull(list, nameof(list));
       list.Insert(list.Count, item);
     }
 
 
-    public static T PopFront<T>(this IList<T> list) // DEF_UNITY_ASSERTIONS BAD
+    public static T PopFront<T>(this IList<T> list)
     {
+      OAssert.NotEmpty(list, nameof(list));
+
       var result = list[0];
       list.RemoveAt(0);
       return result;
@@ -40,6 +45,8 @@ namespace Ore
 
     public static T PopBack<T>(this IList<T> list)
     {
+      OAssert.NotEmpty(list, nameof(list));
+
       var result = list[list.Count - 1];
       list.RemoveAt(list.Count - 1);
       return result;
@@ -47,6 +54,8 @@ namespace Ore
 
     public static T[] PopBack<T>(this IList<T> list, int count)
     {
+      OAssert.NotNull(list, nameof(list));
+
       var result = new T[count];
 
       int i = 0, j = list.Count;
