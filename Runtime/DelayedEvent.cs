@@ -64,7 +64,12 @@ namespace Ore
     private Coroutine m_Invocation;
 
 
-    public DelayedEvent(float seconds = DEFAULT_DELAY_SECONDS, bool is_scaled = DEFAULT_SCALED_TIME)
+    public DelayedEvent()
+      : this(DEFAULT_DELAY_SECONDS)
+    {
+    }
+
+    public DelayedEvent(float seconds, bool is_scaled = DEFAULT_SCALED_TIME)
       : base()
     {
       m_DelaySeconds = seconds;
