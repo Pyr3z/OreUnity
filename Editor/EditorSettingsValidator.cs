@@ -1,4 +1,4 @@
-﻿/** @file       Editor/EditorSettingsValidator.cs
+/** @file       Editor/EditorSettingsValidator.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-06
 **/

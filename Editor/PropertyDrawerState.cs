@@ -1,4 +1,4 @@
-﻿/** @file       Editor/PropertyDrawerState.cs
+/** @file       Editor/PropertyDrawerState.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-15
  *  

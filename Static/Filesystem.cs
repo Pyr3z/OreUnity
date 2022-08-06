@@ -1,4 +1,4 @@
-﻿/** @file   Static/Filesystem.cs
+/** @file   Static/Filesystem.cs
  *  @author levianperez\@gmail.com
  *  @author levi\@leviperez.dev
  *  @date   2022-06-03

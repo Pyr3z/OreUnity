@@ -1,4 +1,4 @@
-﻿/** @file       Editor/ReferencePaletteWindow.cs
+/** @file       Editor/ReferencePaletteWindow.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-07-13
 **/

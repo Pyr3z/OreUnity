@@ -1,4 +1,4 @@
-﻿/** @file   Static/Parsing.cs
+/** @file   Static/Parsing.cs
  *  @author levianperez\@gmail.com
  *  @author levi\@leviperez.dev
  *  @date   2022-06-01

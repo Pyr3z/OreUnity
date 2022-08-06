@@ -1,4 +1,4 @@
-﻿/** @file       Editor/Styles.cs
+/** @file       Editor/Styles.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-29
  *  

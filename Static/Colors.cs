@@ -1,4 +1,4 @@
-﻿/** @file       Static/Colors.cs
+/** @file       Static/Colors.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-29
  *  

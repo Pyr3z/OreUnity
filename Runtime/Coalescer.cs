@@ -1,4 +1,4 @@
-﻿/** @file       Runtime/Coalescer.cs
+/** @file       Runtime/Coalescer.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-07-12
  *

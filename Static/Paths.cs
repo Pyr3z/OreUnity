@@ -1,4 +1,4 @@
-﻿/** @file   Static/Paths.cs
+/** @file   Static/Paths.cs
  *  @author levianperez\@gmail.com
  *  @author levi\@leviperez.dev
  *  @date   2022-06-03

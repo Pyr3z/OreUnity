@@ -1,4 +1,4 @@
-﻿/** @file   Static/Bitwise.cs
+/** @file   Static/Bitwise.cs
  *  @author levianperez\@gmail.com
  *  @author levi\@leviperez.dev
  *  @date   2020-06-06

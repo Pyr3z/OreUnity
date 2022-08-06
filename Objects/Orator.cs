@@ -406,7 +406,20 @@ namespace Ore
       }
       else if (m_IncludeContextInMessages)
       {
-        msg = $"[{ctx.GetType().Name}] {msg}\n(name: \"{ctx.name}\")";
+        if (ctx is UnityEngine.Component c)
+        {
+          // TODO construct full scene path for scene objects
+          msg = $"[{ctx.GetType().Name}] {msg}\n(scene path: \"{c.gameObject.scene.name}/{ctx.name}\")";
+        }
+        else if (ctx is GameObject go)
+        {
+          // TODO construct full scene path for scene objects
+          msg = $"[{ctx.GetType().Name}] {msg}\n(scene path: \"{go.scene.name}/{ctx.name}\")";
+        }
+        else
+        {
+          msg = $"[{ctx.GetType().Name}] {msg}\n(asset name: \"{ctx.name}\")";
+        }
       }
       else if (msg == null)
       {

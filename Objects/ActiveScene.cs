@@ -1,4 +1,4 @@
-﻿/** @file       Objects/ActiveScene.cs
+/** @file       Objects/ActiveScene.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-06
  *
