@@ -4,6 +4,7 @@
 **/
 
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 using UnityEngine;
 
@@ -14,6 +15,7 @@ namespace Ore
 {
 
   [System.Serializable]
+  [SuppressMessage("ReSharper", "MemberInitializerValueIgnored")]
   public class DelayedEvent : UnityEvent, IEvent
   {
     public bool IsEnabled
@@ -38,9 +40,10 @@ namespace Ore
     }
 
 
-    private const bool DEFAULT_SCALED_TIME = true;
-    private const float DEFAULT_DELAY_SECONDS = -1f;
-    private const float MIN_DELAY_SECONDS_ASYNC = 1f / 90f;
+    private const bool  DEFAULT_SCALED_TIME      = true;
+    private const float DEFAULT_DELAY_SECONDS    = -1f;
+    private const float DEFAULT_TARGET_FPS       = 60f;
+    private const float MIN_DELAY_SECONDS_ASYNC  = 1f / 90f;
 
 
     [SerializeField, HideInInspector]
@@ -70,20 +73,19 @@ namespace Ore
     }
 
     public DelayedEvent(float seconds, bool is_scaled = DEFAULT_SCALED_TIME)
-      : base()
     {
       m_DelaySeconds = seconds;
-      m_ScaledTime = is_scaled;
+      m_ScaledTime   = is_scaled;
     }
 
-    public static DelayedEvent WithApproximateFrameDelay(int frames, float target_fps)
+    public static DelayedEvent WithApproximateFrameDelay(int frames, float target_fps = DEFAULT_TARGET_FPS)
     {
       return new DelayedEvent(seconds: frames / target_fps,
                               is_scaled: false);
     }
 
 
-    new public void Invoke()
+    public new void Invoke()
     {
       bool ok = TryInvoke();
       OAssert.True(ok, nameof(TryInvoke), m_Context);
@@ -91,22 +93,20 @@ namespace Ore
 
     public bool TryInvoke()
     {
-      if (m_RunInGlobalContext)
-        return TryInvokeOn(ActiveScene.Current);
-      return TryInvokeOn(m_Context);
+      return TryInvokeOn(m_RunInGlobalContext ? ActiveScene.Current : m_Context);
     }
 
     public bool TryInvokeOn(MonoBehaviour component)
     {
-      if (m_IsEnabled)
-      {
-        if (m_DelaySeconds < MIN_DELAY_SECONDS_ASYNC)
-          base.Invoke();
-        else if (m_Invocation == null && component && component.isActiveAndEnabled)
-          m_Invocation = component.StartCoroutine(DelayedInvokeCoroutine());
-        else
-          return false;
-      }
+      if (!m_IsEnabled)
+        return true;
+      
+      if (m_DelaySeconds < MIN_DELAY_SECONDS_ASYNC)
+        base.Invoke();
+      else if (m_Invocation == null && component && component.isActiveAndEnabled)
+        m_Invocation = component.StartCoroutine(DelayedInvokeCoroutine());
+      else
+        return false;
 
       return true;
     }

@@ -4,6 +4,8 @@
  *  @date   2022-06-20
 **/
 
+// ReSharper disable MemberCanBePrivate.Global
+
 using System.Reflection;
 
 using UnityEngine;

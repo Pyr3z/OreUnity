@@ -7,6 +7,7 @@
 **/
 
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable HeapView.BoxingAllocation
 
 using UnityEngine;
 
@@ -33,13 +34,18 @@ namespace Ore
 
     public static string ToHex(this Color32 c)
     {
-      return string.Format("{0:X2}{1:X2}{2:X2}{3:X2}", c.r, c.g, c.b, c.a);
+      return $"{c.r:X2}{c.g:X2}{c.b:X2}{c.a:X2}";
     }
 
     public static Color32 FromHex(string hex)
     {
       _ = Parsing.TryParseColor32(hex, out var c); // Do or do not;
-      return c;                                        // there is no "Try".
+      return c;                                           // there is no "Try".
+    }
+
+    public static Color32 FromHex(string hex, Color32 fallback)
+    {
+      return Parsing.TryParseColor32(hex, out var c) ? c : fallback;
     }
 
 

@@ -3,6 +3,8 @@
  *  @date       2022-02-17
 **/
 
+// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
+
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -49,22 +51,23 @@ namespace Ore
     protected SceneRef m_OwningScene;
 
     [SerializeField]
-    protected bool m_IsReplaceable = false;
+    protected bool m_IsReplaceable;
 
     [SerializeField]
-    protected bool m_DontDestroyOnLoad = false;
+    protected bool m_DontDestroyOnLoad;
 
     [SerializeField]
-    protected DelayedEvent m_OnFirstInitialized = DelayedEvent.WithApproximateFrameDelay(1, 60f);
+    protected DelayedEvent m_OnFirstInitialized = DelayedEvent.WithApproximateFrameDelay(1);
 
 
     [System.NonSerialized]
-    private bool m_IsInitialized = false;
+    private bool m_IsInitialized;
 
 
     [System.Diagnostics.Conditional("DEBUG")]
     public void ValidateInitialization() // good to call as a listener to "On First Initialized"
     {
+      // ReSharper disable once HeapView.ObjectAllocation
       OAssert.AllTrue(this, s_Current == this, m_IsInitialized, isActiveAndEnabled);
       Orator.Log($"VALIDATED: Initialization", this);
     }
@@ -74,19 +77,6 @@ namespace Ore
     {
       bool ok = TryInitialize((TSelf)this);
       OAssert.True(ok, this);
-
-      // TODO re-enable this logic once logging & SceneAware are reimplemented
-
-      //if (TryInitialize((TSelf)this))
-      //{
-      //  if (this is ISceneAware isa)
-      //    isa.RegisterSceneCallbacks();
-      //}
-      //else
-      //{
-      //  $"{TSpy<TSelf>.LogName} failed to initialize."
-      //    .LogError(this);
-      //}
     }
 
     protected virtual void OnDisable()
@@ -97,12 +87,7 @@ namespace Ore
 
     protected virtual void OnValidate()
     {
-      if (m_DontDestroyOnLoad)
-        m_OwningScene = default;
-      else
-      {
-        m_OwningScene = gameObject.scene;
-      }
+      m_OwningScene = m_DontDestroyOnLoad ? default : gameObject.scene;
     }
 
 

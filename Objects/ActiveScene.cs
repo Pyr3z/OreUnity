@@ -14,8 +14,7 @@ using UnityEngine.SceneManagement;
 
 namespace Ore
 {
-
-  [DefaultExecutionOrder(-500)]
+  [DefaultExecutionOrder(-500)] // rationale: Many things might depend on this class early-on.
   public sealed class ActiveScene : OSingleton<ActiveScene>
   {
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -30,14 +29,14 @@ namespace Ore
       if (!curr)
         curr = Instantiate();
 
-      OAssert.True(curr, $"{nameof(ActiveScene)}.{nameof(Current)}");
+      OAssert.Exists(curr, $"{nameof(ActiveScene)}.{nameof(Current)}");
 
       curr.SetDontDestroyOnLoad(!next.isLoaded);
     }
 
     private static ActiveScene Instantiate()
     {
-      Debug.Assert(!Current);
+      OAssert.True(!Current || Current.m_IsReplaceable);
 
       var obj = new GameObject($"[{nameof(ActiveScene)}]")
       {
@@ -46,11 +45,11 @@ namespace Ore
       };
 
       var bud = obj.AddComponent<ActiveScene>();
-      Debug.Assert(Current == bud, nameof(ActiveScene) + " instantiation");
-
       bud.m_IsReplaceable = true;
 
-      Orator.Log($"Instantiated runtime <{nameof(ActiveScene)}>!");
+      OAssert.True(Current == bud);
+
+      Orator.Log($"Auto-Instantiated: <{nameof(ActiveScene)}>");
       return bud;
     }
 
