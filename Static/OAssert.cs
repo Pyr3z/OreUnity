@@ -6,6 +6,7 @@
 **/
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 using UnityEngine;
 
@@ -14,9 +15,13 @@ using UnityAssert  = UnityEngine.Assertions.Assert;
 using AssException = UnityEngine.Assertions.AssertionException;
 
 
+// ReSharper disable All
+
+
 namespace Ore
 {
 
+  [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
   public /* static */ class OAssert
   {
     private static Orator Orator => Orator.Instance;
@@ -63,33 +68,33 @@ namespace Ore
     [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void True(bool value, Object ctx = null)
     {
-      if (!value)
-      {
-        if (Orator)
-          Orator.assertionFailed(BoolFailMessage(expected: true), ctx);
-        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+      if (value)
+        return;
+      
+      if (Orator)
+        Orator.assertionFailed(BoolFailMessage(expected: true), ctx);
+      else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
 #pragma warning disable CS0162
-          throw new AssException(MSG_NO_KONSOLE, BoolFailMessage(expected: true, ctx));
+        throw new AssException(MSG_NO_KONSOLE, BoolFailMessage(expected: true, ctx));
 #pragma warning restore CS0162
-        else
-          LogNoOrator(BoolFailMessage(expected: true, ctx));
-      }
+      else
+        LogNoOrator(BoolFailMessage(expected: true, ctx));
     }
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void True(bool value, string msg, Object ctx = null)
     {
-      if (!value)
-      {
-        if (Orator)
-          Orator.assertionFailed(msg, ctx);
-        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+      if (value)
+        return;
+      
+      if (Orator)
+        Orator.assertionFailed(msg, ctx);
+      else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
 #pragma warning disable CS0162
-          throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
+        throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
 #pragma warning restore CS0162
-        else
-          LogNoOrator(MessageContext(msg, ctx));
-      }
+      else
+        LogNoOrator(MessageContext(msg, ctx));
     }
 
 
@@ -104,18 +109,19 @@ namespace Ore
     {
       for (int i = 0, ilen = values?.Length ?? 0; i < ilen; ++i)
       {
-        if (!values[i])
-        {
-          if (Orator)
-            Orator.assertionFailed($"# {i + 1}/{ilen}: {BoolFailMessage(expected: true)}", ctx);
-          else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+        if (values[i])
+          continue;
+        
+        if (Orator)
+          Orator.assertionFailed($"# {i + 1}/{ilen}: {BoolFailMessage(expected: true)}", ctx);
+        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
 #pragma warning disable CS0162
-            throw new AssException(MSG_NO_KONSOLE, $"{BoolFailMessage(expected: true, ctx)}{NL}(parameter: {i + 1}/{ilen})");
+          throw new AssException(MSG_NO_KONSOLE, $"{BoolFailMessage(expected: true, ctx)}{NL}(parameter: {i + 1}/{ilen})");
 #pragma warning restore CS0162
-          else
-            Debug.LogAssertion($"{BoolFailMessage(expected: true, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
-          return;
-        }
+        else
+          Debug.LogAssertion($"{BoolFailMessage(expected: true, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
+        
+        return;
       }
     }
 
@@ -123,33 +129,33 @@ namespace Ore
     [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void False(bool value, Object ctx = null)
     {
-      if (value)
-      {
-        if (Orator)
-          Orator.assertionFailed(BoolFailMessage(expected: false), ctx);
-        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+      if (!value)
+        return;
+      
+      if (Orator)
+        Orator.assertionFailed(BoolFailMessage(expected: false), ctx);
+      else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
 #pragma warning disable CS0162
-          throw new AssException(MSG_NO_KONSOLE, BoolFailMessage(expected: false, ctx));
+        throw new AssException(MSG_NO_KONSOLE, BoolFailMessage(expected: false, ctx));
 #pragma warning restore CS0162
-        else
-          LogNoOrator(BoolFailMessage(expected: false, ctx));
-      }
+      else
+        LogNoOrator(BoolFailMessage(expected: false, ctx));
     }
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void False(bool value, string msg, Object ctx = null)
     {
-      if (value)
-      {
-        if (Orator)
-          Orator.assertionFailed(msg, ctx);
-        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+      if (!value)
+        return;
+      
+      if (Orator)
+        Orator.assertionFailed(msg, ctx);
+      else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
 #pragma warning disable CS0162
-          throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
+        throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
 #pragma warning restore CS0162
-        else
-          LogNoOrator(MessageContext(msg, ctx));
-      }
+      else
+        LogNoOrator(MessageContext(msg, ctx));
     }
 
 
@@ -164,18 +170,19 @@ namespace Ore
     {
       for (int i = 0, ilen = values?.Length ?? 0; i < ilen; ++i)
       {
-        if (values[i])
-        {
-          if (Orator)
-            Orator.assertionFailed($"# {i + 1}/{ilen}: {BoolFailMessage(expected: false)}", ctx);
-          else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+        if (!values[i])
+          continue;
+        
+        if (Orator)
+          Orator.assertionFailed($"# {i + 1}/{ilen}: {BoolFailMessage(expected: false)}", ctx);
+        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
 #pragma warning disable CS0162
-            throw new AssException(MSG_NO_KONSOLE, $"{BoolFailMessage(expected: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
+          throw new AssException(MSG_NO_KONSOLE, $"{BoolFailMessage(expected: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
 #pragma warning restore CS0162
-          else
-            Debug.LogAssertion($"{BoolFailMessage(expected: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
-          return;
-        }
+        else
+          Debug.LogAssertion($"{BoolFailMessage(expected: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
+        
+        return;
       }
     }
 
@@ -183,33 +190,33 @@ namespace Ore
     [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void NotNull(object reference, Object ctx = null)
     {
-      if (reference == null)
-      {
-        if (Orator)
-          Orator.assertionFailed(NullFailMessage(expected_null: false), ctx);
-        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+      if (reference != null)
+        return;
+      
+      if (Orator)
+        Orator.assertionFailed(NullFailMessage(expected_null: false), ctx);
+      else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
 #pragma warning disable CS0162
-          throw new AssException(MSG_NO_KONSOLE, NullFailMessage(expected_null: false, ctx));
+        throw new AssException(MSG_NO_KONSOLE, NullFailMessage(expected_null: false, ctx));
 #pragma warning restore CS0162
-        else
-          Debug.LogAssertion(NullFailMessage(expected_null: false, ctx), ctx);
-      }
+      else
+        Debug.LogAssertion(NullFailMessage(expected_null: false, ctx), ctx);
     }
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void NotNull(object reference, string msg, Object ctx = null)
     {
-      if (reference == null)
-      {
-        if (Orator)
-          Orator.assertionFailed(msg, ctx);
-        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+      if (reference != null)
+        return;
+      
+      if (Orator)
+        Orator.assertionFailed(msg, ctx);
+      else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
 #pragma warning disable CS0162
-          throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
+        throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
 #pragma warning restore CS0162
-        else
-          Debug.LogAssertion(MessageContext(msg, ctx), ctx);
-      }
+      else
+        Debug.LogAssertion(MessageContext(msg, ctx), ctx);
     }
 
 
@@ -224,18 +231,19 @@ namespace Ore
     {
       for (int i = 0, ilen = references?.Length ?? 0; i < ilen; ++i)
       {
-        if (references[i] == null)
-        {
-          if (Orator)
-            Orator.assertionFailed($"# {i + 1}/{ilen}: {NullFailMessage(expected_null: false)}", ctx);
-          else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+        if (references[i] != null)
+          continue;
+        
+        if (Orator)
+          Orator.assertionFailed($"# {i + 1}/{ilen}: {NullFailMessage(expected_null: false)}", ctx);
+        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
 #pragma warning disable CS0162
-            throw new AssException(MSG_NO_KONSOLE, $"{NullFailMessage(expected_null: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
+          throw new AssException(MSG_NO_KONSOLE, $"{NullFailMessage(expected_null: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
 #pragma warning restore CS0162
-          else
-            Debug.LogAssertion($"{NullFailMessage(expected_null: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
-          return;
-        }
+        else
+          Debug.LogAssertion($"{NullFailMessage(expected_null: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
+        
+        return;
       }
     }
 
@@ -243,33 +251,33 @@ namespace Ore
     [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void NotEmpty<T>(ICollection<T> list, Object ctx = null)
     {
-      if (list == null || list.Count == 0)
-      {
-        if (Orator)
-          Orator.assertionFailed(CollectionEmptyMessage(expected_empty: false), ctx);
-        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+      if (list != null && list.Count != 0)
+        return;
+      
+      if (Orator)
+        Orator.assertionFailed(CollectionEmptyMessage(expected_empty: false), ctx);
+      else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
 #pragma warning disable CS0162
-          throw new AssException(MSG_NO_KONSOLE, CollectionEmptyMessage(expected_empty: false, ctx));
+        throw new AssException(MSG_NO_KONSOLE, CollectionEmptyMessage(expected_empty: false, ctx));
 #pragma warning restore CS0162
-        else
-          Debug.LogAssertion(CollectionEmptyMessage(expected_empty: false, ctx), ctx);
-      }
+      else
+        Debug.LogAssertion(CollectionEmptyMessage(expected_empty: false, ctx), ctx);
     }
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void NotEmpty<T>(ICollection<T> list, string msg, Object ctx = null)
     {
-      if (list == null || list.Count == 0)
-      {
-        if (Orator)
-          Orator.assertionFailed(msg, ctx);
-        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+      if (list != null && list.Count != 0)
+        return;
+      
+      if (Orator)
+        Orator.assertionFailed(msg, ctx);
+      else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
 #pragma warning disable CS0162
-          throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
+        throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
 #pragma warning restore CS0162
-        else
-          Debug.LogAssertion(MessageContext(msg, ctx), ctx);
-      }
+      else
+        Debug.LogAssertion(MessageContext(msg, ctx), ctx);
     }
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
@@ -283,18 +291,19 @@ namespace Ore
     {
       for (int i = 0, ilen = lists?.Length ?? 0; i < ilen; ++i)
       {
-        if (lists[i] == null || lists[i].Count == 0)
-        {
-          if (Orator)
-            Orator.assertionFailed($"# {i + 1}/{ilen}: {CollectionEmptyMessage(expected_empty: false)}", ctx);
-          else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+        if (lists[i] != null && lists[i].Count != 0)
+          continue;
+        
+        if (Orator)
+          Orator.assertionFailed($"# {i + 1}/{ilen}: {CollectionEmptyMessage(expected_empty: false)}", ctx);
+        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
 #pragma warning disable CS0162
-            throw new AssException(MSG_NO_KONSOLE, $"{CollectionEmptyMessage(expected_empty: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
+          throw new AssException(MSG_NO_KONSOLE, $"{CollectionEmptyMessage(expected_empty: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
 #pragma warning restore CS0162
-          else
-            Debug.LogAssertion($"{CollectionEmptyMessage(expected_empty: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
-          return;
-        }
+        else
+          Debug.LogAssertion($"{CollectionEmptyMessage(expected_empty: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
+        
+        return;
       }
     }
 
@@ -360,14 +369,15 @@ namespace Ore
     {
       for (int i = 0, ilen = objs?.Length ?? 0; i < ilen; ++i)
       {
-        if (objs[i] is null)
-        {
-          if (Orator)
-            Orator.assertionFailedNoThrow($"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
-          else
-            Debug.LogAssertion($"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
-          return true;
-        }
+        if (objs[i] is { })
+          continue;
+        
+        if (Orator)
+          Orator.assertionFailedNoThrow($"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
+        else
+          Debug.LogAssertion($"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
+        
+        return true;
       }
 
       return false;

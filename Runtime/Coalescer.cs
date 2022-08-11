@@ -9,8 +9,17 @@
  *              "Containers" namespace?
 **/
 
+using JetBrains.Annotations;
+
 using System.Collections;
 using System.Collections.Generic;
+
+
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable HeapView.ObjectAllocation
+// ReSharper disable HeapView.ObjectAllocation.Possible
+// ReSharper disable HeapView.DelegateAllocation
+// ReSharper disable HeapView.PossibleBoxingAllocation
 
 
 namespace Ore
@@ -18,37 +27,37 @@ namespace Ore
 
   public struct Coalescer<T> : IEnumerable<T>
   {
-    public delegate bool Validator(T item);
-    public static bool DefaultValidator(T item) => !Equals(item, default(T));
+    public delegate bool Validator([CanBeNull] T item);
+    private static bool DefaultValidator([CanBeNull] T item) => !Equals(item, default(T));
 
 
     private IEnumerable<T>  m_Items;
     private Validator       m_Validator;
-
-
+    
+    
     public Coalescer(params T[] items)
       : this(items, validator: DefaultValidator)
     {
     }
-    public Coalescer(IEnumerable<T> items, Validator validator = null)
+    public Coalescer([CanBeNull] IEnumerable<T> items, [CanBeNull] Validator validator = null)
     {
-      m_Items = items ?? new T[0];
+      m_Items 		= items ?? System.Array.Empty<T>();
       m_Validator = validator ?? DefaultValidator;
     }
 
     public Coalescer<T> SetItems(params T[] items)
     {
-      m_Items = items ?? new T[0];
+      m_Items = items ?? System.Array.Empty<T>();
       return this;
     }
 
-    public Coalescer<T> SetItems(IEnumerable<T> items)
+    public Coalescer<T> SetItems([CanBeNull] IEnumerable<T> items)
     {
-      m_Items = items ?? new T[0];
+      m_Items = items ?? System.Array.Empty<T>();
       return this;
     }
 
-    public Coalescer<T> SetValidator(Validator validator)
+    public Coalescer<T> SetValidator([CanBeNull] Validator validator)
     {
       m_Validator = validator ?? DefaultValidator;
       return this;
@@ -57,17 +66,21 @@ namespace Ore
 
     public bool TryCoalesce(out T item)
     {
-      var it = GetEnumerator();
-      if (it.MoveNext())
+      item = default(T);
+      
+      if (OAssert.FailsNullChecks(m_Items, m_Validator))
+        return false;
+      
+      foreach (var i in m_Items)
       {
-        item = it.Current;
+        if (!m_Validator(i))
+          continue;
+          
+        item = i;
         return true;
       }
-      else
-      {
-        item = default;
-        return false;
-      }
+
+      return false;
     }
 
 
