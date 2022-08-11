@@ -6,6 +6,8 @@
  *  status moves around among different loaded Scenes.
 **/
 
+// ReSharper disable HeapView.DelegateAllocation
+
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -28,7 +30,7 @@ namespace Ore
       if (!curr)
         curr = Instantiate();
 
-      Debug.Assert(curr, $"!!{nameof(ActiveScene)}.Current");
+      OAssert.True(curr, $"{nameof(ActiveScene)}.{nameof(Current)}");
 
       curr.SetDontDestroyOnLoad(!next.isLoaded);
     }
@@ -37,9 +39,11 @@ namespace Ore
     {
       Debug.Assert(!Current);
 
-      var obj = new GameObject($"[{nameof(ActiveScene)}]");
-      obj.hideFlags = HideFlags.DontSave;
-      obj.isStatic = true;
+      var obj = new GameObject($"[{nameof(ActiveScene)}]")
+      {
+        hideFlags = HideFlags.DontSave,
+        isStatic  = true
+      };
 
       var bud = obj.AddComponent<ActiveScene>();
       Debug.Assert(Current == bud, nameof(ActiveScene) + " instantiation");

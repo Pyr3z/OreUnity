@@ -17,6 +17,8 @@
             (which typically call the instance methods on the singleton).
 **/
 
+// ReSharper disable MemberCanBePrivate.Global
+
 using System.ComponentModel;
 
 using UnityEngine;
@@ -27,7 +29,6 @@ using AssException  = UnityEngine.Assertions.AssertionException;
 
 namespace Ore
 {
-  //[DebuggerStepThrough]
   [DefaultExecutionOrder(-1337)]
   public sealed class Orator : OAssetSingleton<Orator>, IImmortalSingleton
   {
@@ -358,7 +359,7 @@ namespace Ore
 
     #region STATIC ASSERTION API
 
-    public /* static */ sealed class Assert : OAssert
+    public /* static */ abstract class Assert : OAssert
     {
 
       // implementation now in `Static/OAssert.cs`.

@@ -4,10 +4,9 @@
  *
  *  @brief      A container that only yields items if they are valid
  *              (by default: is not equal to default(T)).
- *
- *  @todo       Probably migrate this implementation + others to a
- *              "Containers" namespace?
 **/
+
+// TODO Probably migrate this implementation + others to a "Containers" namespace?
 
 using JetBrains.Annotations;
 

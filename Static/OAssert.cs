@@ -5,8 +5,9 @@
  *  @remark     Moved from Orator.Assert (which is backwards-maintained).
 **/
 
+// ReSharper disable All
+
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 using UnityEngine;
 
@@ -15,13 +16,8 @@ using UnityAssert  = UnityEngine.Assertions.Assert;
 using AssException = UnityEngine.Assertions.AssertionException;
 
 
-// ReSharper disable All
-
-
 namespace Ore
 {
-
-  [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
   public /* static */ class OAssert
   {
     private static Orator Orator => Orator.Instance;
@@ -242,6 +238,59 @@ namespace Ore
 #pragma warning restore CS0162
         else
           Debug.LogAssertion($"{NullFailMessage(expected_null: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
+        
+        return;
+      }
+    }
+
+    
+    [Conditional(DEF_UNITY_ASSERTIONS)]
+    public static void Exists(Object obj, Object ctx = null)
+    {
+      if (obj)
+        return;
+      
+      if (Orator)
+        Orator.assertionFailed(NullFailMessage(expected_null: false), ctx);
+      else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
+        throw new AssException(MSG_NO_KONSOLE, NullFailMessage(expected_null: false, ctx));
+#pragma warning restore CS0162
+      else
+        Debug.LogAssertion(NullFailMessage(expected_null: false, ctx), ctx);
+    }
+
+    [Conditional(DEF_UNITY_ASSERTIONS)]
+    public static void Exists(Object obj, string msg, Object ctx = null)
+    {
+      if (obj)
+        return;
+      
+      if (Orator)
+        Orator.assertionFailed(msg, ctx);
+      else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
+        throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
+#pragma warning restore CS0162
+      else
+        Debug.LogAssertion(MessageContext(msg, ctx), ctx);
+    }
+
+    public static void AllExist(params Object[] objs)
+    {
+      for (int i = 0, ilen = objs?.Length ?? 0; i < ilen; ++i)
+      {
+        if (objs[i] != null)
+          continue;
+        
+        if (Orator)
+          Orator.assertionFailed($"# {i + 1}/{ilen}: {NullFailMessage(expected_null: false)}");
+        else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
+          throw new AssException(MSG_NO_KONSOLE, $"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
+#pragma warning restore CS0162
+        else
+          Debug.LogAssertion($"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
         
         return;
       }

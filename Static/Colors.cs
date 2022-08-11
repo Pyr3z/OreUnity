@@ -6,6 +6,8 @@
  *              go crazy in this file. KEEP IT SIMPLE STUPID!
 **/
 
+// ReSharper disable MemberCanBePrivate.Global
+
 using UnityEngine;
 
 
