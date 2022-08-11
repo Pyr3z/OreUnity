@@ -13,6 +13,8 @@ using Conditional  = System.Diagnostics.ConditionalAttribute;
 using UnityAssert  = UnityEngine.Assertions.Assert;
 using AssException = UnityEngine.Assertions.AssertionException;
 
+// ReSharper disable All
+
 
 namespace Ore
 {
@@ -68,7 +70,9 @@ namespace Ore
         if (Orator)
           Orator.assertionFailed(BoolFailMessage(expected: true), ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
           throw new AssException(MSG_NO_KONSOLE, BoolFailMessage(expected: true, ctx));
+#pragma warning restore CS0162
         else
           LogNoOrator(BoolFailMessage(expected: true, ctx));
       }
@@ -82,7 +86,9 @@ namespace Ore
         if (Orator)
           Orator.assertionFailed(msg, ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
           throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
+#pragma warning restore CS0162
         else
           LogNoOrator(MessageContext(msg, ctx));
       }
@@ -105,7 +111,9 @@ namespace Ore
           if (Orator)
             Orator.assertionFailed($"# {i + 1}/{ilen}: {BoolFailMessage(expected: true)}", ctx);
           else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
             throw new AssException(MSG_NO_KONSOLE, $"{BoolFailMessage(expected: true, ctx)}{NL}(parameter: {i + 1}/{ilen})");
+#pragma warning restore CS0162
           else
             Debug.LogAssertion($"{BoolFailMessage(expected: true, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
           return;
@@ -122,7 +130,9 @@ namespace Ore
         if (Orator)
           Orator.assertionFailed(BoolFailMessage(expected: false), ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
           throw new AssException(MSG_NO_KONSOLE, BoolFailMessage(expected: false, ctx));
+#pragma warning restore CS0162
         else
           LogNoOrator(BoolFailMessage(expected: false, ctx));
       }
@@ -136,7 +146,9 @@ namespace Ore
         if (Orator)
           Orator.assertionFailed(msg, ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
           throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
+#pragma warning restore CS0162
         else
           LogNoOrator(MessageContext(msg, ctx));
       }
@@ -159,7 +171,9 @@ namespace Ore
           if (Orator)
             Orator.assertionFailed($"# {i + 1}/{ilen}: {BoolFailMessage(expected: false)}", ctx);
           else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
             throw new AssException(MSG_NO_KONSOLE, $"{BoolFailMessage(expected: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
+#pragma warning restore CS0162
           else
             Debug.LogAssertion($"{BoolFailMessage(expected: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
           return;
@@ -176,7 +190,9 @@ namespace Ore
         if (Orator)
           Orator.assertionFailed(NullFailMessage(expected_null: false), ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
           throw new AssException(MSG_NO_KONSOLE, NullFailMessage(expected_null: false, ctx));
+#pragma warning restore CS0162
         else
           Debug.LogAssertion(NullFailMessage(expected_null: false, ctx), ctx);
       }
@@ -190,7 +206,9 @@ namespace Ore
         if (Orator)
           Orator.assertionFailed(msg, ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
           throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
+#pragma warning restore CS0162
         else
           Debug.LogAssertion(MessageContext(msg, ctx), ctx);
       }
@@ -213,7 +231,9 @@ namespace Ore
           if (Orator)
             Orator.assertionFailed($"# {i + 1}/{ilen}: {NullFailMessage(expected_null: false)}", ctx);
           else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
             throw new AssException(MSG_NO_KONSOLE, $"{NullFailMessage(expected_null: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
+#pragma warning restore CS0162
           else
             Debug.LogAssertion($"{NullFailMessage(expected_null: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
           return;
@@ -230,7 +250,9 @@ namespace Ore
         if (Orator)
           Orator.assertionFailed(CollectionEmptyMessage(expected_empty: false), ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
           throw new AssException(MSG_NO_KONSOLE, CollectionEmptyMessage(expected_empty: false, ctx));
+#pragma warning restore CS0162
         else
           Debug.LogAssertion(CollectionEmptyMessage(expected_empty: false, ctx), ctx);
       }
@@ -244,7 +266,9 @@ namespace Ore
         if (Orator)
           Orator.assertionFailed(msg, ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
           throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
+#pragma warning restore CS0162
         else
           Debug.LogAssertion(MessageContext(msg, ctx), ctx);
       }
@@ -266,7 +290,9 @@ namespace Ore
           if (Orator)
             Orator.assertionFailed($"# {i + 1}/{ilen}: {CollectionEmptyMessage(expected_empty: false)}", ctx);
           else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
+#pragma warning disable CS0162
             throw new AssException(MSG_NO_KONSOLE, $"{CollectionEmptyMessage(expected_empty: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
+#pragma warning restore CS0162
           else
             Debug.LogAssertion($"{CollectionEmptyMessage(expected_empty: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
           return;
