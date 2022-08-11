@@ -1,4 +1,4 @@
-/** @file       Abstract/OComponent.cs
+/*! @file       Abstract/OComponent.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-01-20
 **/

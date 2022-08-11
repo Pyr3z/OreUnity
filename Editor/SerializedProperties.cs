@@ -1,4 +1,4 @@
-/** @file       Editor/SerializedProperties.cs
+/*! @file       Editor/SerializedProperties.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-15
 **/

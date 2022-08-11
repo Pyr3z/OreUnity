@@ -1,4 +1,4 @@
-/** @file       Static/Lists.cs
+/*! @file       Static/Lists.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-20
 **/

@@ -1,4 +1,4 @@
-/** @file       Abstract/IEvent.cs
+/*! @file       Abstract/IEvent.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-06
 **/

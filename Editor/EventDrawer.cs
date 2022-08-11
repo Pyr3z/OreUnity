@@ -1,4 +1,4 @@
-/** @file       Editor/EventDrawer.cs
+/*! @file       Editor/EventDrawer.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-14
 **/

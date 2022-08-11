@@ -1,4 +1,4 @@
-/** @file       Editor/FoldoutHeader.cs
+/*! @file       Editor/FoldoutHeader.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-20
 **/

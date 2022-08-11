@@ -1,4 +1,4 @@
-/** @file     Static/DeviceSpy.cs
+/*! @file     Static/DeviceSpy.cs
  *  @author   Levi Perez (levi\@leviperez.dev)
  *  @date     2022-01-20
 **/

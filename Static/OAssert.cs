@@ -1,4 +1,4 @@
-/** @file       Static/OAssert.cs
+/*! @file       Static/OAssert.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-01
  *  
@@ -12,8 +12,6 @@ using UnityEngine;
 using Conditional  = System.Diagnostics.ConditionalAttribute;
 using UnityAssert  = UnityEngine.Assertions.Assert;
 using AssException = UnityEngine.Assertions.AssertionException;
-
-// ReSharper disable All
 
 
 namespace Ore

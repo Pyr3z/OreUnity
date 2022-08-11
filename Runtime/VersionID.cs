@@ -1,4 +1,4 @@
-/** @file       Objects/VersionID.cs
+/*! @file       Objects/VersionID.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2021-11-08
 **/

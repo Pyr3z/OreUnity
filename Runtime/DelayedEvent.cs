@@ -1,4 +1,4 @@
-/** @file       Objects/DelayedEvent.cs
+/*! @file       Objects/DelayedEvent.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-01
 **/

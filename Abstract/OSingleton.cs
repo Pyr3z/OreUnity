@@ -1,4 +1,4 @@
-/** @file       Abstract/OSingleton.cs
+/*! @file       Abstract/OSingleton.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-02-17
 **/

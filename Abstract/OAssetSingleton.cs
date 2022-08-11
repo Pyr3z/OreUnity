@@ -1,4 +1,4 @@
-/** @file       Abstract/OAssetSingleton.cs
+/*! @file       Abstract/OAssetSingleton.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-02-17
  *  

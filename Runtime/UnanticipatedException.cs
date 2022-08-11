@@ -1,4 +1,4 @@
-/** @file   Objects/UnanticipatedException.cs
+/*! @file   Objects/UnanticipatedException.cs
  *  @author levi\@leviperez.dev
  *  @date   2022-06-03
 **/

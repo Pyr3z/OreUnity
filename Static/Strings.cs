@@ -1,4 +1,4 @@
-/** @file   Static/Strings.cs
+/*! @file   Static/Strings.cs
  *  @author levianperez\@gmail.com
  *  @author levi\@leviperez.dev
  *  @date   2020-06-06

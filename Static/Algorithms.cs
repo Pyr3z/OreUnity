@@ -1,4 +1,4 @@
-/** @file       Static/Algorithms.cs
+/*! @file       Static/Algorithms.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-02-30
  *  

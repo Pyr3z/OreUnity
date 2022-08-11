@@ -1,4 +1,4 @@
-/** @file   Static/Hashing.cs
+/*! @file   Static/Hashing.cs
  *  @author levi\@leviperez.dev
  *  @date   2020-06-06
 **/

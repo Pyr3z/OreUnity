@@ -1,4 +1,4 @@
-/** @file   Objects/Orator.cs
+/*! @file   Objects/Orator.cs
     @author levianperez\@gmail.com
     @author levi\@leviperez.dev
     @date   2022-01-01
