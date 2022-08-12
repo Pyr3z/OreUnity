@@ -3,7 +3,7 @@
  *  @date       2022-02-28
 **/
 
-#if UNITY_EDITOR // periodically test me by flipping with '!'
+// ReSharper disable MemberCanBePrivate.Global
 
 using System.Collections.Generic;
 
@@ -13,7 +13,7 @@ using UnityEditor;
 
 namespace Ore
 {
-
+#if UNITY_EDITOR // periodically test me by flipping with '!'
   public static class EditorBridge
   {
 
@@ -41,12 +41,11 @@ namespace Ore
         int i = buffer.Count;
         while (i --> 0)
         {
-          if (buffer[i] == asset)
-          {
-            buffer.RemoveAt(i);
-            changed = true;
-            // intentionally no break; should remove duplicates too!
-          }
+          if (buffer[i] != asset)
+            continue;
+          buffer.RemoveAt(i);
+          changed = true;
+          // intentionally no break; should remove duplicates too!
         }
       }
 
@@ -59,15 +58,9 @@ namespace Ore
     }
 
   } // end static class EditorBridge
+  
+#else // if !UNITY_EDITOR
 
-}
-
-#else // !UNITY_EDITOR
-
-using UnityEngine;
-
-namespace Bore
-{
   public static class EditorBridge
   {
 
@@ -82,7 +75,7 @@ namespace Bore
     }
 
   } // end class EditorBridge
-
-}
-
+  
 #endif // UNITY_EDITOR
+  
+}

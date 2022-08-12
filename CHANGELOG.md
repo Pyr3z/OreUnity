@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - X
 
+## [2.0.1] - 2022-08-12
+- Fixed: OAssert preventing builds
+- Added: OAssert.Exists(), etc
+- Fixed: EditorBridge warning, something something about namespaces 
+
 ## [2.0.0] - 2022-07-25
 - BREAKING: Moved: ALL code from namespace `Bore` and to namespaces `Ore` and `Ore.Editor`.
 - Moved: `Editor/Drawers.cs` -> `Editor/OGUI.cs` (associated functions are now also nested as appropriate).
