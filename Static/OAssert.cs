@@ -437,7 +437,7 @@ namespace Ore
 #pragma warning disable IDE0060
     public static bool Fails(bool assertion) => false;
     public static bool Fails(bool assertion, object msg) => false;
-    public static bool FailsNullCheck(object obj, Object ctx = null)
+    public static bool FailsNullCheck(object obj, Object ctx = null) => false;
     public static bool FailsNullCheck(object obj, string msg, Object ctx = null) => false;
     public static bool FailsNullChecks(params object[] objs) => false;
 #pragma warning restore IDE0060
