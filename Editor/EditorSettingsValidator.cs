@@ -36,12 +36,8 @@ namespace Ore.Editor
 
         string filepath = $"Assets/{tself.Name}.asset"; // TODO implement AssetPathAttribute for specifying location
 
-        if (AssetDatabase.LoadAssetAtPath(filepath, tself))
-          continue;
-
         if (Filesystem.PathExists(filepath))
-          filepath = AssetDatabase.GenerateUniqueAssetPath(filepath);
-        // (typically appends incremental numbers to filename until unique)
+          continue;
 
         if (Filesystem.TryMakePathTo(filepath))
         {

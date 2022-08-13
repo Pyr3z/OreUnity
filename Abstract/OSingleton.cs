@@ -61,15 +61,15 @@ namespace Ore
 
 
     [System.NonSerialized]
-    private bool m_IsInitialized;
+    private bool m_IsSingletonInitialized;
 
 
     [System.Diagnostics.Conditional("DEBUG")]
     public void ValidateInitialization() // good to call as a listener to "On First Initialized"
     {
       // ReSharper disable once HeapView.ObjectAllocation
-      OAssert.AllTrue(this, s_Current == this, m_IsInitialized, isActiveAndEnabled);
-      Orator.Log($"VALIDATED: Initialization", this);
+      OAssert.AllTrue(this, s_Current == this, m_IsSingletonInitialized, isActiveAndEnabled);
+      Orator.Log($"Singleton registration validated.", this);
     }
 
 
@@ -109,15 +109,12 @@ namespace Ore
 
       s_Current = self;
 
-      if (m_IsInitialized)
-        return true;
-
       if (m_DontDestroyOnLoad)
         DontDestroyOnLoad(gameObject);
 
       m_OwningScene = gameObject.scene;
 
-      return m_IsInitialized = m_OnFirstInitialized.TryInvokeOn(this);
+      return m_IsSingletonInitialized || (m_IsSingletonInitialized = m_OnFirstInitialized.TryInvoke());
     }
 
 
@@ -131,9 +128,7 @@ namespace Ore
       if (set)
         DontDestroyOnLoad(gameObject);
       else
-      {
         SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
-      }
 
       m_OwningScene = gameObject.scene;
     }
