@@ -76,12 +76,6 @@ namespace Ore
     {
       hideFlags = m_AdvancedFlags;
 
-      if (this is IImmortalSingleton)
-      {
-        m_IsReplaceable = false;
-        m_IsRequiredOnLaunch = true;
-      }
-
       _ = EditorBridge.TrySetPreloadedAsset(this, m_IsRequiredOnLaunch);
     }
 
