@@ -49,7 +49,7 @@ namespace Ore
     [SerializeField]
     private bool m_IsRequiredOnLaunch = false;
     [SerializeField]
-    protected bool m_IsReplaceable = false;
+    protected bool m_IsReplaceable = true;
     [SerializeField]
     protected HideFlags m_AdvancedFlags = HideFlags.DontUnloadUnusedAsset;
 
