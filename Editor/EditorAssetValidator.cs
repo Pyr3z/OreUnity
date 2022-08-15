@@ -32,8 +32,16 @@ namespace Ore.Editor
 
       if (asset && asset is IImmortalSingleton)
       {
-        Orator.Warn($"I tried to delete \"{asset}\", but it is marked as an immortal singleton so I didn't.");
-        return AssetDeleteResult.FailedDelete;
+        string title = $"Confirm destructive action: {asset}";
+        string message = $"The asset at path \"{path}\" is a marked <{nameof(IImmortalSingleton)}>.\n\nAre you sure you want to delete it?";
+        if (EditorUtility.DisplayDialog(title, message, "Yes, delete it.", "Oops, no don't delete it."))
+        {
+          return AssetDeleteResult.DidNotDelete;
+        }
+        else
+        {
+          return AssetDeleteResult.FailedDelete;
+        }
       }
 
       return AssetDeleteResult.DidNotDelete;
