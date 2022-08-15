@@ -7,6 +7,7 @@
 // ReSharper disable MemberCanBePrivate.Global
 
 using System.Reflection;
+using System.Collections.Generic;
 
 using UnityEngine;
 
@@ -52,11 +53,28 @@ namespace Ore
     public static bool IsDefined<T>(this MemberInfo member, bool inherit = true)
       where T : System.Attribute
     {
+      OAssert.NotNull(member, "member");
+
       return member.IsDefined(typeof(T), inherit);
+    }
+
+    public static bool AreAnyDefined(this MemberInfo member, IEnumerable<Type> attributes, bool inherit = true)
+    {
+      OAssert.AllNotNull(member, attributes);
+
+      foreach (var attr in attributes)
+      {
+        if (member.IsDefined(attr, inherit))
+          return true;
+      }
+
+      return false;
     }
 
     public static bool IsHidden(this FieldInfo field)
     {
+      OAssert.NotNull(field, "field");
+
       return field.IsDefined<HideInInspector>() ||
              field.IsDefined<System.ObsoleteAttribute>();
     }

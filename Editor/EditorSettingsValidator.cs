@@ -25,25 +25,28 @@ namespace Ore.Editor
 
     internal static void ValidateOAssetSingletons()
     {
+      var silencers = new System.Type[]
+      {
+        typeof(CreateAssetMenuAttribute),
+        typeof(OptionalAssetAttribute),
+        typeof(System.ObsoleteAttribute)
+      };
+
       foreach (var tself in TypeCache.GetTypesDerivedFrom(typeof(OAssetSingleton<>)))
       {
-        if (tself == null || tself.IsAbstract || tself.IsGenericType)
+        if (tself == null || tself.IsAbstract || tself.IsGenericType || tself.AreAnyDefined(silencers))
           continue;
 
         var load = Resources.FindObjectsOfTypeAll(tself);
         if (load.Length > 0)
           continue;
 
-        string filepath = $"Assets/{tself.Name}.asset"; // TODO implement AssetPathAttribute for specifying location
+        string filepath = $"Assets/Resources/{tself.Name}.asset"; // TODO implement AssetPathAttribute for specifying location
 
-        if (Filesystem.PathExists(filepath))
-          continue;
-
-        if (Filesystem.TryMakePathTo(filepath))
+        if (!Filesystem.PathExists(filepath) && Filesystem.TryMakePathTo(filepath))
         {
           var instance = ScriptableObject.CreateInstance(tself);
-          if (OAssert.Fails(instance))
-            continue;
+          OAssert.Exists(instance);
 
           AssetDatabase.CreateAsset(instance, filepath);
           AssetDatabase.SaveAssetIfDirty(instance);
@@ -61,9 +64,9 @@ namespace Ore.Editor
 
       set.RemoveWhere(obj => !obj);
 
-      int changed = 0;
+      int changed = preloaded.Count - set.Count;
       int i = preloaded.Count;
-      while (i-- > 0)
+      while (i --> 0)
       {
         if (!set.Contains(preloaded[i]))
         {

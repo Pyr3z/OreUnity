@@ -26,13 +26,13 @@ namespace Ore.Editor
      *  static void OnWillSaveAssets(string[] paths)
      */
 
-    private static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions _)
+    private static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions _ )
     {
       var asset = AssetDatabase.LoadAssetAtPath<Asset>(path);
 
-      if (asset is IImmortalSingleton)
+      if (asset && asset is IImmortalSingleton)
       {
-        Debug.LogWarning($"I tried to delete \"{asset}\", but it is marked as an immortal singleton so I didn't.");
+        Orator.Warn($"I tried to delete \"{asset}\", but it is marked as an immortal singleton so I didn't.");
         return AssetDeleteResult.FailedDelete;
       }
 
