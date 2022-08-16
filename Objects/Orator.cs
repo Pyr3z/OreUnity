@@ -55,7 +55,7 @@ namespace Ore
 
     internal const EditorBrowsableState INSTANCE_BROWSABLE_POLICY = EditorBrowsableState.Never;
 
-    internal const string DEFAULT_KONSOLE_PREFIX = "[" + nameof(Orator) + "]";
+    internal const string DEFAULT_KONSOLE_PREFIX = "<color=\"orange\">[" + nameof(Orator) + "]</color>";
     internal const LogOption DEFAULT_LOG_LOGOPT = LogOption.NoStacktrace;
     internal const bool DEFAULT_INCLUDE_CONTEXT = true;
 
