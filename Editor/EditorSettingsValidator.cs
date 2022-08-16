@@ -42,8 +42,7 @@ namespace Ore.Editor
           continue;
 
         string filepath;
-        var attr = tself.GetCustomAttribute(typeof(AssetPathAttribute)) as AssetPathAttribute;
-        if (attr != null)
+        if (tself.GetCustomAttribute(typeof(AssetPathAttribute)) is AssetPathAttribute attr)
         {
           filepath = attr.Path;
         }
