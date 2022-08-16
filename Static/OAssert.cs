@@ -29,25 +29,25 @@ namespace Ore
 
 
 #if UNITY_EDITOR
-    [UnityEditor.MenuItem("Ore/Tests/Assertion Exception (No Orator)")]
+    [UnityEditor.MenuItem("Ore/Orator/Assertion Exception (No Orator)")]
     private static void Menu_TestAssertException()
     {
       throw new AssException("message", "userMessage");
     }
 
-    [UnityEditor.MenuItem("Ore/Tests/Assertion Log (No Orator)")]
+    [UnityEditor.MenuItem("Ore/Orator/Assertion Log (No Orator)")]
     private static void Menu_TestAssertLog()
     {
       LogNoOrator($"{Orator}");
     }
 
-    [UnityEditor.MenuItem("Ore/Tests/Assertion Log")]
+    [UnityEditor.MenuItem("Ore/Orator/Assertion Log")]
     private static void Menu_TestAssertLogOrator()
     {
       True(false, ctx: null);
     }
 
-    [UnityEditor.MenuItem("Ore/Tests/Assertion Fails Null Checks")]
+    [UnityEditor.MenuItem("Ore/Orator/Assertion Fails Null Checks")]
     private static void Menu_TestAssertNulls()
     {
       _ = FailsNullChecks(new object(), null, new object());

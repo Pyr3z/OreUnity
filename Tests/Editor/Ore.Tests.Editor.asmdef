@@ -1,0 +1,25 @@
+{
+    "name": "Ore.Tests.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:003a62cf52b30d24388538d6e0151df6",
+        "GUID:d0c9d3bd0b80c1b4e854427f0376e27c",
+        "GUID:0acc523941302664db1f4e527237feb3",
+        "GUID:27619889b8ba8c24980f49ee34dbb44a"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

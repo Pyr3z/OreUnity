@@ -1,4 +1,4 @@
-/*! @file       Editor/EditorSettingsValidator.cs
+/*! @file       Editor/EditorStateValidator.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-06
 **/
@@ -13,16 +13,17 @@ namespace Ore.Editor
 {
 
   [InitializeOnLoad]
-  public static class EditorSettingsValidator
+  public static class EditorStateValidator
   {
 
-    static EditorSettingsValidator()
+    static EditorStateValidator()
     {
       EditorApplication.delayCall += ValidateOAssetSingletons;
       EditorApplication.delayCall += ValidatePreloadedAssets;
     }
 
 
+    [MenuItem("Ore/Validate/OAssetSingletons")]
     internal static void ValidateOAssetSingletons()
     {
       var silencers = new System.Type[]
@@ -37,8 +38,7 @@ namespace Ore.Editor
         if (tself == null || tself.IsAbstract || tself.IsGenericType || tself.AreAnyDefined(silencers))
           continue;
 
-        var load = Resources.FindObjectsOfTypeAll(tself);
-        if (load.Length > 0)
+        if (!AssetDatabase.FindAssets($"t:{tself.Name}").IsEmpty())
           continue;
 
         string filepath;
@@ -65,6 +65,7 @@ namespace Ore.Editor
       }
     }
 
+    [MenuItem("Ore/Validate/Preloaded Assets")]
     internal static void ValidatePreloadedAssets()
     {
       var preloaded = new List<Object>(PlayerSettings.GetPreloadedAssets());
@@ -94,6 +95,6 @@ namespace Ore.Editor
       }
     }
 
-  }
+  } // end static calss EditorStateValidator
 
 }

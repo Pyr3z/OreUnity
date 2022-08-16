@@ -8,10 +8,6 @@ using System.IO;
 
 using UnityEngine;
 
-#if UNITY_EDITOR
-using UnityEditor; // TODO will remove when tests are moved out
-#endif
-
 using Encoding = System.Text.Encoding;
 
 
@@ -336,94 +332,3 @@ namespace Ore
   } // end static class Filesystem
 
 }
-
-
-#if UNITY_EDITOR
-
-// TODO move outta here, use proper test framework
-namespace Ore.Tests
-{
-  internal static class TestFilesystem
-  {
-
-    [MenuItem("Ore/Tests/Filesystem")]
-    private static void Run()
-    {
-      Debug.Log("--- TEST BEGIN");
-
-      // set up test data
-
-      (string path, string text)[] texts =
-      {
-        ("progress",  "topScore:314\ntopKills:13\ncurrentSkin:dragonMonkey\n"),
-        ("flight",    "{\"FlightVersion\":6820,\"LastUpdatedHash\":\"257af26594d7f4d6a3ff89f789622f23\"}"),
-        ("stats",     "dayOfPlaying:3\ngamesToday:2\ntotalGames:15"),
-      };
-
-      (string path, byte[] data)[] datas =
-      {
-        ("koobox.png",            AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/bore~.png").EncodeToPNG()),
-        ($"{texts[1].path}.bin",  texts[1].text.ToBase64().ToBytes()),
-      };
-
-      string pre = "./Temp/TestFilesystem";
-
-      // run tests
-
-      // text tests:
-      foreach (var (path, text) in texts)
-      {
-        string fullpath = $"{pre}/{path}";
-
-        if (!Filesystem.TryWriteText(fullpath, text) ||
-            !Filesystem.TryReadText(fullpath, out string read))
-        {
-          Filesystem.LogLastException();
-          continue;
-        }
-
-        if (!string.Equals(text, read, System.StringComparison.Ordinal))
-          Debug.LogError($"TEST ERROR: text file input and output differ (\"{path}\").\n\t IN:{text}\n\tOUT:{read}");
-      }
-
-      // binary tests:
-      foreach (var (path, data) in datas)
-      {
-        string fullpath = $"{pre}/{path}";
-
-        if (!Filesystem.TryWriteBinary(fullpath, data) ||
-            !Filesystem.TryReadBinary(fullpath, out byte[] read))
-        {
-          Filesystem.LogLastException();
-          continue;
-        }
-
-        int ilen = data.Length, olen = read.Length;
-        if (ilen != olen)
-        {
-          Debug.LogError($"TEST: binary file byte array lengths differ. (\"{path}\")\n\t INLEN: {ilen}\n\tOUTLEN: {olen}");
-          continue;
-        }
-
-        int diffs = 0;
-        for (int i = 0; i < ilen; ++i)
-        {
-          byte lhs = data[i];
-          byte rhs = read[i];
-
-          if (lhs != rhs)
-            ++diffs;
-        }
-
-        if (diffs > 0)
-          Debug.LogError($"TEST: binary input and output differ. (\"{path}\")\n\tNUM DIFFS: {diffs}");
-      }
-
-      Debug.Log("--- TEST END");
-    }
-
-  } // end internal static class TestFilesystem
-
-}
-
-#endif // UNITY_EDITOR
