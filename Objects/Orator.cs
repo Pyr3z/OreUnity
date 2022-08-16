@@ -32,9 +32,6 @@ namespace Ore
   [DefaultExecutionOrder(-1337)]
   public sealed class Orator : OAssetSingleton<Orator>, IImmortalSingleton
   {
-
-    #region instance fields
-
     [System.Serializable]
     private struct LogFormatDef
     {
@@ -49,7 +46,131 @@ namespace Ore
       public Color32 RichTextColor;
       // rich text etc... (TODO)
     } // end struct LogFormatDef
+    
+    
+    #region PUBLIC STATIC METHODS
 
+    public static string Prefix
+    {
+      get => Instance ? Instance.m_OratorPrefix : DEFAULT_KONSOLE_PREFIX;
+      set
+      {
+        if (Instance)
+          Instance.m_OratorPrefix = value;
+      }
+    }
+    public static bool RaiseExceptions
+    {
+      get => Instance ? Instance.m_AssertionsRaiseExceptions : DEFAULT_ASSERT_EXCEPTIONS;
+      set
+      {
+        if (Instance)
+          Instance.m_AssertionsRaiseExceptions = value;
+      }
+    }
+    public static bool ForceAssertionsInRelease
+    {
+      get => Instance ? Instance.m_ForceAssertionsInRelease : DEFAULT_ASSERTIONS_IN_RELEASE;
+      set
+      {
+        if (Instance)
+          Instance.m_ForceAssertionsInRelease = value;
+      }
+    }
+
+
+    public static void Reached()
+    {
+      if (Instance)
+        Instance.reached();
+      else
+        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {DEFAULT_REACHED_MSG}");
+    }
+
+    public static void Reached(Object ctx)
+    {
+      if (Instance)
+        Instance.reached(ctx);
+      else
+        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {DEFAULT_REACHED_MSG} (name=\"{ctx}\")", ctx);
+    }
+
+    public static void Reached(string msg)
+    {
+      if (Instance)
+        Instance.reached(msg);
+      else
+        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {DEFAULT_REACHED_MSG} \"{msg}\"");
+    }
+
+
+    public static void Log(string msg)
+    {
+      if (Instance)
+        Instance.log(msg);
+      else
+        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {msg}");
+    }
+
+    public static void Log(string msg, Object ctx)
+    {
+      if (Instance)
+        Instance.log(msg, ctx);
+      else
+        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
+    }
+
+
+    public static void Warn(string msg)
+    {
+      if (Instance)
+        Instance.warn(msg);
+      else
+        Debug.LogWarning($"{DEFAULT_KONSOLE_PREFIX} {msg}");
+    }
+
+    public static void Warn(string msg, Object ctx)
+    {
+      if (Instance)
+        Instance.warn(msg, ctx);
+      else
+        Debug.LogWarning($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
+    }
+
+
+    public static void Error(string msg)
+    {
+      if (Instance)
+        Instance.error(msg);
+      else
+        Debug.LogError($"{DEFAULT_KONSOLE_PREFIX} {msg}");
+    }
+
+    public static void Error(string msg, Object ctx)
+    {
+      if (Instance)
+        Instance.error(msg, ctx);
+      else
+        Debug.LogError($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
+    }
+
+    #endregion PUBLIC STATIC METHODS
+    
+    
+    #region STATIC ASSERTION API
+
+    public /* static */ abstract class Assert : OAssert
+    {
+
+      // implementation now in `Static/OAssert.cs`.
+      // You can still use this interface via `Orator.Assert.X()`, but `OAssert.X()` is shorter.
+
+    } // end static class Assert
+
+    #endregion STATIC ASSERTION API
+    
+
+    #region instance fields
 
     // compile-time default values:
 
@@ -107,17 +228,7 @@ namespace Ore
       BaseMessage = DEFAULT_ASSERT_MSG
     };
 
-
-    protected override void OnValidate()
-    {
-      base.OnValidate();
-
-      // reset cached message strings
-      m_FormattedReachedMessage = null;
-      m_FormattedAssertMessage = null;
-    }
-
-    #endregion
+    #endregion instance fields
 
 
     #region instance methods
@@ -248,154 +359,44 @@ namespace Ore
     #endregion
 
 
-    #region PUBLIC STATIC METHODS
-
-    public static string Prefix
-    {
-      get => Instance ? Instance.m_OratorPrefix : DEFAULT_KONSOLE_PREFIX;
-      set
-      {
-        if (Instance)
-          Instance.m_OratorPrefix = value;
-      }
-    }
-    public static bool RaiseExceptions
-    {
-      get => Instance ? Instance.m_AssertionsRaiseExceptions : DEFAULT_ASSERT_EXCEPTIONS;
-      set
-      {
-        if (Instance)
-          Instance.m_AssertionsRaiseExceptions = value;
-      }
-    }
-    public static bool ForceAssertionsInRelease
-    {
-      get => Instance ? Instance.m_ForceAssertionsInRelease : DEFAULT_ASSERTIONS_IN_RELEASE;
-      set
-      {
-        if (Instance)
-          Instance.m_ForceAssertionsInRelease = value;
-      }
-    }
-
-
-    public static void Reached()
-    {
-      if (Instance)
-        Instance.reached();
-      else
-        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {DEFAULT_REACHED_MSG}");
-    }
-
-    public static void Reached(Object ctx)
-    {
-      if (Instance)
-        Instance.reached(ctx);
-      else
-        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {DEFAULT_REACHED_MSG} (name=\"{ctx}\")", ctx);
-    }
-
-    public static void Reached(string msg)
-    {
-      if (Instance)
-        Instance.reached(msg);
-      else
-        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {DEFAULT_REACHED_MSG} \"{msg}\"");
-    }
-
-
-    public static void Log(string msg)
-    {
-      if (Instance)
-        Instance.log(msg);
-      else
-        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {msg}");
-    }
-
-    public static void Log(string msg, Object ctx)
-    {
-      if (Instance)
-        Instance.log(msg, ctx);
-      else
-        Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
-    }
-
-
-    public static void Warn(string msg)
-    {
-      if (Instance)
-        Instance.warn(msg);
-      else
-        Debug.LogWarning($"{DEFAULT_KONSOLE_PREFIX} {msg}");
-    }
-
-    public static void Warn(string msg, Object ctx)
-    {
-      if (Instance)
-        Instance.warn(msg, ctx);
-      else
-        Debug.LogWarning($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
-    }
-
-
-    public static void Error(string msg)
-    {
-      if (Instance)
-        Instance.error(msg);
-      else
-        Debug.LogError($"{DEFAULT_KONSOLE_PREFIX} {msg}");
-    }
-
-    public static void Error(string msg, Object ctx)
-    {
-      if (Instance)
-        Instance.error(msg, ctx);
-      else
-        Debug.LogError($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
-    }
-
-    #endregion
-
-
-    #region STATIC ASSERTION API
-
-    public /* static */ abstract class Assert : OAssert
-    {
-
-      // implementation now in `Static/OAssert.cs`.
-      // You can still use this interface via `Orator.Assert.X()`, but `OAssert.X()` is shorter.
-
-    } // end static class Assert
-
-    #endregion
-
-
     #region (private section)
 
-    // TODO fancy formatting w/ PyroDK.RichText API
-
-    private string m_FormattedReachedMessage = null;
     private string ReachedMessage
     {
       get
       {
         if (m_FormattedReachedMessage == null)
           m_FormattedReachedMessage = $"{m_OratorPrefix} {m_ReachedFormat.BaseMessage}";
-
+        // TODO RichText
         return m_FormattedReachedMessage;
       }
     }
 
-    private string m_FormattedAssertMessage = null;
     private string AssertMessage
     {
       get
       {
         if (m_FormattedAssertMessage == null)
           m_FormattedAssertMessage = $"{m_OratorPrefix} {m_AssertionFailedFormat.BaseMessage}";
-
+        // TODO RichText
         return m_FormattedAssertMessage;
       }
+    }
+    
+    
+    private string m_FormattedReachedMessage = null;
+    
+    private string m_FormattedAssertMessage = null;
+    
+    // TODO fancy formatting w/ PyroDK.RichText API
+    
+    protected override void OnValidate()
+    {
+      base.OnValidate();
+
+      // reset cached message strings
+      m_FormattedReachedMessage = null;
+      m_FormattedAssertMessage = null;
     }
 
     private void FixupMessageContext(ref string msg, ref Object ctx)
@@ -441,7 +442,7 @@ namespace Ore
     }
 #endif // UNITY_EDITOR
 
-    #endregion
+    #endregion (private section)
 
   } // end class Orator
 
