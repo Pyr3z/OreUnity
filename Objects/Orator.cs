@@ -199,7 +199,25 @@ namespace Ore
     private static bool AlreadyLogged(string msg, Object ctx)
     {
       int cap = Instance ? Instance.m_LogOnceMemorySize : DEFAULT_LOGONCE_MEMORY_SIZE;
-      int hash = Hashing.MakeHash(msg, ctx);  
+      int hash;
+      
+      #if UNITY_EDITOR
+      
+      var stage = UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+      if (stage)
+      {
+        hash = Hashing.MakeHash(msg, stage.assetPath);
+      }
+      else
+      {
+        hash = Hashing.MakeHash(msg, ctx);
+      }
+      
+      #else // if !UNITY_EDITOR
+      
+      hash = Hashing.MakeHash(msg, ctx);
+      
+      #endif // UNITY_EDITOR
       
       if (s_LoggedOnceHashes.Count >= cap)
       {
@@ -228,6 +246,12 @@ namespace Ore
           Warn($"could write to \"{CACHE_PATH}\"");
         }
       }
+      
+      UnityEditor.EditorApplication.wantsToQuit += () =>
+      {
+        _ = Filesystem.TryDeletePath(CACHE_PATH);
+        return true;
+      };
     }
     
     
@@ -551,12 +575,21 @@ namespace Ore
     [UnityEditor.MenuItem("Ore/Tests/Orator Logs")]
     private static void Menu_TestLogs()
     {
+      ReachedOnce(Instance);
+      
       Reached();
       Log("message");
       Warn("warning");
       Error("error");
       Assert.True(false, Instance);
       Log("(post-assert failure)");
+    }
+    
+    [UnityEditor.MenuItem("Ore/Clear Orator.LogOnce")]
+    private static void Menu_ClearLogOnce()
+    {
+      _ = Filesystem.TryDeletePath(CACHE_PATH);
+      s_LoggedOnceHashes.Clear();
     }
 #endif // UNITY_EDITOR
 
