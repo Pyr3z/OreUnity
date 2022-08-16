@@ -3,6 +3,8 @@
  *  @date       2022-08-06
 **/
 
+using JetBrains.Annotations;
+
 
 namespace Ore
 {
@@ -19,14 +21,17 @@ namespace Ore
     /// <param name="path">
     /// Relative path to the Assets/ folder, e.g., "Resources/GoodBoy.asset"
     /// </param>
-    public AssetPathAttribute(string path)
+    public AssetPathAttribute([NotNull] string path)
     {
       OAssert.True(Filesystem.IsValidPath(path), $"invalid path: \"{path}\"");
       
-      if (path.EndsWith(".asset"))
-        Path = path;
-      else
-        Path = $"{path}.asset";
+      if (!path.StartsWith("Assets/"))
+        path = $"Assets/{path}";
+      
+      if (!path.EndsWith(".asset"))
+        path = $"{path}.asset";
+      
+      Path = path;
     }
   }
 }
