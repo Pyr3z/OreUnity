@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 // TODO remove temporary type spoofs
-using SceneRef = UnityEngine.SceneManagement.Scene;
+using SceneRef = System.String;
 
 
 namespace Ore
@@ -87,7 +87,7 @@ namespace Ore
 
     protected virtual void OnValidate()
     {
-      m_OwningScene = m_DontDestroyOnLoad ? default : gameObject.scene;
+      m_OwningScene = m_DontDestroyOnLoad ? string.Empty : gameObject.scene.name;
     }
 
 
@@ -112,7 +112,7 @@ namespace Ore
       if (m_DontDestroyOnLoad)
         DontDestroyOnLoad(gameObject);
 
-      m_OwningScene = gameObject.scene;
+      m_OwningScene = gameObject.scene.name;
 
       return m_IsSingletonInitialized || (m_IsSingletonInitialized = m_OnFirstInitialized.TryInvoke());
     }
@@ -130,7 +130,7 @@ namespace Ore
       else
         SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
 
-      m_OwningScene = gameObject.scene;
+      m_OwningScene = gameObject.scene.name;
     }
 
   } // end class OSingleton
