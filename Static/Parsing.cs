@@ -4,6 +4,7 @@
  *  @date   2022-06-01
 **/
 
+using System.Globalization;
 using UnityEngine;
 
 using TimeSpan = System.TimeSpan;
@@ -37,6 +38,12 @@ namespace Ore
       }
 
       return false;
+    }
+    
+    
+    public static bool TryParseInt32(string str, out int n)
+    {
+      return int.TryParse(str, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out n);
     }
 
 

@@ -20,11 +20,13 @@
 // ReSharper disable MemberCanBePrivate.Global
 
 using System.ComponentModel;
+using System.Collections.Generic;
 
 using UnityEngine;
 
 using Debug         = UnityEngine.Debug;
 using AssException  = UnityEngine.Assertions.AssertionException;
+using Object = UnityEngine.Object;
 
 
 namespace Ore
@@ -157,6 +159,115 @@ namespace Ore
     #endregion PUBLIC STATIC METHODS
     
     
+    #region "Log Once" API
+    // TODO decide if this should just be the default log behaviour (toggleable)
+    
+    public static void ReachedOnce(Object ctx)
+    {
+      if (AlreadyLogged(nameof(ReachedOnce), ctx))
+        return;
+      
+      Reached(ctx);
+    }
+    
+    public static void LogOnce(string msg, Object ctx = null)
+    {
+      if (AlreadyLogged(msg, ctx))
+        return;
+      
+      Log(msg, ctx);
+    }
+    
+    public static void WarnOnce(string msg, Object ctx = null)
+    {
+      if (AlreadyLogged(msg, ctx))
+        return;
+      
+      Warn(msg, ctx);
+    }
+    
+    public static void ErrorOnce(string msg, Object ctx = null)
+    {
+      if (AlreadyLogged(msg, ctx))
+        return;
+      
+      Error(msg, ctx);
+    }
+    
+    
+    private static HashSet<int> s_LoggedOnceHashes = new HashSet<int>();
+    private static bool AlreadyLogged(string msg, Object ctx)
+    {
+      int cap = Instance ? Instance.m_LogOnceMemorySize : DEFAULT_LOGONCE_MEMORY_SIZE;
+      int hash = Hashing.MakeHash(msg, ctx);  
+      
+      if (s_LoggedOnceHashes.Count >= cap)
+      {
+        Log($"LogOnce memory has overflowed. Resetting. (cap={cap})");
+        s_LoggedOnceHashes.Clear();
+        
+        #if UNITY_EDITOR
+        _ = Filesystem.TryDeletePath(CACHE_PATH);
+        #endif // UNITY_EDITOR
+      }
+      
+      return !s_LoggedOnceHashes.Add(hash);
+    }
+    
+    #if UNITY_EDITOR
+    
+    private const string CACHE_PATH = "Temp/Orator.LogOnce.bin";
+    
+    [UnityEditor.InitializeOnLoadMethod]
+    private static void OnScriptLoad()
+    {
+      if (!ReadCacheLogOnce() && s_LoggedOnceHashes.Count > 0)
+      {
+        if (!WriteCacheLogOnce())
+        {
+          Warn($"could write to \"{CACHE_PATH}\"");
+        }
+      }
+    }
+    
+    
+    private static bool WriteCacheLogOnce()
+    {
+      if (OAssert.Fails(Filesystem.TryDeletePath(CACHE_PATH), $"couldn't delete \"{CACHE_PATH}\""))
+        return false;
+      if (s_LoggedOnceHashes.Count == 0)
+        return true;
+      
+      var strb = new System.Text.StringBuilder(7 * s_LoggedOnceHashes.Count);
+      
+      foreach (int hash in s_LoggedOnceHashes)
+      {
+        _ = strb.Append(hash.ToInvariantString()).Append('\n');
+      }
+      
+      return Filesystem.TryWriteText(CACHE_PATH, strb.ToString());
+    }
+    
+    private static bool ReadCacheLogOnce()
+    {
+      if (!Filesystem.TryReadLines(CACHE_PATH, out string[] lines))
+        return false;
+      
+      s_LoggedOnceHashes.Clear();
+      foreach (var line in lines)
+      {
+        if (Parsing.TryParseInt32(line, out int hash))
+          s_LoggedOnceHashes.Add(hash);
+      }
+      
+      return true;
+    }
+    
+    #endif
+    
+    #endregion "Log Once" API
+    
+    
     #region STATIC ASSERTION API
 
     public /* static */ abstract class Assert : OAssert
@@ -190,6 +301,8 @@ namespace Ore
 
     internal const bool DEFAULT_ASSERT_EXCEPTIONS = false;
     internal const bool DEFAULT_ASSERTIONS_IN_RELEASE = false;
+    
+    internal const int DEFAULT_LOGONCE_MEMORY_SIZE = 512;
 
 
     [Header("Orator Properties")]
@@ -228,6 +341,11 @@ namespace Ore
       BaseMessage = DEFAULT_ASSERT_MSG
     };
 
+    [Space]
+    
+    [SerializeField, Tooltip("or, the maximum number of log signatures to keep in RAM to prevent duplicate logging.")]
+    private int m_LogOnceMemorySize = DEFAULT_LOGONCE_MEMORY_SIZE;
+    
     #endregion instance fields
 
 

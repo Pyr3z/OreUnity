@@ -88,7 +88,21 @@ namespace Ore
       text = null;
       return false;
     }
+    
+    public static bool TryReadLines(string filepath, out string[] lines, char newline = '\n', Encoding encoding = null)
+    {
+      if (TryReadText(filepath, out string text, encoding))
+      {
+        // maybe this is slow?
+        lines = text.Split(newline);
+        return lines.Length > 0;
+      }
+      
+      lines = new string[0];
+      return false;
+    }
 
+    
     public static bool TryWriteBinary(string filepath, byte[] data)
     {
       try
@@ -179,6 +193,45 @@ namespace Ore
     public static bool PathExists(string path)
     {
       return File.Exists(path) || Directory.Exists(path);
+    }
+    
+    public static bool TryDeletePath(string path)
+    {
+      try
+      {
+        #if UNITY_EDITOR
+        if (!PathExists(path))
+          return true;
+        
+        return UnityEditor.FileUtil.DeleteFileOrDirectory(path);
+        #else // if !UNITY_EDITOR
+        
+        if (File.Exists(path))
+        {
+          File.Delete(path);
+        }
+        else if (Directory.Exists(path))
+        {
+          Directory.Delete(path, true);
+        }
+        
+        return true;
+        
+        #endif // UNITY_EDITOR
+      }
+      catch (System.Exception ex)
+      {
+        if (ex is IOException)
+        {
+          LastException = ex;
+        }
+        else
+        {
+          LastException = new UnanticipatedException(ex);
+        }
+        
+        return false;
+      }
     }
 
     #endregion FUNDAMENTAL FILE I/O
