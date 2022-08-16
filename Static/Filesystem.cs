@@ -190,6 +190,11 @@ namespace Ore
       }
     }
 
+    public static bool IsValidPath(string path)
+    {
+      return Paths.IsValidPath(path);
+    }
+    
     public static bool PathExists(string path)
     {
       return File.Exists(path) || Directory.Exists(path);

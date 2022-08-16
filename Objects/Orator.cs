@@ -32,7 +32,8 @@ using Object = UnityEngine.Object;
 namespace Ore
 {
   [DefaultExecutionOrder(-1337)]
-  public sealed class Orator : OAssetSingleton<Orator>, IImmortalSingleton
+  [AssetPath("Resources/Orator.asset")]
+  public sealed class Orator : OAssetSingleton<Orator>
   {
     [System.Serializable]
     private struct LogFormatDef

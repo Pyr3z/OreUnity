@@ -47,7 +47,7 @@ namespace Ore
 
     [Header("Scene Singleton")]
 
-    [SerializeField] // [RequiredReference(DisableIfPrefab = true)]
+    [SerializeField, ReadOnly] // [RequiredReference(DisableIfPrefab = true)]
     protected SceneRef m_OwningScene;
 
     [SerializeField]

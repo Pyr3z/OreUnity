@@ -4,7 +4,7 @@
 **/
 
 using System.Collections.Generic;
-
+using System.Reflection;
 using UnityEngine;
 using UnityEditor;
 
@@ -18,8 +18,8 @@ namespace Ore.Editor
 
     static EditorSettingsValidator()
     {
-      ValidateOAssetSingletons();
-      ValidatePreloadedAssets();
+      EditorApplication.delayCall += ValidateOAssetSingletons;
+      EditorApplication.delayCall += ValidatePreloadedAssets;
     }
 
 
@@ -41,8 +41,17 @@ namespace Ore.Editor
         if (load.Length > 0)
           continue;
 
-        string filepath = $"Assets/Resources/{tself.Name}.asset"; // TODO implement AssetPathAttribute for specifying location
-
+        string filepath;
+        var attr = tself.GetCustomAttribute(typeof(AssetPathAttribute)) as AssetPathAttribute;
+        if (attr != null)
+        {
+          filepath = attr.Path;
+        }
+        else
+        {
+          filepath = $"Assets/Resources/{tself.Name}.asset";
+        }
+        
         if (!Filesystem.PathExists(filepath) && Filesystem.TryMakePathTo(filepath))
         {
           var instance = ScriptableObject.CreateInstance(tself);
