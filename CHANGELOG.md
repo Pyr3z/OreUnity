@@ -8,10 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - Added: new Orator.LogOnce (etc) API prevents annoying spam in your logs.
 - Fixed: Dependency loop issue after fresh pull.
+- Removed: IImmortalSingleton. It was folly.
+- Added: Attribute [AssetPath] for specifying custom paths for automatic OAssetSingleton creation.
 
 ## [2.0.2] - 2022-08-15
 - Fixed: Defunct behaviour on Orator assets (and all other OAssetSingletons)
-- Added: Certain attributes disable automatic OAssetSingleton creation: CreateAssetMenu, Obsolete, OptionalOAsset.
+- Added: Certain attributes disable automatic OAssetSingleton creation: [CreateAssetMenu], [Obsolete], [OptionalAsset].
 - Changed: All OAssetSingletons get auto-created in the root-level Resources folder.
 
 ## [2.0.1] - 2022-08-12
