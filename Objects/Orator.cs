@@ -234,7 +234,7 @@ namespace Ore
     
     #if UNITY_EDITOR
     
-    private const string CACHE_PATH = "Temp/Orator.LogOnce.bin";
+    private const string CACHE_PATH = "Temp/Orator.LogOnce.cache";
     
     [UnityEditor.InitializeOnLoadMethod]
     private static void OnScriptLoad()
@@ -243,7 +243,7 @@ namespace Ore
       {
         if (!WriteCacheLogOnce())
         {
-          Warn($"could write to \"{CACHE_PATH}\"");
+          Warn($"could not write to \"{CACHE_PATH}\"");
         }
       }
       
@@ -257,7 +257,7 @@ namespace Ore
     
     private static bool WriteCacheLogOnce()
     {
-      if (OAssert.Fails(Filesystem.TryDeletePath(CACHE_PATH), $"couldn't delete \"{CACHE_PATH}\""))
+      if (OAssert.Fails(Filesystem.TryDeletePath(CACHE_PATH), $"could not delete \"{CACHE_PATH}\""))
         return false;
       if (s_LoggedOnceHashes.Count == 0)
         return true;
@@ -572,7 +572,7 @@ namespace Ore
     }
 
 #if UNITY_EDITOR
-    [UnityEditor.MenuItem("Ore/Tests/Orator Logs")]
+    [UnityEditor.MenuItem("Ore/Orator/Test All Log Types")]
     private static void Menu_TestLogs()
     {
       ReachedOnce(Instance);
@@ -581,12 +581,21 @@ namespace Ore
       Log("message");
       Warn("warning");
       Error("error");
-      Assert.True(false, Instance);
+      OAssert.True(false, Instance);
       Log("(post-assert failure)");
     }
     
-    [UnityEditor.MenuItem("Ore/Clear Orator.LogOnce")]
-    private static void Menu_ClearLogOnce()
+    [UnityEditor.MenuItem("Ore/Orator/Write Cache")]
+    private static void Menu_WriteCache()
+    {
+      ReachedOnce(Instance);
+      
+      if (!WriteCacheLogOnce())
+        Error("failed to write Orator cache!");
+    }
+    
+    [UnityEditor.MenuItem("Ore/Orator/Clear Cache")]
+    private static void Menu_ClearCache()
     {
       _ = Filesystem.TryDeletePath(CACHE_PATH);
       s_LoggedOnceHashes.Clear();
