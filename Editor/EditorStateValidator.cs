@@ -60,7 +60,7 @@ namespace Ore.Editor
           AssetDatabase.SaveAssetIfDirty(instance);
           AssetDatabase.ImportAsset(filepath); // overkill?
 
-          Orator.Log($"OAssetSingleton: Created new <{tself.Name}> at {filepath}");
+          Orator.Log($"Created new OAssetSingleton <{tself.Name}> at \"{filepath}\"", instance);
         }
       }
     }

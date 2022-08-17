@@ -8,8 +8,13 @@
 
 // ReSharper disable HeapView.DelegateAllocation
 
+using System.Collections;
+using System.Collections.Generic;
+
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
+using JetBrains.Annotations;
 
 
 namespace Ore
@@ -17,8 +22,55 @@ namespace Ore
   [DefaultExecutionOrder(-500)] // rationale: Many things might depend on this class early-on.
   public sealed class ActiveScene : OSingleton<ActiveScene>
   {
+    
+    private static Queue<IEnumerator> s_CoroutineQueue;
+    
+    
+    /// <summary>
+    /// Primarily useful for non-Scene-bound code to enqueue a coroutine even if
+    /// no scenes are loaded yet.
+    /// </summary>
+    /// <param name="coroutine"></param>
+    public static void EnqueueCoroutine([NotNull] IEnumerator coroutine)
+    {
+      if (OAssert.FailsNullCheck(coroutine, nameof(coroutine)))
+        return;
+      
+      if (IsActive)
+      {
+        // late comers = just run it now
+        _ = Instance.StartCoroutine(coroutine);
+        return;
+      }
+      
+      s_CoroutineQueue ??= new Queue<IEnumerator>();
+      s_CoroutineQueue.Enqueue(coroutine);
+    }
+
+
+    protected override void OnEnable()
+    {
+      if (!TryInitialize(this) || s_CoroutineQueue == null)
+        return;
+      
+      while (s_CoroutineQueue.Count > 0)
+      {
+        var subroutine = s_CoroutineQueue.Dequeue();
+        if (subroutine != null)
+        {
+          _ = StartCoroutine(subroutine);
+        }
+      }
+      
+      s_CoroutineQueue = null;
+    }
+    
+    
+    
+    // the rest ensures this singleton is ALWAYS on the "active" scene.
+    
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void RegisterGlobalCallbacks()
+    private static void RegisterActiveSceneListener()
     {
       SceneManager.activeSceneChanged += OnActiveSceneChanged;
     }
