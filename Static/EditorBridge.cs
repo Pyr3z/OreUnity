@@ -24,7 +24,7 @@ namespace Ore
 
     public static bool TrySetPreloadedAsset(Object asset, bool set)
     {
-      if (OAssert.Fails(IsMainAsset(asset), $"Object \"{asset}\" is not a main asset Object and cannot be preloaded."))
+      if (!IsMainAsset(asset))
         return false;
 
       var   buffer  = new List<Object>(PlayerSettings.GetPreloadedAssets());
