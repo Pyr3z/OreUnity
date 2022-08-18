@@ -161,7 +161,6 @@ namespace Ore
     
     
     #region "Log Once" API
-    // TODO decide if this should just be the default log behaviour (toggleable)
     
     public static void ReachedOnce(Object ctx)
     {
@@ -196,7 +195,7 @@ namespace Ore
     }
     
     
-    private static HashSet<int> s_LoggedOnceHashes = new HashSet<int>();
+    private static readonly HashSet<int> s_LoggedOnceHashes = new HashSet<int>();
     private static bool AlreadyLogged(string msg, Object ctx)
     {
       int cap = Instance ? Instance.m_LogOnceMemorySize : DEFAULT_LOGONCE_MEMORY_SIZE;
