@@ -224,7 +224,7 @@ namespace Ore
       }
     }
     
-    public void StopCoroutine([NotNull] string key)
+    public /**/ new /**/ void StopCoroutine([NotNull] string key)
     {
       int i = m_KeyedCoroutines.Count;
       while (i --> 0)
