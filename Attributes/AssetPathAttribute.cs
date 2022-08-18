@@ -17,20 +17,20 @@ namespace Ore
   public class AssetPathAttribute : System.Attribute
   {
     public readonly string Path;
-    
+
     /// <param name="path">
     /// Relative path to the Assets/ folder, e.g., "Resources/GoodBoy.asset"
     /// </param>
     public AssetPathAttribute([NotNull] string path)
     {
       OAssert.True(Filesystem.IsValidPath(path), $"invalid path: \"{path}\"");
-      
+
       if (!path.StartsWith("Assets/"))
         path = $"Assets/{path}";
-      
+
       if (!path.EndsWith(".asset"))
         path = $"{path}.asset";
-      
+
       Path = path;
     }
   }

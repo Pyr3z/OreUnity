@@ -49,8 +49,8 @@ namespace Ore
       public Color32 RichTextColor;
       // rich text etc... (TODO)
     } // end struct LogFormatDef
-    
-    
+
+
     #region PUBLIC STATIC METHODS
 
     public static string Prefix
@@ -158,51 +158,51 @@ namespace Ore
     }
 
     #endregion PUBLIC STATIC METHODS
-    
-    
+
+
     #region "Log Once" API
-    
+
     public static void ReachedOnce(Object ctx)
     {
       if (AlreadyLogged(nameof(ReachedOnce), ctx))
         return;
-      
+
       Reached(ctx);
     }
-    
+
     public static void LogOnce(string msg, Object ctx = null)
     {
       if (AlreadyLogged(msg, ctx))
         return;
-      
+
       Log(msg, ctx);
     }
-    
+
     public static void WarnOnce(string msg, Object ctx = null)
     {
       if (AlreadyLogged(msg, ctx))
         return;
-      
+
       Warn(msg, ctx);
     }
-    
+
     public static void ErrorOnce(string msg, Object ctx = null)
     {
       if (AlreadyLogged(msg, ctx))
         return;
-      
+
       Error(msg, ctx);
     }
-    
-    
+
+
     private static readonly HashSet<int> s_LoggedOnceHashes = new HashSet<int>();
     private static bool AlreadyLogged(string msg, Object ctx)
     {
       int cap = Instance ? Instance.m_LogOnceMemorySize : DEFAULT_LOGONCE_MEMORY_SIZE;
       int hash;
-      
+
       #if UNITY_EDITOR
-      
+
       var stage = UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
       if (stage)
       {
@@ -212,30 +212,30 @@ namespace Ore
       {
         hash = Hashing.MakeHash(msg, ctx);
       }
-      
+
       #else // if !UNITY_EDITOR
-      
+
       hash = Hashing.MakeHash(msg, ctx);
-      
+
       #endif // UNITY_EDITOR
-      
+
       if (s_LoggedOnceHashes.Count >= cap)
       {
         Log($"LogOnce memory has overflowed. Resetting. (cap={cap})");
         s_LoggedOnceHashes.Clear();
-        
+
         #if UNITY_EDITOR
         _ = Filesystem.TryDeletePath(CACHE_PATH);
         #endif // UNITY_EDITOR
       }
-      
+
       return !s_LoggedOnceHashes.Add(hash);
     }
-    
+
     #if UNITY_EDITOR
-    
+
     private const string CACHE_PATH = "Temp/Orator.LogOnce.cache";
-    
+
     [UnityEditor.InitializeOnLoadMethod]
     private static void OnScriptLoad()
     {
@@ -246,52 +246,52 @@ namespace Ore
           Warn($"could not write to \"{CACHE_PATH}\"");
         }
       }
-      
+
       UnityEditor.EditorApplication.wantsToQuit += () =>
       {
         _ = Filesystem.TryDeletePath(CACHE_PATH);
         return true;
       };
     }
-    
-    
+
+
     private static bool WriteCacheLogOnce()
     {
       if (OAssert.Fails(Filesystem.TryDeletePath(CACHE_PATH), $"could not delete \"{CACHE_PATH}\""))
         return false;
       if (s_LoggedOnceHashes.Count == 0)
         return true;
-      
+
       var strb = new System.Text.StringBuilder(7 * s_LoggedOnceHashes.Count);
-      
+
       foreach (int hash in s_LoggedOnceHashes)
       {
         _ = strb.Append(hash.ToInvariantString()).Append('\n');
       }
-      
+
       return Filesystem.TryWriteText(CACHE_PATH, strb.ToString());
     }
-    
+
     private static bool ReadCacheLogOnce()
     {
       if (!Filesystem.TryReadLines(CACHE_PATH, out string[] lines))
         return false;
-      
+
       s_LoggedOnceHashes.Clear();
       foreach (var line in lines)
       {
         if (Parsing.TryParseInt32(line, out int hash))
           s_LoggedOnceHashes.Add(hash);
       }
-      
+
       return true;
     }
-    
+
     #endif
-    
+
     #endregion "Log Once" API
-    
-    
+
+
     #region STATIC ASSERTION API
 
     public /* static */ abstract class Assert : OAssert
@@ -303,7 +303,7 @@ namespace Ore
     } // end static class Assert
 
     #endregion STATIC ASSERTION API
-    
+
 
     #region instance fields
 
@@ -325,7 +325,7 @@ namespace Ore
 
     internal const bool DEFAULT_ASSERT_EXCEPTIONS = false;
     internal const bool DEFAULT_ASSERTIONS_IN_RELEASE = false;
-    
+
     internal const int DEFAULT_LOGONCE_MEMORY_SIZE = 512;
 
 
@@ -366,10 +366,10 @@ namespace Ore
     };
 
     [Space]
-    
+
     [SerializeField, Tooltip("or, the maximum number of log signatures to keep in RAM to prevent duplicate logging.")]
     private int m_LogOnceMemorySize = DEFAULT_LOGONCE_MEMORY_SIZE;
-    
+
     #endregion instance fields
 
 
@@ -524,14 +524,14 @@ namespace Ore
         return m_FormattedAssertMessage;
       }
     }
-    
-    
+
+
     private string m_FormattedReachedMessage = null;
-    
+
     private string m_FormattedAssertMessage = null;
-    
+
     // TODO fancy formatting w/ PyroDK.RichText API
-    
+
     protected override void OnValidate()
     {
       base.OnValidate();
@@ -576,7 +576,7 @@ namespace Ore
     private static void Menu_TestLogs()
     {
       ReachedOnce(Instance);
-      
+
       Reached();
       Log("message");
       Warn("warning");
@@ -584,16 +584,16 @@ namespace Ore
       OAssert.True(false, Instance);
       Log("(post-assert failure)");
     }
-    
+
     [UnityEditor.MenuItem("Ore/Orator/Write Cache")]
     private static void Menu_WriteCache()
     {
       ReachedOnce(Instance);
-      
+
       if (!WriteCacheLogOnce())
         Error("failed to write Orator cache!");
     }
-    
+
     [UnityEditor.MenuItem("Ore/Orator/Clear Cache")]
     private static void Menu_ClearCache()
     {

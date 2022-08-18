@@ -36,7 +36,7 @@ namespace Ore
     {
       return $"[{{0,{CalcDecimalDigits(size)}}}]";
     }
-    
+
     public static string ToInvariantString(this System.IConvertible self)
     {
       return self?.ToString(System.Globalization.NumberFormatInfo.InvariantInfo);

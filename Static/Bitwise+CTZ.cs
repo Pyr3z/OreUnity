@@ -37,7 +37,7 @@ namespace Ore
     #else // A lookup with a pre-computed DeBruijn sequence is fastest:
       if (bits == 0)
         return 64;
-      
+
       return s_CTZLookup64[ ( LSB(bits) * c_DeBruijnKey64 ) >> 58 ];
     #endif
     }

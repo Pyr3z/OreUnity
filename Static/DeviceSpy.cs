@@ -222,7 +222,7 @@ namespace Ore
     private static ABIArch CalcABIArch()
     {
       var strcmp = System.StringComparison.OrdinalIgnoreCase;
-      
+
       string type = SystemInfo.processorType;
 
       // Android and Android-like devices are pretty standard here

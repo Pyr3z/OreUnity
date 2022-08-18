@@ -58,7 +58,7 @@ namespace Ore
     }
 
   } // end static class EditorBridge
-  
+
 #else // if !UNITY_EDITOR
 
   public static class EditorBridge
@@ -75,7 +75,7 @@ namespace Ore
     }
 
   } // end class EditorBridge
-  
+
 #endif // UNITY_EDITOR
-  
+
 }

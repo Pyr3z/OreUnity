@@ -100,7 +100,7 @@ namespace Ore
     {
       if (!m_IsEnabled)
         return true;
-      
+
       if (m_DelaySeconds < MIN_DELAY_SECONDS_ASYNC)
         base.Invoke();
       else if (m_Invocation == null && component && component.isActiveAndEnabled)

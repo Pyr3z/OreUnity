@@ -1,7 +1,7 @@
 /*! @file       Static/Algorithms.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-02-30
- *  
+ *
  *  @brief      Collection of generic data structure algorithms.
 **/
 

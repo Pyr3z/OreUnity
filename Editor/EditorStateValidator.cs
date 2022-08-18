@@ -50,7 +50,7 @@ namespace Ore.Editor
         {
           filepath = $"Assets/Resources/{tself.Name}.asset";
         }
-        
+
         if (!Filesystem.PathExists(filepath) && Filesystem.TryMakePathTo(filepath))
         {
           var instance = ScriptableObject.CreateInstance(tself);

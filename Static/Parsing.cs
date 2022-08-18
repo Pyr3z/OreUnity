@@ -39,8 +39,8 @@ namespace Ore
 
       return false;
     }
-    
-    
+
+
     public static bool TryParseInt32(string str, out int n)
     {
       return int.TryParse(str, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out n);
@@ -158,7 +158,7 @@ namespace Ore
       while (j < 4 && i < hex.Length - 1)
       {
         if (special_syntax)
-          // special HTML syntax: makes 
+          // special HTML syntax: makes
           hexhi = hexlo = hex[i++];
         else
         {

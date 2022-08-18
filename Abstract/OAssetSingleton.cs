@@ -1,12 +1,12 @@
 /*! @file       Abstract/OAssetSingleton.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-02-17
- *  
+ *
  *  @brief      Base class for singleton objects which exists without a
  *              formal "parent" to which it is dependendent.
  *
  *  @remark     No scene, No GameObject ;)
- *  
+ *
  *  @remark     For non-abstract, non-generic subclasses, an asset
  *              (ScriptableObject) is auto-generated on Editor reload
  *              if an instance does not already exist (or cannot be found

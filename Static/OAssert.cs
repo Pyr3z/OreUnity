@@ -1,7 +1,7 @@
 /*! @file       Static/OAssert.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-01
- *  
+ *
  *  @remark     Moved from Orator.Assert (which is backwards-maintained).
 **/
 
@@ -66,7 +66,7 @@ namespace Ore
     {
       if (value)
         return;
-      
+
       if (Orator)
         Orator.assertionFailed(BoolFailMessage(expected: true), ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -82,7 +82,7 @@ namespace Ore
     {
       if (value)
         return;
-      
+
       if (Orator)
         Orator.assertionFailed(msg, ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -107,7 +107,7 @@ namespace Ore
       {
         if (values[i])
           continue;
-        
+
         if (Orator)
           Orator.assertionFailed($"# {i + 1}/{ilen}: {BoolFailMessage(expected: true)}", ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -116,7 +116,7 @@ namespace Ore
 #pragma warning restore CS0162
         else
           Debug.LogAssertion($"{BoolFailMessage(expected: true, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
-        
+
         return;
       }
     }
@@ -127,7 +127,7 @@ namespace Ore
     {
       if (!value)
         return;
-      
+
       if (Orator)
         Orator.assertionFailed(BoolFailMessage(expected: false), ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -143,7 +143,7 @@ namespace Ore
     {
       if (!value)
         return;
-      
+
       if (Orator)
         Orator.assertionFailed(msg, ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -168,7 +168,7 @@ namespace Ore
       {
         if (!values[i])
           continue;
-        
+
         if (Orator)
           Orator.assertionFailed($"# {i + 1}/{ilen}: {BoolFailMessage(expected: false)}", ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -177,7 +177,7 @@ namespace Ore
 #pragma warning restore CS0162
         else
           Debug.LogAssertion($"{BoolFailMessage(expected: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
-        
+
         return;
       }
     }
@@ -188,7 +188,7 @@ namespace Ore
     {
       if (reference != null)
         return;
-      
+
       if (Orator)
         Orator.assertionFailed(NullFailMessage(expected_null: false), ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -204,7 +204,7 @@ namespace Ore
     {
       if (reference != null)
         return;
-      
+
       if (Orator)
         Orator.assertionFailed(msg, ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -229,7 +229,7 @@ namespace Ore
       {
         if (references[i] != null)
           continue;
-        
+
         if (Orator)
           Orator.assertionFailed($"# {i + 1}/{ilen}: {NullFailMessage(expected_null: false)}", ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -238,18 +238,18 @@ namespace Ore
 #pragma warning restore CS0162
         else
           Debug.LogAssertion($"{NullFailMessage(expected_null: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
-        
+
         return;
       }
     }
 
-    
+
     [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void Exists(Object obj, Object ctx = null)
     {
       if (obj)
         return;
-      
+
       if (Orator)
         Orator.assertionFailed(NullFailMessage(expected_null: false), ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -265,7 +265,7 @@ namespace Ore
     {
       if (obj)
         return;
-      
+
       if (Orator)
         Orator.assertionFailed(msg, ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -282,7 +282,7 @@ namespace Ore
       {
         if (objs[i] != null)
           continue;
-        
+
         if (Orator)
           Orator.assertionFailed($"# {i + 1}/{ilen}: {NullFailMessage(expected_null: false)}");
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -291,7 +291,7 @@ namespace Ore
 #pragma warning restore CS0162
         else
           Debug.LogAssertion($"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
-        
+
         return;
       }
     }
@@ -302,7 +302,7 @@ namespace Ore
     {
       if (list != null && list.Count != 0)
         return;
-      
+
       if (Orator)
         Orator.assertionFailed(CollectionEmptyMessage(expected_empty: false), ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -318,7 +318,7 @@ namespace Ore
     {
       if (list != null && list.Count != 0)
         return;
-      
+
       if (Orator)
         Orator.assertionFailed(msg, ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -342,7 +342,7 @@ namespace Ore
       {
         if (lists[i] != null && lists[i].Count != 0)
           continue;
-        
+
         if (Orator)
           Orator.assertionFailed($"# {i + 1}/{ilen}: {CollectionEmptyMessage(expected_empty: false)}", ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
@@ -351,7 +351,7 @@ namespace Ore
 #pragma warning restore CS0162
         else
           Debug.LogAssertion($"{CollectionEmptyMessage(expected_empty: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
-        
+
         return;
       }
     }
@@ -420,12 +420,12 @@ namespace Ore
       {
         if (objs[i] is { })
           continue;
-        
+
         if (Orator)
           Orator.assertionFailedNoThrow($"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
         else
           Debug.LogAssertion($"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
-        
+
         return true;
       }
 
@@ -433,7 +433,7 @@ namespace Ore
     }
 
 #else // !UNITY_ASSERTIONS
-      
+
 #pragma warning disable IDE0060
     public static bool Fails(bool assertion, Object ctx = null) => false;
     public static bool Fails(bool assertion, string msg, Object ctx = null) => false;

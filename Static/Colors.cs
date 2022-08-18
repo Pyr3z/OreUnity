@@ -1,7 +1,7 @@
 /*! @file       Static/Colors.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-29
- *  
+ *
  *  @brief      CHRIST for the love of god, don't let Levi
  *              go crazy in this file. KEEP IT SIMPLE STUPID!
 **/

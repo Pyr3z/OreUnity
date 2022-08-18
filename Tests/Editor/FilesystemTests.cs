@@ -83,5 +83,5 @@ public static class FilesystemTests
         Orator.Error($"TEST: binary input and output differ. (\"{path}\")\n\tNUM DIFFS: {diffs}");
     }
   }
-  
+
 } // end static class FilesystemTests

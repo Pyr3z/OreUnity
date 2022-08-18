@@ -10,7 +10,7 @@ using System.Collections.Generic;
 namespace Ore
 {
   /// <summary>
-  /// Utilities and generic extensions for `IList<T>` containers. 
+  /// Utilities and generic extensions for `IList<T>` containers.
   /// </summary>
   public static class Lists
   {

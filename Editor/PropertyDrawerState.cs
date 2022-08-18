@@ -1,7 +1,7 @@
 /*! @file       Editor/PropertyDrawerState.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-15
- *  
+ *
  *  @brief      A base class for tracking/caching states for
  *              non-trivial "Drawer" implementations.
 **/

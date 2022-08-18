@@ -32,8 +32,8 @@ namespace Ore
 
     private IEnumerable<T>  m_Items;
     private Validator       m_Validator;
-    
-    
+
+
     public Coalescer(params T[] items)
       : this(items, validator: DefaultValidator)
     {
@@ -66,15 +66,15 @@ namespace Ore
     public bool TryCoalesce(out T item)
     {
       item = default(T);
-      
+
       if (OAssert.FailsNullChecks(m_Items, m_Validator))
         return false;
-      
+
       foreach (var i in m_Items)
       {
         if (!m_Validator(i))
           continue;
-          
+
         item = i;
         return true;
       }
