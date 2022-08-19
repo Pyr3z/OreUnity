@@ -40,7 +40,7 @@ namespace Ore.Editor
       }
 
       if (indent > 0)
-        OGUI.PushIndentLevel(indent, FIX_LABEL_WIDTH);
+        OGUI.IndentLevel.Push(indent, FIX_LABEL_WIDTH);
 
       Indent = indent;
       Rect = pos;
@@ -58,7 +58,7 @@ namespace Ore.Editor
         GUILayout.EndVertical();
 
       if (Indent > 0)
-        OGUI.PopIndentLevel(FIX_LABEL_WIDTH);
+        OGUI.IndentLevel.Pop(FIX_LABEL_WIDTH);
 
       if (IsListElement)
         OGUI.LabelWidth.Pop();

@@ -4,7 +4,7 @@
 **/
 
 using UnityEditor;
-
+using UnityEngine;
 using IList = System.Collections.IList;
 using FieldInfo = System.Reflection.FieldInfo;
 
@@ -24,15 +24,17 @@ namespace Ore.Editor
 
       try
       {
-        return SerializedProperty.EqualContents(null, prop) || !SerializedProperty.EqualContents(prop, prop);
+        return prop == null || SerializedProperty.EqualContents(null, prop) || !SerializedProperty.EqualContents(prop, prop);
         // (this checks the internal C++ pointer if it's nullptr.)
-        // (the 2nd call checks for mroe recent (Unity 2020) fuckery, and is what throws the NRE.)
+        // (the 3rd call checks for more recent (Unity 2020) fuckery, and is what throws the NRE.)
       }
       catch (System.NullReferenceException)
       {
+        // I hate everyone. Except for you, reader <3
         return true;
       }
     }
+
 
     public static bool IsArrayElement(this SerializedProperty prop)
     {
@@ -81,7 +83,7 @@ namespace Ore.Editor
 
     private static bool TryGetUnderlyingBoxedValue(string prop_path, ref object boxed_value)
     {
-      if (boxed_value == null)
+      if (boxed_value is null)
         return false;
 
       // Strategy: use Reflection to follow the fully-qualified property path

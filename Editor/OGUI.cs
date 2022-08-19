@@ -23,7 +23,7 @@ namespace Ore.Editor
     public static float LabelWidthRaw => LabelWidth.Stack.Front(fallback: EditorGUIUtility.labelWidth);
     public static float LabelWidthHalf => EditorGUIUtility.labelWidth * 0.45f;
 
-    public static float FieldStartX => FieldStartXRaw;
+    public static float FieldStartX => FieldStartXRaw - EditorGUI.indentLevel * STD_INDENT;
     public static float FieldStartXRaw => FieldEndX * 0.45f - STD_INDENT_0;
     public static float FieldEndX => EditorGUIUtility.currentViewWidth - STD_PAD_RIGHT;
     public static float FieldWidth => Mathf.Max(FieldEndX - FieldStartXRaw, EditorGUIUtility.fieldWidth);
@@ -173,39 +173,6 @@ namespace Ore.Editor
       }
 
     } // end static class IndentLevel
-
-    private static List<int> s_IndentLvlStack = new List<int>();
-    public static void PushIndentLevel(int lvl, bool fix_label_width = true)
-    {
-      if (lvl < 0)
-        lvl = 0;
-
-      s_IndentLvlStack.PushBack(EditorGUI.indentLevel);
-
-      EditorGUI.indentLevel = lvl;
-
-      if (fix_label_width)
-        LabelWidth.Push(LabelWidthRaw - STD_INDENT * lvl);
-    }
-    public static void PopIndentLevel(bool fix_label_width = true)
-    {
-      if (s_IndentLvlStack.Count > 0)
-      {
-        EditorGUI.indentLevel = s_IndentLvlStack.PopBack();
-
-        if (fix_label_width)
-          LabelWidth.Pop();
-      }
-    }
-    public static void ResetIndentLevel()
-    {
-      s_IndentLvlStack.Clear();
-      EditorGUI.indentLevel = 0;
-    }
-    public static void PushNextIndentLevel(bool fix_label_width = true, int delta = 1)
-    {
-      PushIndentLevel(EditorGUI.indentLevel + delta, fix_label_width);
-    }
 
   } // end static class OGUI
 
