@@ -22,14 +22,17 @@ using WeakRef = System.WeakReference;
 namespace Ore
 {
   [DefaultExecutionOrder(-500)] // rationale: Many things might depend on this class early-on.
-  public sealed class ActiveScene : OSingleton<ActiveScene>
+  public class ActiveScene : OSingleton<ActiveScene>
   {
 
   [Header("ActiveScene")]
     [SerializeField, Range(0, 64), Tooltip("Set to 0 to squelch the warning.")]
     private int m_TooManyCoroutinesWarningThreshold = 16;
 
+    [System.NonSerialized]
+    private static Dictionary<string, float> s_SceneBirthdays = new Dictionary<string, float>();
 
+    [System.NonSerialized]
     private static Queue<(IEnumerator,object)> s_CoroutineQueue;
 
     [System.NonSerialized]
@@ -38,6 +41,27 @@ namespace Ore
     [System.NonSerialized]
     private readonly List<(Coroutine,string)> m_KeyedCoroutines = new List<(Coroutine, string)>();
 
+    
+    public static float GetSceneAge()
+    {
+      if (IsActive && s_SceneBirthdays.TryGetValue(Instance.gameObject.scene.name, out float birth))
+      {
+        return Time.realtimeSinceStartup - birth;
+      }
+      return 0f;
+    }
+    
+    public static float GetSceneAge(string scene_name)
+    {
+      if (s_SceneBirthdays.TryGetValue(scene_name, out float birth))
+      {
+        return Time.realtimeSinceStartup - birth;
+      }
+      return 0f;
+    }
+    
+    
+    // Global static Coroutine impl:
 
     /// <summary>
     /// Primarily useful for non-Scene-bound code to enqueue a coroutine even if
@@ -336,6 +360,7 @@ namespace Ore
     private static void RegisterActiveSceneListener()
     {
       SceneManager.activeSceneChanged += OnActiveSceneChanged;
+      SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     private static void OnActiveSceneChanged(Scene prev, Scene next)
@@ -347,6 +372,11 @@ namespace Ore
       OAssert.Exists(curr, $"{nameof(ActiveScene)}.{nameof(Current)}");
 
       curr.SetDontDestroyOnLoad(!next.isLoaded);
+    }
+    
+    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+      s_SceneBirthdays[scene.name] = Time.realtimeSinceStartup;
     }
 
     private static ActiveScene Instantiate()
