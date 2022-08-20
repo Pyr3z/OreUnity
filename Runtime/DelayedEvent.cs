@@ -93,7 +93,13 @@ namespace Ore
 
     public bool TryInvoke()
     {
-      return TryInvokeOn(m_RunInGlobalContext ? ActiveScene.Current : m_Context);
+      if (m_RunInGlobalContext)
+      {
+        ActiveScene.EnqueueCoroutine(DelayedInvokeCoroutine(), m_Context);
+        return true;
+      }
+      
+      return TryInvokeOn(m_Context);
     }
 
     public bool TryInvokeOn(MonoBehaviour component)
@@ -102,11 +108,17 @@ namespace Ore
         return true;
 
       if (m_DelaySeconds < MIN_DELAY_SECONDS_ASYNC)
+      {
         base.Invoke();
+      }
       else if (m_Invocation == null && component && component.isActiveAndEnabled)
+      {
         m_Invocation = component.StartCoroutine(DelayedInvokeCoroutine());
+      }
       else
+      {
         return false;
+      }
 
       return true;
     }
@@ -114,10 +126,17 @@ namespace Ore
 
     private IEnumerator DelayedInvokeCoroutine()
     {
+      if (m_DelaySeconds <= 0f)
+      {
+        base.Invoke();
+        m_Invocation = null;
+        yield break;
+      }
+      
       if (m_ScaledTime)
         yield return new WaitForSeconds(m_DelaySeconds);
-      else if (m_DelaySeconds < 1f / Application.targetFrameRate)
-        yield return new WaitForEndOfFrame();
+      else if (m_DelaySeconds < 1f / 30f)
+        yield return null;
       else
         yield return new WaitForSecondsRealtime(m_DelaySeconds);
 

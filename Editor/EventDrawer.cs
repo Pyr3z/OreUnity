@@ -103,6 +103,8 @@ namespace Ore.Editor
         {
           if (root.serializedObject.targetObject is MonoBehaviour owner)
             Context.objectReferenceValue = owner;
+          else if (root.serializedObject.targetObject is ScriptableObject contract)
+            Context.objectReferenceValue = contract;
           else
             Context = null;
         }
@@ -113,7 +115,7 @@ namespace Ore.Editor
         {
           RunInGlobalContext = null;
         }
-        else if (Context == null || !Context.objectReferenceValue)
+        else if (Context == null || !Context.objectReferenceValue || Context.objectReferenceValue is ScriptableObject)
         {
           RunInGlobalContext.boolValue = true;
         }
