@@ -93,13 +93,14 @@ namespace Ore
 
     public bool TryInvoke()
     {
-      if (m_RunInGlobalContext || !(m_Context is MonoBehaviour component))
+      if (m_RunInGlobalContext || m_Context is ScriptableObject)
       {
-        ActiveScene.EnqueueCoroutine(DelayedInvokeCoroutine(), m_Context);
+        if (m_IsEnabled)
+          ActiveScene.EnqueueCoroutine(DelayedInvokeCoroutine(), m_Context);
         return true;
       }
       
-      return TryInvokeOn(component);
+      return TryInvokeOn(m_Context as MonoBehaviour);
     }
 
     public bool TryInvokeOn(MonoBehaviour component)
