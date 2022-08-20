@@ -50,7 +50,7 @@ namespace Ore
     private bool m_IsEnabled;
 
     [SerializeField, HideInInspector]
-    private MonoBehaviour m_Context; // auto-assigned in EventDrawer.cs
+    private Object m_Context; // auto-assigned in EventDrawer.cs
 
     [SerializeField, HideInInspector]
     private bool m_RunInGlobalContext;
@@ -93,13 +93,13 @@ namespace Ore
 
     public bool TryInvoke()
     {
-      if (m_RunInGlobalContext)
+      if (m_RunInGlobalContext || !(m_Context is MonoBehaviour component))
       {
         ActiveScene.EnqueueCoroutine(DelayedInvokeCoroutine(), m_Context);
         return true;
       }
       
-      return TryInvokeOn(m_Context);
+      return TryInvokeOn(component);
     }
 
     public bool TryInvokeOn(MonoBehaviour component)
