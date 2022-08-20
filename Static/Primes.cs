@@ -3,6 +3,8 @@
  *  @date       2022-08-18
 **/
 
+#if false // temp disabled until needed internally (probs for HashMap)
+
 namespace Ore
 {
   public class Primes
@@ -1106,3 +1108,5 @@ namespace Ore
     
   } // end class Primes
 }
+
+#endif

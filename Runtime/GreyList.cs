@@ -43,5 +43,10 @@ namespace Ore
       return m_Type == GreyListType.Disabled || ((m_Type == GreyListType.Whitelist) == Contains(item));
     }
     
+    public bool Rejects([CanBeNull] T item)
+    {
+      return m_Type != GreyListType.Disabled && ((m_Type == GreyListType.Blacklist) == Contains(item));
+    }
+    
   } // end class GreyList<T>
 }
