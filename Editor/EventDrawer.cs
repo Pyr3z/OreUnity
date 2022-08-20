@@ -96,7 +96,9 @@ namespace Ore.Editor
         // MonoBehaviour m_Context
         Context = root.FindPropertyRelative("m_Context");
         if (OAssert.Fails(Context != null && Context.propertyType == SerializedPropertyType.ObjectReference))
+        {
           Context = null;
+        }
         else
         {
           if (root.serializedObject.targetObject is MonoBehaviour owner)
@@ -108,11 +110,12 @@ namespace Ore.Editor
         // bool m_RunInGlobalContext
         RunInGlobalContext = root.FindPropertyRelative("m_RunInGlobalContext");
         if (OAssert.Fails(RunInGlobalContext != null && RunInGlobalContext.propertyType == SerializedPropertyType.Boolean))
-          RunInGlobalContext = null;
-        else
         {
-          if (Context == null)
-            RunInGlobalContext.boolValue = false;
+          RunInGlobalContext = null;
+        }
+        else if (Context == null || !Context.objectReferenceValue)
+        {
+          RunInGlobalContext.boolValue = true;
         }
 
         root.serializedObject.ApplyModifiedProperties();
@@ -168,14 +171,18 @@ namespace Ore.Editor
 
           pos.xMax = OGUI.LabelEndX;
 
+          EditorGUI.BeginDisabledGroup(prop.serializedObject.targetObject is ScriptableObject);
           _ = EditorGUI.PropertyField(pos, state.RunInGlobalContext, label);
+          EditorGUI.EndDisabledGroup();
 
           // draw context reference (read-only info)
           pos.x = pos.xMax + STD_LINE_HEIGHT;
           pos.xMax = total.xMax;
 
           if (state.RunInGlobalContext.boolValue)
+          {
             label.text = $"→ will run on Runtime {Styles.ColorText(nameof(ActiveScene), Styles.Dark.ReferenceTypeName)}";
+          }
           else if (state.Context != null && state.Context.objectReferenceValue)
           {
             label.text = $"→ will run on this {Styles.ColorText(state.Context.objectReferenceValue.GetType().Name, Styles.Dark.ReferenceTypeName)}";

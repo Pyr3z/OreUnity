@@ -56,7 +56,7 @@ namespace Ore
     [Space]
 
     [SerializeField]
-    protected UnityEvent m_OnAfterInitialized = new UnityEvent();
+    protected DelayedEvent m_OnAfterInitialized = new DelayedEvent();
 
 
 
@@ -107,9 +107,7 @@ namespace Ore
 
       s_Current = self;
 
-      m_OnAfterInitialized.Invoke();
-
-      return true;
+      return m_OnAfterInitialized.TryInvoke();
     }
 
   } // end class OAssetSingleton
