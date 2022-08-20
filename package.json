@@ -1,6 +1,6 @@
 {
   "name":         "dev.leviperez.ore",
-  "version":      "2.0.2",
+  "version":      "2.1.0",
 
   "displayName":  "[Ore]",
   "description":  "Core package intended for Bore use, and (ideally) free of any hard dependencies.",
@@ -12,6 +12,6 @@
 
   "repository": {
     "type": "git",
-    "url":  "https://leviperez.dev/unity/ore.git#gp/v2.0.2"
+    "url":  "https://gitlab.com/UnityOre/ore.git#gp/v2.1.0"
   }
 }

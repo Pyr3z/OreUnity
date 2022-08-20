@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed: IImmortalSingleton. It was folly.
 - Added: Attribute [AssetPath] for specifying custom paths for automatic OAssetSingleton creation.
 - Added: A more complete Coroutine API for ActiveScene.
+- Added: GreyLists, SerialSets
+- Fixed: DelayedEvent in ScriptableObjects
 
 ## [2.0.2] - 2022-08-15
 - Fixed: Defunct behaviour on Orator assets (and all other OAssetSingletons)
