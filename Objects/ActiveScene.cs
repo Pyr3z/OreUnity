@@ -30,7 +30,7 @@ namespace Ore
     private int m_TooManyCoroutinesWarningThreshold = 16;
 
     [System.NonSerialized]
-    private static Dictionary<string, float> s_SceneBirthdays = new Dictionary<string, float>();
+    private static Dictionary<Scene, float> s_SceneBirthdays = new Dictionary<Scene, float>();
 
     [System.NonSerialized]
     private static Queue<(IEnumerator,object)> s_CoroutineQueue;
@@ -42,9 +42,30 @@ namespace Ore
     private readonly List<(Coroutine,string)> m_KeyedCoroutines = new List<(Coroutine, string)>();
 
     
+    public static bool TryGetScene(out Scene scene)
+    {
+      if (IsActive)
+      {
+        scene = Current.gameObject.scene;
+        return true;
+      }
+      
+      scene = default;
+      return false;
+    }
+    
     public static float GetSceneAge()
     {
-      if (IsActive && s_SceneBirthdays.TryGetValue(Instance.gameObject.scene.name, out float birth))
+      if (IsActive && s_SceneBirthdays.TryGetValue(Instance.gameObject.scene, out float birth))
+      {
+        return Time.realtimeSinceStartup - birth;
+      }
+      return 0f;
+    }
+    
+    public static float GetSceneAge(Scene scene)
+    {
+      if (s_SceneBirthdays.TryGetValue(scene, out float birth))
       {
         return Time.realtimeSinceStartup - birth;
       }
@@ -53,11 +74,7 @@ namespace Ore
     
     public static float GetSceneAge(string scene_name)
     {
-      if (s_SceneBirthdays.TryGetValue(scene_name, out float birth))
-      {
-        return Time.realtimeSinceStartup - birth;
-      }
-      return 0f;
+      return GetSceneAge(SceneManager.GetSceneByName(scene_name));
     }
     
     
@@ -376,7 +393,7 @@ namespace Ore
     
     private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-      s_SceneBirthdays[scene.name] = Time.realtimeSinceStartup;
+      s_SceneBirthdays[scene] = Time.realtimeSinceStartup;
     }
 
     private static ActiveScene Instantiate()
@@ -394,7 +411,6 @@ namespace Ore
 
       OAssert.True(Current == bud);
 
-      Orator.Log($"Auto-Instantiated: <{nameof(ActiveScene)}>");
       return bud;
     }
 
