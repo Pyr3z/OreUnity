@@ -306,7 +306,7 @@ namespace Ore
         {
           m_ContractedCoroutines.RemoveAt(i);
         }
-        else if (contract is null || !contract.IsAlive)
+        else if (contract is null || !contract.IsAlive || (contract.Target is Object obj && !obj))
         {
           StopCoroutine(coru);
           m_ContractedCoroutines.RemoveAt(i);
