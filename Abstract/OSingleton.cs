@@ -47,9 +47,6 @@ namespace Ore
 
     [Header("Scene Singleton")]
 
-    [SerializeField, ReadOnly] // [RequiredReference(DisableIfPrefab = true)]
-    protected SceneRef m_OwningScene;
-
     [SerializeField]
     protected bool m_IsReplaceable;
 
@@ -87,7 +84,6 @@ namespace Ore
 
     protected virtual void OnValidate()
     {
-      m_OwningScene = m_DontDestroyOnLoad ? string.Empty : gameObject.scene.name;
     }
 
 
@@ -112,8 +108,6 @@ namespace Ore
       if (m_DontDestroyOnLoad)
         DontDestroyOnLoad(gameObject);
 
-      m_OwningScene = gameObject.scene.name;
-
       return m_IsSingletonInitialized || (m_IsSingletonInitialized = m_OnFirstInitialized.TryInvoke());
     }
 
@@ -129,8 +123,6 @@ namespace Ore
         DontDestroyOnLoad(gameObject);
       else
         SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
-
-      m_OwningScene = gameObject.scene.name;
     }
 
   } // end class OSingleton

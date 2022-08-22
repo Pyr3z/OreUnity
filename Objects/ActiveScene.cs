@@ -30,7 +30,7 @@ namespace Ore
     private int m_TooManyCoroutinesWarningThreshold = 16;
 
     [System.NonSerialized]
-    private static Dictionary<Scene, float> s_SceneBirthdays = new Dictionary<Scene, float>();
+    private static readonly Dictionary<Scene, float> s_SceneBirthdays = new Dictionary<Scene, float>();
 
     [System.NonSerialized]
     private static Queue<(IEnumerator,object)> s_CoroutineQueue;
