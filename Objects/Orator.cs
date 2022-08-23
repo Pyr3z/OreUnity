@@ -500,7 +500,15 @@ namespace Ore
 
     #endregion
 
-
+    #if !UNITY_EDITOR // Remove rich text tags from strings in builds!
+    private void Awake()
+    {
+      m_OratorPrefix = Strings.RemoveHypertextTags(m_OratorPrefix);
+      m_ReachedFormat.BaseMessage = Strings.RemoveHypertextTags(m_ReachedFormat.BaseMessage);
+      m_AssertionFailedFormat.BaseMessage = Strings.RemoveHypertextTags(m_AssertionFailedFormat.BaseMessage);
+    }
+    #endif
+    
     #region (private section)
 
     private string ReachedMessage

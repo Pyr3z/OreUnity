@@ -8,7 +8,7 @@
 **/
 
 using System.Collections.Generic;
-
+using JetBrains.Annotations;
 using StringBuilder = System.Text.StringBuilder;
 using Encoding      = System.Text.Encoding;
 using Convert       = System.Convert;
@@ -174,6 +174,82 @@ namespace Ore
       return max < count ? count : max;
     }
 
+    
+    public static string RemoveHypertextTags([CanBeNull] string text)
+    {
+      // algorithm formerly called "PyroDK.RichText.RemoveSoberly(text)"
+      
+      if (text is null || text.Length < 3)
+        return text;
+      
+      var bob = new StringBuilder(text.Length / 2);
+      
+      int i = 0, size = text.Length;
+      (int start, int end) lhs = (0, 0),
+                           rhs = (0, size - 1);
+      
+      int found = 0; // 1 = found open, 2 = found pair
+      while (i < size)
+      {
+        if (text[i] == '<')
+        {
+          if (found == 0 && text[i + 1] != '/')
+          {
+            int lhs_end = i - 1;
+            
+            while (++i < size)
+            {
+              if (text[i] == '>')
+              {
+                found = 1;
+                lhs.end = lhs_end;
+                rhs.start = i + 1;
+                break;
+              }
+            }
+          }
+          else if (found == 1 && text[i + 1] == '/')
+          {
+            int rhs_end = i - 1;
+          
+            while (++i < size)
+            {
+              if (text[i] == '>')
+              {
+                found = 2;
+                rhs.end = rhs_end;
+                break;
+              }
+            }
+          }
+        }
+        
+        ++i;
+        
+        if (found == 2)
+        {
+          lhs.end -= lhs.start - 1;
+          rhs.end -= rhs.start - 1;
+          
+          if (lhs.end > 0)
+            bob.Append(text, lhs.start, lhs.end);
+          if (rhs.end > 0)
+            bob.Append(text, rhs.start, rhs.end);
+          
+          lhs.start = lhs.end = rhs.start = i;
+          rhs.end = size - 1;
+          found = 0;
+        }
+      } // end outer while loop
+      
+      if (found == 0 && (rhs.end -= rhs.start - 1) > 0)
+      {
+        bob.Append(text, rhs.start, rhs.end);
+      }
+      
+      return bob.ToString();
+    }
+    
   } // end static class Strings
 
 }

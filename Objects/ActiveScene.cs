@@ -94,6 +94,7 @@ namespace Ore
     /// expires (either due to GC cleanup or Unity Object deletion), the
     /// associated coroutine will stop if it is still running.
     /// </param>
+    [PublicAPI]
     public static void EnqueueCoroutine([NotNull] IEnumerator routine, [NotNull] Object contract)
     {
       if (OAssert.FailsNullChecks(routine, contract))
@@ -110,7 +111,8 @@ namespace Ore
         s_CoroutineQueue.Enqueue((routine,contract));
       }
     }
-
+    
+    [PublicAPI]
     public static void EnqueueCoroutine([NotNull] IEnumerator routine, [NotNull] string key)
     {
       if (OAssert.FailsNullChecks(routine, key))
@@ -133,6 +135,7 @@ namespace Ore
     /// <param name="contract">
     ///
     /// </param>
+    [PublicAPI]
     public static void CancelCoroutine([NotNull] Object contract)
     {
       if (IsActive)
@@ -164,6 +167,7 @@ namespace Ore
     /// <param name="key">
     ///
     /// </param>
+    [PublicAPI]
     public static void CancelCoroutine([NotNull] string key)
     {
       if (IsActive)
@@ -227,9 +231,10 @@ namespace Ore
 
     public Coroutine StartCoroutine([NotNull] IEnumerator routine, [NotNull] Object contract)
     {
-      var coru = base.StartCoroutine(routine);
+      var wref = new WeakRef(contract);
+      var coru = base.StartCoroutine(DoRoutinePlusCleanup(routine, wref, m_ContractedCoroutines.Count));
 
-      m_ContractedCoroutines.Add((coru, new WeakRef(contract)));
+      m_ContractedCoroutines.Add((coru, wref));
 
       CheckCoroutineThreshold();
 
@@ -238,7 +243,7 @@ namespace Ore
 
     public Coroutine StartCoroutine([NotNull] IEnumerator routine, [NotNull] string key)
     {
-      var coru = base.StartCoroutine(routine);
+      var coru = base.StartCoroutine(DoRoutinePlusCleanup(routine, key, m_KeyedCoroutines.Count));
 
       m_KeyedCoroutines.Add((coru, key));
 
@@ -284,6 +289,55 @@ namespace Ore
     }
 
 
+    private IEnumerator DoRoutinePlusCleanup(IEnumerator routine, WeakRef wref, int i_hint)
+    {
+      yield return routine;
+      
+      int i = i_hint.AtMost(m_ContractedCoroutines.Count - 1);
+      while (i --> 0)
+      {
+        var (coru,cont) = m_ContractedCoroutines[i];
+        if (coru is null)
+        {
+          m_ContractedCoroutines.RemoveAt(i);
+          if (cont.IsAlive && cont.Target.Equals(wref.Target))
+            yield break;
+        }
+        else if (!cont.IsAlive)
+        {
+          m_ContractedCoroutines.RemoveAt(i);
+          StopCoroutine(coru);
+        }
+        else if (cont.Target.Equals(wref.Target))
+        {
+          m_ContractedCoroutines.RemoveAt(i);
+          StopCoroutine(coru);
+          yield break;
+        }
+      }
+    }
+    
+    private IEnumerator DoRoutinePlusCleanup(IEnumerator routine, string key, int i_hint)
+    {
+      yield return routine;
+      
+      int i = i_hint.AtMost(m_KeyedCoroutines.Count - 1);
+      while (i --> 0)
+      {
+        var (coru,kee) = m_KeyedCoroutines[i];
+        if (coru is null)
+        {
+          m_KeyedCoroutines.RemoveAt(i);
+        }
+        else if (key == kee)
+        {
+          m_KeyedCoroutines.RemoveAt(i);
+          StopCoroutine(coru);
+          yield break;
+        }
+      }
+    }
+    
     private void CheckCoroutineThreshold()
     {
       if (m_TooManyCoroutinesWarningThreshold <= 0)
@@ -352,7 +406,7 @@ namespace Ore
         {
           if (thing is string key)
             StartCoroutine(routine, key);
-          else if (thing is Object contract)
+          else if (thing is Object contract && contract)
             StartCoroutine(routine, contract);
           else
             StartCoroutine(routine, thing.ToString());

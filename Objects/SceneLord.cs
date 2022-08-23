@@ -4,6 +4,7 @@
 **/
 
 using JetBrains.Annotations;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 
@@ -11,13 +12,20 @@ namespace Ore
 {
   public class SceneLord : OAssetSingleton<SceneLord>
   {
+    
+    [PublicAPI]
+    public static void AppQuit()
+    {
+      Application.Quit();
+    }
+
     [PublicAPI]
     public static void LoadSceneAdditiveAsync(int build_idx)
     {
       var load = SceneManager.LoadSceneAsync(build_idx, LoadSceneMode.Additive);
       load.allowSceneActivation = true;
     }
-    
+
     [PublicAPI]
     public static void LoadSceneAsync(int build_idx)
     {
@@ -36,6 +44,6 @@ namespace Ore
       
       load.allowSceneActivation = true;
     }
-    
+
   } // end class SceneLord
 }
