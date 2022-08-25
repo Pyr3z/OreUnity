@@ -5,9 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-## [2.2.0] - UNRELEASED
+## [UNRELEASE] - 2022-08
+- (...)
+
+## [2.2.0] - 2022-08-25
 - Removed: Automatic OAssetSingleton<> instantiations by default. You can still flag an OAssetSingleton for auto-creation at a specific path by using the [AssetPath(string)] type attribute.
 - Added: Public API for asset creation, work either at runtime or edit time: OAsset.Create(...)
+- Added: OAssetSingleton.TryGuarantee(out TSelf) - used to absolutely guarantee that you'll get an instance, even if one must be created. The only case where this fails is when the system is out of memory (in theory).
+- Added: SceneLord OAssetSingleton - it's a helper for calling SceneManager functions from with serialized Unity Events (etc).
 
 ## [2.1.4] - 2022-08-24
 - Fixed: Orator now only uses rich text in Editor, not in builds (i.e. Android Logcat).
