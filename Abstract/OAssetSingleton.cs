@@ -17,6 +17,7 @@
  *        where (or where not) their singleton asset should exist.
 **/
 
+using JetBrains.Annotations;
 using UnityEngine;
 
 using UnityEvent = UnityEngine.Events.UnityEvent;
@@ -35,25 +36,23 @@ namespace Ore
   public abstract class OAssetSingleton<TSelf> : OAsset
     where TSelf : OAssetSingleton<TSelf>
   {
+    [PublicAPI]
     public static TSelf Current => s_Current;
+    [PublicAPI]
     public static TSelf Instance => s_Current; // compatibility API
-
-    private static TSelf s_Current;
-
-
+    [PublicAPI]
     public static bool IsActive => s_Current;
+    [PublicAPI]
     public static bool IsReplaceable => !s_Current || s_Current.m_IsReplaceable;
 
+    
+    private static TSelf s_Current;
 
-    [Header("Asset Singleton Properties")]
+    
     [SerializeField]
     private bool m_IsRequiredOnLaunch = false;
     [SerializeField]
     protected bool m_IsReplaceable = true;
-    [SerializeField]
-    protected HideFlags m_AdvancedFlags = HideFlags.DontUnloadUnusedAsset;
-
-    [Space]
 
     [SerializeField]
     protected DelayedEvent m_OnAfterInitialized = new DelayedEvent();
@@ -72,10 +71,9 @@ namespace Ore
         s_Current = null;
     }
 
-    protected virtual void OnValidate()
+    protected override void OnValidate()
     {
-      hideFlags = m_AdvancedFlags;
-
+      base.OnValidate();
       _ = EditorBridge.TrySetPreloadedAsset(this, m_IsRequiredOnLaunch);
     }
 

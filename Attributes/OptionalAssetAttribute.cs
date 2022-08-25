@@ -10,7 +10,8 @@ namespace Ore
   /// Apply me to OAssetSingletons to prevent auto-creation of an asset in the Assets/Resources folder.
   /// (The same logic can be applied simply by using the CreateAssetMenuAttribute as well.)
   /// </summary>
-  [System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+  [System.Obsolete("The default behaviour for OAssetSingletons is now that they are optional. Use [AssetPath(string)] to mark them as mandatory.", true)]
+  [System.AttributeUsage(System.AttributeTargets.Class, Inherited = false)]
   public class OptionalAssetAttribute : System.Attribute
   {
   }

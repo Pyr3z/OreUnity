@@ -18,49 +18,57 @@ namespace Ore.Editor
 
     static EditorStateValidator()
     {
-      EditorApplication.delayCall += ValidateOAssetSingletons;
+      EditorApplication.delayCall += ValidateTypeAttributes;
       EditorApplication.delayCall += ValidatePreloadedAssets;
     }
 
 
-    [MenuItem("Ore/Validate/OAssetSingletons")]
-    internal static void ValidateOAssetSingletons()
+    [MenuItem("Ore/Validate/Type Attributes")]
+    internal static void ValidateTypeAttributes()
     {
-      var silencers = new System.Type[]
+      var silencers = new []
+      {
+        typeof(System.ObsoleteAttribute)
+      };
+      
+      foreach (var tasset in TypeCache.GetTypesWithAttribute<AssetPathAttribute>())
+      {
+        if (tasset is null || tasset.IsAbstract || tasset.IsGenericType || tasset.AreAnyDefined(silencers))
+          continue;
+        
+        if (!tasset.IsSubclassOf(typeof(ScriptableObject)))
+        {
+          Orator.Error($"[{nameof(AssetPathAttribute)}] is only intended for ScriptableObject types! (t:{tasset.Name})");
+          continue;
+        }
+        
+        var attr = tasset.GetCustomAttribute<AssetPathAttribute>(); // shouldn't be heritable
+
+        if (!Filesystem.PathExists(attr.Path) && OAsset.Create(tasset, out ScriptableObject asset, attr.Path))
+        {
+          Orator.Log($"Created new Asset of type <{tasset.Name}> at \"{attr.Path}\"", asset);
+        }
+      }
+      
+      silencers = new []
       {
         typeof(CreateAssetMenuAttribute),
-        typeof(OptionalAssetAttribute),
         typeof(System.ObsoleteAttribute)
       };
 
-      foreach (var tself in TypeCache.GetTypesDerivedFrom(typeof(OAssetSingleton<>)))
+      foreach (var tsingleton in TypeCache.GetTypesDerivedFrom(typeof(OAssetSingleton<>)))
       {
-        if (tself == null || tself.IsAbstract || tself.IsGenericType || tself.AreAnyDefined(silencers))
+        if (tsingleton is null || tsingleton.IsAbstract || tsingleton.IsGenericType || tsingleton.AreAnyDefined(silencers))
           continue;
 
-        if (!AssetDatabase.FindAssets($"t:{tself.Name}").IsEmpty())
+        if (!AssetDatabase.FindAssets($"t:{tsingleton.Name}").IsEmpty())
           continue;
 
-        string filepath;
-        if (tself.GetCustomAttribute(typeof(AssetPathAttribute)) is AssetPathAttribute attr)
+        string filepath = $"Assets/Resources/{tsingleton.Name}.asset";
+        
+        if (!Filesystem.PathExists(filepath) && OAsset.Create(tsingleton, out OAsset singleton, filepath))
         {
-          filepath = attr.Path;
-        }
-        else
-        {
-          filepath = $"Assets/Resources/{tself.Name}.asset";
-        }
-
-        if (!Filesystem.PathExists(filepath) && Filesystem.TryMakePathTo(filepath))
-        {
-          var instance = ScriptableObject.CreateInstance(tself);
-          OAssert.Exists(instance);
-
-          AssetDatabase.CreateAsset(instance, filepath);
-          AssetDatabase.SaveAssetIfDirty(instance);
-          AssetDatabase.ImportAsset(filepath); // overkill?
-
-          Orator.Log($"Created new OAssetSingleton <{tself.Name}> at \"{filepath}\"", instance);
+          Orator.Log($"Created new OAssetSingleton <{tsingleton.Name}> at \"{filepath}\"", singleton);
         }
       }
     }
