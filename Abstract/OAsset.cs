@@ -71,7 +71,7 @@ namespace Ore
           return false;
         }
         #else // if !UNITY_EDITOR
-        instance.name = assetpath;
+        instance.name = path;
         #endif // UNITY_EDITOR
       }
       
