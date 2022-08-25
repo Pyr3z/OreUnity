@@ -46,18 +46,24 @@ namespace Ore
     public static bool IsReplaceable => !s_Current || s_Current.m_IsReplaceable;
 
     
+    [PublicAPI]
+    public static bool TryGuarantee(out TSelf instance)
+    {
+      return (instance = s_Current) || ( Create(out instance) && instance.TryInitialize(instance) );
+    }
+    
+    
     private static TSelf s_Current;
 
     
     [SerializeField]
-    private bool m_IsRequiredOnLaunch = false;
+    protected bool m_IsRequiredOnLaunch = false;
     [SerializeField]
-    protected bool m_IsReplaceable = true;
+    protected bool m_IsReplaceable = false;
 
     [SerializeField]
     protected DelayedEvent m_OnAfterInitialized = new DelayedEvent();
-
-
+    
 
     protected virtual void OnEnable()
     {
