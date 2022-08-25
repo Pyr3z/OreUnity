@@ -123,6 +123,11 @@ namespace Ore
         Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
     }
 
+    public static void NFE(System.Exception ex, Object ctx = null)
+    {
+      // bad, lazy wrapper
+      Debug.LogException(ex, ctx);
+    }
 
     public static void Warn(string msg)
     {
@@ -464,7 +469,6 @@ namespace Ore
 
       Debug.LogFormat(LogType.Log, m_LogStackTracePolicy, ctx, "{0} {1}", m_OratorPrefix, msg);
     }
-
 
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     public void warn(Object ctx, string msg = null)

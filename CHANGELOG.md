@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 ## [2.2.0] - UNRELEASED
 - Removed: Automatic OAssetSingleton<> instantiations by default. You can still flag an OAssetSingleton for auto-creation at a specific path by using the [AssetPath(string)] type attribute.
+- Added: Public API for asset creation, work either at runtime or edit time: OAsset.Create(...)
 
 ## [2.1.4] - 2022-08-24
 - Fixed: Orator now only uses rich text in Editor, not in builds (i.e. Android Logcat).
