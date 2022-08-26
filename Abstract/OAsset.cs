@@ -26,10 +26,10 @@ namespace Ore
     
     
     [PublicAPI]
-    public static bool Create<T>(out T instance, [CanBeNull] string path = null)
+    public static bool TryCreate<T>(out T instance, [CanBeNull] string path = null)
       where T : ScriptableObject
     {
-      if (Create(typeof(T), out ScriptableObject so, path))
+      if (TryCreate(typeof(T), out ScriptableObject so, path))
       {
         instance = (T)so;
         return true;
@@ -40,7 +40,7 @@ namespace Ore
     }
     
     [PublicAPI]
-    public static bool Create<T>([NotNull] System.Type type, out T instance, [CanBeNull] string path = null)
+    public static bool TryCreate<T>([NotNull] System.Type type, out T instance, [CanBeNull] string path = null)
       where T : ScriptableObject
     {
       #if UNITY_EDITOR

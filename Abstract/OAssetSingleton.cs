@@ -49,7 +49,7 @@ namespace Ore
     [PublicAPI]
     public static bool TryGuarantee(out TSelf instance)
     {
-      return (instance = s_Current) || ( Create(out instance) && instance.TryInitialize(instance) );
+      return (instance = s_Current) || ( TryCreate(out instance) && instance.TryInitialize(instance) );
     }
     
     

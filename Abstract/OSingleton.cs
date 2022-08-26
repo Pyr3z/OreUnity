@@ -5,6 +5,7 @@
 
 // ReSharper disable ConvertToAutoPropertyWithPrivateSetter
 
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -27,32 +28,53 @@ namespace Ore
   public abstract class OSingleton<TSelf> : OComponent
     where TSelf : OSingleton<TSelf>
   {
+    [PublicAPI]
     public static TSelf Current => s_Current;
-    private static TSelf s_Current;
+    [PublicAPI]
     public static TSelf Instance => s_Current; // compatibility API
-
-
+    [PublicAPI]
     public static bool IsActive => s_Current && s_Current.isActiveAndEnabled;
+    [PublicAPI]
     public static bool IsReplaceable => !s_Current || s_Current.m_IsReplaceable;
+    [PublicAPI]
     public static bool IsDontDestroyOnLoad => s_Current && s_Current.m_DontDestroyOnLoad;
 
 
-    public static bool FindInstance(out TSelf instance)
+    [PublicAPI]
+    public static bool TryGuarantee(out TSelf instance)
     {
-      instance = s_Current;
-      return instance;
+      return (instance = s_Current) || TryCreate(out instance);
+    }
+    
+    [PublicAPI]
+    public static bool TryCreate(out TSelf instance, bool force = false)
+    {
+      if (s_Current)
+      {
+        if (force)
+        {
+          s_Current.DestroyGameObject();
+        }
+        else
+        {
+          instance = s_Current;
+          return true;
+        }
+      }
+      
+      instance = new GameObject($"[{typeof(TSelf).Name}]").AddComponent<TSelf>();
+      return instance && instance.m_IsSingletonInitialized;
     }
 
 
+    private static TSelf s_Current;
 
-    [Header("Scene Singleton")]
 
+  [Header("Scene Singleton")]
     [SerializeField]
     protected bool m_IsReplaceable;
-
     [SerializeField]
     protected bool m_DontDestroyOnLoad;
-
     [SerializeField]
     protected DelayedEvent m_OnFirstInitialized = DelayedEvent.WithApproximateFrameDelay(1);
 
