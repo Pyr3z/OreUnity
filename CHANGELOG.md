@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 ## [UNRELEASE] - 2022-08
-- (...)
+- Fixed: SceneLord.LoadSceneAsync now has safety guards against spamming.
+- Changed: SceneLord is no longer a required OAssetSingleton and can be created via the Asset menu.
 
 ## [2.2.0] - 2022-08-25
 - Removed: Automatic OAssetSingleton<> instantiations by default. You can still flag an OAssetSingleton for auto-creation at a specific path by using the [AssetPath(string)] type attribute.
