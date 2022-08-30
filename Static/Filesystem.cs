@@ -1,11 +1,10 @@
-/*! @file   Static/Filesystem.cs
- *  @author levianperez\@gmail.com
- *  @author levi\@leviperez.dev
- *  @date   2022-06-03
+/*! @file       Static/Filesystem.cs
+ *  @author     Levi Perez (levi\@leviperez.dev)
+ *  @date       2022-06-03
 **/
 
 using System.IO;
-
+using JetBrains.Annotations;
 using UnityEngine;
 
 using Encoding = System.Text.Encoding;
@@ -248,58 +247,57 @@ namespace Ore
 
     #region INFO & DEBUGGING
 
-    public enum IOResult
-    {
-      None = -1,
-      Success,
-      PathNotFound,
-      PathNotValid,
-      FileAlreadyInUse,
-      NotPermitted,
-      DiskFull,
-      UnknownFailure
-    }
-
+    [PublicAPI]
     public static IOResult GetLastIOResult()
     {
       if (s_ExceptionRingIdx == 0)
         return IOResult.None;
 
-      switch (LastException)
+      return InterpretException(LastException);
+    }
+
+    [PublicAPI]
+    public static IOResult InterpretException([CanBeNull] Exception ex)
+    {
+      switch (ex)
       {
-        case null:
-          return IOResult.Success;
+      case null:
+        return IOResult.Success;
 
-        case FileNotFoundException _:
-        case DirectoryNotFoundException _:
-        case DriveNotFoundException _:
-          return IOResult.PathNotFound;
+      case FileNotFoundException _:
+      case DirectoryNotFoundException _:
+      case DriveNotFoundException _:
+        return IOResult.PathNotFound;
 
-        case IOException iox:
-        {
-          string msg = iox.Message.ToLowerInvariant();
+      case IOException iox:
+      {
+        string msg = iox.Message.ToLowerInvariant();
 
-          if (msg.Contains("disk full"))
-            return IOResult.DiskFull;
-          if (msg.Contains("sharing violation") || msg.Contains("returned 997."))
-            return IOResult.FileAlreadyInUse;
-          if (msg.Contains(" permi"))
-            return IOResult.NotPermitted;
-          if (msg.Contains("invalid"))
-            return IOResult.PathNotValid;
-
-          return IOResult.UnknownFailure;
-        }
-
-        case UnauthorizedException _:
+        if (msg.StartsWith("disk full"))
+          return IOResult.DiskFull;
+        
+        if (msg.StartsWith("sharing violation") || msg.StartsWith("win32 io returned 997."))
+          return IOResult.FileAlreadyInUse;
+        
+        if (msg.StartsWith("invalid handle") || msg.Contains(" permi"))
           return IOResult.NotPermitted;
 
-        default:
-          return IOResult.UnknownFailure;
+        return IOResult.UnknownFailure;
+      }
+
+      case UnauthorizedException _:
+        return IOResult.NotPermitted;
+
+      case ArgumentException _:
+        return IOResult.PathNotValid;
+
+      default:
+        return IOResult.UnknownFailure;
       }
     }
 
-    public static bool TryGetLastException(out System.Exception ex, bool consume = false)
+    [PublicAPI]
+    public static bool TryGetLastException(out Exception ex, bool consume = false)
     {
       // funky for-loop is necessary to preserve actual order of buffer reads
       for (int i = 0; i < EXCEPTION_RING_SZ; ++i)
@@ -323,6 +321,7 @@ namespace Ore
       return false; ;
     }
 
+    [PublicAPI]
     [System.Diagnostics.Conditional("DEBUG")]
     public static void LogLastException()
     {
@@ -336,10 +335,10 @@ namespace Ore
     #region PRIVATE
 
     private const int EXCEPTION_RING_SZ = 4;
-    private static readonly System.Exception[] s_ExceptionRingBuf = new System.Exception[EXCEPTION_RING_SZ];
+    private static readonly Exception[] s_ExceptionRingBuf = new Exception[EXCEPTION_RING_SZ];
     private static int s_ExceptionRingIdx = 0;
 
-    private static System.Exception LastException
+    private static Exception LastException
     {
       get => s_ExceptionRingBuf[s_ExceptionRingIdx % EXCEPTION_RING_SZ];
       set => s_ExceptionRingBuf[++s_ExceptionRingIdx % EXCEPTION_RING_SZ] = value;
