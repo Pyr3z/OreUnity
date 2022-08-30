@@ -272,7 +272,7 @@ namespace Ore
 
           if (msg.Contains("disk full"))
             return IOResult.DiskFull;
-          if (msg.Contains("permission"))
+          if (msg.Contains("violation") || msg.Contains("permission"))
             return IOResult.NotPermitted;
           if (msg.Contains("invalid"))
             return IOResult.PathNotValid;
@@ -285,7 +285,7 @@ namespace Ore
       }
     }
 
-    public static bool TryGetLastException(out System.Exception ex)
+    public static bool TryGetLastException(out System.Exception ex, bool consume = false)
     {
       // funky for-loop is necessary to preserve actual order of buffer reads
       for (int i = 0; i < EXCEPTION_RING_SZ; ++i)
@@ -297,6 +297,10 @@ namespace Ore
         if (s_ExceptionRingBuf[idx] != null)
         {
           ex = s_ExceptionRingBuf[idx];
+
+          if (consume)
+            s_ExceptionRingBuf[idx] = null;
+
           return true;
         }
       }
@@ -308,7 +312,7 @@ namespace Ore
     [System.Diagnostics.Conditional("DEBUG")]
     public static void LogLastException()
     {
-      if (TryGetLastException(out var ex))
+      if (TryGetLastException(out var ex, consume: true))
         Debug.LogException(ex);
     }
 
@@ -318,7 +322,7 @@ namespace Ore
     #region PRIVATE
 
     private const int EXCEPTION_RING_SZ = 4;
-    private static System.Exception[] s_ExceptionRingBuf = new System.Exception[EXCEPTION_RING_SZ];
+    private static readonly System.Exception[] s_ExceptionRingBuf = new System.Exception[EXCEPTION_RING_SZ];
     private static int s_ExceptionRingIdx = 0;
 
     private static System.Exception LastException

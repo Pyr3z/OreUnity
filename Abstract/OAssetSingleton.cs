@@ -11,10 +11,6 @@
  *              (ScriptableObject) is auto-generated on Editor reload
  *              if an instance does not already exist (or cannot be found
  *              in a standard locaton).
- *
- *  @TODO Implement a class attribute, [AssetPathAttribute(string)], which
- *        gives subclasses the ability to define an explicit location for
- *        where (or where not) their singleton asset should exist.
 **/
 
 using JetBrains.Annotations;
