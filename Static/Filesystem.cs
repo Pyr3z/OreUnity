@@ -10,6 +10,11 @@ using UnityEngine;
 
 using Encoding = System.Text.Encoding;
 
+using Exception = System.Exception;
+using UnauthorizedException = System.UnauthorizedAccessException;
+using ArgumentNullException = System.ArgumentNullException;
+using ArgumentException = System.ArgumentException;
+
 
 namespace Ore
 {
@@ -30,9 +35,9 @@ namespace Ore
 
     public static bool TryWriteObject(string filepath, object obj, bool pretty)
     {
-      if (obj == null)
+      if (obj is null)
       {
-        LastException = new System.ArgumentNullException("obj");
+        LastException = new ArgumentNullException("obj");
         return false;
       }
 
@@ -110,19 +115,20 @@ namespace Ore
         LastException = null;
         return true;
       }
-      catch (System.Exception ex)
+      catch (IOException iox)
       {
-        if (ex is IOException)
-        {
-          LastException = ex;
-        }
-        else
-        {
-          LastException = new UnanticipatedException(ex);
-        }
-
-        return false;
+        LastException = iox;
       }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
+      }
+
+      return false;
     }
 
     public static bool TryReadBinary(string filepath, out byte[] data)
@@ -133,20 +139,21 @@ namespace Ore
         LastException = null;
         return true;
       }
-      catch (System.Exception ex)
+      catch (IOException iox)
       {
-        if (ex is IOException)
-        {
-          LastException = ex;
-        }
-        else
-        {
-          LastException = new UnanticipatedException(ex);
-        }
-
-        data = null;
-        return false;
+        LastException = iox;
       }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
+      }
+
+      data = System.Array.Empty<byte>();
+      return false;
     }
 
     public static bool TryMakePathTo(string filepath)
@@ -157,19 +164,20 @@ namespace Ore
         LastException = null;
         return true;
       }
-      catch (System.Exception ex)
+      catch (IOException iox)
       {
-        if (ex is IOException)
-        {
-          LastException = ex;
-        }
-        else
-        {
-          LastException = new UnanticipatedException(ex);
-        }
-
-        return false;
+        LastException = iox;
       }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
+      }
+
+      return false;
     }
 
     public static void MakePathTo(string filepath)
@@ -182,7 +190,7 @@ namespace Ore
       }
       else
       {
-        throw new System.ArgumentException($"Invalid path string \"{filepath}\".", "filepath");
+        throw new ArgumentException($"Invalid path string \"{filepath}\".", "filepath");
       }
     }
 
@@ -201,10 +209,9 @@ namespace Ore
       try
       {
         #if UNITY_EDITOR
-        if (!PathExists(path))
-          return true;
-
-        return UnityEditor.FileUtil.DeleteFileOrDirectory(path);
+        
+        return !PathExists(path) || UnityEditor.FileUtil.DeleteFileOrDirectory(path);
+        
         #else // if !UNITY_EDITOR
 
         if (File.Exists(path))
@@ -213,26 +220,27 @@ namespace Ore
         }
         else if (Directory.Exists(path))
         {
-          Directory.Delete(path, true);
+          Directory.Delete(path, recursive: true);
         }
 
         return true;
 
         #endif // UNITY_EDITOR
       }
-      catch (System.Exception ex)
+      catch (IOException iox)
       {
-        if (ex is IOException)
-        {
-          LastException = ex;
-        }
-        else
-        {
-          LastException = new UnanticipatedException(ex);
-        }
-
-        return false;
+        LastException = iox;
       }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
+      }
+
+      return false;
     }
 
     #endregion FUNDAMENTAL FILE I/O
@@ -246,6 +254,7 @@ namespace Ore
       Success,
       PathNotFound,
       PathNotValid,
+      FileAlreadyInUse,
       NotPermitted,
       DiskFull,
       UnknownFailure
@@ -272,13 +281,18 @@ namespace Ore
 
           if (msg.Contains("disk full"))
             return IOResult.DiskFull;
-          if (msg.Contains("violation") || msg.Contains("permission"))
+          if (msg.Contains("sharing violation") || msg.Contains("returned 997."))
+            return IOResult.FileAlreadyInUse;
+          if (msg.Contains(" permi"))
             return IOResult.NotPermitted;
           if (msg.Contains("invalid"))
             return IOResult.PathNotValid;
 
           return IOResult.UnknownFailure;
         }
+
+        case UnauthorizedException _:
+          return IOResult.NotPermitted;
 
         default:
           return IOResult.UnknownFailure;
