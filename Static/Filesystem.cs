@@ -23,7 +23,8 @@ namespace Ore
 
     #region FUNDAMENTAL FILE I/O
 
-    public static bool TryWriteObject(string filepath, object obj)
+    [PublicAPI]
+    public static bool TryWriteObject(string filepath, [NotNull] object obj)
     {
       #if DEBUG // default value for "pretty print JSON" relies on debug build status
       return TryWriteObject(filepath, obj, pretty: true);
@@ -32,7 +33,8 @@ namespace Ore
       #endif
     }
 
-    public static bool TryWriteObject(string filepath, object obj, bool pretty)
+    [PublicAPI]
+    public static bool TryWriteObject(string filepath, [NotNull] object obj, bool pretty)
     {
       if (obj is null)
       {
@@ -57,19 +59,20 @@ namespace Ore
         LastException = null;
         return true;
       }
-      catch (System.Exception ex)
+      catch (IOException iox)
       {
-        if (ex is IOException)
-        {
-          LastException = ex;
-        }
-        else
-        {
-          LastException = new UnanticipatedException(ex);
-        }
-
-        return false;
+        LastException = iox;
       }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
+      }
+
+      return false;
     }
 
     public static bool TryWriteText(string filepath, string text, Encoding encoding = null)
@@ -98,7 +101,7 @@ namespace Ore
         return lines.Length > 0;
       }
 
-      lines = new string[0];
+      lines = System.Array.Empty<string>();
       return false;
     }
 
@@ -130,8 +133,14 @@ namespace Ore
       return false;
     }
 
-    public static bool TryReadBinary(string filepath, out byte[] data)
+    [PublicAPI]
+    public static bool TryReadBinary([CanBeNull] string filepath, out byte[] data)
     {
+      if (!Paths.IsValidPath(filepath))
+      {
+        
+      }
+
       try
       {
         data = File.ReadAllBytes(filepath);
@@ -155,8 +164,15 @@ namespace Ore
       return false;
     }
 
-    public static bool TryMakePathTo(string filepath)
+    [PublicAPI]
+    public static bool TryMakePathTo([CanBeNull] string filepath)
     {
+      if (filepath.IsEmpty())
+      {
+        LastException = new ArgumentNullException("filepath");
+        return false;
+      }
+
       try
       {
         MakePathTo(filepath);
@@ -179,7 +195,8 @@ namespace Ore
       return false;
     }
 
-    public static void MakePathTo(string filepath)
+    [PublicAPI]
+    public static void MakePathTo([NotNull] string filepath)
     {
       if (Paths.IsValidPath(filepath) && Paths.ExtractDirectoryPath(filepath, out string dirpath))
       {
@@ -193,17 +210,14 @@ namespace Ore
       }
     }
 
-    public static bool IsValidPath(string path)
-    {
-      return Paths.IsValidPath(path);
-    }
-
-    public static bool PathExists(string path)
+    [PublicAPI]
+    public static bool PathExists([CanBeNull] string path)
     {
       return File.Exists(path) || Directory.Exists(path);
     }
 
-    public static bool TryDeletePath(string path)
+    [PublicAPI]
+    public static bool TryDeletePath([CanBeNull] string path)
     {
       try
       {
@@ -259,40 +273,49 @@ namespace Ore
     [PublicAPI]
     public static IOResult InterpretException([CanBeNull] Exception ex)
     {
+    TOP:
       switch (ex)
       {
-      case null:
-        return IOResult.Success;
+        case null:
+          return IOResult.Success;
 
-      case FileNotFoundException _:
-      case DirectoryNotFoundException _:
-      case DriveNotFoundException _:
-        return IOResult.PathNotFound;
+        case ArgumentException _:
+        case PathTooLongException _:
+          return IOResult.PathNotValid;
 
-      case IOException iox:
-      {
-        string msg = iox.Message.ToLowerInvariant();
+        case FileNotFoundException _:
+        case DirectoryNotFoundException _:
+        case DriveNotFoundException _:
+          return IOResult.PathNotFound;
 
-        if (msg.StartsWith("disk full"))
-          return IOResult.DiskFull;
-        
-        if (msg.StartsWith("sharing violation") || msg.StartsWith("win32 io returned 997."))
-          return IOResult.FileAlreadyInUse;
-        
-        if (msg.StartsWith("invalid handle") || msg.Contains(" permi"))
+        case IOException iox:
+        {
+          string msg = iox.Message.ToLowerInvariant();
+
+          if (msg.StartsWith("disk full"))
+            return IOResult.DiskFull;
+          
+          if (msg.StartsWith("sharing violation") || msg.StartsWith("win32 io returned 997."))
+            return IOResult.FileAlreadyInUse;
+          
+          if (msg.StartsWith("invalid handle") || msg.Contains(" permi"))
+            return IOResult.NotPermitted;
+
+          return IOResult.UnknownFailure;
+        }
+
+        case UnauthorizedException _:
           return IOResult.NotPermitted;
 
-        return IOResult.UnknownFailure;
-      }
+        case UnanticipatedException unant:
+        {
+          if ((ex = unant.InnerException) is {})
+            goto TOP; // fuck recursion.
+          return IOResult.UnknownFailure;
+        }
 
-      case UnauthorizedException _:
-        return IOResult.NotPermitted;
-
-      case ArgumentException _:
-        return IOResult.PathNotValid;
-
-      default:
-        return IOResult.UnknownFailure;
+        default:
+          return IOResult.UnknownFailure;
       }
     }
 
@@ -306,15 +329,15 @@ namespace Ore
         if (idx < 0)
           break;
 
-        if (s_ExceptionRingBuf[idx] != null)
-        {
-          ex = s_ExceptionRingBuf[idx];
+        if (s_ExceptionRingBuf[idx] is null)
+          continue;
 
-          if (consume)
-            s_ExceptionRingBuf[idx] = null;
+        ex = s_ExceptionRingBuf[idx];
 
-          return true;
-        }
+        if (consume)
+          s_ExceptionRingBuf[idx] = null;
+
+        return true;
       }
 
       ex = null;
@@ -326,7 +349,7 @@ namespace Ore
     public static void LogLastException()
     {
       if (TryGetLastException(out var ex, consume: true))
-        Debug.LogException(ex);
+        Orator.NFE(ex);
     }
 
     #endregion INFO & DEBUGGING

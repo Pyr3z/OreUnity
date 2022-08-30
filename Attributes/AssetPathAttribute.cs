@@ -23,7 +23,7 @@ namespace Ore
     /// </param>
     public AssetPathAttribute([NotNull] string path)
     {
-      OAssert.True(Filesystem.IsValidPath(path), $"invalid path: \"{path}\"");
+      OAssert.True(Paths.IsValidPath(path), $"invalid path: \"{path}\"");
 
       if (!path.StartsWith("Assets/"))
         path = $"Assets/{path}";
