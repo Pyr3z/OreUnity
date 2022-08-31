@@ -43,12 +43,13 @@ namespace Ore
     }
 
 
-    public static string FromBytes(byte[] bytes, Encoding encoding = null)
+    public static string FromBytes([CanBeNull] byte[] bytes, [CanBeNull] Encoding encoding = null)
     {
-      if (bytes == null || bytes.Length == 0)
+      if (bytes is null || bytes.Length == 0)
         return string.Empty;
 
       return (encoding ?? DefaultEncoding).GetString(bytes);
+        // can throw ArgumentException if the bytes violate the encoding provided
     }
 
 

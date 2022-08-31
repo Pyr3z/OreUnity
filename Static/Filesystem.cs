@@ -11,7 +11,6 @@ using Encoding = System.Text.Encoding;
 
 using Exception = System.Exception;
 using UnauthorizedException = System.UnauthorizedAccessException;
-using ArgumentNullException = System.ArgumentNullException;
 using ArgumentException = System.ArgumentException;
 
 
@@ -24,7 +23,7 @@ namespace Ore
     #region FUNDAMENTAL FILE I/O
 
     [PublicAPI]
-    public static bool TryWriteObject(string filepath, [NotNull] object obj)
+    public static bool TryWriteObject([NotNull] string filepath, [CanBeNull] object obj)
     {
       #if DEBUG // default value for "pretty print JSON" relies on debug build status
       return TryWriteObject(filepath, obj, pretty: true);
@@ -34,24 +33,26 @@ namespace Ore
     }
 
     [PublicAPI]
-    public static bool TryWriteObject(string filepath, [NotNull] object obj, bool pretty)
+    public static bool TryWriteObject([NotNull] string filepath, [CanBeNull] object obj, bool pretty)
     {
-      if (obj is null)
-      {
-        LastException = new ArgumentNullException("obj");
-        return false;
-      }
-
       try
       {
         MakePathTo(filepath);
 
-        string json = JsonUtility.ToJson(obj, pretty);
-
-        if (json.IsEmpty() || json[0] != '{')
+        string json;
+        if (obj is {})
         {
-          LastException = new UnanticipatedException("JsonUtility.ToJson returned a bad JSON string.");
-          return false;
+          json = JsonUtility.ToJson(obj, pretty);
+
+          if (json.IsEmpty() || json[0] != '{')
+          {
+            LastException = new UnanticipatedException("JsonUtility.ToJson returned a bad JSON string.");
+            return false;
+          }
+        }
+        else
+        {
+          json = "{}";
         }
 
         File.WriteAllBytes(filepath, json.ToBytes(Encoding.Unicode));
@@ -75,24 +76,31 @@ namespace Ore
       return false;
     }
 
-    public static bool TryWriteText(string filepath, string text, Encoding encoding = null)
+    public static bool TryWriteText([NotNull] string filepath, [CanBeNull] string text, Encoding encoding = null)
     {
       return TryWriteBinary(filepath, text.ToBytes(encoding));
     }
 
-    public static bool TryReadText(string filepath, out string text, Encoding encoding = null)
+    public static bool TryReadText([NotNull] string filepath, [NotNull] out string text, Encoding encoding = null)
     {
       if (TryReadBinary(filepath, out byte[] data))
       {
-        text = Strings.FromBytes(data, encoding);
-        return true;
+        try
+        {
+          text = Strings.FromBytes(data, encoding);
+          return true;
+        }
+        catch (ArgumentException ex)
+        {
+          CurrentException = ex;
+        }
       }
 
-      text = null;
+      text = string.Empty;
       return false;
     }
 
-    public static bool TryReadLines(string filepath, out string[] lines, char newline = '\n', Encoding encoding = null)
+    public static bool TryReadLines([NotNull] string filepath, [NotNull] out string[] lines, char newline = '\n', Encoding encoding = null)
     {
       if (TryReadText(filepath, out string text, encoding))
       {
@@ -104,9 +112,9 @@ namespace Ore
       lines = System.Array.Empty<string>();
       return false;
     }
-
-
-    public static bool TryWriteBinary(string filepath, byte[] data)
+    
+    [PublicAPI]
+    public static bool TryWriteBinary([NotNull] string filepath, [NotNull] byte[] data)
     {
       try
       {
@@ -134,11 +142,13 @@ namespace Ore
     }
 
     [PublicAPI]
-    public static bool TryReadBinary([CanBeNull] string filepath, out byte[] data)
+    public static bool TryReadBinary([NotNull] string filepath, [NotNull] out byte[] data)
     {
       if (!Paths.IsValidPath(filepath))
       {
-        
+        LastException = new ArgumentException("filepath");
+        data = System.Array.Empty<byte>();
+        return false;
       }
 
       try
@@ -165,14 +175,8 @@ namespace Ore
     }
 
     [PublicAPI]
-    public static bool TryMakePathTo([CanBeNull] string filepath)
+    public static bool TryMakePathTo([NotNull] string filepath)
     {
-      if (filepath.IsEmpty())
-      {
-        LastException = new ArgumentNullException("filepath");
-        return false;
-      }
-
       try
       {
         MakePathTo(filepath);
@@ -196,7 +200,7 @@ namespace Ore
     }
 
     [PublicAPI]
-    public static void MakePathTo([NotNull] string filepath)
+    public static void MakePathTo([NotNull] string filepath) // throws
     {
       if (Paths.IsValidPath(filepath) && Paths.ExtractDirectoryPath(filepath, out string dirpath))
       {
@@ -365,6 +369,11 @@ namespace Ore
     {
       get => s_ExceptionRingBuf[s_ExceptionRingIdx % EXCEPTION_RING_SZ];
       set => s_ExceptionRingBuf[++s_ExceptionRingIdx % EXCEPTION_RING_SZ] = value;
+    }
+
+    private static Exception CurrentException
+    {
+      set => s_ExceptionRingBuf[s_ExceptionRingIdx % EXCEPTION_RING_SZ] = value;
     }
 
     #endregion PRIVATE
