@@ -24,7 +24,7 @@ namespace Ore
     Whitelist,
     Disabled
   }
-  
+
   [System.Serializable]
   public class GreyList<T> : SerialSet<T>
   {
@@ -36,17 +36,17 @@ namespace Ore
 
     [SerializeField]
     private GreyListType m_Type = GreyListType.Blacklist;
-    
-    
+
+
     public bool Accepts([CanBeNull] T item)
     {
       return m_Type == GreyListType.Disabled || ((m_Type == GreyListType.Whitelist) == Contains(item));
     }
-    
+
     public bool Rejects([CanBeNull] T item)
     {
       return m_Type != GreyListType.Disabled && ((m_Type == GreyListType.Blacklist) == Contains(item));
     }
-    
+
   } // end class GreyList<T>
 }

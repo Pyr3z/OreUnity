@@ -112,7 +112,7 @@ namespace Ore
       lines = System.Array.Empty<string>();
       return false;
     }
-    
+
     [PublicAPI]
     public static bool TryWriteBinary([NotNull] string filepath, [NotNull] byte[] data)
     {
@@ -226,9 +226,9 @@ namespace Ore
       try
       {
         #if UNITY_EDITOR
-        
+
         return !PathExists(path) || UnityEditor.FileUtil.DeleteFileOrDirectory(path);
-        
+
         #else // if !UNITY_EDITOR
 
         if (File.Exists(path))
@@ -298,10 +298,10 @@ namespace Ore
 
           if (msg.StartsWith("disk full"))
             return IOResult.DiskFull;
-          
+
           if (msg.StartsWith("sharing violation") || msg.StartsWith("win32 io returned 997."))
             return IOResult.FileAlreadyInUse;
-          
+
           if (msg.StartsWith("invalid handle") || msg.Contains(" permi"))
             return IOResult.NotPermitted;
 

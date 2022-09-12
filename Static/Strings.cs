@@ -9,9 +9,11 @@
 
 using System.Collections.Generic;
 using JetBrains.Annotations;
+
 using StringBuilder = System.Text.StringBuilder;
 using Encoding      = System.Text.Encoding;
 using Convert       = System.Convert;
+using IFormatter    = System.IFormatProvider;
 
 
 namespace Ore
@@ -19,9 +21,12 @@ namespace Ore
   /// <summary>
   /// Utilities for C# string manipulation & querying.
   /// </summary>
+  [PublicAPI]
   public static class Strings
   {
     public static Encoding DefaultEncoding { get; set; } = Encoding.Unicode;
+
+    public static IFormatter InvariantFormatter { get; set; } = System.Globalization.CultureInfo.InvariantCulture;
 
 
     public static readonly char[] WHITESPACES = { ' ', '\t', '\n', '\r', '\v' };
@@ -30,14 +35,14 @@ namespace Ore
 
     public static bool IsEmpty(this string str)
     {
-      return str == null || str.Length == 0;
+      return str is null || str.Length == 0;
     }
 
 
     public static byte[] ToBytes(this string str, Encoding encoding = null)
     {
       if (IsEmpty(str))
-        return new byte[0];
+        return System.Array.Empty<byte>();
 
       return (encoding ?? DefaultEncoding).GetBytes(str);
     }
@@ -73,9 +78,9 @@ namespace Ore
 #endif
     }
 
-    public static string ExpandCamelCase(this string str)
+    public static string ExpandCamelCase([CanBeNull] this string str)
     {
-      if (str == null || str.Length <= 1)
+      if (str is null || str.Length <= 1)
         return str;
 
       int i = 0, ilen = str.Length;
@@ -175,20 +180,20 @@ namespace Ore
       return max < count ? count : max;
     }
 
-    
+
     public static string RemoveHypertextTags([CanBeNull] string text)
     {
       // algorithm formerly called "PyroDK.RichText.RemoveSoberly(text)"
-      
+
       if (text is null || text.Length < 3)
         return text;
-      
+
       var bob = new StringBuilder(text.Length / 2);
-      
+
       int i = 0, size = text.Length;
       (int start, int end) lhs = (0, 0),
                            rhs = (0, size - 1);
-      
+
       int found = 0; // 1 = found open, 2 = found pair
       while (i < size)
       {
@@ -197,7 +202,7 @@ namespace Ore
           if (found == 0 && text[i + 1] != '/')
           {
             int lhs_end = i - 1;
-            
+
             while (++i < size)
             {
               if (text[i] == '>')
@@ -212,7 +217,7 @@ namespace Ore
           else if (found == 1 && text[i + 1] == '/')
           {
             int rhs_end = i - 1;
-          
+
             while (++i < size)
             {
               if (text[i] == '>')
@@ -224,33 +229,33 @@ namespace Ore
             }
           }
         }
-        
+
         ++i;
-        
+
         if (found == 2)
         {
           lhs.end -= lhs.start - 1;
           rhs.end -= rhs.start - 1;
-          
+
           if (lhs.end > 0)
             bob.Append(text, lhs.start, lhs.end);
           if (rhs.end > 0)
             bob.Append(text, rhs.start, rhs.end);
-          
+
           lhs.start = lhs.end = rhs.start = i;
           rhs.end = size - 1;
           found = 0;
         }
       } // end outer while loop
-      
+
       if (found == 0 && (rhs.end -= rhs.start - 1) > 0)
       {
         bob.Append(text, rhs.start, rhs.end);
       }
-      
+
       return bob.ToString();
     }
-    
+
   } // end static class Strings
 
 }

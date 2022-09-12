@@ -512,7 +512,7 @@ namespace Ore
       m_AssertionFailedFormat.BaseMessage = Strings.RemoveHypertextTags(m_AssertionFailedFormat.BaseMessage);
     }
     #endif
-    
+
     #region (private section)
 
     private string ReachedMessage

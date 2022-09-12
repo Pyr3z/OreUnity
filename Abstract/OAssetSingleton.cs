@@ -41,17 +41,17 @@ namespace Ore
     [PublicAPI]
     public static bool IsReplaceable => !s_Current || s_Current.m_IsReplaceable;
 
-    
+
     [PublicAPI]
     public static bool TryGuarantee(out TSelf instance)
     {
       return (instance = s_Current) || ( TryCreate(out instance) && instance.TryInitialize(instance) );
     }
-    
-    
+
+
     private static TSelf s_Current;
 
-    
+
     [SerializeField]
     protected bool m_IsRequiredOnLaunch = false;
     [SerializeField]
@@ -59,7 +59,7 @@ namespace Ore
 
     [SerializeField]
     protected DelayedEvent m_OnAfterInitialized = new DelayedEvent();
-    
+
 
     protected virtual void OnEnable()
     {

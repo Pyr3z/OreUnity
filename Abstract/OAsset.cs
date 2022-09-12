@@ -23,8 +23,8 @@ namespace Ore
     {
       hideFlags = m_HideFlags;
     }
-    
-    
+
+
     [PublicAPI]
     public static bool TryCreate<T>(out T instance, [CanBeNull] string path = null)
       where T : ScriptableObject
@@ -34,11 +34,11 @@ namespace Ore
         instance = (T)so;
         return true;
       }
-      
+
       instance = null;
       return false;
     }
-    
+
     [PublicAPI]
     public static bool TryCreate<T>([NotNull] System.Type type, out T instance, [CanBeNull] string path = null)
       where T : ScriptableObject
@@ -50,7 +50,7 @@ namespace Ore
         return false;
       }
       #endif
-      
+
       instance = (T)CreateInstance(type);
       if (OAssert.Fails(instance, "object allocation returned null"))
         return false;
@@ -74,10 +74,10 @@ namespace Ore
         instance.name = path;
         #endif // UNITY_EDITOR
       }
-      
+
       return true;
     }
-    
+
   } // end class Asset
 
 }

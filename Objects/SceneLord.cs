@@ -15,8 +15,10 @@ namespace Ore
   {
     [SerializeField]
     protected UnloadSceneOptions m_DefaultUnloadSceneOptions = UnloadSceneOptions.None;
-    
-    
+
+    private static int s_CurrentLoadAsync = -1;
+
+
     [PublicAPI]
     public static void AppQuit()
     {
@@ -41,7 +43,7 @@ namespace Ore
         Orator.WarnOnce($"Already loading scene #{s_CurrentLoadAsync}, can't queue another one!", Current);
         return;
       }
-      
+
       s_CurrentLoadAsync = index;
 
       index = SceneManager.sceneCount; // now this is runtime index, not build index
@@ -62,12 +64,9 @@ namespace Ore
             SceneManager.UnloadSceneAsync(curr, UnloadSceneOptions.None);
         }
       };
-      
+
       load.allowSceneActivation = true;
     }
-    
-    
-    private static int s_CurrentLoadAsync = -1;
 
   } // end class SceneLord
 }

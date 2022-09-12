@@ -99,7 +99,7 @@ namespace Ore
           ActiveScene.EnqueueCoroutine(DelayedInvokeCoroutine(), m_Context);
         return true;
       }
-      
+
       return TryInvokeOn(m_Context as MonoBehaviour);
     }
 
@@ -133,7 +133,7 @@ namespace Ore
         m_Invocation = null;
         yield break;
       }
-      
+
       if (m_ScaledTime)
         yield return new WaitForSeconds(m_DelaySeconds);
       else if (m_DelaySeconds < 1f / 30f)

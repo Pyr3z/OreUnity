@@ -3,23 +3,25 @@
  *  @date     2022-01-20
 **/
 
+using JetBrains.Annotations;
 using UnityEngine;
 
 
 namespace Ore
 {
-
+  [PublicAPI]
   public static class DeviceSpy
   {
     public enum ABIArch
     {
-      ARM     = 0,
+      ARMv7   = 0,
       ARM64   = 1,
       x86     = 2, // x86* = ChromeOS
       x86_64  = 3,
 
-      ARMv7   = ARM,
-      ARM32   = ARM,
+      ARM     = ARMv7,
+      ARM32   = ARMv7,
+      ARMv8   = ARM64,
     }
 
 
@@ -27,9 +29,7 @@ namespace Ore
     {
       get
       {
-        if (s_OSVersion == null)
-          s_OSVersion = VersionID.ExtractOSVersion(SystemInfo.operatingSystem);
-        return s_OSVersion;
+        return s_OSVersion ??= VersionID.ExtractOSVersion(SystemInfo.operatingSystem);
       }
     }
 
@@ -37,7 +37,7 @@ namespace Ore
     {
       get
       {
-        if (s_Brand == null)
+        if (s_Brand is null)
           (s_Brand, s_Model) = GetMakeModel();
         return s_Brand;
       }
@@ -47,7 +47,7 @@ namespace Ore
     {
       get
       {
-        if (s_Model == null)
+        if (s_Model is null)
           (s_Brand, s_Model) = GetMakeModel();
         return s_Model;
       }
@@ -57,7 +57,7 @@ namespace Ore
     {
       get
       {
-        if (s_TimezoneUTCStr == null)
+        if (s_TimezoneUTCStr is null)
           (s_TimezoneOffset, s_TimezoneUTCStr) = GetTimezoneUTCOffset();
         return s_TimezoneUTCStr;
       }
@@ -67,7 +67,7 @@ namespace Ore
     {
       get
       {
-        if (s_TimezoneOffset == null)
+        if (s_TimezoneOffset is null)
           (s_TimezoneOffset, s_TimezoneUTCStr) = GetTimezoneUTCOffset();
         return (float)s_TimezoneOffset;
       }
@@ -77,9 +77,7 @@ namespace Ore
     {
       get
       {
-        if (s_DiagonalInches == null)
-          s_DiagonalInches = CalcScreenDiagonalInches();
-        return (float)s_DiagonalInches;
+        return s_DiagonalInches ??= CalcScreenDiagonalInches();
       }
     }
 
@@ -87,9 +85,7 @@ namespace Ore
     {
       get
       {
-        if (s_AspectRatio == null)
-          s_AspectRatio = CalcAspectRatio();
-        return (float)s_AspectRatio;
+        return s_AspectRatio ??= CalcAspectRatio();
       }
     }
 
@@ -97,9 +93,7 @@ namespace Ore
     {
       get
       {
-        if (s_IsTablet == null)
-          s_IsTablet = CalcIsTablet();
-        return (bool)s_IsTablet;
+        return s_IsTablet ??= CalcIsTablet();
       }
     }
 
@@ -107,9 +101,7 @@ namespace Ore
     {
       get
       {
-        if (s_IsBlueStacks == null)
-          s_IsBlueStacks = CalcIsBlueStacks();
-        return (bool)s_IsBlueStacks;
+        return s_IsBlueStacks ??= CalcIsBlueStacks();
       }
     }
 
@@ -118,9 +110,7 @@ namespace Ore
     {
       get
       {
-        if (s_ABIArch == null)
-          s_ABIArch = CalcABIArch();
-        return (ABIArch)s_ABIArch;
+        return s_ABIArch ??= CalcABIArch();
       }
     }
 
@@ -151,7 +141,7 @@ namespace Ore
 
       string makemodel = SystemInfo.deviceModel;
 
-      int split = makemodel.IndexOfAny(new char[]{ ' ', '-' });
+      int split = makemodel.IndexOfAny(new []{ ' ', '-' });
       if (split < 0)
         return (makemodel, makemodel);
 
@@ -176,9 +166,9 @@ namespace Ore
     private static float CalcAspectRatio()
     {
       if (Screen.height < Screen.width)
-        return Screen.width / Screen.height;
+        return (float)Screen.width / Screen.height;
       else
-        return Screen.height / Screen.width;
+        return (float)Screen.height / Screen.width;
     }
 
     private static bool CalcIsTablet()
@@ -186,10 +176,6 @@ namespace Ore
 #if AD_MEDIATION_MAX
 
       return MaxSdkUtils.IsTablet();
-
-#elif UNITY_EDITOR
-
-      return false;
 
 #else
 
@@ -221,32 +207,30 @@ namespace Ore
 
     private static ABIArch CalcABIArch()
     {
-      var strcmp = System.StringComparison.OrdinalIgnoreCase;
+#if !UNITY_EDITOR && UNITY_IOS // TODO iOS needs to be tested
+      if (System.Environment.Is64BitOperatingSystem)
+        return ABIArch.ARM64;
+      else
+        return ABIArch.ARM;
+#endif // UNITY_IOS
 
       string type = SystemInfo.processorType;
 
       // Android and Android-like devices are pretty standard here
-      if (type.StartsWith("ARM", strcmp))
+      if (type.StartsWith("ARM64"))
       {
-        if (type.Substring(3, 2) == "64" || System.Environment.Is64BitOperatingSystem)
-          return ABIArch.ARM64;
-        else
-          return ABIArch.ARM;
+        return ABIArch.ARM64;
       }
-      else if (Application.platform == RuntimePlatform.IPhonePlayer)
+      else if (type.StartsWith("ARMv7"))
       {
-        if (System.Environment.Is64BitOperatingSystem)
-          return ABIArch.ARM64;
-        else
-          return ABIArch.ARM;
+        return ABIArch.ARM32;
       }
+
+      // Chrome OS (should be a rare case)
+      if (System.Environment.Is64BitOperatingSystem)
+        return ABIArch.x86_64;
       else
-      {
-        if (System.Environment.Is64BitOperatingSystem)
-          return ABIArch.x86_64;
-        else
-          return ABIArch.x86;
-      }
+        return ABIArch.x86;
     }
 
   } // end class DeviceSpy

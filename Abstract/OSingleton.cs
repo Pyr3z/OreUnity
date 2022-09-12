@@ -45,7 +45,7 @@ namespace Ore
     {
       return (instance = s_Current) || TryCreate(out instance);
     }
-    
+
     [PublicAPI]
     public static bool TryCreate(out TSelf instance, bool force = false)
     {
@@ -61,7 +61,7 @@ namespace Ore
           return true;
         }
       }
-      
+
       instance = new GameObject($"[{typeof(TSelf).Name}]").AddComponent<TSelf>();
       return instance && instance.m_IsSingletonInitialized;
     }

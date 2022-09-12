@@ -41,7 +41,7 @@ namespace Ore
     [System.NonSerialized]
     private readonly List<(Coroutine,string)> m_KeyedCoroutines = new List<(Coroutine, string)>();
 
-    
+
     public static bool TryGetScene(out Scene scene)
     {
       if (IsActive)
@@ -49,11 +49,11 @@ namespace Ore
         scene = Current.gameObject.scene;
         return true;
       }
-      
+
       scene = default;
       return false;
     }
-    
+
     public static float GetSceneAge()
     {
       if (IsActive && s_SceneBirthdays.TryGetValue(Instance.gameObject.scene, out float birth))
@@ -62,7 +62,7 @@ namespace Ore
       }
       return 0f;
     }
-    
+
     public static float GetSceneAge(Scene scene)
     {
       if (s_SceneBirthdays.TryGetValue(scene, out float birth))
@@ -71,13 +71,13 @@ namespace Ore
       }
       return 0f;
     }
-    
+
     public static float GetSceneAge(string scene_name)
     {
       return GetSceneAge(SceneManager.GetSceneByName(scene_name));
     }
-    
-    
+
+
     // Global static Coroutine impl:
 
     /// <summary>
@@ -111,7 +111,7 @@ namespace Ore
         s_CoroutineQueue.Enqueue((routine,contract));
       }
     }
-    
+
     [PublicAPI]
     public static void EnqueueCoroutine([NotNull] IEnumerator routine, [NotNull] string key)
     {
@@ -292,7 +292,7 @@ namespace Ore
     private IEnumerator DoRoutinePlusCleanup(IEnumerator routine, WeakRef wref, int i_hint)
     {
       yield return routine;
-      
+
       int i = i_hint.AtMost(m_ContractedCoroutines.Count - 1);
       while (i --> 0)
       {
@@ -316,11 +316,11 @@ namespace Ore
         }
       }
     }
-    
+
     private IEnumerator DoRoutinePlusCleanup(IEnumerator routine, string key, int i_hint)
     {
       yield return routine;
-      
+
       int i = i_hint.AtMost(m_KeyedCoroutines.Count - 1);
       while (i --> 0)
       {
@@ -337,7 +337,7 @@ namespace Ore
         }
       }
     }
-    
+
     private void CheckCoroutineThreshold()
     {
       if (m_TooManyCoroutinesWarningThreshold <= 0)
@@ -444,7 +444,7 @@ namespace Ore
 
       curr.SetDontDestroyOnLoad(!next.isLoaded);
     }
-    
+
     private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
       s_SceneBirthdays[scene] = Time.realtimeSinceStartup;

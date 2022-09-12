@@ -30,18 +30,18 @@ namespace Ore.Editor
       {
         typeof(System.ObsoleteAttribute)
       };
-      
+
       foreach (var tasset in TypeCache.GetTypesWithAttribute<AssetPathAttribute>())
       {
         if (tasset is null || tasset.IsAbstract || tasset.IsGenericType || tasset.AreAnyDefined(silencers))
           continue;
-        
+
         if (!tasset.IsSubclassOf(typeof(ScriptableObject)))
         {
           Orator.Error($"[{nameof(AssetPathAttribute)}] is only intended for ScriptableObject types! (t:{tasset.Name})");
           continue;
         }
-        
+
         var attr = tasset.GetCustomAttribute<AssetPathAttribute>(); // shouldn't be heritable
 
         if (!Filesystem.PathExists(attr.Path) && OAsset.TryCreate(tasset, out ScriptableObject asset, attr.Path))
@@ -49,7 +49,7 @@ namespace Ore.Editor
           Orator.Log($"Created new Asset of type <{tasset.Name}> at \"{attr.Path}\"", asset);
         }
       }
-      
+
       silencers = new []
       {
         typeof(CreateAssetMenuAttribute),
@@ -65,7 +65,7 @@ namespace Ore.Editor
           continue;
 
         string filepath = $"Assets/Resources/{tsingleton.Name}.asset";
-        
+
         if (!Filesystem.PathExists(filepath) && OAsset.TryCreate(tsingleton, out OAsset singleton, filepath))
         {
           Orator.Log($"Created new OAssetSingleton <{tsingleton.Name}> at \"{filepath}\"", singleton);

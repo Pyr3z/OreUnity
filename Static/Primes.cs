@@ -14,7 +14,7 @@ namespace Ore
     {
       return 1 < value && IsPrime((uint)value);
     }
-    
+
     public static bool IsPrime(uint value)
     {
       if ((value & 1) == 0)
@@ -30,12 +30,12 @@ namespace Ore
         return IsPrimeNoLookup(value);
       }
     }
-    
+
     public static bool IsPrimeNoLookup(uint value)
     {
       return IsPrimeNoLookup(value, (uint)System.Math.Sqrt(value));
     }
-    
+
     public static bool IsPrimeNoLookup(uint value, uint sqrt)
     {
       for (uint i = 3; i <= sqrt; i += 2)
@@ -46,30 +46,30 @@ namespace Ore
 
       return true;
     }
-    
-    
+
+
     public static int Next(int current)
     {
       if (OAssert.Fails(current >= 0, "integer overflow?"))
         return Integers.MAX_ARRAY_SZ;
 
       int idx = System.Array.BinarySearch(CONVENIENT_PRIMES, current);
-      
+
       if (idx < 0)
         idx = ~idx;
       else
         ++idx;
-      
+
       if (idx < CONVENIENT_PRIMES.Length)
         return CONVENIENT_PRIMES[idx];
-      
+
       if ((current & 1) == 0)
         current |= 1;
       else
         current += 2;
 
       uint sqrt = (uint)System.Math.Sqrt(current);
-      
+
       while (current < Integers.MAX_ARRAY_SZ)
       {
         if (IsPrimeNoLookup((uint)current, sqrt))
@@ -80,13 +80,13 @@ namespace Ore
         if (current > sqrt * sqrt)
           ++sqrt;
       }
-      
+
       return Integers.MAX_ARRAY_SZ;
     }
-    
-    
+
+
     // data section (consider pruning)
-    
+
     private static readonly int[] CONVENIENT_PRIMES = // Count = 72
     {
       3, 7, 11, 17, 23, 29, 37, 47, 59, 71,
@@ -98,7 +98,7 @@ namespace Ore
       968897, 1162687, 1395263, 1674319, 2009191, 2411033, 2893249, 3471899, 4166287, 4999559,
       5999471, 7199369
     };
-    
+
     private const int LOOKUP_10K_START = 3;
     private const int LOOKUP_10K_MAX   = 104729;
     private const int LOOKUP_10K_COUNT = 10000 - LOOKUP_10K_START;
@@ -1105,7 +1105,7 @@ namespace Ore
       104549,104551,104561,104579,104593,104597,104623,104639,104651,104659,
       104677,104681,104683,104693,104701,104707,104711,104717,104723,104729
     };
-    
+
   } // end class Primes
 }
 

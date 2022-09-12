@@ -28,22 +28,22 @@ namespace Ore
     public int Count => m_Set.Count;
 
     public bool IsReadOnly => false;
-    
-    
+
+
     [SerializeField]
     private T[] m_Items = System.Array.Empty<T>();
-    
+
     [System.NonSerialized]
     private HashSet<T> m_Set;
     [System.NonSerialized]
     private bool m_Dirty;
 
-    
+
     public SerialSet()
     {
       m_Set = new HashSet<T>();
     }
-    
+
     public SerialSet([CanBeNull] IEnumerable<T> items)
     {
       if (items is null)
@@ -61,7 +61,7 @@ namespace Ore
     {
       return m_Dirty |= m_Set.Add(item);
     }
-    
+
     void ICollection<T>.Add([CanBeNull] T item)
     {
       m_Dirty |= m_Set.Add(item);
@@ -86,7 +86,7 @@ namespace Ore
     {
       return m_Set.Remove(item);
     }
-    
+
     public IEnumerator<T> GetEnumerator()
     {
       return m_Set.GetEnumerator();
@@ -144,7 +144,7 @@ namespace Ore
     {
       return m_Set.SetEquals(other);
     }
-    
+
     public void SymmetricExceptWith([NotNull] IEnumerable<T> other)
     {
       _ = XOR(other);
@@ -167,7 +167,7 @@ namespace Ore
       return m_Dirty |= (m_Set.Count != precount);
     }
 
-    
+
     public void TrimSerialList()
     {
       m_Set.Clear();
@@ -183,7 +183,7 @@ namespace Ore
       m_Set.UnionWith(m_Items);
       m_Dirty = false;
     }
-    
+
     void ISerializationCallbackReceiver.OnBeforeSerialize()
     {
       if (m_Dirty)
@@ -193,6 +193,6 @@ namespace Ore
         m_Dirty = false;
       }
     }
-    
+
   } // end class SerialSet
 }
