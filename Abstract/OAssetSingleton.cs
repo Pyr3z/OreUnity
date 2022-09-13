@@ -29,20 +29,16 @@ namespace Ore
   /// <typeparam name="TSelf">
   ///   Successor should pass its own type (CRTP).
   /// </typeparam>
+  [PublicAPI]
   public abstract class OAssetSingleton<TSelf> : OAsset
     where TSelf : OAssetSingleton<TSelf>
   {
-    [PublicAPI]
     public static TSelf Current => s_Current;
-    [PublicAPI]
     public static TSelf Instance => s_Current; // compatibility API
-    [PublicAPI]
     public static bool IsActive => s_Current;
-    [PublicAPI]
     public static bool IsReplaceable => !s_Current || s_Current.m_IsReplaceable;
 
 
-    [PublicAPI]
     public static bool TryGuarantee(out TSelf instance)
     {
       return (instance = s_Current) || ( TryCreate(out instance) && instance.TryInitialize(instance) );
@@ -64,7 +60,9 @@ namespace Ore
     protected virtual void OnEnable()
     {
       if (!TryInitialize((TSelf)this))
-        Orator.Warn("OAssetSingleton failed to initialize!", this);
+      {
+        // Orator.Warn("OAssetSingleton failed to initialize!", this);
+      }
     }
 
     protected virtual void OnDisable()

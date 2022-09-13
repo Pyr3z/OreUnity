@@ -53,6 +53,7 @@ namespace Ore.Editor
       silencers = new []
       {
         typeof(CreateAssetMenuAttribute),
+        typeof(AssetPathAttribute), // we just checked these = skip
         typeof(System.ObsoleteAttribute)
       };
 

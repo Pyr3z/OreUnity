@@ -52,7 +52,7 @@ namespace Ore
       #endif
 
       instance = (T)CreateInstance(type);
-      if (OAssert.Fails(instance, "object allocation returned null"))
+      if (OAssert.Fails(instance, $"Object creation for {type.Name} returned null"))
         return false;
 
       if (!path.IsEmpty())
