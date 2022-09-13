@@ -242,6 +242,11 @@ namespace Ore
     {
       parts.Clear();
 
+      if (m_String.IsEmpty())
+      {
+        return 0;
+      }
+
       int start = 0;
       while (m_String[start] < '0' || m_String[start] > '9')
       {

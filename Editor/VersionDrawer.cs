@@ -18,6 +18,8 @@ namespace Ore.Editor
     private VersionID m_ScratchVer = new VersionID(null);
     private List<(string str, int idx)> m_Parts = new List<(string str, int idx)>();
 
+    private const int MAX_SPLIT_COMPONENTS = 5;
+
     public override void OnGUI(Rect total, SerializedProperty prop, GUIContent label)
     {
       var str_prop = prop.FindPropertyRelative("m_String");
@@ -28,7 +30,7 @@ namespace Ore.Editor
       int plen = m_ScratchVer.SplitParts(m_Parts);
       int ilen = m_ScratchVer.Length;
 
-      if (ilen < 2 || ilen > 4)
+      if (ilen < 2 || ilen > MAX_SPLIT_COMPONENTS)
       {
         EditorGUI.DelayedTextField(total, str_prop, label);
         return;
@@ -65,7 +67,7 @@ namespace Ore.Editor
         part = EditorGUI.DelayedTextField(pos, part);
         if (EditorGUI.EndChangeCheck() && !changed)
         {
-          if (Parsing.TryParseInt32(part, out _ ) || idx == ilen - 1)
+          if (Parsing.TryParseInt32(part, out _ ))
           {
             m_Parts[p] = (part, idx);
             changed = true;
@@ -94,7 +96,7 @@ namespace Ore.Editor
       }
       else if (prop.isExpanded)
       {
-        OGUI.IndentLevel.Increase();
+        OGUI.IndentLevel.Increase(fix_label_width: false);
 
         pos = new Rect(total)
         {
@@ -102,10 +104,15 @@ namespace Ore.Editor
         };
 
         label.text = "(raw version string)";
-        pos = EditorGUI.PrefixLabel(pos, label);
-        EditorGUI.SelectableLabel(pos, m_ScratchVer);
 
-        OGUI.IndentLevel.Pop();
+        EditorGUI.BeginChangeCheck();
+        str = EditorGUI.DelayedTextField(pos, label, m_ScratchVer);
+        if (EditorGUI.EndChangeCheck())
+        {
+          str_prop.stringValue = str;
+        }
+
+        OGUI.IndentLevel.Pop(fix_label_width: false);
       }
     }
 
