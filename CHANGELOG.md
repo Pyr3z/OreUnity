@@ -5,9 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-## [UNRELEASE] - 2022-08
+## [UNRELEASED] - 2022-
+- fef
+
+## [2.2.1] - 2022-09-12
 - Fixed: SceneLord.LoadSceneAsync now has safety guards against spamming.
 - Changed: SceneLord is no longer a required OAssetSingleton and can be created via the Asset menu.
+- Changed: VersionID internals are now smarter.
+- Added: (Editor-only) Property drawer for VersionIDs, does some validation, allows editing the underlying string.
+- Fixed: More annoying OAssetSingleton warnings / failed asserts.
+- Fixed: My head.
 
 ## [2.2.0] - 2022-08-25
 - Removed: Automatic OAssetSingleton<> instantiations by default. You can still flag an OAssetSingleton for auto-creation at a specific path by using the [AssetPath(string)] type attribute.
