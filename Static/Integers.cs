@@ -8,6 +8,7 @@
  *    implement `System.IConvertible`.
 **/
 
+using JetBrains.Annotations;
 using IConvertible = System.IConvertible;
 
 
@@ -17,6 +18,7 @@ namespace Ore
   /// Provides utilities for native integral primitives and other types that
   /// implement `System.IConvertible`.
   /// </summary>
+  [PublicAPI]
   public static class Integers
   {
     // Maximum 1D array size, slightly smaller than int.MaxValue (grabbed from decompiled System.Array)
@@ -37,9 +39,9 @@ namespace Ore
       return $"[{{0,{CalcDecimalDigits(size)}}}]";
     }
 
-    public static string ToInvariantString(this System.IConvertible self)
+    public static string ToInvariantString(this IConvertible self)
     {
-      return self?.ToString(System.Globalization.NumberFormatInfo.InvariantInfo);
+      return self?.ToString(Strings.InvariantFormatter);
     }
 
 
@@ -57,7 +59,11 @@ namespace Ore
 
     public static int Sign(this int self)
     {
-      return (self > 0).GetHashCode() - (self < 0).GetHashCode();
+      if (self < 0)
+        return -1;
+      if (0 < self)
+        return +1;
+      return 0;
     }
 
     public static int SignNoZero(this int self)

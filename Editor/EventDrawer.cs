@@ -10,8 +10,8 @@ using UnityEditor;
 namespace Ore.Editor
 {
 
-  [CustomPropertyDrawer(typeof(IEvent), useForChildren: true)] // shit, doesn't work..
-  [CustomPropertyDrawer(typeof(DelayedEvent), useForChildren: true)] // ... gotta be explicit.
+  [CustomPropertyDrawer(typeof(IEvent), useForChildren: true)] // interfaces don't actually work..
+  [CustomPropertyDrawer(typeof(DelayedEvent), useForChildren: true)] // ... so gotta be explicit.
   internal class EventDrawer : UnityEditorInternal.UnityEventDrawer
   {
     private const string UNITYEVENT_LAST_PROPERTY = "m_PersistentCalls";
