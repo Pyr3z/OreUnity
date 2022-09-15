@@ -87,15 +87,6 @@ namespace Ore
     internal static readonly char[] TAG_DELIMS = { '-', '+', '/', 'f' };
     internal static readonly char[] TRIM_CHARS = { 'v', 'V', '(', ')', '-', '+' };
 
-    private const int NYBBLE = 4; // bits in half a byte
-
-    // internal: these masks document succinctly the byte layout of VersionID ordered hashes.
-    internal const uint HASH_MASK_RESERVED = 0xF0000000;
-    internal const uint HASH_MASK_MAJOR    = 0x0FF00000;
-    internal const uint HASH_MASK_MINOR    = 0x000FF000;
-    internal const uint HASH_MASK_PATCH    = 0x00000FF0;
-    internal const uint HASH_MASK_EXTRA    = 0x0000000F;
-
 
     [SerializeField, Delayed]
     private string m_String;
@@ -269,7 +260,7 @@ namespace Ore
       var splits = m_String.Substring(start, end - start).Split(SEPARATOR);
       for (int i = 0, ilen = splits.Length; i < ilen; ++i)
       {
-        if (Parsing.TryParseInt32(splits[i], out int val))
+        if (Parsing.TryParseInt32(splits[i], out _ ))
         {
           parts.Add((splits[i], i));
         }
@@ -329,8 +320,17 @@ namespace Ore
       m_OrderedHash = CalcOrderedHash(end);
     }
 
+    // internal: these masks document succinctly the byte layout of VersionID ordered hashes.
+    internal const uint HASH_MASK_RESERVED = 0xF0000000;
+    internal const uint HASH_MASK_MAJOR    = 0x0FF00000;
+    internal const uint HASH_MASK_MINOR    = 0x000FF000;
+    internal const uint HASH_MASK_PATCH    = 0x00000FF0;
+    internal const uint HASH_MASK_EXTRA    = 0x0000000F;
+
     private int CalcOrderedHash(int end)
     {
+      const int NYBBLE = 4;
+
       int bitpos = 8 * sizeof(uint) - NYBBLE; // reserve top nybble
       int len = m_Vers.Length;
       int hash;

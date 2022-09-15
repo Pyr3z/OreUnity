@@ -4,7 +4,7 @@
 **/
 
 using System.Collections;
-
+using JetBrains.Annotations;
 using UnityEngine;
 
 using Action = System.Action;
@@ -23,13 +23,14 @@ namespace Ore
     #region EVENT CALLBACK ACTIONS
 
     [System.Diagnostics.Conditional("DEBUG")]
+    [PublicAPI]
     public void DebugLog(string message)
     {
-      // TODO change out this quick n easy line
-      Debug.Log($"{GetType().Name}: {message}\n(GameObject \"{name}\")");
+      Orator.Log(message, this);
     }
 
 
+    [PublicAPI]
     public void SpawnLocal(GameObject prefab)
     {
       // DISCLAIMER: SpawnPools would be FAR better to use instead of this!
@@ -39,6 +40,7 @@ namespace Ore
         Debug.LogWarning($"{GetType().Name} \"{name}\" : Missing Prefab reference!");
     }
 
+    [PublicAPI]
     public void SpawnWorld(GameObject prefab)
     {
       // DISCLAIMER: SpawnPools would be FAR better to use instead of this!
@@ -49,17 +51,20 @@ namespace Ore
     }
 
 
+    [PublicAPI]
     public void ToggleSelf()
     {
       enabled = !enabled;
     }
 
+    [PublicAPI]
     public void ToggleGameObject()
     {
       gameObject.SetActive(!gameObject.activeSelf);
     }
 
 
+    [PublicAPI]
     public void DestroySelf(float in_seconds = 0f)
     {
       if (Application.isEditor && in_seconds.IsZero())
@@ -68,6 +73,7 @@ namespace Ore
         Destroy(this, in_seconds);
     }
 
+    [PublicAPI]
     public void DestroyGameObject(float in_seconds = 0f)
     {
       if (Application.isEditor && in_seconds.IsZero())

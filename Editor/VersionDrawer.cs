@@ -27,7 +27,6 @@ namespace Ore.Editor
       string str = str_prop.stringValue;
       m_ScratchVer.Deserialize(str);
 
-      int plen = m_ScratchVer.SplitParts(m_Parts);
       int ilen = m_ScratchVer.Length;
 
       if (ilen < 2 || ilen > MAX_SPLIT_COMPONENTS)
@@ -57,6 +56,7 @@ namespace Ore.Editor
         changed = true;
       }
 
+      int plen = m_ScratchVer.SplitParts(m_Parts);
       for (int p = 0; p < plen; ++p)
       {
         var (part, idx) = m_Parts[p];
