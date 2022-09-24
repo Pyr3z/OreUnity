@@ -117,11 +117,6 @@ namespace Ore
 
     public static int ClampIndex(this int idx, int size)
     {
-      //#if DEBUG
-      //if (Logging.Assert(count >= 0, $"Negative count detected! idx={idx} count={count}"))
-      //  return -1;
-      //#endif
-
       if (size == 0 || size <= idx)
         return size - 1;
 
@@ -130,6 +125,8 @@ namespace Ore
 
     public static int WrapIndex(this int i, int sz)
     {
+      // the extra math here supports wrapping negative indices, so i = -1
+      // would return sz - 1.
       return (i % sz + sz) % sz;
     }
 
@@ -238,13 +235,13 @@ namespace Ore
 
 
 
-    public static void RemoveFlag<TFlag>(ref this long self, TFlag flag)
+    public static void ClearFlag<TFlag>(ref this long self, TFlag flag)
       where TFlag : unmanaged, IConvertible
     {
       self &= ~flag.ToInt64(null);
     }
 
-    public static void RemoveFlag<TFlag>(ref this int self, TFlag flag)
+    public static void ClearFlag<TFlag>(ref this int self, TFlag flag)
       where TFlag : unmanaged, IConvertible
     {
       self &= ~flag.ToInt32(null);
@@ -268,7 +265,7 @@ namespace Ore
 
     public static bool IsEven(this long self)
     {
-      return (self & long.MinValue) == 0 == ((self & 1) == 0);
+      return (0 < self) == ((self & 1) == 0);
     }
 
     public static bool IsEven(this ulong self)
@@ -279,7 +276,7 @@ namespace Ore
 
     public static bool IsEven(this int self)
     {
-      return (self & int.MinValue) == 0 == ((self & 1) == 0);
+      return (0 < self) == ((self & 1) == 0);
     }
 
     public static bool IsEven(this uint self)
@@ -298,23 +295,23 @@ namespace Ore
     }
 
 
-    public static int Truncate(this ulong self)
+    public static int ToBinary(this ulong self)
     {
       return 0 < self ? 1 : 0;
     }
 
-    public static int Truncate(this uint self)
+    public static int ToBinary(this uint self)
     {
       return 0 < self ? 1 : 0;
     }
 
 
-    public static int Truncate(this long self)
+    public static int ToBinary(this long self)
     {
       return self == 0 ? 0 : 1;
     }
 
-    public static int Truncate(this int self)
+    public static int ToBinary(this int self)
     {
       return self == 0 ? 0 : 1;
     }

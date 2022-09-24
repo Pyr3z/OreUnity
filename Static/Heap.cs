@@ -1,31 +1,18 @@
-/*! @file       Static/Algorithms.cs
+/*! @file       Static/Heap.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-02-30
- *
- *  @brief      Collection of generic data structure algorithms.
 **/
 
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 
 namespace Ore
 {
-
-  public static class Algorithms
+  [PublicAPI]
+  public static class Heap
   {
-
-    /// <summary>
-    /// DOES NOT CHECK FOR NULL OR VALID INDICES
-    /// </summary>
-    public static void Swap<T>(this IList<T> list, int idx1, int idx2)
-    {
-      var temp = list[idx1];
-      list[idx1] = list[idx2];
-      list[idx2] = temp;
-    }
-
-
-    public static void MakeHeap<T>(this IList<T> list, System.Comparison<T> cmp)
+    public static void Make<T>(IList<T> list, System.Comparison<T> cmp)
     {
       OAssert.AllNotNull(list, cmp);
 
@@ -37,7 +24,7 @@ namespace Ore
       }
     }
 
-    public static void PushHeap<T>(this IList<T> list, T push, System.Comparison<T> cmp)
+    public static void Push<T>(IList<T> list, T push, System.Comparison<T> cmp)
     {
       OAssert.AllNotNull(list, cmp);
 
@@ -49,14 +36,13 @@ namespace Ore
       // heapify up
       while (child > 0 && cmp(list[child], list[parent]) > 0)
       {
-        list.Swap(child, parent);
-
+        (list[child],list[parent]) = (list[parent],list[child]);
         child  = parent;
         parent = (parent - 1) / 2;
       }
     }
 
-    public static T PopHeap<T>(this IList<T> list, System.Comparison<T> cmp)
+    public static T Pop<T>(IList<T> list, System.Comparison<T> cmp)
     {
       OAssert.AllNotNull(list, cmp);
 
@@ -68,7 +54,7 @@ namespace Ore
 
       if (last > 1)
       {
-        list.Swap(0, last);
+        (list[0],list[last]) = (list[last],list[0]);
         list.RemoveAt(last);
         HeapifyDown(list, 0, cmp);
       }
@@ -100,7 +86,7 @@ namespace Ore
         if (max == node)
           return;
 
-        list.Swap(node, max);
+        (list[node],list[max]) = (list[max],list[node]);
 
         node = max;
       }
@@ -126,13 +112,13 @@ namespace Ore
       if (max == node)
         return;
 
-      list.Swap(node, max);
+      (list[node],list[max]) = (list[max],list[node]);
 
       if (max <= (list.Count - 1 - 1) / 2)
         HeapifyDownRecursive(list, max, cmp); // <--
     }
 
-  } // end static class Algorithms
+  } // end static class Heap
 
 }
 

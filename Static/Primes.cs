@@ -3,13 +3,16 @@
  *  @date       2022-08-18
 **/
 
-#if false // temp disabled until needed internally (probs for HashMap)
+#if KORE_PRIMES // temporarily optional class until optimized for mem size
+
+using JetBrains.Annotations;
+
 
 namespace Ore
 {
-  public class Primes
+  [PublicAPI]
+  public static class Primes
   {
-
     public static bool IsPrime(int value)
     {
       return 1 < value && IsPrime((uint)value);
