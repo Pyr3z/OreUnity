@@ -3,15 +3,157 @@
  *  @date       2022-09-23
 **/
 
+using System.Collections;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using UnityEngine;
+
 
 namespace Ore
 {
   [PublicAPI]
   public static class Raster
   {
+    public struct LineDrawer : IEnumerator<Vector2Int>
+    {
+      public Vector2Int Current => new Vector2Int(x, y);
+      object IEnumerator.Current => Current;
+
+      private int sx, sy, x, y, dx, dy, xinc, yinc, i, error, side, state;
+
+      private const int PREPARED  = 0;
+      private const int ITERATING = 1;
+
+      private RectInt m_Bounds;
+
+
+      [PublicAPI]
+      public static LineDrawer WithBounds(int xmin, int ymin, int xmax, int ymax)
+      {
+        if (xmax < xmin)
+          (xmax,xmin) = (xmin,xmax);
+
+        if (ymax < ymin)
+          (ymax,ymin) = (ymin,ymax);
+
+        return new LineDrawer
+        {
+          m_Bounds = new RectInt(xmin, ymin, xmax - xmin, ymax - ymin)
+        };
+      }
+
+      [PublicAPI]
+      public void Prepare(int ax, int ay, int bx, int by)
+      {
+        x = sx = ax;
+        y = sy = ay;
+
+        xinc = (bx < ax) ? -1 : 1;
+        yinc = (by < ay) ? -1 : 1;
+        dx   = xinc * (bx - ax);
+        dy   = yinc * (by - ay);
+
+        if (dx == dy)
+        {
+          i = dx;
+        }
+        else
+        {
+          side  = -1 * ((dx == 0 ? yinc : xinc) - 1);
+          i     = dx + dy;
+          error = dx - dy;
+        }
+
+        dx *= 2;
+        dy *= 2;
+
+        state = PREPARED;
+      }
+
+      [PublicAPI]
+      public void Prepare(Vector2 start, Vector2 direction, float distance)
+      {
+        x = sx = (int)start.x;
+        y = sy = (int)start.y;
+
+        xinc = direction.x < 0f ? -1 : 1;
+        yinc = direction.y < 0f ? -1 : 1;
+
+        dx = (int)(xinc * direction.x * distance);
+        dy = (int)(yinc * direction.y * distance);
+
+        if (dx == dy)
+        {
+          i = dx;
+        }
+        else
+        {
+          side  = -1 * ((dx == 0 ? yinc : xinc) - 1);
+          i     = dx + dy;
+          error = dx - dy;
+        }
+
+        dx *= 2;
+        dy *= 2;
+
+        state = PREPARED;
+      }
+
+
+      public bool MoveNext()
+      {
+        if (i <= 0)
+        {
+          return false;
+        }
+
+        if (state == PREPARED)
+        {
+          state = ITERATING;
+          return true;
+        }
+
+        --i;
+
+        if (dx == dy)
+        {
+          x += xinc;
+          y += yinc;
+        }
+        else if (error > 0 || error == side)
+        {
+          x += xinc;
+          error -= dy;
+        }
+        else
+        {
+          y += yinc;
+          error += dx;
+        }
+
+        if (m_Bounds.width > 0 && !m_Bounds.Contains(new Vector2Int(x, y)))
+        {
+          i = 0;
+          return false;
+        }
+
+        return true;
+      }
+
+      public void Reset()
+      {
+        x = sx;
+        y = sy;
+        i     = (dx + dy) / 2;
+        error = (dx - dy) / 2;
+        state = PREPARED;
+      }
+
+      void System.IDisposable.Dispose()
+      {
+      }
+    }
+
 
     public static IEnumerable<Vector2Int> Line(Vector2 start, Vector2 direction, float distance)
     {
