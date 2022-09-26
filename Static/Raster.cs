@@ -14,7 +14,11 @@ namespace Ore
   [PublicAPI]
   public static class Raster
   {
-    public struct LineDrawer : IEnumerator<Vector2Int>
+    /// <summary>
+    /// Keep a cached field of this class to reduce GC allocs and keep nice algo
+    /// structure!
+    /// </summary>
+    public class LineDrawer : IEnumerator<Vector2Int>, IEnumerable<Vector2Int>
     {
       public Vector2Int Current => new Vector2Int(x, y);
       object IEnumerator.Current => Current;
@@ -30,12 +34,6 @@ namespace Ore
       [PublicAPI]
       public static LineDrawer WithBounds(int xmin, int ymin, int xmax, int ymax)
       {
-        if (xmax < xmin)
-          (xmax,xmin) = (xmin,xmax);
-
-        if (ymax < ymin)
-          (ymax,ymin) = (ymin,ymax);
-
         return new LineDrawer
         {
           m_Bounds = new RectInt(xmin, ymin, xmax - xmin, ymax - ymin)
@@ -148,6 +146,11 @@ namespace Ore
         error = (dx - dy) / 2;
         state = PREPARED;
       }
+
+      // this trick allows this to be used in a foreach loop:
+      IEnumerator<Vector2Int> IEnumerable<Vector2Int>.GetEnumerator() => this;
+
+      IEnumerator IEnumerable.GetEnumerator() => this;
 
       void System.IDisposable.Dispose()
       {
