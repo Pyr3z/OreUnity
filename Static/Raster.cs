@@ -18,7 +18,7 @@ namespace Ore
     /// Keep a cached field of this class to reduce GC allocs and keep nice algo
     /// structure!
     /// </summary>
-    public class LineDrawer : IEnumerator<Vector2Int>, IEnumerable<Vector2Int>
+    public struct LineDrawer : IEnumerator<Vector2Int>, IEnumerable<Vector2Int>
     {
       public Vector2Int Current => new Vector2Int(x, y);
       object IEnumerator.Current => Current;
