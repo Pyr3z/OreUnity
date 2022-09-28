@@ -22,11 +22,11 @@ namespace Ore
   public static class Integers
   {
     // Maximum 1D array size, slightly smaller than int.MaxValue (grabbed from decompiled System.Array)
-    public const int MAX_ARRAY_SZ = 2146435069; // NOTE: this is also the max prime size!
+    public const int MaxArraySize     = Primes.MaxValue;
 
     // logical 2D arrays assume a square grid:
-    public const int MAX_ARRAY2D_SZ = 46329; // floor(sqrt(MAX_ARRAY_SZ))
-    public const int MAX_ARRAY2D_EXTENT = MAX_ARRAY_SZ / 2;
+    public const int MaxArray2DSize   = 46329; // floor(sqrt(MaxArraySize))
+    public const int MaxArray2DExtent = MaxArraySize / 2;
 
 
     public static int CalcDecimalDigits(int self)
@@ -146,7 +146,7 @@ namespace Ore
       if (size < 4)
         return 1;
       else
-        return (size / 2).AtMost(MAX_ARRAY2D_EXTENT, warn: true);
+        return (size / 2).AtMost(MaxArray2DExtent, warn: true);
     }
 
     public static int CalcExtent(uint size)
@@ -154,7 +154,7 @@ namespace Ore
       if (size < 4u)
         return 1;
       else
-        return ((int)(size / 2)).AtMost(MAX_ARRAY2D_EXTENT, warn: true);
+        return ((int)(size / 2)).AtMost(MaxArray2DExtent, warn: true);
     }
 
 

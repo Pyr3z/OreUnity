@@ -10,9 +10,10 @@ using Math = System.Math;
 
 namespace Ore
 {
-  [PublicAPI]
-  public static class Primes
+  public static class Primes // TODO make me an OAssetSingleton, so we can use serialization to choose our prime pool!
   {
+
+    [PublicAPI]
     public static bool IsPrime(int value)
     {
       if (value < 2)
@@ -25,11 +26,13 @@ namespace Ore
              IsPrimeNoLookup(value, (int)Math.Sqrt(value));
     }
 
+    [PublicAPI]
     public static bool IsPrimeNoLookup(int value)
     {
       return IsPrimeNoLookup(value, (int)Math.Sqrt(value));
     }
 
+    [PublicAPI]
     public static bool IsPrimeNoLookup(int value, int sqrt)
     {
       for (int i = 3; i <= sqrt; i += 2)
@@ -41,12 +44,22 @@ namespace Ore
       return true;
     }
 
-
+    [PublicAPI]
     public static int Next(int current)
     {
-      if (OAssert.Fails(current >= 0, "integer overflow?"))
+      return Next(current, int.MaxValue);
+    }
+
+    [PublicAPI]
+    public static int Next(int current, int hashprime)
+    {
+      if (current < MinValue)
       {
-        return Integers.MAX_ARRAY_SZ;
+        return MinValue;
+      }
+      if (current > MaxValue)
+      {
+        return MaxValue;
       }
 
       int idx = CONVENIENT_PRIMES.BinarySearch(current);
@@ -57,38 +70,47 @@ namespace Ore
 
       ++idx;
 
-      if (idx < CONVENIENT_PRIMES.Length)
+      while (idx < CONVENIENT_PRIMES.Length) // (average case)
       {
-        // (average case)
-        return CONVENIENT_PRIMES[idx];
+        current = CONVENIENT_PRIMES[idx];
+        if ((current - 1) % hashprime != 0)
+          return current;
+        ++idx;
       }
 
-      // rarer case (will still happen for massive data structures)
+      // rarer case (will happen for massive data structures, or really bad hashprimes)
 
       current = current | 1 + 2;
 
-      int sqrt = (int)Math.Sqrt(current);
+      idx = (int)Math.Sqrt(current);
 
-      while (current < Integers.MAX_ARRAY_SZ)
+      while (current < MaxValue)
       {
-        if (IsPrimeNoLookup(current, sqrt))
+        if (IsPrimeNoLookup(current, idx))
           return current;
 
         current += 2;
 
-        ++sqrt;
+        ++idx;
 
-        if (current < sqrt * sqrt)
+        if (current < idx * idx)
         {
-          --sqrt;
+          --idx;
         }
       }
 
-      return Integers.MAX_ARRAY_SZ;
+      return MaxValue;
     }
 
 
     // data section (pruned)
+
+    public const int MinValue = 3; // I know, technically 2 is prime... BUT NOT IN MY HAUS
+
+    public const int MaxValue = 2146435069; // largest prime that can also be an array size
+
+    public const int MaxConvenientValue = 7199369;
+
 
     private static readonly int[] CONVENIENT_PRIMES =
     {
