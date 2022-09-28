@@ -15,13 +15,54 @@ using Math = System.Math;
 
 namespace Ore
 {
+
   [PublicAPI]
   public static class Raster
   {
+
+    public static IEnumerable<Vector2Int> Line(int ax, int ay, int bx, int by)
+    {
+      var rasterizer = new LineDrawer();
+      rasterizer.Prepare(ax, ay, bx, by);
+      return rasterizer; // the boxing allocation is less than a yield routine.
+    }
+
+    public static IEnumerable<Vector2Int> Line(Vector2Int a, Vector2Int b)
+    {
+      var rasterizer = new LineDrawer();
+      rasterizer.Prepare(a, b);
+      return rasterizer;
+    }
+
+    public static IEnumerable<Vector2Int> Line(Vector2 start, Vector2 direction, float distance)
+    {
+      var rasterizer = new LineDrawer();
+      rasterizer.Prepare(start, direction, distance);
+      return rasterizer;
+    }
+
+
+    public static IEnumerable<Vector2Int> Rectangle(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3)
+    {
+      throw new System.NotImplementedException();
+    }
+
+    public static IEnumerable<Vector2Int> Circle(Vector2 center, float radius)
+    {
+      // TODO iterate on PyroDK impl.
+      throw new System.NotImplementedException();
+    }
+
+
+
     /// <summary>
-    /// Keep a cached field of this class to reduce GC allocs and keep nice algo
-    /// structure!
+    /// Keep a cached field of this struct to reduce GC allocs and keep nice
+    /// algo structure!
     /// </summary>
+    /// <remarks>
+    /// Based on Bresenham's rasterization, implemented by Levi:
+    /// https://gist.github.com/Pyr3z/46884d67641094d6cf353358566db566
+    /// </remarks>
     public struct LineDrawer : IEnumerator<Vector2Int>, IEnumerable<Vector2Int>
     {
       [PublicAPI]
@@ -50,11 +91,9 @@ namespace Ore
 
 
       public int x, y;
-      
+
       private int sx, sy, dx, dy, xinc, yinc, i, error, side, state;
-
-      private RectInt m_Bounds;
-
+      private int xmin, xmax, ymin, ymax;
 
       private const int PREPARED  = 0;
       private const int ITERATING = 1;
@@ -74,29 +113,29 @@ namespace Ore
 
         return new LineDrawer
         {
-          m_Bounds = new RectInt(xmin, ymin, xmax - xmin, ymax - ymin)
+          xmin = xmin,
+          xmax = xmax,
+          ymin = ymin,
+          ymax = ymax
         };
       }
 
 
       [PublicAPI]
-      public void Prepare(int ax, int ay, int bx, int by)
+      public LineDrawer Prepare(int ax, int ay, int bx, int by)
       {
         x = sx = ax;
         y = sy = ay;
 
-        if (m_Bounds.width > 0)
+        if (xmin < xmax)
         {
-          int xmin = m_Bounds.xMin, ymin = m_Bounds.yMin,
-              xmax = m_Bounds.xMax, ymax = m_Bounds.yMax;
-
           // invalid if starting out of bounds:
           if (ax < xmin || ax >= xmax || ay < ymin || ay >= ymax)
           {
             x = xmin;
             y = ymin;
             i = 0;
-            return;
+            return this;
           }
         }
 
@@ -120,13 +159,20 @@ namespace Ore
         dy *= 2;
 
         state = PREPARED;
+        return this;
       }
 
       [PublicAPI]
-      public void Prepare(Vector2 start, Vector2 direction, float distance)
+      public LineDrawer Prepare(Vector2Int a, Vector2Int b)
       {
-        var b = start + direction * distance;
-        Prepare((int)start.x, (int)start.y, (int)b.x, (int)b.y);
+        return Prepare(a.x, a.y, b.x, b.y);
+      }
+
+      [PublicAPI]
+      public LineDrawer Prepare(Vector2 start, Vector2 direction, float distance)
+      {
+        direction = start + direction * distance;
+        return Prepare((int)start.x, (int)start.y, (int)direction.x, (int)direction.y);
       }
 
 
@@ -161,16 +207,16 @@ namespace Ore
           error += dx;
         }
 
-        if (m_Bounds.width == 0)
+        if (xmin == xmax)
           return true;
 
-        if (x < m_Bounds.x || x >= m_Bounds.xMax)
+        if (x < xmin || x >= xmax)
         {
           x -= xinc;
           i = -1;
         }
 
-        if (y < m_Bounds.y || y >= m_Bounds.yMax)
+        if (y < ymin || y >= ymax)
         {
           y -= yinc;
           i = -1;
@@ -198,58 +244,7 @@ namespace Ore
       void System.IDisposable.Dispose()
       {
       }
-    }
-
-
-    public static IEnumerable<Vector2Int> Line(Vector2 start, Vector2 direction, float distance)
-    {
-      // based on Bresenham implemented by Levi: https://gist.github.com/Pyr3z/46884d67641094d6cf353358566db566
-      var a = new Vector2Int((int)start.x, (int)start.y);
-
-      int dx, dy, xinc, yinc, i, error, side;
-
-      xinc = direction.x < 0f ? -1 : +1;
-      yinc = direction.y < 0f ? -1 : +1;
-
-      dx = (int)(xinc * direction.x * distance);
-      dy = (int)(yinc * direction.y * distance);
-
-      yield return a;
-
-      if (dx == dy) // Handle perfect diagonals
-      {
-        while (dx --> 0)
-        {
-          a.x += xinc;
-          a.y += yinc;
-          yield return a;
-        }
-        yield break;
-      }
-
-      side = -1 * ((dx == 0 ? yinc : xinc) - 1);
-
-      i     = dx + dy;
-      error = dx - dy;
-      dx *= 2;
-      dy *= 2;
-
-      while (i --> 0)
-      {
-        if (error > 0 || error == side)
-        {
-          a.x += xinc;
-          error -= dy;
-        }
-        else
-        {
-          a.y += yinc;
-          error += dx;
-        }
-
-        yield return a;
-      }
-    }
+    } // end struct LineDrawer
 
   } // end class Raster
 }
