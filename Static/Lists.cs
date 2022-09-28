@@ -5,6 +5,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 
 namespace Ore
@@ -12,6 +13,7 @@ namespace Ore
   /// <summary>
   /// Utilities and generic extensions for `IList<T>` containers.
   /// </summary>
+  [PublicAPI]
   public static class Lists
   {
 
@@ -83,6 +85,40 @@ namespace Ore
         return fallback;
 
       return list[list.Count - 1];
+    }
+
+    public static int BinarySearch<T>(
+      [NotNull]   this IReadOnlyList<T> list,
+      [CanBeNull] T value,
+      [CanBeNull] IComparer<T> comparer = null)
+    {
+      comparer ??= Comparer<T>.Default;
+
+      int lhs = 0;
+      int rhs = list.Count - 1;
+      int idx = rhs / 2;
+
+      while (lhs <= rhs)
+      {
+        int cmp = comparer.Compare(list[idx], value);
+
+        if (cmp < 0)
+        {
+          lhs = idx + 1;
+        }
+        else if (cmp > 0)
+        {
+          rhs = idx - 1;
+        }
+        else
+        {
+          return idx;
+        }
+
+        idx = (lhs + rhs) / 2;
+      }
+
+      return ~idx;
     }
 
   } // end static class Lists

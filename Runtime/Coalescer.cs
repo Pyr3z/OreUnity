@@ -40,7 +40,7 @@ namespace Ore
     }
     public Coalescer([CanBeNull] IEnumerable<T> items, [CanBeNull] Validator validator = null)
     {
-      m_Items 		= items ?? System.Array.Empty<T>();
+      m_Items     = items ?? System.Array.Empty<T>();
       m_Validator = validator ?? DefaultValidator;
     }
 
