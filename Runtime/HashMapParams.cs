@@ -13,6 +13,7 @@ using UnityEngine;
 
 namespace Ore
 {
+  [System.Serializable]
   public struct HashMapParams
   {
 
@@ -45,9 +46,9 @@ namespace Ore
 
     #region Properties + Fields
 
-    public int UserCapacity => CalcLoadLimit(m_InternalSize);
-
-    public bool IsFixedSize => m_GrowFactor < GROWFACTOR_MIN;
+    public int  UserCapacity    => CalcLoadLimit(m_InternalSize);
+    public int  RehashThreshold => m_HashPrime - 1;
+    public bool IsFixedSize     => m_GrowFactor < GROWFACTOR_MIN;
 
 
     [SerializeField]
@@ -131,6 +132,12 @@ namespace Ore
       return m_InternalSize = CalcInternalSize(userCapacity);
     }
 
+
+    public int MakeBuckets<T>(out T[] buckets)
+    {
+      buckets = new T[m_InternalSize];
+      return CalcLoadLimit(m_InternalSize);
+    }
 
     public int MakeBuckets<T>(int userCapacity, out T[] buckets)
     {
