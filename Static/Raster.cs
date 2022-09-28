@@ -22,29 +22,45 @@ namespace Ore
 
     public static IEnumerable<Vector2Int> Line(int ax, int ay, int bx, int by)
     {
-      var rasterizer = new LineDrawer();
-      rasterizer.Prepare(ax, ay, bx, by);
-      return rasterizer; // the boxing allocation is less than a yield routine.
+      // the boxing allocation is less than a yield routine.
+      return new LineDrawer().Prepare(ax, ay, bx, by);
     }
 
     public static IEnumerable<Vector2Int> Line(Vector2Int a, Vector2Int b)
     {
-      var rasterizer = new LineDrawer();
-      rasterizer.Prepare(a, b);
-      return rasterizer;
+      return new LineDrawer().Prepare(a, b);
     }
 
     public static IEnumerable<Vector2Int> Line(Vector2 start, Vector2 direction, float distance)
     {
-      var rasterizer = new LineDrawer();
-      rasterizer.Prepare(start, direction, distance);
-      return rasterizer;
+      return new LineDrawer().Prepare(start, direction, distance);
     }
 
 
-    public static IEnumerable<Vector2Int> Rectangle(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3)
+    public static IEnumerable<Vector2Int> Quad(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3)
     {
-      throw new System.NotImplementedException();
+      var line = new LineDrawer();
+
+      // easy implementation first
+      foreach (var cell in line.Prepare(p0, p1))
+      {
+        yield return cell;
+      }
+
+      foreach (var cell in line.Prepare(p1, p2))
+      {
+        yield return cell;
+      }
+
+      foreach (var cell in line.Prepare(p2, p3))
+      {
+        yield return cell;
+      }
+
+      foreach (var cell in line.Prepare(p3, p0))
+      {
+        yield return cell;
+      }
     }
 
     public static IEnumerable<Vector2Int> Circle(Vector2 center, float radius)
@@ -166,6 +182,12 @@ namespace Ore
       public LineDrawer Prepare(Vector2Int a, Vector2Int b)
       {
         return Prepare(a.x, a.y, b.x, b.y);
+      }
+
+      [PublicAPI]
+      public LineDrawer Prepare(Vector2 a, Vector2 b)
+      {
+        return Prepare((int)a.x, (int)a.y, (int)b.x, (int)b.y);
       }
 
       [PublicAPI]
