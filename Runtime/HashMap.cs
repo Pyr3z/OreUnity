@@ -20,7 +20,7 @@ namespace Ore
   public partial class HashMap<TKey,TValue>
   {
 
-    #region Properties
+  #region Properties
 
     [PublicAPI]
     public Type KeyType   => typeof(TKey);
@@ -40,10 +40,10 @@ namespace Ore
     public HashMapParams Parameters => m_Params;
     public int Version => m_Version;
 
-    #endregion Properties
+  #endregion Properties
 
 
-    #region Fields
+  #region Fields
 
     [SerializeField] // the only serializable field in this class
     protected HashMapParams m_Params = HashMapParams.Default;
@@ -59,7 +59,7 @@ namespace Ore
     #endregion
 
 
-    #region Constructors
+  #region Constructors
 
     public HashMap()
     {
@@ -80,14 +80,145 @@ namespace Ore
       MakeBuckets();
     }
 
-    #endregion Constructors
+  #endregion Constructors
 
 
-    #region Public Methods
+  #region Public Methods
 
+    /// <summary>
+    /// Fast search for the existence of the given key in this map.
+    /// </summary>
+    /// <param name="key">A valid key to search for.</param>
+    /// <returns>
+    /// true   if the HashMap contains the key.
+    /// false  if it doesn't.
+    /// </returns>
+    public bool Contains(TKey key)
+    {
+      if (m_Count == 0 || m_KeyComparator.IsNullKey(key))
+        return false;
+
+      CalcHashJump(key, out int hash31, out int jump);
+
+      int i     = hash31 % m_Buckets.Length;
+      int jumps = 0;
+
+      do
+      {
+        int found = BucketEquals(m_Buckets[i], hash31, key);
+
+        if (found > 0)
+          return true;
+
+        if (found == 0)
+          return false;
+
+        i = (i + jump) % m_Buckets.Length;
+      }
+      while (++jumps < m_Count);
+
+      return false;
+    }
+
+    /// <summary>
+    /// Finds the value mapped to the given key, if it exists in the HashMap.
+    /// </summary>
+    /// <param name="key">A valid key to search for.</param>
+    /// <param name="value">The return parameter containing the found value (if true is returned).</param>
+    /// <returns>
+    /// true   if a value was found mapped to the key.
+    /// false  if no value was found.
+    /// </returns>
+    public bool Find(TKey key, out TValue value)
+    {
+      int i = FindBucket(key);
+      if (i > -1)
+      {
+        value = m_Buckets[i].Value;
+        return true;
+      }
+
+      value = default;
+      return false;
+    }
+
+    /// <summary>
+    /// For syntactic sugar and familiarity, however no different from Map(),
+    /// aside from the void return.
+    /// </summary>
+    public void Add(TKey key, TValue val)
+    {
+      _ = TryInsert(key, val, overwrite: false, out _ );
+    }
+
+    /// <summary>
+    /// Registers a new key-value mapping in the HashMap iff there isn't already
+    /// a mapping at the given key.
+    /// </summary>
+    /// <returns>
+    /// true   if the value was successfully mapped to the given key,
+    /// false  if there was already a value mapped to this key,
+    ///        or there was an error.
+    /// </returns>
+    public bool Map(TKey key, TValue val)
+    {
+      return TryInsert(key, val, overwrite: false, out _ );
+    }
+
+    /// <summary>
+    /// Like Map(), but allows the user to overwrite preexisting values.
+    /// </summary>
+    /// <returns>
+    /// true   if the value is successfully mapped,
+    /// false  if the value is identical to a preexisting mapping,
+    ///        or there was an error.
+    /// </returns>
+    public bool Remap(TKey key, TValue val)
+    {
+      return TryInsert(key, val, overwrite: true, out _ );
+    }
+
+    /// <summary>
+    /// Used in case you care what happens to previously mapped values at certain keys.
+    /// </summary>
+    /// <param name="key">The key to map the new value to.</param>
+    /// <param name="val">The value to be mapped.</param>
+    /// <param name="preexisting">Situational output value, which is only valid if false is returned.</param>
+    /// <returns>
+    /// true   if new value was mapped successfully,
+    /// false  if new value was NOT mapped because there is a preexisting value,
+    /// null   if map state error.
+    /// </returns>
+    public bool? TryMap(TKey key, TValue val, out TValue preexisting)
+    {
+      if (TryInsert(key, val, overwrite: false, out int i))
+      {
+        preexisting = val;
+        return true;
+      }
+
+      if (i >= 0 && !IsFreeBucket(m_Buckets[i]))
+      {
+        preexisting = m_Buckets[i].Value;
+        return false;
+      }
+
+      preexisting = default;
+      return null;
+    }
+
+
+    /// <summary>
+    /// Tries to ensure the HashMap can hold at least userCapacity items.
+    /// </summary>
+    /// <param name="userCapacity">The minimum quantity of items to ensure capacitance for.</param>
+    /// <returns>
+    /// true   if the HashMap can now hold at least userCapacity items.
+    /// false  if the HashMap failed to reallocate enough space to hold userCapacity items.
+    /// </returns>
     public bool EnsureCapacity(int userCapacity)
     {
-      OAssert.False(userCapacity < 0, "provided negative userCapacity");
+      OAssert.False(userCapacity < 0, "provided a negative userCapacity");
 
       if (!m_Params.IsFixedSize && userCapacity > m_LoadLimit)
       {
@@ -97,10 +228,10 @@ namespace Ore
       return m_LoadLimit >= userCapacity;
     }
 
-    #endregion Public Methods
+  #endregion Public Methods
 
 
-    #region Internal Methods
+  #region Internal Methods
 
     private bool TryInsert(TKey key, TValue val, bool overwrite, out int i)
     {
@@ -232,17 +363,17 @@ namespace Ore
       return false;
     }
 
-    private bool IsEmptyBucket(Bucket bucket)
+    private bool IsEmptyBucket(in Bucket bucket)
     {
       return bucket.DirtyHash == 0 && m_KeyComparator.IsNullKey(bucket.Key);
     }
 
-    private bool IsFreeBucket(Bucket bucket)
+    private bool IsFreeBucket(in Bucket bucket)
     {
       return m_KeyComparator.IsNullKey(bucket.Key);
     }
 
-    private bool IsSmearedBucket(Bucket bucket)
+    private bool IsSmearedBucket(in Bucket bucket)
     {
       // A "smeared" bucket is the result of a bucket that was first dirtied
       // (via a collision), and subsequently cleared. This is necessary to
@@ -253,16 +384,14 @@ namespace Ore
       return bucket.DirtyHash < 0 && m_KeyComparator.IsNullKey(bucket.Key);
     }
 
-    private void CalcHashJump(TKey key, out int hash31, out int jump)
+    private void CalcHashJump(in TKey key, out int hash31, out int jump)
     {
       hash31 = m_KeyComparator.GetHashCode(key) & int.MaxValue;
       jump   = m_Params.CalcJump(hash31, m_Buckets.Length);
     }
 
-    private int FindBucket(TKey key, out Bucket bucket)
+    private int FindBucket(in TKey key)
     {
-      bucket = default;
-
       if (m_Count == 0 || m_KeyComparator.IsNullKey(key))
       {
         return -1;
@@ -272,46 +401,33 @@ namespace Ore
 
       int i = hash31 % m_Buckets.Length;
       int jumps = 0;
-      int found = 0;
 
       do
       {
-        found = BucketEquals(i, hash31, key);
-
-        if (found == 0) // NOPE
-        {
-          return -1;
-        }
+        int found = BucketEquals(m_Buckets[i], hash31, key);
 
         if (found > 0) // YEP
-        {
-          bucket = m_Buckets[i];
           return i;
-        }
 
-        // SKIP
+        if (found == 0) // NOPE
+          return -i;
+
+        // else, NEXT
 
         i = (i + jump) % m_Buckets.Length;
       }
       while (++jumps < m_Count);
 
-      return -1;
+      return -i;
     }
 
-    private int BucketEquals(int i, int hash31, TKey key)
+    private int BucketEquals(in Bucket bucket, int hash31, in TKey key)
     {
-      const int SKIP = -1, NOPE = 0, YEP = +1;
-
-      if (i < 0 || i >= m_Buckets.Length)
-      {
-        return NOPE;
-      }
-
-      var bucket = m_Buckets[i];
+      const int NEXT = -1, NOPE = 0, YEP = +1;
 
       if (IsFreeBucket(bucket))
       {
-        return -(bucket.DirtyHash >> 31); // -1 or 0 / FALSE or NULL
+        return -(bucket.DirtyHash >> 31); // -1 or 0 / NEXT if smeared, else NOPE
       }
 
       if (bucket.Hash == hash31 && m_KeyComparator.Equals(key, bucket.Key))
@@ -319,7 +435,7 @@ namespace Ore
         return YEP;
       }
 
-      return SKIP;
+      return NEXT;
     }
 
 
@@ -396,7 +512,7 @@ namespace Ore
       // Leave version unchanged, since the top-level data contents should be the same
     }
 
-    #endregion Internal Methods
+  #endregion Internal Methods
 
   } // end partial class HashMap
 

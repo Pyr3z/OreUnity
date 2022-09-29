@@ -3,7 +3,6 @@
  *  @date       2022-08
 **/
 
-using System.Collections.Generic;
 using JetBrains.Annotations;
 
 
@@ -12,7 +11,7 @@ namespace Ore
 
   public partial class HashMap<TKey,TValue>
   {
-    protected struct Bucket
+    protected struct Bucket // not sure if struct is better in this case~
     {
       public int Hash
       {
@@ -30,18 +29,6 @@ namespace Ore
         Key         = key; // <-- boxed
         Value       = val;
         DirtyHash   = hash31 | (DirtyHash & int.MinValue); // preserve dirt bit
-      }
-
-      public bool TryUnpack(out (TKey key, TValue val) contents)
-      {
-        contents = default;
-
-        if (Key is null)
-          return false;
-
-        contents.key = (TKey)Key;
-        contents.val = Value;
-        return true;
       }
 
       public void Smear()
