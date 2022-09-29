@@ -48,10 +48,10 @@ namespace Ore
     [SerializeField] // the only serializable field in this class
     protected HashMapParams m_Params = HashMapParams.Default;
 
-    protected int m_Count, m_Collisions, m_LoadLimit;
-    protected int m_Version;
+    private int m_Count, m_Collisions, m_LoadLimit;
+    private int m_Version;
 
-    protected Bucket[] m_Buckets;
+    private Bucket[] m_Buckets;
 
     protected IHashKeyComparator<TKey>  m_KeyComparator   = HashKeyComparator<TKey>.Default;
     protected IEqualityComparer<TValue> m_ValueComparator = EqualityComparer<TValue>.Default;
@@ -175,7 +175,7 @@ namespace Ore
         return true;
       }
 
-      if (i >= 0 && !IsFreeBucket(m_Buckets[i]))
+      if (i >= 0 && !m_Buckets[i].IsFree(m_KeyComparator))
       {
         preexisting = m_Buckets[i].Value;
         return false;
@@ -257,7 +257,7 @@ namespace Ore
 
       if (m_Count >= m_LoadLimit)
       {
-        if (GrowCapacity() <= m_Count)
+        if (Grow() <= m_Count)
         {
           i = -1;
           return false;
@@ -279,16 +279,12 @@ namespace Ore
       {
         var bucket = m_Buckets[i];
 
-        if (IsEmptyBucket(bucket))
+        if (bucket.IsEmpty(m_KeyComparator))
         {
           if (fallback != -1)
             i = fallback;
 
-          bucket.DirtyHash = hash31;
-          bucket.Key       = key;
-          bucket.Value     = val;
-
-          m_Buckets[i] = bucket;
+          m_Buckets[i].Fill(key, val, hash31);
 
           ++m_Count;
           ++m_Version;
@@ -296,22 +292,18 @@ namespace Ore
         }
 
 
-        if (fallback == -1 && IsSmearedBucket(bucket))
+        if (fallback == -1 && bucket.IsSmeared(m_KeyComparator))
         {
           fallback = i;
         }
-        else if (IsFreeBucket(bucket))
+        else if (bucket.IsFree(m_KeyComparator))
         {
           // end of smear chain
 
           if (fallback != -1)
             i = fallback;
 
-          bucket.Hash  = hash31; // preserves dirty bit
-          bucket.Key   = key;
-          bucket.Value = val;
-
-          m_Buckets[i] = bucket;
+          m_Buckets[i].Fill(key, val, hash31);
 
           ++m_Count;
           ++m_Version;
@@ -326,7 +318,7 @@ namespace Ore
         else if (bucket.Hash == hash31 && m_KeyComparator.Equals(key, bucket.Key))
         {
           // equivalent bucket found
-          if (!overwrite || m_ValueComparator.Equals(val, bucket.Value))
+          if (!overwrite || (m_ValueComparator is {} && m_ValueComparator.Equals(val, bucket.Value)))
             return false;
 
           m_Buckets[i].Value = val;
@@ -373,27 +365,6 @@ namespace Ore
       return false;
     }
 
-    private bool IsEmptyBucket(in Bucket bucket)
-    {
-      return bucket.DirtyHash == 0 && m_KeyComparator.IsNullKey(bucket.Key);
-    }
-
-    private bool IsFreeBucket(in Bucket bucket)
-    {
-      return m_KeyComparator.IsNullKey(bucket.Key);
-    }
-
-    private bool IsSmearedBucket(in Bucket bucket)
-    {
-      // A "smeared" bucket is the result of a bucket that was first dirtied
-      // (via a collision), and subsequently cleared. This is necessary to
-      // preserve the state of the jump graph, keeping lookups with collisions
-      // reliable and reproducible.
-      // Calling Rehash() eliminates all smeared buckets
-      // (but not all dirty buckets!).
-      return bucket.DirtyHash < 0 && m_KeyComparator.IsNullKey(bucket.Key);
-    }
-
     private void CalcHashJump(in TKey key, out int hash31, out int jump)
     {
       hash31 = m_KeyComparator.GetHashCode(key) & int.MaxValue;
@@ -433,9 +404,11 @@ namespace Ore
 
     private int BucketEquals(in Bucket bucket, int hash31, in TKey key)
     {
+      #pragma warning disable CS0219
       const int NEXT = -1, NOPE = 0, YEP = +1;
+      #pragma warning restore CS0219
 
-      if (IsFreeBucket(bucket))
+      if (bucket.IsEmpty(m_KeyComparator))
       {
         return -(bucket.DirtyHash >> 31); // -1 or 0 / NEXT if smeared, else NOPE
       }
@@ -461,7 +434,7 @@ namespace Ore
       m_LoadLimit = m_Params.MakeBuckets(userCapacity, out m_Buckets);
     }
 
-    private int GrowCapacity()
+    private int Grow()
     {
       if (m_Params.IsFixedSize)
         return -1;
@@ -496,7 +469,7 @@ namespace Ore
 
       if (m_Count == 0 && m_Buckets.Length != newSize)
       {
-        m_Buckets = newBuckets;
+        m_Buckets = newBuckets; // potential GC concern
         return;
       }
 
@@ -504,7 +477,7 @@ namespace Ore
       int hash31, jump;
       foreach (var bucket in m_Buckets)
       {
-        if (IsEmptyBucket(bucket))
+        if (bucket.IsEmpty(m_KeyComparator))
           continue;
 
         hash31 = bucket.Hash;
@@ -518,7 +491,7 @@ namespace Ore
       OAssert.True(count == m_Count, "HashMap.Rehash");
 
       m_Count   = count;
-      m_Buckets = newBuckets;
+      m_Buckets = newBuckets; // potential GC concern
 
       // Leave version unchanged, since the top-level data contents should be the same
     }

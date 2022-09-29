@@ -15,40 +15,71 @@ namespace Ore
     {
       public int Hash
       {
+        [Pure]
         get => DirtyHash & int.MaxValue;
-        set => DirtyHash = value | (DirtyHash & int.MinValue);
+        private
+        set => DirtyHash = (value & int.MaxValue) | (DirtyHash & int.MinValue);
       }
+
 
       public int    DirtyHash;
       public TKey   Key;
       public TValue Value; // direct member access is faster
 
 
+      [Pure]
+      public bool IsEmpty([NotNull] in IHashKeyComparator<TKey> keyEq)
+      {
+        return DirtyHash == 0 && keyEq.IsNullKey(Key);
+      }
+
+      [Pure]
+      public bool IsFree([NotNull] in IHashKeyComparator<TKey> keyEq)
+      {
+        return keyEq.IsNullKey(Key);
+      }
+
+      [Pure]
+      public bool IsSmeared([NotNull] in IHashKeyComparator<TKey> keyEq)
+      {
+        // A "smeared" bucket is the result of a bucket that was first dirtied
+        // (via a collision), and subsequently cleared. This is necessary to
+        // preserve the state of the jump graph, keeping lookups with collisions
+        // reliable and reproducible.
+        // Calling Rehash() eliminates all smeared buckets
+        // (but not all dirty buckets!).
+
+        return DirtyHash < 0 && keyEq.IsNullKey(Key);
+      }
+
+
       public void Fill(TKey key, TValue val, int hash31)
       {
-        Key         = key; // <-- boxed
-        Value       = val;
-        DirtyHash   = hash31 | (DirtyHash & int.MinValue); // preserve dirt bit
+        Key   = key;
+        Value = val;
+        Hash  = hash31;
       }
 
       public void Smear()
       {
-        Key          = default;
-        Value        = default;
-        DirtyHash   &= int.MinValue;
+        Key        = default;
+        Value      = default;
+        DirtyHash &= int.MinValue;
       }
 
+      [Pure]
       public Bucket RehashClone(int hash31)
       {
         return new Bucket
         {
-          Key         = Key,
-          Value       = Value,
-          DirtyHash   = hash31
+          Key       = Key,
+          Value     = Value,
+          DirtyHash = hash31
         };
       }
 
-      public int PlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IHashKeyComparator<TKey> keyEq)
+      [Pure]
+      public int PlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] in IHashKeyComparator<TKey> keyEq)
       {
         int hash       = Hash;
         int collisions = 0;
@@ -76,6 +107,7 @@ namespace Ore
         return collisions;
       }
 
+      [Pure]
       public int ForcePlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IHashKeyComparator<TKey> keyEq)
       {
         int collisions = 0;
