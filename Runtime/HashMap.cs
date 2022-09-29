@@ -270,7 +270,7 @@ namespace Ore
 
       CalcHashJump(key, out int hash31, out int jump);
 
-      i = hash31 % m_Buckets.Length;
+      i = hash31 % m_Buckets.Length; // high chance that we immediately found the index O(1)
 
       int fallback = -1;
       int jumps = 0;
@@ -298,10 +298,8 @@ namespace Ore
         }
         else if (bucket.IsFree(m_KeyComparator))
         {
-          // end of smear chain
-
-          if (fallback != -1)
-            i = fallback;
+          if (fallback != -1) // end of smear chain;
+            i = fallback;     // we can fill the last smear instead
 
           m_Buckets[i].Fill(key, val, hash31);
 
@@ -318,8 +316,12 @@ namespace Ore
         else if (bucket.Hash == hash31 && m_KeyComparator.Equals(key, bucket.Key))
         {
           // equivalent bucket found
-          if (!overwrite || (m_ValueComparator is {} && m_ValueComparator.Equals(val, bucket.Value)))
+
+          if (!overwrite || (m_ValueComparator is {} &&
+                             m_ValueComparator.Equals(val, bucket.Value)))
+          {
             return false;
+          }
 
           m_Buckets[i].Value = val;
           ++m_Version;
@@ -331,16 +333,15 @@ namespace Ore
 
           return true;
         }
-        else // Mark collision
-        {
-          if (fallback == -1 && bucket.DirtyHash >= 0)
-          {
-            m_Buckets[i].DirtyHash |= int.MinValue;
-            ++m_Collisions;
-          }
 
-          i = (i + jump) % m_Buckets.Length;
+        if (fallback == -1 && bucket.DirtyHash >= 0)
+        {
+          // Mark new collision
+          m_Buckets[i].DirtyHash |= int.MinValue;
+          ++m_Collisions;
         }
+
+        i = (i + jump) % m_Buckets.Length;
       }
       while (++jumps < m_Buckets.Length);
 
