@@ -175,7 +175,24 @@ namespace Ore
     {
       bool alreadyClear = m_Count == 0;
 
-      MakeBuckets(m_LoadLimit);
+      m_Collisions = m_Count = 0;
+      m_Buckets = new Bucket[m_Buckets.Length];
+
+      if (!alreadyClear)
+      {
+        ++m_Version;
+        return true;
+      }
+
+      return false;
+    }
+
+    public bool ClearNoAlloc()
+    {
+      bool alreadyClear = m_Count == 0;
+
+      m_Collisions = m_Count = 0;
+      System.Array.Clear(m_Buckets, 0, m_Buckets.Length);
 
       if (!alreadyClear)
       {
