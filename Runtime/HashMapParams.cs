@@ -17,7 +17,7 @@ namespace Ore
   public struct HashMapParams
   {
 
-    #region Constants + Defaults
+  #region Constants + Defaults
 
     private const int USERCAPACITY_DEFAULT = 5;
 
@@ -41,10 +41,10 @@ namespace Ore
     [PublicAPI]
     public static readonly HashMapParams Default = new HashMapParams(USERCAPACITY_DEFAULT);
 
-    #endregion Constants + Defaults
+  #endregion Constants + Defaults
 
 
-    #region Properties + Fields
+  #region Properties + Fields
 
     public int  UserCapacity    => CalcLoadLimit(m_InternalSize);
     public int  RehashThreshold => m_HashPrime - 1;
@@ -60,10 +60,10 @@ namespace Ore
     [SerializeField]
     private int   m_HashPrime;
 
-    #endregion Properties + Fields
+  #endregion Properties + Fields
 
 
-    #region Constructors + Factory Funcs
+  #region Constructors + Factory Funcs
 
     [PublicAPI]
     public static HashMapParams NoAlloc(int userCapacity, float loadFactor = LOADFACTOR_DEFAULT)
@@ -109,10 +109,10 @@ namespace Ore
       m_InternalSize = Primes.Next((int)(initialCapacity / m_LoadFactor), m_HashPrime);
     }
 
-    #endregion Constructors + Factory Funcs
+  #endregion Constructors + Factory Funcs
 
 
-    #region Methods
+  #region Methods
 
     public bool Check()
     {
@@ -141,19 +141,25 @@ namespace Ore
 
     public int MakeBuckets<T>(int userCapacity, out T[] buckets)
     {
-      userCapacity = CalcInternalSize(userCapacity);
-      buckets = new T[userCapacity];
-      return CalcLoadLimit(userCapacity);
+      buckets = new T[CalcInternalSize(userCapacity)];
+      return CalcLoadLimit(buckets.Length);
     }
 
     public int CalcInternalSize(int userCapacity)
     {
-      return Primes.Next((int)(userCapacity / m_LoadFactor), m_HashPrime);
+      userCapacity = (int)(userCapacity / m_LoadFactor);
+
+      if (Primes.IsPrime(userCapacity) && (userCapacity - 1) % m_HashPrime != 0)
+      {
+        return userCapacity;
+      }
+
+      return Primes.Next(userCapacity, m_HashPrime);
     }
 
-    public int CalcLoadLimit(int internalSize)
+    public int CalcLoadLimit(int internalSize) // AKA User Capacity
     {
-      return (int)(m_LoadFactor * internalSize);
+      return (int)(internalSize * m_LoadFactor);
     }
 
     public int CalcJump(int hash31, int size)
@@ -172,7 +178,7 @@ namespace Ore
       return Primes.Next((int)(prevSize * m_GrowFactor), m_HashPrime);
     }
 
-    #endregion Methods
+  #endregion Methods
 
 
     public static implicit operator HashMapParams (int initialCapacity)

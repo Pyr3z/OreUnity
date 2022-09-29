@@ -95,29 +95,7 @@ namespace Ore
     /// </returns>
     public bool Contains(TKey key)
     {
-      if (m_Count == 0 || m_KeyComparator.IsNullKey(key))
-        return false;
-
-      CalcHashJump(key, out int hash31, out int jump);
-
-      int i     = hash31 % m_Buckets.Length;
-      int jumps = 0;
-
-      do
-      {
-        int found = BucketEquals(m_Buckets[i], hash31, key);
-
-        if (found > 0)
-          return true;
-
-        if (found == 0)
-          return false;
-
-        i = (i + jump) % m_Buckets.Length;
-      }
-      while (++jumps < m_Count);
-
-      return false;
+      return FindBucket(key) >= 0;
     }
 
     /// <summary>
@@ -208,6 +186,42 @@ namespace Ore
     }
 
 
+    public bool Unmap(TKey key)
+    {
+      int i = FindBucket(key);
+
+      if (i >= 0)
+      {
+        m_Buckets[i].Smear();
+        --m_Count;
+        ++m_Version;
+        return true;
+      }
+
+      return false;
+    }
+
+    public void Remove(TKey key)
+    {
+      _ = Unmap(key);
+    }
+
+    public bool Clear()
+    {
+      bool alreadyClear = m_Count == 0;
+
+      MakeBuckets(m_LoadLimit);
+
+      if (!alreadyClear)
+      {
+        ++m_Version;
+        return true;
+      }
+
+      return false;
+    }
+
+
     /// <summary>
     /// Tries to ensure the HashMap can hold at least userCapacity items.
     /// </summary>
@@ -241,11 +255,7 @@ namespace Ore
         return false;
       }
 
-      if (m_Buckets is null)
-      {
-        MakeBuckets();
-      }
-      else if (m_Count >= m_LoadLimit)
+      if (m_Count >= m_LoadLimit)
       {
         if (GrowCapacity() <= m_Count)
         {
@@ -444,6 +454,7 @@ namespace Ore
       m_Count = m_Collisions = 0;
       m_LoadLimit = m_Params.MakeBuckets(out m_Buckets);
     }
+
     private void MakeBuckets(int userCapacity)
     {
       m_Count = m_Collisions = 0;
