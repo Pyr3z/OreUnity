@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 ## [UNRELEASED] - 2022-
-- fef
+- Added: HashMap data structure !!!!
 
 ## [2.2.1] - 2022-09-12
 - Fixed: SceneLord.LoadSceneAsync now has safety guards against spamming.
