@@ -15,8 +15,9 @@ namespace Ore
     [SerializeField] // the only serializable field in this class
     protected HashMapParams m_Params = HashMapParams.Default;
 
-    protected IHashKeyComparator<TKey>  m_KeyComparator   = HashKeyComparator<TKey>.Default;
-    protected IEqualityComparer<TValue> m_ValueComparator = EqualityComparer<TValue>.Default;
+    protected IComparator<TKey>   m_KeyComparator   = Comparator<TKey>.Default;
+    protected IComparator<TValue> m_ValueComparator = Comparator<TValue>.Default;
+
 
     private int m_Count, m_Collisions, m_LoadLimit;
     private int m_Version;
@@ -26,7 +27,7 @@ namespace Ore
 
     private bool TryInsert(TKey key, TValue val, bool overwrite, out int i)
     {
-      if (m_KeyComparator.IsNullKey(key))
+      if (m_KeyComparator.IsNone(key))
       {
         i = -1;
         return false;
@@ -151,7 +152,7 @@ namespace Ore
 
     private int FindBucket(in TKey key)
     {
-      if (m_Count == 0 || m_KeyComparator.IsNullKey(key))
+      if (m_Count == 0 || m_KeyComparator.IsNone(key))
       {
         return -1;
       }

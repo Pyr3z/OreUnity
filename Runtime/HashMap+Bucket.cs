@@ -28,19 +28,19 @@ namespace Ore
 
 
       [Pure]
-      public bool IsEmpty([NotNull] in IHashKeyComparator<TKey> keyEq)
+      public bool IsEmpty([NotNull] in IComparator<TKey> keyEq)
       {
-        return DirtyHash == 0 && keyEq.IsNullKey(Key);
+        return DirtyHash == 0 && keyEq.IsNone(Key);
       }
 
       [Pure]
-      public bool IsFree([NotNull] in IHashKeyComparator<TKey> keyEq)
+      public bool IsFree([NotNull] in IComparator<TKey> keyEq)
       {
-        return keyEq.IsNullKey(Key);
+        return keyEq.IsNone(Key);
       }
 
       [Pure]
-      public bool IsSmeared([NotNull] in IHashKeyComparator<TKey> keyEq)
+      public bool IsSmeared([NotNull] in IComparator<TKey> keyEq)
       {
         // A "smeared" bucket is the result of a bucket that was first dirtied
         // (via a collision), and subsequently cleared. This is necessary to
@@ -49,7 +49,7 @@ namespace Ore
         // Calling Rehash() eliminates all smeared buckets
         // (but not all dirty buckets!).
 
-        return DirtyHash < 0 && keyEq.IsNullKey(Key);
+        return DirtyHash < 0 && keyEq.IsNone(Key);
       }
 
 
@@ -79,14 +79,14 @@ namespace Ore
       }
 
       [Pure]
-      public int PlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] in IHashKeyComparator<TKey> keyEq)
+      public int PlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] in IComparator<TKey> keyEq)
       {
         int hash       = Hash;
         int collisions = 0;
         int i          = hash % buckets.Length;
 
         var bucket = buckets[i]; // keep in mind bucket != buckets[i] now
-        while (!keyEq.IsNullKey(bucket.Key))
+        while (!keyEq.IsNone(bucket.Key))
         {
           if (hash == bucket.Hash && keyEq.Equals(Key, bucket.Key))
           {
@@ -108,12 +108,12 @@ namespace Ore
       }
 
       [Pure]
-      public int ForcePlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IHashKeyComparator<TKey> keyEq)
+      public int ForcePlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IComparator<TKey> keyEq)
       {
         int collisions = 0;
         int i          = Hash % buckets.Length;
 
-        while (!keyEq.IsNullKey(buckets[i].Key))
+        while (!keyEq.IsNone(buckets[i].Key))
         {
           if (buckets[i].DirtyHash >= 0)
           {
