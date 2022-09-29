@@ -14,30 +14,22 @@ namespace Ore
   {
     protected struct Bucket
     {
+      public int Hash
+      {
+        get => DirtyHash & int.MaxValue;
+        set => DirtyHash = value | (DirtyHash & int.MinValue);
+      }
+
+      public int    DirtyHash;
       public TKey   Key;
       public TValue Value; // direct member access is faster
 
-      private int m_DirtyHash;
-
-      public int  Hash      => m_DirtyHash & int.MaxValue;
-      public bool IsEmpty   => Key is null;
-      public bool IsDefault => m_DirtyHash == 0 && Key is null;
-      public bool IsDirty   => m_DirtyHash < 0;
-      public bool IsSmeared => m_DirtyHash < 0 && Key is null;
-
-
-      public Bucket(TKey key, TValue val, int hash31)
-      {
-        Key         = key; // <-- boxed
-        Value       = val;
-        m_DirtyHash = hash31;
-      }
 
       public void Fill(TKey key, TValue val, int hash31)
       {
         Key         = key; // <-- boxed
         Value       = val;
-        m_DirtyHash = hash31 | (m_DirtyHash & int.MinValue); // preserve dirt bit
+        DirtyHash   = hash31 | (DirtyHash & int.MinValue); // preserve dirt bit
       }
 
       public bool TryUnpack(out (TKey key, TValue val) contents)
@@ -52,20 +44,11 @@ namespace Ore
         return true;
       }
 
-      public bool MakeDirty()
-      {
-        if (m_DirtyHash < 0)
-          return false;
-
-        m_DirtyHash |= int.MinValue;
-        return true;
-      }
-
       public void Smear()
       {
         Key          = default;
         Value        = default;
-        m_DirtyHash &= int.MinValue;
+        DirtyHash   &= int.MinValue;
       }
 
       public Bucket RehashClone(int hash31)
@@ -74,27 +57,27 @@ namespace Ore
         {
           Key         = Key,
           Value       = Value,
-          m_DirtyHash = hash31
+          DirtyHash   = hash31
         };
       }
 
-      public int PlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IEqualityComparer<TKey> keyEq)
+      public int PlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IHashKeyComparator<TKey> keyEq)
       {
         int hash       = Hash;
         int collisions = 0;
         int i          = hash % buckets.Length;
 
         var bucket = buckets[i]; // keep in mind bucket != buckets[i] now
-        while (!bucket.IsEmpty)
+        while (!keyEq.IsNullKey(bucket.Key))
         {
           if (hash == bucket.Hash && keyEq.Equals(Key, bucket.Key))
           {
             return collisions | int.MinValue;
           }
 
-          if (bucket.m_DirtyHash >= 0)
+          if (bucket.DirtyHash >= 0)
           {
-            buckets[i].m_DirtyHash |= int.MinValue;
+            buckets[i].DirtyHash |= int.MinValue;
             ++collisions;
           }
 
@@ -106,16 +89,16 @@ namespace Ore
         return collisions;
       }
 
-      public int PlaceIn([NotNull] Bucket[] buckets, int jump)
+      public int ForcePlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IHashKeyComparator<TKey> keyEq)
       {
         int collisions = 0;
         int i          = Hash % buckets.Length;
 
-        while (!buckets[i].IsEmpty)
+        while (!keyEq.IsNullKey(buckets[i].Key))
         {
-          if (buckets[i].m_DirtyHash >= 0)
+          if (buckets[i].DirtyHash >= 0)
           {
-            buckets[i].m_DirtyHash |= int.MinValue;
+            buckets[i].DirtyHash |= int.MinValue;
             ++collisions;
           }
 
