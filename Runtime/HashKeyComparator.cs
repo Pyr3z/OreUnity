@@ -5,31 +5,30 @@
 
 using System.Collections;
 using System.Collections.Generic;
+
 using JetBrains.Annotations;
+
+using IConvertible = System.IConvertible;
 
 
 namespace Ore
 {
 
-  public class HashKeyComparator : IEqualityComparer
+  public class HashKeyComparator<T> : IEqualityComparer<T>
   {
-    public static readonly HashKeyComparator Default = new HashKeyComparator();
+    public static readonly HashKeyComparator<T> Default = new HashKeyComparator<T>();
 
 
-    public bool Equals([CanBeNull] object a, [CanBeNull] object b)
+    public bool Equals([CanBeNull] T a, [CanBeNull] T b)
     {
       // slightly different short-circuiting than object.Equals
-      return a == b || ( a is {} && a.Equals(b) );
+      return a is {} && a.Equals(b);
     }
 
-    public int GetHashCode([CanBeNull] object obj)
+    public int GetHashCode([CanBeNull] T obj)
     {
-      if (obj is null)
-        return 0;
-
-      // ignore sign bit
-      return obj.GetHashCode() & int.MaxValue;
+      return obj?.GetHashCode() ?? 0;
     }
-  } // end class KeyComparator
+  } // end class HashKeyComparator
 
 }

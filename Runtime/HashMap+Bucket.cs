@@ -3,7 +3,7 @@
  *  @date       2022-08
 **/
 
-using System.Collections;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 
 
@@ -14,10 +14,10 @@ namespace Ore
   {
     protected struct Bucket
     {
-      public object Key;   // boxing of the key is necessary
+      public TKey   Key;
       public TValue Value; // direct member access is faster
 
-      private int    m_DirtyHash;
+      private int m_DirtyHash;
 
       public int  Hash      => m_DirtyHash & int.MaxValue;
       public bool IsEmpty   => Key is null;
@@ -33,7 +33,7 @@ namespace Ore
         m_DirtyHash = hash31;
       }
 
-      public void Set(TKey key, TValue val, int hash31)
+      public void Fill(TKey key, TValue val, int hash31)
       {
         Key         = key; // <-- boxed
         Value       = val;
@@ -63,7 +63,7 @@ namespace Ore
 
       public void Smear()
       {
-        Key          = null;
+        Key          = default;
         Value        = default;
         m_DirtyHash &= int.MinValue;
       }
@@ -78,7 +78,7 @@ namespace Ore
         };
       }
 
-      public int PlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IEqualityComparer keyEq)
+      public int PlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IEqualityComparer<TKey> keyEq)
       {
         int hash       = Hash;
         int collisions = 0;
