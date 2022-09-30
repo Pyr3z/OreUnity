@@ -22,18 +22,24 @@ namespace Ore
       if ((value & 1) == 0) // "is even"
         return value == 2;
 
-      return ConvenientPrimes.BinarySearch(value) >= 0 ||
-             IsPrimeNoLookup(value, (int)Math.Sqrt(value));
-    }
+      if (ConvenientPrimes.BinarySearch(value) >= 0)
+        return true;
 
-    [PublicAPI]
-    public static bool IsPrimeNoLookup(int value)
-    {
       return IsPrimeNoLookup(value, (int)Math.Sqrt(value));
     }
 
-    [PublicAPI]
-    public static bool IsPrimeNoLookup(int value, int sqrt)
+    internal static bool IsPrimeNoLookup(int value)
+    {
+      if (value < 2)
+        return false;
+
+      if ((value & 1) == 0)
+        return value == 2;
+
+      return IsPrimeNoLookup(value, (int)Math.Sqrt(value));
+    }
+
+    internal static bool IsPrimeNoLookup(int value, int sqrt)
     {
       for (int i = 3; i <= sqrt; i += 2)
       {

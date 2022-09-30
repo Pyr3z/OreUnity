@@ -33,7 +33,7 @@ namespace Ore
     private const float GROWFACTOR_MIN     = 1.1f;
     private const float GROWFACTOR_MAX     = 3f;
 
-    private const int HASHPRIME_DEFAULT    = 53; // Microsoft uses 101
+    private const int HASHPRIME_DEFAULT    = 101;
 
     private const bool ISFIXED_DEFAULT     = false;
 

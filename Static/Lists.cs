@@ -90,17 +90,22 @@ namespace Ore
 
     public static int BinarySearch<T>(
       [NotNull]   this IReadOnlyList<T> list,
-      [CanBeNull] T value,
-      [CanBeNull] IComparer<T> comparer = null)
+      [CanBeNull] T value)
     {
-      comparer ??= Comparator<T>.Default;
+      return BinarySearch(list, value, Comparator<T>.Default);
+    }
 
+    public static int BinarySearch<T>(
+      [NotNull]   this IReadOnlyList<T> list,
+      [CanBeNull] T value,
+      [NotNull] IComparer<T> comparer)
+    {
       int lhs = 0;
       int rhs = list.Count - 1;
-      int idx = rhs / 2;
 
       while (lhs <= rhs)
       {
+        int idx = (lhs + rhs) >> 1;
         int cmp = comparer.Compare(list[idx], value);
 
         if (cmp < 0)
@@ -115,11 +120,9 @@ namespace Ore
         {
           return idx;
         }
-
-        idx = (lhs + rhs) / 2;
       }
 
-      return ~idx;
+      return ~lhs;
     }
 
 
