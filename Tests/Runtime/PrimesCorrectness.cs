@@ -4,6 +4,7 @@
  *
  *  Correctness Tests:
  *  [ ] Primes.IsPrime
+ *  [ ] Primes.IsPrimeNoLookup
  *  [ ] Primes.Next
  *  [ ] Hash collision ratio
 **/
