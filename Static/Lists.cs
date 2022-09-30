@@ -87,12 +87,13 @@ namespace Ore
       return list[list.Count - 1];
     }
 
+
     public static int BinarySearch<T>(
       [NotNull]   this IReadOnlyList<T> list,
       [CanBeNull] T value,
       [CanBeNull] IComparer<T> comparer = null)
     {
-      comparer ??= Comparer<T>.Default;
+      comparer ??= Comparator<T>.Default;
 
       int lhs = 0;
       int rhs = list.Count - 1;
@@ -119,6 +120,24 @@ namespace Ore
       }
 
       return ~idx;
+    }
+
+
+    public static void Shuffle<T>([NotNull] this IList<T> list)
+    {
+      int len = list.Count;
+      for (int i = 0; i < len; ++i)
+      {
+        int swap = Integers.RandomIndex(len);
+        (list[i],list[swap]) = (list[swap],list[i]);
+      }
+    }
+
+    public static IList<T> Shuffled<T>([NotNull] this IList<T> list)
+    {
+      var copy = new List<T>(list);
+      Shuffle(copy);
+      return copy;
     }
 
   } // end static class Lists

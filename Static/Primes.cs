@@ -22,7 +22,7 @@ namespace Ore
       if ((value & 1) == 0) // "is even"
         return value == 2;
 
-      return CONVENIENT_PRIMES.BinarySearch(value) >= 0 ||
+      return ConvenientPrimes.BinarySearch(value) >= 0 ||
              IsPrimeNoLookup(value, (int)Math.Sqrt(value));
     }
 
@@ -45,13 +45,7 @@ namespace Ore
     }
 
     [PublicAPI]
-    public static int Next(int current)
-    {
-      return Next(current, int.MaxValue);
-    }
-
-    [PublicAPI]
-    public static int Next(int current, int hashprime)
+    public static int Next(int current, int hashprime = int.MaxValue)
     {
       if (current < MinValue)
       {
@@ -62,7 +56,7 @@ namespace Ore
         return MaxValue;
       }
 
-      int idx = CONVENIENT_PRIMES.BinarySearch(current);
+      int idx = ConvenientPrimes.BinarySearch(current);
       if (idx < 0)
       {
         idx = ~idx;
@@ -70,9 +64,9 @@ namespace Ore
 
       ++idx;
 
-      while (idx < CONVENIENT_PRIMES.Length) // (average case)
+      while (idx < ConvenientPrimes.Length) // (average case)
       {
-        current = CONVENIENT_PRIMES[idx];
+        current = ConvenientPrimes[idx];
         if ((current - 1) % hashprime != 0)
           return current;
         ++idx;
@@ -112,7 +106,7 @@ namespace Ore
     public const int MaxConvenientValue = 7199369;
 
 
-    private static readonly int[] CONVENIENT_PRIMES =
+    internal static readonly int[] ConvenientPrimes =
     {
       // skips over many intermediate primes on a curve
       3, 7, 11, 17, 23, 29, 37, 47, 59, 71,
