@@ -7,12 +7,58 @@
  *    testing builds are A-OK!
 **/
 
+using System.Collections.Generic;
+using JetBrains.Annotations;
+using NUnit.Framework;
+using UnityEngine;
+
+
 namespace Ore.Tests
 {
   public static class Primes10K
   {
+    internal const int MAX_TEST_VALUE = 20200; // somewhat arbitrary
 
-    public static int Random()
+
+    public static List<int> GetTestValues(int nPrime, int nNonPrime, bool includeConstantValues = false)
+    {
+      Assert.Positive(nPrime + nNonPrime);
+      Assert.LessOrEqual(nPrime, InOrder.Length);
+
+      List<int> list;
+      int nConsts;
+      if (includeConstantValues)
+      {
+        nConsts = 8;
+        list = new List<int>(nPrime + nNonPrime + nConsts)
+        {
+          -1, 0, 1, 2, InOrder.Length, int.MinValue, int.MaxValue, Primes.MaxValue
+        };
+      }
+      else
+      {
+        nConsts = 0;
+        list = new List<int>(nPrime + nNonPrime);
+      }
+
+      // add case archetype values
+
+      for (int i = 0; i < nPrime; ++i)
+      {
+        list.Add(GetRandomPrime());
+      }
+
+      for (int i = 0; i < nNonPrime; ++i)
+      {
+        list.Add(Random.Range(4, MAX_TEST_VALUE) & ~1);
+      }
+
+      Assert.AreEqual(list.Count, nPrime + nNonPrime + nConsts, "GetTestValues output");
+
+      return list;
+    }
+
+    public static int GetRandomPrime()
     {
       return InOrder[Integers.RandomIndex(InOrder.Length)];
     }
