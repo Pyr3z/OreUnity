@@ -44,6 +44,16 @@ namespace Ore
     public HashMapParams Parameters => m_Params;
     public int Version => m_Version;
 
+    public TValue this[TKey key]
+    {
+      get
+      {
+        _ = Find(key, out TValue result);
+        return result;
+      }
+      set  => _ = TryInsert(key, value, overwrite: true, out _ );
+    }
+
 
 
     public HashMap()
@@ -76,7 +86,7 @@ namespace Ore
     /// false  if it doesn't.
     /// </returns>
     [Pure]
-    public bool Contains(TKey key)
+    public bool HasKey(TKey key)
     {
       return FindBucket(key) >= 0;
     }
