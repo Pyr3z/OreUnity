@@ -2,17 +2,16 @@
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-09-29
  *
- *  Correctness Tests:
+ *  Correctness Tests: (x = pass, ~ = skipped for now)
  *  [x] Binary Search
  *  [x] Primes.IsPrime
  *  [x] Primes.IsPrimeNoLookup
- *  [-] Primes.Next
- *  [-] Primes.NextNoLookup
- *  [?] Hash collision ratio
+ *  [x] Primes.Next
+ *  [x] Primes.NextNoLookup
+ *  [~] Hash collision ratio
 **/
 
 using System.Linq;
-using System.Collections.Generic;
 
 using NUnit.Framework;
 
@@ -141,8 +140,7 @@ namespace Ore.Tests
     [Test]
     public static void HashCollisionRatio()
     {
-      // TODO
-      Assert.Inconclusive("Test not finished.");
+      Assert.Inconclusive("Test goals TBD");
     }
 
   }
