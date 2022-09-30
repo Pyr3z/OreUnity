@@ -114,7 +114,7 @@ namespace Ore.Tests
       Assert.AreEqual(25229, Primes.NearestTo(25228));
       Assert.AreEqual(3617, Primes.NearestTo(3615));
       Assert.AreEqual(3709, Primes.NearestTo(3711));
-      Assert.AreEqual(5077, Primes.NearestTo(5068));
+      Assert.AreEqual(5059, Primes.NearestTo(5068));
     }
 
     [Test]
