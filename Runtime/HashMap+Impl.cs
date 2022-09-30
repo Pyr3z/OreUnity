@@ -24,6 +24,7 @@ namespace Ore
 
     #if UNITY_INCLUDE_TESTS
     internal Bucket[] m_Buckets;
+    internal int LifetimeAllocs { get; private set; }
     #else
     private Bucket[] m_Buckets;
     #endif
@@ -144,6 +145,7 @@ namespace Ore
         return true;
       }
 
+      i = -1;
       return false;
     }
 
@@ -208,12 +210,10 @@ namespace Ore
     {
       m_Count = m_Collisions = 0;
       m_LoadLimit = m_Params.MakeBuckets(out m_Buckets);
-    }
 
-    private void MakeBuckets(int userCapacity)
-    {
-      m_Count = m_Collisions = 0;
-      m_LoadLimit = m_Params.MakeBuckets(userCapacity, out m_Buckets);
+      #if UNITY_INCLUDE_TESTS
+      ++LifetimeAllocs;
+      #endif
     }
 
     private int Grow()
@@ -248,6 +248,10 @@ namespace Ore
       m_LoadLimit  = m_Params.CalcLoadLimit(newSize);
 
       var newBuckets = new Bucket[newSize];
+
+      #if UNITY_INCLUDE_TESTS
+      ++LifetimeAllocs;
+      #endif
 
       if (m_Count == 0 && m_Buckets.Length != newSize)
       {

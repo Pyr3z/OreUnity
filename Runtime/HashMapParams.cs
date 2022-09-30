@@ -57,7 +57,7 @@ namespace Ore
     private float m_LoadFactor;
     [SerializeField, Range(0f, GROWFACTOR_MAX)]
     private float m_GrowFactor;
-    [SerializeField, Min(Primes.MinValue)]
+    [SerializeField, Min(53)]
     private int   m_HashPrime;
 
   #endregion Properties + Fields
@@ -127,9 +127,9 @@ namespace Ore
       m_InitialSize = INTERNALSIZE_DEFAULT;
     }
 
-    public int SetUserCapacity(int userCapacity)
+    public int StoreLoadLimit(int loadLimit)
     {
-      return m_InitialSize = CalcInternalSize(userCapacity);
+      return m_InitialSize = CalcInternalSize(loadLimit);
     }
 
 
@@ -139,27 +139,22 @@ namespace Ore
       return CalcLoadLimit(m_InitialSize);
     }
 
-    public int MakeBuckets<T>(int userCapacity, out T[] buckets)
+    public int CalcInternalSize(int loadLimit)
     {
-      buckets = new T[CalcInternalSize(userCapacity)];
-      return CalcLoadLimit(buckets.Length);
-    }
+      loadLimit = (int)(loadLimit / m_LoadFactor); // saving on stacksize; this is now internal size
 
-    public int CalcInternalSize(int userCapacity)
-    {
-      userCapacity = (int)(userCapacity / m_LoadFactor);
-
-      if (Primes.IsPrime(userCapacity) && (userCapacity - 1) % m_HashPrime != 0)
+      if ((loadLimit - 1) % m_HashPrime != 0 && Primes.IsPrime(loadLimit))
       {
-        return userCapacity;
+        return loadLimit;
       }
 
-      return Primes.Next(userCapacity, m_HashPrime);
+      return Primes.Next(loadLimit, m_HashPrime);
     }
 
     public int CalcLoadLimit(int internalSize) // AKA User Capacity
     {
-      return (int)(internalSize * m_LoadFactor);
+      // without the rounding, we get wonky EnsureCapacity behavior
+      return (int)(internalSize * m_LoadFactor + 0.5f);
     }
 
     public int CalcJump(int hash31, int size)

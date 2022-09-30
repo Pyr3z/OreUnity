@@ -155,17 +155,18 @@ namespace Ore
     /// </summary>
     /// <param name="key">The key to map the new value to.</param>
     /// <param name="val">The value to be mapped.</param>
-    /// <param name="preexisting">Situational output value, which is only valid if false is returned.</param>
+    /// <param name="preexisting">Conditional output value, which is only valid if false is returned.</param>
     /// <returns>
     /// true   if new value was mapped successfully,
     /// false  if new value was NOT mapped because there is a preexisting value,
-    /// null   if map state error.
+    /// null   if null key (likely), or map state error (unlikely).
     /// </returns>
     public bool? TryMap(TKey key, TValue val, out TValue preexisting)
     {
+      preexisting = default;
+
       if (TryInsert(key, val, overwrite: false, out int i))
       {
-        preexisting = val;
         return true;
       }
 
@@ -175,7 +176,6 @@ namespace Ore
         return false;
       }
 
-      preexisting = default;
       return null;
     }
 
@@ -205,7 +205,12 @@ namespace Ore
       bool alreadyClear = m_Count == 0;
 
       m_Collisions = m_Count = 0;
+      // always reallocate, in case we have dirty buckets
       m_Buckets = new Bucket[m_Buckets.Length];
+
+      #if UNITY_INCLUDE_TESTS
+      ++LifetimeAllocs;
+      #endif
 
       if (!alreadyClear)
       {
@@ -234,23 +239,23 @@ namespace Ore
 
 
     /// <summary>
-    /// Tries to ensure the HashMap can hold at least userCapacity items.
+    /// Tries to ensure the HashMap can hold at least loadLimit items.
     /// </summary>
-    /// <param name="userCapacity">The minimum quantity of items to ensure capacitance for.</param>
+    /// <param name="loadLimit">The minimum quantity of items to ensure capacitance for.</param>
     /// <returns>
-    /// true   if the HashMap can now hold at least userCapacity items.
-    /// false  if the HashMap failed to reallocate enough space to hold userCapacity items.
+    /// true   if the HashMap can now hold at least loadLimit items.
+    /// false  if the HashMap failed to reallocate enough space to hold loadLimit items.
     /// </returns>
-    public bool EnsureCapacity(int userCapacity)
+    public bool EnsureCapacity(int loadLimit)
     {
-      OAssert.False(userCapacity < 0, "provided a negative userCapacity");
+      OAssert.False(loadLimit < 0, "provided a negative loadLimit");
 
-      if (!m_Params.IsFixedSize && userCapacity > m_LoadLimit)
+      if (!m_Params.IsFixedSize && loadLimit > m_LoadLimit)
       {
-        Rehash(m_Params.SetUserCapacity(userCapacity));
+        Rehash(m_Params.StoreLoadLimit(loadLimit));
       }
 
-      return m_LoadLimit >= userCapacity;
+      return m_LoadLimit >= loadLimit;
     }
 
   } // end partial class HashMap
