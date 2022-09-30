@@ -164,7 +164,7 @@ namespace Ore
 
     public int CalcNextSize(int prevSize, int maxSize = Primes.MaxValue)
     {
-      if (m_GrowFactor <= 1f || m_HashPrime < Primes.MinValue)
+      if (m_GrowFactor <= 1f)
         return prevSize;
 
       if ((int)(maxSize / m_GrowFactor) < prevSize)

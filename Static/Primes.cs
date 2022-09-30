@@ -39,7 +39,7 @@ namespace Ore
       return IsPrimeNoLookup(value, (int)Math.Sqrt(value));
     }
 
-    internal static bool IsPrimeNoLookup(int value, int sqrt)
+    private static bool IsPrimeNoLookup(int value, int sqrt)
     {
       for (int i = 3; i <= sqrt; i += 2)
       {
@@ -49,6 +49,28 @@ namespace Ore
 
       return true;
     }
+
+
+    [PublicAPI]
+    public static int NearestTo(int value)
+    {
+      if (value < 3)
+        return 2;
+
+      value |= 1;
+
+      int d = 2;
+      while (!IsPrime(value))
+      {
+        value += d;
+        d *= -2;
+        // no way it's really just this...
+        // ... inverted binary search is simpler than binary search...
+      }
+
+      return value;
+    }
+
 
     [PublicAPI]
     public static int Next(int current, int hashprime = int.MaxValue)

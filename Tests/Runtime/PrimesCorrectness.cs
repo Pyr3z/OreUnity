@@ -108,6 +108,16 @@ namespace Ore.Tests
     }
 
     [Test]
+    public static void NearestTo()
+    {
+      Assert.AreEqual(7, Primes.NearestTo(7));
+      Assert.AreEqual(25229, Primes.NearestTo(25228));
+      Assert.AreEqual(3617, Primes.NearestTo(3615));
+      Assert.AreEqual(3709, Primes.NearestTo(3711));
+      Assert.AreEqual(5077, Primes.NearestTo(5068));
+    }
+
+    [Test]
     public static void FindGoodHashPrimes()
     {
       var bob = new System.Text.StringBuilder();
