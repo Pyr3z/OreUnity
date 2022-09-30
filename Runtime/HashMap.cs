@@ -1,6 +1,15 @@
 /*! @file       Runtime/HashMap.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-09-28
+ *
+ *  Hashing Function:
+ *    Default for type TKey, or user-defined via custom IComparator<TKey>.
+ *
+ *  Load Factor Grow Threshold:
+ *    0.72 by default, or user-defined via HashMapParams
+ *
+ *  Collision Resolution Policy:
+ *    Linear probing (as it is the most flexible for all use cases).
 **/
 
 using JetBrains.Annotations;
@@ -16,6 +25,16 @@ namespace Ore
   {
     public Type KeyType => typeof(TKey);
     public Type ValueType => typeof(TValue);
+    public IComparator<TKey> KeyComparator
+    {
+      get => m_KeyComparator;
+      set => m_KeyComparator = value ?? Comparator<TKey>.Default;
+    }
+    public IComparator<TValue> ValueComparator
+    {
+      get => m_ValueComparator;
+      set => m_ValueComparator = value; // null is allowed
+    }
     public int Count => m_Count;
     public int Capacity
     {

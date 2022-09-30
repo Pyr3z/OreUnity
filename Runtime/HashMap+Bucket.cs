@@ -1,6 +1,6 @@
 /*! @file       Runtime/HashMap+Bucket.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
- *  @date       2022-08
+ *  @date       2022-09-29
 **/
 
 using JetBrains.Annotations;
@@ -11,8 +11,14 @@ namespace Ore
 
   public partial class HashMap<TKey,TValue>
   {
-    protected struct Bucket // not sure if struct is better in this case~
+    #if UNITY_INCLUDE_TESTS
+    internal struct Bucket
+    #else
+    protected struct Bucket
+    #endif
     {
+      // not sure if struct is actually better in this case~
+
       public int Hash
       {
         [Pure]
@@ -22,7 +28,7 @@ namespace Ore
       }
 
 
-      public int    DirtyHash;
+      public int    DirtyHash; // "dirty" bit implements linear probing for collision resolution
       public TKey   Key;
       public TValue Value; // direct member access is faster
 

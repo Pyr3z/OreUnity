@@ -16,14 +16,17 @@ namespace Ore
     protected HashMapParams m_Params = HashMapParams.Default;
 
     protected IComparator<TKey>   m_KeyComparator   = Comparator<TKey>.Default;
-    protected IComparator<TValue> m_ValueComparator = Comparator<TValue>.Default;
+    protected IComparator<TValue> m_ValueComparator = null;
 
 
     private int m_Count, m_Collisions, m_LoadLimit;
     private int m_Version;
 
+    #if UNITY_INCLUDE_TESTS
+    internal Bucket[] m_Buckets;
+    #else
     private Bucket[] m_Buckets;
-
+    #endif
 
     private bool TryInsert(TKey key, TValue val, bool overwrite, out int i)
     {

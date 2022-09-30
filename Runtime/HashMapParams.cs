@@ -27,7 +27,7 @@ namespace Ore
 
     private const float LOADFACTOR_DEFAULT = 0.72f;
     private const float LOADFACTOR_MIN     = 0.1f;
-    private const float LOADFACTOR_MAX     = 1f;
+    private const float LOADFACTOR_MAX     = 1f;    // danger
 
     private const float GROWFACTOR_DEFAULT = 2f;
     private const float GROWFACTOR_MIN     = 1.1f;
@@ -46,18 +46,18 @@ namespace Ore
 
   #region Properties + Fields
 
-    public int  UserCapacity    => CalcLoadLimit(m_InternalSize);
+    public int  UserCapacity    => CalcLoadLimit(m_InitialSize);
     public int  RehashThreshold => m_HashPrime - 1;
     public bool IsFixedSize     => m_GrowFactor < GROWFACTOR_MIN;
 
 
-    [SerializeField]
-    private int   m_InternalSize;
-    [SerializeField]
+    [SerializeField, Range(INTERNALSIZE_MIN, INTERNALSIZE_MAX)]
+    private int   m_InitialSize;
+    [SerializeField, Range(LOADFACTOR_MIN, LOADFACTOR_MAX)]
     private float m_LoadFactor;
-    [SerializeField]
+    [SerializeField, Range(0f, GROWFACTOR_MAX)]
     private float m_GrowFactor;
-    [SerializeField]
+    [SerializeField, Min(Primes.MinValue)]
     private int   m_HashPrime;
 
   #endregion Properties + Fields
@@ -106,7 +106,7 @@ namespace Ore
 
       m_LoadFactor = loadFactor.Clamp(LOADFACTOR_MIN, LOADFACTOR_MAX);
 
-      m_InternalSize = Primes.Next((int)(initialCapacity / m_LoadFactor), m_HashPrime);
+      m_InitialSize = Primes.Next((int)(initialCapacity / m_LoadFactor), m_HashPrime);
     }
 
   #endregion Constructors + Factory Funcs
@@ -116,27 +116,27 @@ namespace Ore
 
     public bool Check()
     {
-      return  (INTERNALSIZE_MIN <= m_InternalSize && m_InternalSize <= INTERNALSIZE_MAX) &&
-              (LOADFACTOR_MIN <= m_LoadFactor && m_LoadFactor <= LOADFACTOR_MAX)         &&
-              (m_GrowFactor <= GROWFACTOR_MAX)                                           &&
+      return  (INTERNALSIZE_MIN <= m_InitialSize && m_InitialSize <= INTERNALSIZE_MAX) &&
+              (LOADFACTOR_MIN <= m_LoadFactor && m_LoadFactor <= LOADFACTOR_MAX)       &&
+              (m_GrowFactor <= GROWFACTOR_MAX)                                         &&
               (m_HashPrime == HASHPRIME_DEFAULT || Primes.IsPrime(m_HashPrime));
     }
 
     public void ResetGrowth()
     {
-      m_InternalSize = INTERNALSIZE_DEFAULT;
+      m_InitialSize = INTERNALSIZE_DEFAULT;
     }
 
     public int SetUserCapacity(int userCapacity)
     {
-      return m_InternalSize = CalcInternalSize(userCapacity);
+      return m_InitialSize = CalcInternalSize(userCapacity);
     }
 
 
     public int MakeBuckets<T>(out T[] buckets)
     {
-      buckets = new T[m_InternalSize];
-      return CalcLoadLimit(m_InternalSize);
+      buckets = new T[m_InitialSize];
+      return CalcLoadLimit(m_InitialSize);
     }
 
     public int MakeBuckets<T>(int userCapacity, out T[] buckets)

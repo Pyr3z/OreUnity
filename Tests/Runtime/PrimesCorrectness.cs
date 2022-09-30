@@ -3,11 +3,12 @@
  *  @date       2022-09-29
  *
  *  Correctness Tests:
- *  [ ] Binary Search
- *  [ ] Primes.IsPrime
- *  [ ] Primes.IsPrimeNoLookup
- *  [ ] Primes.Next
- *  [ ] Hash collision ratio
+ *  [x] Binary Search
+ *  [x] Primes.IsPrime
+ *  [x] Primes.IsPrimeNoLookup
+ *  [-] Primes.Next
+ *  [-] Primes.NextNoLookup
+ *  [?] Hash collision ratio
 **/
 
 using System.Linq;
@@ -27,29 +28,20 @@ namespace Ore.Tests
     {
       var testvalues = Primes10K.GetTestValues(500, 500, true);
 
-      foreach (int value in testvalues.Concat(Primes10K.InOrder))
+      foreach (int value in testvalues)
       {
         int system = System.Array.BinarySearch(Primes10K.InOrder, value);
         int ore   = Primes10K.InOrder.BinarySearch(value);
 
         Assert.AreEqual(system.Sign(), ore.Sign(), $"(sign of result) forValue={value},system={system},ore={ore}");
-
-        if (system < 0)
-        {
-          // I checked it, OK to skip
-          // Debug.Log($"[{nameof(BinarySearchCorrectness)}] inverted outputs not the same: system={system},ore={ore}");
-        }
-        else
-        {
-          Assert.AreEqual(system, ore);
-        }
+        Assert.AreEqual(system, ore, $"forValue={value}");
       }
     }
 
     [Test]
     public static void IsPrimeNoLookup() // NoLookup should techically be axiomatic
     {
-      const int N = 333;
+      const int N = 200;
 
       var knownprimes = Primes10K.GetTestValues(N, 0);
       var knownnons   = Primes10K.GetTestValues(0, N);
@@ -64,7 +56,7 @@ namespace Ore.Tests
     [Test]
     public static void IsPrime()
     {
-      const int N = 666;
+      const int N = 500;
 
       var knownprimes = Primes10K.GetTestValues(N, 0);
       var knownnons   = Primes10K.GetTestValues(0, N);
@@ -87,41 +79,31 @@ namespace Ore.Tests
     [Test]
     public static void Next()
     {
-      var maxTestValueNexts = new HashSet<int>
-      {
-        20201, 20219, 20231, 20233, 20249, 25229 // should cover all likelihoods
-      };
+      DoNext(Primes.Next);
+    }
 
-      int next;
+    [Test]
+    public static void NextNoLookup()
+    {
+      DoNext(Primes.NextNoLookup);
+    }
 
-      // singular test
-      next = Primes.Next(Primes10K.MAX_TEST_VALUE);
-      Assert.True(maxTestValueNexts.Contains(next), $"value={Primes10K.MAX_TEST_VALUE},next={next}");
-
-      // singular test with hashprime 101
-      next = Primes.Next(Primes10K.MAX_TEST_VALUE, 101);
-      Assert.True(maxTestValueNexts.Contains(next), $"value={Primes10K.MAX_TEST_VALUE},next={next}");
-
-      // singular test with hashprime 53
-      next = Primes.Next(Primes10K.MAX_TEST_VALUE, 53);
-      Assert.True(maxTestValueNexts.Contains(next), $"value={Primes10K.MAX_TEST_VALUE},next={next}");
-
-
-      // scale it up
+    private static void DoNext(System.Func<int, int, int> nextFunc)
+    {
       var testvalues = Primes10K.GetTestValues(100, 100);
 
-      foreach (int hashprime in new []{ int.MaxValue, 101, 53 })
+      foreach (int hashprime in Hashing.HashPrimes.Append(int.MaxValue).Append(Primes.MaxValue))
       {
         foreach (int value in testvalues)
         {
-          next = Primes.Next(value, hashprime);
-          Debug.Log($"value={value},next={next}");
+          int next = nextFunc(value, hashprime);
 
-          Assert.Positive(next);
-          Assert.True(Primes.IsPrime(next));
+          string msg = $"hashprime={hashprime},value={value},next={next}";
+          Assert.Positive(next, msg);
+          Assert.True(Primes.IsPrime(next), msg);
 
           // MaxValue is a last resort of what's returned; test values shouldn't trigger it
-          Assert.Less(next, Primes.MaxValue);
+          Assert.Less(next, Primes.MaxValue, msg);
         }
       }
     }
@@ -131,7 +113,7 @@ namespace Ore.Tests
     {
       var bob = new System.Text.StringBuilder();
 
-      foreach (int prime in Primes10K.InOrder)
+      foreach (int prime in Hashing.HashPrimes)
       {
         bool good = true;
 

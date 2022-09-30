@@ -54,13 +54,9 @@ namespace Ore
     public static int Next(int current, int hashprime = int.MaxValue)
     {
       if (current < MinValue)
-      {
         return MinValue;
-      }
-      if (current > MaxValue)
-      {
+      if (current >= MaxValue)
         return MaxValue;
-      }
 
       int idx = ConvenientPrimes.BinarySearch(current);
       if (idx < 0)
@@ -79,23 +75,33 @@ namespace Ore
       }
 
       // rarer case (will happen for massive data structures, or really bad hashprimes)
+      return NextNoLookup(current, hashprime);
+    }
+
+    [PublicAPI]
+    public static int NextNoLookup(int current, int hashprime = int.MaxValue)
+    {
+      if (current < MinValue)
+        return MinValue;
+      if (current >= MaxValue)
+        return MaxValue;
 
       current = current | 1 + 2;
 
-      idx = (int)Math.Sqrt(current);
+      int sqrt = (int)Math.Sqrt(current);
 
       while (current < MaxValue)
       {
-        if (IsPrimeNoLookup(current, idx))
+        if (IsPrimeNoLookup(current, sqrt))
           return current;
 
         current += 2;
 
-        ++idx;
+        ++sqrt;
 
-        if (current < idx * idx)
+        if (current < sqrt * sqrt)
         {
-          --idx;
+          --sqrt;
         }
       }
 
@@ -114,7 +120,7 @@ namespace Ore
 
     internal static readonly int[] ConvenientPrimes =
     {
-      // skips over many intermediate primes on a curve
+      // chooses primes closest to the curve y=2+1.2^x and where (prime - 1) % 101 != 0
       3, 7, 11, 17, 23, 29, 37, 47, 59, 71,
       89, 107, 131, 163, 197, 239, 293, 353, 431, 521,
       631, 761, 919, 1103, 1327, 1597, 1931, 2333, 2801, 3371,

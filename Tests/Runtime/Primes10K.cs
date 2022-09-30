@@ -68,7 +68,6 @@ namespace Ore.Tests
       return System.Array.BinarySearch(InOrder, value) >= 0;
     }
 
-
     internal static readonly int[] InOrder =
     {
       2,3,5,7,11,13,17,19,23,29,
