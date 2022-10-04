@@ -9,31 +9,105 @@
 **/
 
 using NUnit.Framework;
+
+using UnityEngine;
 using UnityEngine.TestTools;
+
 using System.Collections;
+using System.Collections.Generic;
+
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 
 namespace Ore.Tests
 {
   public static class PrimesSpeed
   {
+    private const int NFRAMES = 60;
+    private const int SCALE   = 2048;
+
+
+    private static IEnumerator DoSpeedTest(System.Func<int,bool> testFunc, string name, float acceptableMS, List<int> data = null)
+    {
+      data ??= Primes10K.GetTestValues(SCALE >> 1, SCALE >> 1);
+
+      var stopwatch = new Stopwatch();
+
+      yield return null; // start all speed tests after 1st loop
+
+      int i = NFRAMES;
+      while (i --> 0)
+      {
+        int j = data.Count;
+
+        stopwatch.Start();
+
+        while (j --> 0)
+        {
+          if (testFunc(data[j]))
+          {
+            data[j] &= ~1;
+          }
+          else
+          {
+            ++data[j];
+          }
+        }
+
+        stopwatch.Stop();
+
+        yield return null;
+      }
+
+      float ms = stopwatch.ElapsedMilliseconds / (float)NFRAMES;
+
+      Debug.Log($"Primes.{name}: Average ms per {data.Count} checks = {ms:N1}ms  ({ms / acceptableMS:P0} of budget)");
+
+      Assert.Less(ms, acceptableMS);
+    }
 
     [UnityTest]
     public static IEnumerator IsPrime()
     {
-      yield break;
+      return DoSpeedTest(Primes.IsPrime, nameof(IsPrime), 3f);
     }
 
     [UnityTest]
     public static IEnumerator IsPrimeNoLookup()
     {
-      yield break;
+      return DoSpeedTest(Primes.IsPrimeNoLookup, nameof(IsPrimeNoLookup), 3f);
+    }
+
+    [UnityTest]
+    public static IEnumerator NearestTo()
+    {
+      return DoSpeedTest((p) => Primes.NearestTo(p) > p, nameof(NearestTo), 3f);
     }
 
     [UnityTest]
     public static IEnumerator Next()
     {
-      yield break;
+      return DoSpeedTest((p) => Primes.Next(p) > p + 5, nameof(Next), 5f);
+    }
+
+    [UnityTest]
+    public static IEnumerator NextNoLookup()
+    {
+      return DoSpeedTest((p) => Primes.NextNoLookup(p) > p + 5, nameof(NextNoLookup), 5f);
+    }
+
+    [UnityTest]
+    public static IEnumerator IsConvenientPrime()
+    {
+      var convenient = Primes.ConvenientPrimes;
+      var data = new List<int>(convenient);
+
+      while (data.Count < SCALE)
+      {
+        data.Add(convenient[Integers.RandomIndex(convenient.Count)]);
+      }
+
+      return DoSpeedTest(Primes.IsPrime, "IsPrime(when convient)", 2f, data);
     }
 
   }

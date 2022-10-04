@@ -3,6 +3,7 @@
  *  @date       2022-08-18
 **/
 
+using System.Collections.Generic;
 using JetBrains.Annotations;
 
 using Math = System.Math;
@@ -22,7 +23,7 @@ namespace Ore
       if ((value & 1) == 0) // "is even"
         return value == 2;
 
-      if (ConvenientPrimes.BinarySearch(value) >= 0)
+      if (s_ConvenientPrimes.BinarySearch(value) >= 0)
         return true;
 
       return IsPrimeNoLookup(value, (int)Math.Sqrt(value));
@@ -63,7 +64,12 @@ namespace Ore
       while (!IsPrime(value))
       {
         value += d;
-        d *= -2;
+
+        if (d > 0)
+          d = -1 * (d + 2);
+        else
+          d = -1 * (d - 2);
+
         // no way it's really just this...
         // ... inverted binary search is simpler than binary search...
       }
@@ -80,7 +86,7 @@ namespace Ore
       if (current >= MaxValue)
         return MaxValue;
 
-      int idx = ConvenientPrimes.BinarySearch(current);
+      int idx = s_ConvenientPrimes.BinarySearch(current);
       if (idx < 0)
       {
         idx = ~idx;
@@ -88,9 +94,9 @@ namespace Ore
 
       ++idx;
 
-      while (idx < ConvenientPrimes.Length) // (average case)
+      while (idx < s_ConvenientPrimes.Length) // (average case)
       {
-        current = ConvenientPrimes[idx];
+        current = s_ConvenientPrimes[idx];
         if ((current - 1) % hashprime != 0)
           return current;
         ++idx;
@@ -140,7 +146,9 @@ namespace Ore
     public const int MaxConvenientValue = 7199369;
 
 
-    internal static readonly int[] ConvenientPrimes =
+    public static IReadOnlyList<int> ConvenientPrimes => s_ConvenientPrimes;
+
+    private static readonly int[] s_ConvenientPrimes =
     {
       // chooses primes closest to the curve y=2+1.2^x and where (prime - 1) % 101 != 0
       3, 7, 11, 17, 23, 29, 37, 47, 59, 71,

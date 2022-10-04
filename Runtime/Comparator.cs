@@ -31,26 +31,26 @@ namespace Ore
 
 
     [PublicAPI, Pure]
-    public virtual bool IsNone(T obj)
+    public bool IsNone(T obj)
     {
       return obj is null || Equals(obj, default(T));
     }
 
     [PublicAPI, Pure]
-    public virtual bool Equals(T a, T b)
+    public bool Equals(T a, T b)
     {
       // slightly different short-circuiting than object.Equals
       return (object)a == (object)b || (a is { } && a.Equals(b));
     }
 
     [PublicAPI, Pure]
-    public virtual int GetHashCode([CanBeNull] T obj)
+    public int GetHashCode([CanBeNull] T obj)
     {
       return obj?.GetHashCode() ?? 0;
     }
 
     [PublicAPI, Pure]
-    public virtual int Compare(T a, T b)
+    public int Compare(T a, T b)
     {
       if (m_Type == TypeCode.String)
       {
