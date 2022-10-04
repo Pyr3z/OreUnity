@@ -17,8 +17,9 @@
 
 using NUnit.Framework;
 
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -317,6 +318,29 @@ namespace Ore.Tests
       foreach (string guid in guids)
       {
         Assert.True(map[guid] == guid);
+      }
+    }
+
+    [Test]
+    public static void Enumerator()
+    {
+      var data = HashMapSpeed.GetTestHashMap(100);
+      var dict = new Dictionary<string,string>(data);
+
+      Assert.AreEqual(dict.Count, data.Count);
+
+      int c = 0;
+      foreach (var (key, value) in data)
+      {
+        Assert.True(dict[key] == value);
+        ++c;
+      }
+
+      Assert.AreEqual(dict.Count, c);
+
+      foreach (var kvp in dict)
+      {
+        Assert.True(data[kvp.Key] == kvp.Value);
       }
     }
 
