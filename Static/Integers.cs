@@ -29,14 +29,14 @@ namespace Ore
     public const int MaxArray2DExtent = MaxArraySize / 2;
 
 
-    public static int CalcDecimalDigits(int self)
+    public static int CalcDigits(int self)
     {
       return self < 10 ? 1 : (int)System.Math.Log10(self - 1) + 1;
     }
 
     public static string MakeIndexPreformattedString(int size)
     {
-      return $"[{{0,{CalcDecimalDigits(size)}}}]";
+      return $"[{{0,{CalcDigits(size)}}}]";
     }
 
     public static string ToInvariantString(this IConvertible self)

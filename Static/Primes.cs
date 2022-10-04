@@ -23,9 +23,7 @@ namespace Ore
       if ((value & 1) == 0) // "is even"
         return value == 2;
 
-      if (s_ConvenientPrimes.BinarySearch(value) >= 0)
-        return true;
-
+      // return (s_ConvenientPrimes.BinarySearch(value) >= 0) ||
       return IsPrimeNoLookup(value, (int)Math.Sqrt(value));
     }
 
@@ -60,18 +58,26 @@ namespace Ore
 
       value |= 1;
 
-      int d = 2;
-      while (!IsPrime(value))
+      int d    = 2;
+      int sqrt = (int)Math.Sqrt(value);
+      while (!IsPrimeNoLookup(value, sqrt))
       {
         value += d;
 
         if (d > 0)
+        {
           d = -1 * (d + 2);
-        else
-          d = -1 * (d - 2);
 
-        // no way it's really just this...
-        // ... inverted binary search is simpler than binary search...
+          while (value < sqrt * sqrt)
+            ++sqrt;
+        }
+        else
+        {
+          d = -1 * (d - 2);
+        }
+
+        while (value < sqrt * sqrt)
+          --sqrt;
       }
 
       return value;

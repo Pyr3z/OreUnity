@@ -24,7 +24,7 @@ namespace Ore.Tests
   public static class PrimesSpeed
   {
     private const int NFRAMES = 60;
-    private const int SCALE   = 2048;
+    private const int SCALE   = 1000;
 
 
     private static IEnumerator DoSpeedTest(System.Func<int,bool> testFunc, string name, float acceptableMS, List<int> data = null)

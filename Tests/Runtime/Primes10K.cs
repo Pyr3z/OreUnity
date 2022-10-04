@@ -17,8 +17,7 @@ namespace Ore.Tests
 {
   public static class Primes10K
   {
-    internal const int MAX_TEST_VALUE = 20200; // somewhat arbitrary
-
+    private const int MAX_TEST_VALUE = 2 * Primes.MaxConvenientValue;
 
     public static List<int> GetTestValues(int nPrime, int nNonPrime, bool includeConstantValues = false)
     {
