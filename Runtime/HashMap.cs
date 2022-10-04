@@ -12,8 +12,11 @@
  *    Linear probing (as it is the most flexible for all use cases).
 **/
 
+using System.Collections;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 
+using Array = System.Array;
 using Type = System.Type;
 
 
@@ -21,7 +24,7 @@ namespace Ore
 {
 
   [System.Serializable] // only *actually* serializable if subclassed!
-  public partial class HashMap<TKey,TValue>
+  public partial class HashMap<TKey,TValue> : IDictionary<TKey,TValue>, IDictionary
   {
     public Type KeyType => typeof(TKey);
     public Type ValueType => typeof(TValue);
@@ -43,7 +46,6 @@ namespace Ore
     }
     public HashMapParams Parameters => m_Params;
     public int Version => m_Version;
-
     public TValue this[TKey key]
     {
       get
@@ -53,6 +55,7 @@ namespace Ore
       }
       set  => _ = TryInsert(key, value, overwrite: true, out _ );
     }
+    public bool IsFixedSize => m_Params.IsFixedSize;
 
 
 
@@ -257,6 +260,122 @@ namespace Ore
 
       return m_LoadLimit >= loadLimit;
     }
+
+
+  #region IDictionary<TKey,TValue>
+
+    public ICollection<TKey> Keys     { get; } // TODO
+    ICollection IDictionary.Keys      { get; } // TODO
+
+    public ICollection<TValue> Values { get; } // TODO
+    ICollection IDictionary.Values    { get; } // TODO
+
+    public bool IsReadOnly => false;
+    object IDictionary.this[object key]
+    {
+      get => this[(TKey)key];
+      set => this[(TKey)key] = (TValue)value;
+    }
+
+
+    public bool TryGetValue(TKey key, out TValue value)
+    {
+      return Find(key, out value);
+    }
+
+    public bool ContainsKey(TKey key)
+    {
+      return HasKey(key);
+    }
+
+    public bool Remove(KeyValuePair<TKey, TValue> item)
+    {
+      throw new System.NotImplementedException();
+    }
+
+    bool IDictionary<TKey, TValue>.Remove(TKey key)
+    {
+      return Unmap(key);
+    }
+
+    public void Add(KeyValuePair<TKey, TValue> kvp)
+    {
+      Add(kvp.Key, kvp.Value);
+    }
+
+    void ICollection<KeyValuePair<TKey, TValue>>.Clear()
+    {
+      _ = Clear();
+    }
+
+    public bool Contains(KeyValuePair<TKey, TValue> kvp)
+    {
+      return Find(kvp.Key, out var value) && (m_ValueComparator is null ||
+                                              m_ValueComparator.Equals(kvp.Value, value));
+    }
+
+    public void CopyTo(KeyValuePair<TKey, TValue>[] array, int start)
+    {
+      throw new System.NotImplementedException();
+    }
+
+    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+    {
+      throw new System.NotImplementedException();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+      return GetEnumerator();
+    }
+
+  #endregion IDictionary<TKey,TValue>
+
+  #region IDictionary
+
+    bool ICollection.IsSynchronized => false;
+    object ICollection.SyncRoot => this;
+
+    void ICollection.CopyTo(Array array, int start)
+    {
+      if (array is KeyValuePair<TKey,TValue>[] arr)
+      {
+        CopyTo(arr, start);
+      }
+    }
+
+    void IDictionary.Add(object key, object value)
+    {
+      if (key is TKey k && value is TValue v)
+      {
+        Add(k, v);
+      }
+    }
+
+    void IDictionary.Clear()
+    {
+      _ = Clear();
+    }
+
+    bool IDictionary.Contains(object key)
+    {
+      return key is TKey k && HasKey(k);
+    }
+
+    IDictionaryEnumerator IDictionary.GetEnumerator()
+    {
+      return (IDictionaryEnumerator)GetEnumerator();
+    }
+
+    void IDictionary.Remove(object key)
+    {
+      if (key is TKey k)
+      {
+        Remove(k);
+      }
+    }
+
+  #endregion IDictionary
 
   } // end partial class HashMap
 
