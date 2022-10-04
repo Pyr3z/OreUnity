@@ -30,8 +30,8 @@ namespace Ore.Tests
   public static class HashMapSpeed
   {
 
-    private const int NFRAMES = 300;
-    private const int N       = 1000;
+    private const int NFRAMES = 144;
+    private const int N       = 10000;
 
 
     internal static HashSet<string> GetTestSet(int n)
@@ -93,9 +93,40 @@ namespace Ore.Tests
       return map;
     }
 
-
-    private static IEnumerator DoLookupTest(IDictionary data, string name, float tooslow)
+    internal static List<string> GetSomeKeysFor(IDictionary lookup, int nExist, int nFake)
     {
+      var keys = new List<string>(lookup.Count);
+
+      if (lookup.Count > 0)
+      {
+        var iter = lookup.GetEnumerator();
+
+        while (nExist > 0)
+        {
+          while (iter.MoveNext())
+          {
+            keys.Add(iter.Key?.ToString() ?? "");
+            if (--nExist == 0)
+              break;
+          }
+
+          iter.Reset();
+        }
+      }
+
+      while (nFake --> 0)
+      {
+        keys.Add(Strings.MakeGUID());
+      }
+
+      return keys;
+    }
+
+
+    private static IEnumerator DoLookupTest(IDictionary lookup, string name, float tooslow)
+    {
+      var tests = GetSomeKeysFor(lookup, N / 2, N / 2);
+
       var stopwatch = new Stopwatch();
 
       yield return null;
@@ -103,13 +134,24 @@ namespace Ore.Tests
       int i = NFRAMES;
       while (i --> 0)
       {
-        int j = data.Count;
+        int j = tests.Count;
+
+        tests.Shuffle();
 
         stopwatch.Start();
 
         while (j --> 0)
         {
-
+          if (lookup.Contains(tests[j]))
+          {
+            lookup.Add("fef", "sheff");
+            lookup.Remove("fef");
+          }
+          else
+          {
+            lookup.Add(tests[j], "wef");
+            lookup.Remove(tests[j]);
+          }
         }
 
         stopwatch.Stop();
@@ -119,7 +161,7 @@ namespace Ore.Tests
 
       float ms = stopwatch.ElapsedMilliseconds / (float)NFRAMES;
 
-      Debug.Log($"{name}[{data.Count}]: Average ms per {N} lookups = {ms:N1}ms  ({ms / tooslow:P0} of budget)");
+      Debug.Log($"{name}[{lookup.Count}]: Average ms per {N} lookups = {ms:N1}ms  ({ms / tooslow:P0} of budget)");
 
       Assert.Less(ms, tooslow);
     }
@@ -128,71 +170,91 @@ namespace Ore.Tests
     [UnityTest]
     public static IEnumerator HashMapLookup()
     {
-      string name = "HashMap<string,string>";
+      const string name = "HashMap";
+      const float tooslow = 8f;
 
-      var data = GetTestHashMap(1024);
+      var lookup = GetTestHashMap(2048);
 
-      yield return DoLookupTest(data, name, 16f);
+      yield return DoLookupTest(lookup, name, tooslow);
 
-      while (data.Count > 8)
+      var swap = new HashMap<string,string>();
+      while (lookup.Count > 8)
       {
+        int i = lookup.Count >> 1;
+        foreach (var (key, value) in lookup)
+        {
+          if (i --> 0)
+            swap[key] = value;
+          else
+            break;
+        }
 
+        (lookup,swap) = (swap,lookup);
+        swap.Clear();
+
+        yield return DoLookupTest(lookup, name, tooslow);
       }
     }
 
 
     [UnityTest]
-    public static IEnumerator VersusDictionary()
+    public static IEnumerator DictionaryLookup()
     {
-      yield break;
+      const string name = "Dictionary";
+      const float tooslow = 8f;
+
+      var lookup = GetTestDict(2048);
+
+      yield return DoLookupTest(lookup, name, tooslow);
+
+      var swap = new Dictionary<string, string>();
+      while (lookup.Count > 8)
+      {
+        int i = lookup.Count >> 1;
+        foreach (var kvp in lookup)
+        {
+          if (i --> 0)
+            swap[kvp.Key] = kvp.Value;
+          else
+            break;
+        }
+
+        (lookup,swap) = (swap,lookup);
+        swap.Clear();
+
+        yield return DoLookupTest(lookup, name, tooslow);
+      }
     }
 
     [UnityTest]
-    public static IEnumerator VersusHashtable()
+    public static IEnumerator HashtableLookup()
     {
-      yield break;
-    }
+      const string name = "Hashtable";
+      const float tooslow = 8f;
 
-    [UnityTest]
-    public static IEnumerator VersusHashSet()
-    {
-      yield break;
-    }
+      var lookup = GetTestTable(2048);
 
-    [UnityTest]
-    public static IEnumerator VersusListBinary()
-    {
-      yield break;
-    }
+      yield return DoLookupTest(lookup, name, tooslow);
 
-    [UnityTest]
-    public static IEnumerator VersusListLinear()
-    {
-      yield break;
-    }
+      var swap = new Hashtable();
+      while (lookup.Count > 8)
+      {
+        int i = lookup.Count >> 1;
 
-    [UnityTest]
-    public static IEnumerator VersusArrayBinary()
-    {
-      yield break;
-    }
+        var iter = lookup.GetEnumerator();
+        while (iter.MoveNext())
+        {
+          if (i --> 0)
+            swap[iter.Key] = iter.Value;
+          else
+            break;
+        }
 
-    [UnityTest]
-    public static IEnumerator VersusArrayLinear()
-    {
-      yield break;
-    }
+        (lookup,swap) = (swap,lookup);
+        swap.Clear();
 
-    [UnityTest]
-    public static IEnumerator DictionaryVersusHashtable() // Control
-    {
-      yield break;
-    }
-
-    [UnityTest]
-    public static IEnumerator ClearVersusClearNoAlloc()
-    {
-      yield break;
+        yield return DoLookupTest(lookup, name, tooslow);
+      }
     }
 
   }
