@@ -262,6 +262,12 @@ namespace Ore
     }
 
 
+    public Enumerator GetEnumerator()
+    {
+      return new Enumerator(this);
+    }
+
+
   #region IDictionary<TKey,TValue>
 
     public ICollection<TKey> Keys     { get; } // TODO
@@ -288,9 +294,19 @@ namespace Ore
       return HasKey(key);
     }
 
-    public bool Remove(KeyValuePair<TKey, TValue> item)
+    public bool Remove(KeyValuePair<TKey, TValue> kvp)
     {
-      throw new System.NotImplementedException();
+      int i = FindBucket(kvp.Key);
+      if (i < 0)
+        return false;
+
+      if (m_ValueComparator is {} && !m_ValueComparator.Equals(kvp.Value, m_Buckets[i].Value))
+        return false;
+
+      m_Buckets[i].Smear();
+      --m_Count;
+      ++m_Version;
+      return true;
     }
 
     bool IDictionary<TKey, TValue>.Remove(TKey key)
@@ -316,17 +332,18 @@ namespace Ore
 
     public void CopyTo(KeyValuePair<TKey, TValue>[] array, int start)
     {
+      // TODO
       throw new System.NotImplementedException();
     }
 
-    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+    IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey,TValue>>.GetEnumerator()
     {
-      throw new System.NotImplementedException();
+      return new Enumerator(this);
     }
 
     IEnumerator IEnumerable.GetEnumerator()
     {
-      return GetEnumerator();
+      return new Enumerator(this);
     }
 
   #endregion IDictionary<TKey,TValue>
@@ -364,7 +381,7 @@ namespace Ore
 
     IDictionaryEnumerator IDictionary.GetEnumerator()
     {
-      return (IDictionaryEnumerator)GetEnumerator();
+      return new Enumerator(this);
     }
 
     void IDictionary.Remove(object key)

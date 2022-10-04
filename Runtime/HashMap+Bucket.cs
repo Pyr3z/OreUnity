@@ -3,6 +3,7 @@
  *  @date       2022-09-29
 **/
 
+using System.Collections.Generic;
 using JetBrains.Annotations;
 
 
@@ -42,7 +43,7 @@ namespace Ore
       [Pure]
       public bool IsFree([NotNull] in IComparator<TKey> keyEq)
       {
-        return keyEq.IsNone(Key);
+        return (DirtyHash & int.MaxValue) == 0 && keyEq.IsNone(Key);
       }
 
       [Pure]
@@ -55,7 +56,13 @@ namespace Ore
         // Calling Rehash() eliminates all smeared buckets
         // (but not all dirty buckets!).
 
-        return DirtyHash < 0 && keyEq.IsNone(Key);
+        return DirtyHash == int.MinValue && keyEq.IsNone(Key);
+      }
+
+      [Pure]
+      public KeyValuePair<TKey,TValue> GetPair()
+      {
+        return new KeyValuePair<TKey, TValue>(Key, Value);
       }
 
 
