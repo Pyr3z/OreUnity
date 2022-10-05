@@ -22,12 +22,15 @@ namespace Ore
     private int m_Count, m_Collisions, m_LoadLimit;
     private int m_Version;
 
+    private int m_CachedLookup = int.MinValue;
+
     #if UNITY_INCLUDE_TESTS
     internal Bucket[] m_Buckets;
     internal int LifetimeAllocs { get; private set; }
     #else
     private Bucket[] m_Buckets;
     #endif
+
 
     private bool TryInsert(TKey key, TValue val, bool overwrite, out int i)
     {
@@ -154,51 +157,40 @@ namespace Ore
     {
       if (m_Count == 0 || m_KeyComparator.IsNone(key))
       {
-        return -1;
+        return m_CachedLookup = int.MinValue;
       }
 
-      int hash31 = m_KeyComparator.GetHashCode(key) & int.MaxValue;
-      int jump   = m_Params.CalcJump(hash31, m_Buckets.Length);
+      if (m_CachedLookup >= 0 && m_KeyComparator.Equals(key, m_Buckets[m_CachedLookup].Key))
+      {
+        return m_CachedLookup;
+      }
 
-      int i = hash31 % m_Buckets.Length;
-      int jumps = 0;
+      int ilen   = m_Buckets.Length;
+      int hash31 = m_KeyComparator.GetHashCode(key) & int.MaxValue;
+      int i      = hash31 % ilen;
+      int jump   = m_Params.CalcJump(hash31, ilen);
+      int jumps  = 0;
 
       do
       {
-        int found = BucketEquals(m_Buckets[i], hash31, key);
-
-        if (found > 0) // YEP
-          return i;
-
-        if (found == 0) // NOPE
-          return -i;
+        var bucket = m_Buckets[i];
+        if (bucket.IsEmpty(m_KeyComparator))
+        {
+          if (bucket.DirtyHash == 0) // not smeared
+            return m_CachedLookup = -i;
+        }
+        else if (bucket.Hash == hash31 && m_KeyComparator.Equals(key, bucket.Key))
+        {
+          return m_CachedLookup = i;
+        }
 
         // else, NEXT
 
-        i = (i + jump) % m_Buckets.Length;
+        i = (i + jump) % ilen;
       }
-      while (++jumps < m_Count);
+      while (++jumps < ilen); // can't be < m_Count because of smearing algorithm =/
 
-      return -i;
-    }
-
-    private int BucketEquals(in Bucket bucket, int hash31, in TKey key)
-    {
-      #pragma warning disable CS0219
-      const int NEXT = -1, NOPE = 0, YEP = +1;
-      #pragma warning restore CS0219
-
-      if (bucket.IsEmpty(m_KeyComparator))
-      {
-        return -(bucket.DirtyHash >> 31); // NEXT if smeared, else NOPE
-      }
-
-      if (bucket.Hash == hash31 && m_KeyComparator.Equals(key, bucket.Key))
-      {
-        return YEP;
-      }
-
-      return NEXT;
+      return m_CachedLookup = -i;
     }
 
 
@@ -241,6 +233,7 @@ namespace Ore
       }
 
       m_Collisions = 0;
+      m_CachedLookup = -1;
       m_LoadLimit  = m_Params.CalcLoadLimit(newSize);
 
       var newBuckets = new Bucket[newSize];
