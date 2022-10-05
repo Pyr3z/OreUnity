@@ -3,16 +3,19 @@
  *  @date       2022-09-29
  *
  *  Speed Tests:
- *  [ ] HashMap vs Dictionary
- *  [ ] HashMap vs Hashtable
- *  [ ] HashMap vs HashSet
+ *  [x] HashMap vs Dictionary
+ *  [x] HashMap vs Hashtable
+ *  [x] HashMap vs HashSet
  *  [ ] HashMap vs List (binary search)
  *  [ ] HashMap vs List (linear search)
  *  [ ] HashMap vs Array (binary search)
  *  [ ] HashMap vs Array (linear search)
- *  [ ] Hashtable vs Dictionary
+ *  [x] Hashtable vs Dictionary
  *  [ ] HashMap.Clear vs HashMap.ClearNoAlloc
 **/
+
+using System;
+using Ore;
 
 using NUnit.Framework;
 using UnityEngine.TestTools;
@@ -25,243 +28,203 @@ using Debug = UnityEngine.Debug;
 using Stopwatch = System.Diagnostics.Stopwatch;
 
 
-namespace Ore.Tests
+public static class HashMapSpeed
 {
-  public static class HashMapSpeed
+
+  private const int   NFRAMES = 66;
+  private const int   N       = 10000;
+  private const int   SMALL   = 33;
+  private const int   LARGE   = 666666;
+  private const float TOOSLOW = 100f;
+
+
+  internal static HashSet<string> GetTestSet(int n)
   {
+    var set = new HashSet<string>();
 
-    private const int NFRAMES = 144;
-    private const int N       = 10000;
-
-
-    internal static HashSet<string> GetTestSet(int n)
+    while (n --> 0)
     {
-      var set = new HashSet<string>();
-
-      while (n --> 0)
+      if (!set.Add(Strings.MakeGUID()))
       {
-        if (!set.Add(Strings.MakeGUID()))
-        {
-          ++n;
-        }
-      }
-
-      return set;
-    }
-
-    internal static List<string> GetTestList(int n)
-    {
-      return GetTestSet(n).ToList();
-    }
-
-    internal static string[] GetTestArray(int n)
-    {
-      return GetTestSet(n).ToArray();
-    }
-
-    internal static Dictionary<string,string> GetTestDict(int n)
-    {
-      var keys = GetTestSet(n);
-      var dict = new Dictionary<string,string>(n);
-
-      foreach (string key in keys)
-      {
-        dict[key] = key;
-      }
-
-      return dict;
-    }
-
-    internal static Hashtable GetTestTable(int n)
-    {
-      return new Hashtable(GetTestDict(n));
-    }
-
-    internal static HashMap<string,string> GetTestHashMap(int n)
-    {
-      var map = new HashMap<string,string>(n);
-
-      while (n --> 0)
-      {
-        string guid = Strings.MakeGUID();
-        if (!map.Map(guid, guid))
-        {
-          ++n;
-        }
-      }
-
-      return map;
-    }
-
-    internal static List<string> GetSomeKeysFor(IDictionary lookup, int nExist, int nFake)
-    {
-      var keys = new List<string>(lookup.Count);
-
-      if (lookup.Count > 0)
-      {
-        var iter = lookup.GetEnumerator();
-
-        while (nExist > 0)
-        {
-          while (iter.MoveNext())
-          {
-            keys.Add(iter.Key?.ToString() ?? "");
-            if (--nExist == 0)
-              break;
-          }
-
-          iter.Reset();
-        }
-      }
-
-      while (nFake --> 0)
-      {
-        keys.Add(Strings.MakeGUID());
-      }
-
-      return keys;
-    }
-
-
-    private static IEnumerator DoLookupTest(IDictionary lookup, string name, float tooslow)
-    {
-      var tests = GetSomeKeysFor(lookup, N / 2, N / 2);
-
-      var stopwatch = new Stopwatch();
-
-      yield return null;
-
-      int i = NFRAMES;
-      while (i --> 0)
-      {
-        int j = tests.Count;
-
-        tests.Shuffle();
-
-        stopwatch.Start();
-
-        while (j --> 0)
-        {
-          _ = lookup.Contains(tests[j]);
-        }
-
-        stopwatch.Stop();
-
-        yield return null;
-      }
-
-      float ms = stopwatch.ElapsedMilliseconds / (float)NFRAMES;
-
-      // RFC 4180 CSV:
-      Debug.Log($"\"{name}\",\"{lookup.Count}\",\"{N}\",\"{ms:N2}\"");
-
-      // Debug.Log($"{name}[{lookup.Count}]: Average ms per {N} lookups = {ms:N1}ms  ({ms / tooslow:P0} of budget)");
-
-      Assert.Less(ms, tooslow);
-    }
-
-
-    [UnityTest]
-    public static IEnumerator HashMapLookup()
-    {
-      const string name = "HashMap";
-      const float tooslow = 50f;
-
-      var lookup = GetTestHashMap(2048);
-
-      yield return DoLookupTest(lookup, name, tooslow);
-
-      var swap = new HashMap<string,string>();
-      while (lookup.Count > 16)
-      {
-        int i = lookup.Count >> 1;
-        foreach (var (key, value) in lookup)
-        {
-          if (i --> 0)
-            swap[key] = value;
-          else
-            break;
-        }
-
-        (lookup,swap) = (swap,lookup);
-        swap.Clear();
-
-        yield return DoLookupTest(lookup, name, tooslow);
+        ++n;
       }
     }
 
-    [UnityTest]
-    public static IEnumerator DictionaryLookup()
+    return set;
+  }
+
+  internal static List<string> GetTestList(int n)
+  {
+    return GetTestSet(n).ToList();
+  }
+
+  internal static string[] GetTestArray(int n)
+  {
+    return GetTestSet(n).ToArray();
+  }
+
+  internal static Dictionary<string,string> GetTestDict(int n)
+  {
+    var keys = GetTestSet(n);
+    var dict = new Dictionary<string,string>(n);
+
+    foreach (string key in keys)
     {
-      const string name = "Dictionary";
-      const float tooslow = 50f;
+      dict[key] = key;
+    }
 
-      var lookup = GetTestDict(2048);
+    return dict;
+  }
 
-      yield return DoLookupTest(lookup, name, tooslow);
+  internal static Hashtable GetTestTable(int n)
+  {
+    return new Hashtable(GetTestDict(n));
+  }
 
-      var swap = new Dictionary<string, string>();
-      while (lookup.Count > 16)
+  internal static HashMap<string,string> GetTestHashMap(int n)
+  {
+    var map = new HashMap<string,string>(n);
+
+    while (n --> 0)
+    {
+      string guid = Strings.MakeGUID();
+      if (!map.Map(guid, guid))
       {
-        int i = lookup.Count >> 1;
-        foreach (var kvp in lookup)
-        {
-          if (i --> 0)
-            swap[kvp.Key] = kvp.Value;
-          else
-            break;
-        }
-
-        (lookup,swap) = (swap,lookup);
-        swap.Clear();
-
-        yield return DoLookupTest(lookup, name, tooslow);
+        ++n;
       }
     }
 
-    [UnityTest]
-    public static IEnumerator HashtableLookup()
+    return map;
+  }
+
+  internal static List<string> GetSomeKeysFor(IDictionary lookup, int nExist, int nFake)
+  {
+    var keys = new List<string>(lookup.Count);
+
+    if (lookup.Count > 0)
     {
-      const string name = "Hashtable";
-      const float tooslow = 50f;
+      var iter = lookup.GetEnumerator();
 
-      var lookup = GetTestTable(2048);
-
-      yield return DoLookupTest(lookup, name, tooslow);
-
-      var swap = new Hashtable();
-      while (lookup.Count > 16)
+      while (nExist > 0)
       {
-        int i = lookup.Count >> 1;
-
-        var iter = lookup.GetEnumerator();
         while (iter.MoveNext())
         {
-          if (i --> 0)
-            swap[iter.Key] = iter.Value;
-          else
+          keys.Add(iter.Key?.ToString() ?? "");
+          if (--nExist == 0)
             break;
         }
 
-        (lookup,swap) = (swap,lookup);
-        swap.Clear();
-
-        yield return DoLookupTest(lookup, name, tooslow);
+        iter.Reset();
       }
     }
 
-    [UnityTest]
-    public static IEnumerator BigComparison()
+    while (nFake --> 0)
     {
-      var keys = GetTestArray(16384);
-      var nonkeys = GetTestArray(16384);
-
-      var hashmap = new HashMap<string,string>();
-
-      // TODO
-      Assert.Inconclusive("test not finished.");
-      yield break;
+      keys.Add(Strings.MakeGUID());
     }
 
+    return keys;
   }
+
+
+  private static IEnumerator DoLookupTest(IDictionary lookup, string name, float pExist = 0.5f)
+  {
+    var tests = GetSomeKeysFor(lookup, (int)(pExist * N + 0.5f), (int)((1f-pExist) * N + 0.5f));
+
+    var stopwatch = new Stopwatch();
+
+    yield return null;
+
+    int i = NFRAMES;
+    while (i --> 0)
+    {
+      int j = tests.Count;
+
+      // tests.Shuffle();
+
+      stopwatch.Start();
+
+      while (j --> 0)
+      {
+        if (lookup.Contains(tests[j]))
+        {
+          Assert.AreEqual(tests[j], lookup[tests[j]]);
+        }
+        else
+        {
+          // need to do this to make sure tests are balanced
+          try
+          {
+            _ = lookup[tests[j]];
+          }
+          catch {  }
+        }
+      }
+
+      stopwatch.Stop();
+
+      yield return null;
+    }
+
+    float ms = stopwatch.ElapsedMilliseconds / (float)NFRAMES;
+
+    // RFC 4180 CSV:
+    Debug.Log($"\"{name}\",\"{lookup.Count}\",\"{N}\",\"{pExist:P0}\",\"{ms:N2}\"");
+
+    // Debug.Log($"{name}[{lookup.Count}]: Average ms per {N} lookups = {ms:N1}ms  ({ms / tooslow:P0} of budget)");
+
+    Assert.Less(ms, TOOSLOW);
+  }
+
+
+  private static IEnumerator HashMapLookup(int size)
+  {
+    const string TESTNAME = "HashMap";
+
+    var lookup = GetTestHashMap(size);
+
+    yield return DoLookupTest(lookup, TESTNAME, 0.0f);
+    yield return DoLookupTest(lookup, TESTNAME, 0.5f);
+    yield return DoLookupTest(lookup, TESTNAME, 1.0f);
+  }
+
+  private static IEnumerator DictionaryLookup(int size)
+  {
+    const string TESTNAME = "Dictionary";
+
+    var lookup = GetTestDict(size);
+
+    yield return DoLookupTest(lookup, TESTNAME, 0.0f);
+    yield return DoLookupTest(lookup, TESTNAME, 0.5f);
+    yield return DoLookupTest(lookup, TESTNAME, 1.0f);
+  }
+
+  private static IEnumerator HashtableLookup(int size)
+  {
+    const string TESTNAME = "Hashtable";
+
+    var lookup = GetTestTable(size);
+
+    yield return DoLookupTest(lookup, TESTNAME, 0.0f);
+    yield return DoLookupTest(lookup, TESTNAME, 0.5f);
+    yield return DoLookupTest(lookup, TESTNAME, 1.0f);
+  }
+
+
+  [UnityTest]
+  public static IEnumerator HashMapLookupSmall() => HashMapLookup(SMALL);
+
+  [UnityTest]
+  public static IEnumerator HashMapLookupLarge() => HashMapLookup(LARGE);
+
+  [UnityTest]
+  public static IEnumerator DictionaryLookupSmall() => DictionaryLookup(SMALL);
+  [UnityTest]
+  public static IEnumerator DictionaryLookupLarge() => DictionaryLookup(LARGE);
+
+  [UnityTest]
+  public static IEnumerator HashtableLookupSmall() => HashtableLookup(SMALL);
+  [UnityTest]
+  public static IEnumerator HashtableLookupLarge() => HashtableLookup(LARGE);
+
 }

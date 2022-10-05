@@ -125,7 +125,7 @@ namespace Ore
 
     public static void NFE(System.Exception ex, Object ctx = null)
     {
-      // bad, lazy wrapper
+      // TODO replace this lazy wrapper
       Debug.LogException(ex, ctx);
     }
 
