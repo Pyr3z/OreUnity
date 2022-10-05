@@ -1,13 +1,13 @@
 /*! @file       Runtime/Comparator.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-09-28
+ *
+ *  Default implementation for the IComparator<T> interface.
 **/
 
 // ReSharper disable InconsistentNaming
 
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using JetBrains.Annotations;
 
 using Type = System.Type;
@@ -15,13 +15,6 @@ using Type = System.Type;
 
 namespace Ore
 {
-
-  public interface IComparator<T> : IEqualityComparer<T>, IComparer<T>
-  {
-    bool IsNone([CanBeNull] T obj);
-  }
-
-
   public class Comparator<T> : IComparator<T>
   {
     public static readonly Comparator<T> Default = new Comparator<T>();
