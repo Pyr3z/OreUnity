@@ -142,16 +142,7 @@ namespace Ore.Tests
 
         while (j --> 0)
         {
-          if (lookup.Contains(tests[j]))
-          {
-            lookup.Add("fef", "sheff");
-            lookup.Remove("fef");
-          }
-          else
-          {
-            lookup.Add(tests[j], "wef");
-            lookup.Remove(tests[j]);
-          }
+          _ = lookup.Contains(tests[j]);
         }
 
         stopwatch.Stop();
@@ -161,7 +152,10 @@ namespace Ore.Tests
 
       float ms = stopwatch.ElapsedMilliseconds / (float)NFRAMES;
 
-      Debug.Log($"{name}[{lookup.Count}]: Average ms per {N} lookups = {ms:N1}ms  ({ms / tooslow:P0} of budget)");
+      // RFC 4180 CSV:
+      Debug.Log($"\"{name}\",\"{lookup.Count}\",\"{N}\",\"{ms:N2}\"");
+
+      // Debug.Log($"{name}[{lookup.Count}]: Average ms per {N} lookups = {ms:N1}ms  ({ms / tooslow:P0} of budget)");
 
       Assert.Less(ms, tooslow);
     }
@@ -171,14 +165,14 @@ namespace Ore.Tests
     public static IEnumerator HashMapLookup()
     {
       const string name = "HashMap";
-      const float tooslow = 8f;
+      const float tooslow = 50f;
 
       var lookup = GetTestHashMap(2048);
 
       yield return DoLookupTest(lookup, name, tooslow);
 
       var swap = new HashMap<string,string>();
-      while (lookup.Count > 8)
+      while (lookup.Count > 16)
       {
         int i = lookup.Count >> 1;
         foreach (var (key, value) in lookup)
@@ -196,19 +190,18 @@ namespace Ore.Tests
       }
     }
 
-
     [UnityTest]
     public static IEnumerator DictionaryLookup()
     {
       const string name = "Dictionary";
-      const float tooslow = 8f;
+      const float tooslow = 50f;
 
       var lookup = GetTestDict(2048);
 
       yield return DoLookupTest(lookup, name, tooslow);
 
       var swap = new Dictionary<string, string>();
-      while (lookup.Count > 8)
+      while (lookup.Count > 16)
       {
         int i = lookup.Count >> 1;
         foreach (var kvp in lookup)
@@ -230,14 +223,14 @@ namespace Ore.Tests
     public static IEnumerator HashtableLookup()
     {
       const string name = "Hashtable";
-      const float tooslow = 8f;
+      const float tooslow = 50f;
 
       var lookup = GetTestTable(2048);
 
       yield return DoLookupTest(lookup, name, tooslow);
 
       var swap = new Hashtable();
-      while (lookup.Count > 8)
+      while (lookup.Count > 16)
       {
         int i = lookup.Count >> 1;
 
@@ -255,6 +248,19 @@ namespace Ore.Tests
 
         yield return DoLookupTest(lookup, name, tooslow);
       }
+    }
+
+    [UnityTest]
+    public static IEnumerator BigComparison()
+    {
+      var keys = GetTestArray(16384);
+      var nonkeys = GetTestArray(16384);
+
+      var hashmap = new HashMap<string,string>();
+
+      // TODO
+      Assert.Inconclusive("test not finished.");
+      yield break;
     }
 
   }

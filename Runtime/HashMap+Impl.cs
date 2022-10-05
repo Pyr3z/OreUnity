@@ -50,7 +50,8 @@ namespace Ore
         Rehash();
       }
 
-      CalcHashJump(key, out int hash31, out int jump);
+      int hash31 = m_KeyComparator.GetHashCode(key) & int.MaxValue;
+      int jump   = m_Params.CalcJump(hash31, m_Buckets.Length);
 
       i = hash31 % m_Buckets.Length; // high chance that we immediately found the index O(1)
 
@@ -149,12 +150,6 @@ namespace Ore
       return false;
     }
 
-    private void CalcHashJump(in TKey key, out int hash31, out int jump)
-    {
-      hash31 = m_KeyComparator.GetHashCode(key) & int.MaxValue;
-      jump   = m_Params.CalcJump(hash31, m_Buckets.Length);
-    }
-
     private int FindBucket(in TKey key)
     {
       if (m_Count == 0 || m_KeyComparator.IsNone(key))
@@ -162,7 +157,8 @@ namespace Ore
         return -1;
       }
 
-      CalcHashJump(key, out int hash31, out int jump);
+      int hash31 = m_KeyComparator.GetHashCode(key) & int.MaxValue;
+      int jump   = m_Params.CalcJump(hash31, m_Buckets.Length);
 
       int i = hash31 % m_Buckets.Length;
       int jumps = 0;
@@ -194,7 +190,7 @@ namespace Ore
 
       if (bucket.IsEmpty(m_KeyComparator))
       {
-        return -(bucket.DirtyHash >> 31); // -1 or 0 / NEXT if smeared, else NOPE
+        return -(bucket.DirtyHash >> 31); // NEXT if smeared, else NOPE
       }
 
       if (bucket.Hash == hash31 && m_KeyComparator.Equals(key, bucket.Key))

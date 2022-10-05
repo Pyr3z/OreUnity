@@ -78,6 +78,27 @@ namespace Ore
       MakeBuckets();
     }
 
+    public HashMap([NotNull] IReadOnlyCollection<TKey> keys, [NotNull] IReadOnlyCollection<TValue> values)
+    {
+      OAssert.False(keys.Count < values.Count);
+
+      m_Params.StoreLoadLimit(keys.Count);
+
+      MakeBuckets();
+
+      // TODO optimize
+      var keyiter = keys.GetEnumerator();
+      var valiter = values.GetEnumerator();
+
+      while (keyiter.MoveNext())
+      {
+        Remap(keyiter.Current, valiter.MoveNext() ? valiter.Current : default);
+      }
+
+      keyiter.Dispose();
+      valiter.Dispose();
+    }
+
 
 
     /// <summary>
