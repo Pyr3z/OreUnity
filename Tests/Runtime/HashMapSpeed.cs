@@ -169,7 +169,7 @@ public static class HashMapSpeed
     float ms = stopwatch.ElapsedMilliseconds / (float)NFRAMES;
 
     // RFC 4180 CSV:
-    Debug.Log($"\"{name}\",\"{lookup.Count}\",\"{N}\",\"{pExist:P0}\",\"{ms:N2}\"");
+    Debug.Log($"\"{name}\",\"{lookup.Count}\",\"{tests.Count}\",\"{pExist:P0}\",\"{ms:N2}\"");
 
     // Debug.Log($"{name}[{lookup.Count}]: Average ms per {N} lookups = {ms:N1}ms  ({ms / tooslow:P0} of budget)");
 

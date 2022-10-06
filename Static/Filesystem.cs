@@ -20,7 +20,7 @@ namespace Ore
   public static class Filesystem
   {
 
-    #region FUNDAMENTAL FILE I/O
+  #region FUNDAMENTAL FILE I/O
 
     [PublicAPI]
     public static bool TryWriteObject([NotNull] string filepath, [CanBeNull] object obj)
@@ -76,11 +76,13 @@ namespace Ore
       return false;
     }
 
+    [PublicAPI]
     public static bool TryWriteText([NotNull] string filepath, [CanBeNull] string text, Encoding encoding = null)
     {
       return TryWriteBinary(filepath, text.ToBytes(encoding));
     }
 
+    [PublicAPI]
     public static bool TryReadText([NotNull] string filepath, [NotNull] out string text, Encoding encoding = null)
     {
       if (TryReadBinary(filepath, out byte[] data))
@@ -100,6 +102,7 @@ namespace Ore
       return false;
     }
 
+    [PublicAPI]
     public static bool TryReadLines([NotNull] string filepath, [NotNull] out string[] lines, char newline = '\n', Encoding encoding = null)
     {
       if (TryReadText(filepath, out string text, encoding))
@@ -260,10 +263,10 @@ namespace Ore
       return false;
     }
 
-    #endregion FUNDAMENTAL FILE I/O
+  #endregion FUNDAMENTAL FILE I/O
 
 
-    #region INFO & DEBUGGING
+  #region INFO & DEBUGGING
 
     [PublicAPI]
     public static IOResult GetLastIOResult()
@@ -356,10 +359,10 @@ namespace Ore
         Orator.NFE(ex);
     }
 
-    #endregion INFO & DEBUGGING
+  #endregion INFO & DEBUGGING
 
 
-    #region PRIVATE
+  #region PRIVATE
 
     private const int EXCEPTION_RING_SZ = 4;
     private static readonly Exception[] s_ExceptionRingBuf = new Exception[EXCEPTION_RING_SZ];
@@ -376,7 +379,7 @@ namespace Ore
       set => s_ExceptionRingBuf[s_ExceptionRingIdx % EXCEPTION_RING_SZ] = value;
     }
 
-    #endregion PRIVATE
+  #endregion PRIVATE
 
   } // end static class Filesystem
 

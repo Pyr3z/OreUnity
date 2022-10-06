@@ -22,7 +22,7 @@ internal static class FilesystemCorrectness
   };
 
   static readonly (string path, byte[] data)[] BYTES =
-  {
+  {                                                                   // TODO this ties the test to KooBox
     ("koobox.png",           AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/bore~.png").EncodeToPNG()),
     ($"{TEXTS[1].path}.bin", TEXTS[1].text.ToBase64().ToBytes()),
   };

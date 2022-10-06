@@ -6,7 +6,7 @@
  *              (by default: is not equal to default(T)).
 **/
 
-// TODO Probably migrate this implementation + others to a "Containers" namespace?
+// TODO Probably migrate this implementation + others to a "Kontainers" namespace?
 
 using JetBrains.Annotations;
 
