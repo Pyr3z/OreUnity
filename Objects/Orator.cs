@@ -226,7 +226,7 @@ namespace Ore
 
       if (s_LoggedOnceHashes.Count >= cap)
       {
-        Log($"LogOnce memory has overflowed. Resetting. (cap={cap})");
+        // Log($"LogOnce memory has overflowed. Resetting. (cap={cap})");
         s_LoggedOnceHashes.Clear();
 
         #if UNITY_EDITOR
@@ -331,7 +331,7 @@ namespace Ore
     internal const bool DEFAULT_ASSERT_EXCEPTIONS = false;
     internal const bool DEFAULT_ASSERTIONS_IN_RELEASE = false;
 
-    internal const int DEFAULT_LOGONCE_MEMORY_SIZE = 512;
+    internal const int DEFAULT_LOGONCE_MEMORY_SIZE = 256;
 
 
     [Header("Orator Properties")]

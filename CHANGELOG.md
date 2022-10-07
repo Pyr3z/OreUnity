@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [UNRELEASED] - 2022-10-
 - fef
 
+## [2.3.2] - 2022-10-06
+- Removed stubs for APIs that aren't functional from the release track (issue #1).
+
 ## [2.3.1] - 2022-10-05
 - Added: HashMap data structure !!!! (This is a _somewhat_ major feature addition)
 - Added: Unit tests for Filesystem + HashMap + competing System implementations.
