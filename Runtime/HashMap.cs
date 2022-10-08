@@ -24,16 +24,16 @@ namespace Ore
 {
 
   [System.Serializable] // only *actually* serializable if subclassed!
-  public partial class HashMap<TKey,TValue> : IDictionary<TKey,TValue>, IDictionary
+  public partial class HashMap<K,V> : IDictionary<K,V>, IDictionary
   {
-    public Type KeyType => typeof(TKey);
-    public Type ValueType => typeof(TValue);
-    public IComparator<TKey> KeyComparator
+    public Type KeyType => typeof(K);
+    public Type ValueType => typeof(V);
+    public IComparator<K> KeyComparator
     {
       get => m_KeyComparator;
-      set => m_KeyComparator = value ?? Comparator<TKey>.Default;
+      set => m_KeyComparator = value ?? Comparator<K>.Default;
     }
-    public IComparator<TValue> ValueComparator
+    public IComparator<V> ValueComparator
     {
       get => m_ValueComparator;
       set => m_ValueComparator = value; // null is allowed
@@ -46,11 +46,11 @@ namespace Ore
     }
     public HashMapParams Parameters => m_Params;
     public int Version => m_Version;
-    public TValue this[TKey key]
+    public V this[K key]
     {
       get
       {
-        _ = Find(key, out TValue result);
+        _ = Find(key, out V result);
         return result;
       }
       set  => _ = TryInsert(key, value, overwrite: true, out _ );
@@ -78,7 +78,19 @@ namespace Ore
       MakeBuckets();
     }
 
-    public HashMap([NotNull] IReadOnlyCollection<TKey> keys, [NotNull] IReadOnlyCollection<TValue> values)
+    public HashMap([CanBeNull] IComparator<K> keyComparator, HashMapParams parms = default)
+    {
+      if (parms.Check())
+      {
+        m_Params = parms;
+      }
+
+      MakeBuckets();
+
+      m_KeyComparator = keyComparator ?? Comparator<K>.Default;
+    }
+
+    public HashMap([NotNull] IReadOnlyCollection<K> keys, [NotNull] IReadOnlyCollection<V> values)
     {
       OAssert.False(keys.Count < values.Count);
 
@@ -99,6 +111,11 @@ namespace Ore
       valiter.Dispose();
     }
 
+    public HashMap<K,V> WithValueComparator(IComparator<V> cmp)
+    {
+      m_ValueComparator = cmp;
+      return this;
+    }
 
 
     /// <summary>
@@ -110,9 +127,23 @@ namespace Ore
     /// false  if it doesn't.
     /// </returns>
     [Pure]
-    public bool HasKey(TKey key)
+    public bool HasKey(K key)
     {
       return FindBucket(key) >= 0;
+    }
+
+    [Pure]
+    public bool HasValue(V value)
+    {
+      var cmp = m_ValueComparator ?? Comparator<V>.Default;
+
+      for (int i = 0, ilen = m_Buckets.Length; i < ilen; ++i)
+      {
+        if (m_Buckets[i].MightBeEmpty() && cmp.Equals(value, m_Buckets[i].Value))
+          return true;
+      }
+
+      return true;
     }
 
     /// <summary>
@@ -125,7 +156,7 @@ namespace Ore
     /// false  if no value was found.
     /// </returns>
     [Pure]
-    public bool Find(TKey key, out TValue value)
+    public bool Find(K key, out V value)
     {
       int i = FindBucket(key);
       if (i > -1)
@@ -142,7 +173,7 @@ namespace Ore
     /// For syntactic sugar and familiarity, however no different from Map(),
     /// aside from the void return.
     /// </summary>
-    public void Add(TKey key, TValue val)
+    public void Add(K key, V val)
     {
       _ = TryInsert(key, val, overwrite: false, out _ );
     }
@@ -156,7 +187,7 @@ namespace Ore
     /// false  if there was already a value mapped to this key,
     ///        or there was an error.
     /// </returns>
-    public bool Map(TKey key, TValue val)
+    public bool Map(K key, V val)
     {
       return TryInsert(key, val, overwrite: false, out _ );
     }
@@ -169,7 +200,7 @@ namespace Ore
     /// false  if the value is identical to a preexisting mapping,
     ///        or there was an error.
     /// </returns>
-    public bool Remap(TKey key, TValue val)
+    public bool Remap(K key, V val)
     {
       return TryInsert(key, val, overwrite: true, out _ );
     }
@@ -185,7 +216,7 @@ namespace Ore
     /// false  if new value was NOT mapped because there is a preexisting value,
     /// null   if null key (likely), or map state error (unlikely).
     /// </returns>
-    public bool? TryMap(TKey key, TValue val, out TValue preexisting)
+    public bool? TryMap(K key, V val, out V preexisting)
     {
       preexisting = default;
 
@@ -194,7 +225,7 @@ namespace Ore
         return true;
       }
 
-      if (i >= 0 && !m_Buckets[i].IsFree(m_KeyComparator))
+      if (i >= 0 && (m_Buckets[i].DirtyHash & int.MaxValue) != 0 && m_KeyComparator.IsNone(key))
       {
         preexisting = m_Buckets[i].Value;
         return false;
@@ -204,7 +235,7 @@ namespace Ore
     }
 
 
-    public bool Unmap(TKey key)
+    public bool Unmap(K key)
     {
       int i = FindBucket(key);
 
@@ -219,7 +250,7 @@ namespace Ore
       return false;
     }
 
-    public void Remove(TKey key)
+    public void Remove(K key)
     {
       _ = Unmap(key);
     }
@@ -257,33 +288,33 @@ namespace Ore
     }
 
 
-  #region IDictionary<TKey,TValue>
+  #region IDictionary<K,V>
 
-    public ICollection<TKey> Keys     { get; } // TODO
-    ICollection IDictionary.Keys      { get; } // TODO
+    public ICollection<K> Keys   { get; } // TODO
+    ICollection IDictionary.Keys { get; } // TODO
 
-    public ICollection<TValue> Values { get; } // TODO
-    ICollection IDictionary.Values    { get; } // TODO
+    public ICollection<V> Values   { get; } // TODO
+    ICollection IDictionary.Values { get; } // TODO
 
     public bool IsReadOnly => false;
     object IDictionary.this[object key]
     {
-      get => this[(TKey)key];
-      set => this[(TKey)key] = (TValue)value;
+      get => this[(K)key];
+      set => this[(K)key] = (V)value;
     }
 
 
-    public bool TryGetValue(TKey key, out TValue value)
+    public bool TryGetValue(K key, out V value)
     {
       return Find(key, out value);
     }
 
-    public bool ContainsKey(TKey key)
+    public bool ContainsKey(K key)
     {
       return HasKey(key);
     }
 
-    public bool Remove(KeyValuePair<TKey, TValue> kvp)
+    public bool Remove(KeyValuePair<K,V> kvp)
     {
       int i = FindBucket(kvp.Key);
       if (i < 0)
@@ -298,34 +329,34 @@ namespace Ore
       return true;
     }
 
-    bool IDictionary<TKey, TValue>.Remove(TKey key)
+    bool IDictionary<K, V>.Remove(K key)
     {
       return Unmap(key);
     }
 
-    public void Add(KeyValuePair<TKey, TValue> kvp)
+    public void Add(KeyValuePair<K, V> kvp)
     {
       Add(kvp.Key, kvp.Value);
     }
 
-    void ICollection<KeyValuePair<TKey, TValue>>.Clear()
+    void ICollection<KeyValuePair<K, V>>.Clear()
     {
       _ = Clear();
     }
 
-    public bool Contains(KeyValuePair<TKey, TValue> kvp)
+    public bool Contains(KeyValuePair<K, V> kvp)
     {
       return Find(kvp.Key, out var value) && (m_ValueComparator is null ||
                                               m_ValueComparator.Equals(kvp.Value, value));
     }
 
-    public void CopyTo(KeyValuePair<TKey, TValue>[] array, int start)
+    public void CopyTo(KeyValuePair<K, V>[] array, int start)
     {
       // TODO
       throw new System.NotImplementedException();
     }
 
-    IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey,TValue>>.GetEnumerator()
+    IEnumerator<KeyValuePair<K, V>> IEnumerable<KeyValuePair<K,V>>.GetEnumerator()
     {
       return new Enumerator(this);
     }
@@ -335,7 +366,7 @@ namespace Ore
       return new Enumerator(this);
     }
 
-  #endregion IDictionary<TKey,TValue>
+  #endregion IDictionary<K,V>
 
   #region IDictionary
 
@@ -344,7 +375,7 @@ namespace Ore
 
     void ICollection.CopyTo(Array array, int start)
     {
-      if (array is KeyValuePair<TKey,TValue>[] arr)
+      if (array is KeyValuePair<K,V>[] arr)
       {
         CopyTo(arr, start);
       }
@@ -352,7 +383,7 @@ namespace Ore
 
     void IDictionary.Add(object key, object value)
     {
-      if (key is TKey k && value is TValue v)
+      if (key is K k && value is V v)
       {
         Add(k, v);
       }
@@ -365,7 +396,7 @@ namespace Ore
 
     bool IDictionary.Contains(object key)
     {
-      return key is TKey k && HasKey(k);
+      return key is K k && HasKey(k);
     }
 
     IDictionaryEnumerator IDictionary.GetEnumerator()
@@ -375,7 +406,7 @@ namespace Ore
 
     void IDictionary.Remove(object key)
     {
-      if (key is TKey k)
+      if (key is K k)
       {
         Remove(k);
       }

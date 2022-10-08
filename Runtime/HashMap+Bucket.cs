@@ -10,13 +10,9 @@ using JetBrains.Annotations;
 namespace Ore
 {
 
-  public partial class HashMap<TKey,TValue>
+  public partial class HashMap<K,V>
   {
-    #if UNITY_INCLUDE_TESTS
     internal struct Bucket
-    #else
-    protected struct Bucket
-    #endif
     {
       // not sure if struct is actually better in this case~
 
@@ -24,30 +20,43 @@ namespace Ore
       {
         [Pure]
         get => DirtyHash & int.MaxValue;
-        private
+        internal
         set => DirtyHash = (value & int.MaxValue) | (DirtyHash & int.MinValue);
       }
 
 
-      public int    DirtyHash; // "dirty" bit implements linear probing for collision resolution
-      public TKey   Key;
-      public TValue Value; // direct member access is faster
+      public int DirtyHash; // "dirty" bit implements linear probing for collision resolution
+      public K   Key;
+      public V   Value; // direct member access is faster
 
 
       [Pure]
-      public bool IsEmpty([NotNull] in IComparator<TKey> keyEq)
-      {
-        return DirtyHash == 0 && keyEq.IsNone(Key);
-      }
-
-      [Pure]
-      public bool IsFree([NotNull] in IComparator<TKey> keyEq)
+      public bool IsFree([NotNull] in IComparator<K> keyEq)
       {
         return (DirtyHash & int.MaxValue) == 0 && keyEq.IsNone(Key);
       }
 
       [Pure]
-      public bool IsSmeared([NotNull] in IComparator<TKey> keyEq)
+      public bool IsSmeared([NotNull] in IComparator<K> keyEq)
+      {
+        return DirtyHash == int.MinValue && keyEq.IsNone(Key);
+      }
+
+      [Pure]
+      public bool MightBeEmpty()
+      {
+        return (DirtyHash & int.MaxValue) == 0;
+      }
+
+
+      [Pure]
+      public KeyValuePair<K,V> GetPair()
+      {
+        return new KeyValuePair<K,V>(Key, Value);
+      }
+
+
+      public void Smear()
       {
         // A "smeared" bucket is the result of a bucket that was first dirtied
         // (via a collision), and subsequently cleared. This is necessary to
@@ -56,25 +65,6 @@ namespace Ore
         // Calling Rehash() eliminates all smeared buckets
         // (but not all dirty buckets!).
 
-        return DirtyHash == int.MinValue && keyEq.IsNone(Key);
-      }
-
-      [Pure]
-      public KeyValuePair<TKey,TValue> GetPair()
-      {
-        return new KeyValuePair<TKey, TValue>(Key, Value);
-      }
-
-
-      public void Fill(TKey key, TValue val, int hash31)
-      {
-        Key   = key;
-        Value = val;
-        Hash  = hash31;
-      }
-
-      public void Smear()
-      {
         Key        = default;
         Value      = default;
         DirtyHash &= int.MinValue;
@@ -92,7 +82,7 @@ namespace Ore
       }
 
       [Pure]
-      public int PlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] in IComparator<TKey> keyEq)
+      public int PlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] in IComparator<K> keyEq)
       {
         int hash       = Hash;
         int collisions = 0;
@@ -121,7 +111,7 @@ namespace Ore
       }
 
       [Pure]
-      public int ForcePlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IComparator<TKey> keyEq)
+      public int ForcePlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IComparator<K> keyEq)
       {
         int collisions = 0;
         int i          = Hash % buckets.Length;

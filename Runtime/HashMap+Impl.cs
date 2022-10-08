@@ -10,26 +10,26 @@ using UnityEngine;
 
 namespace Ore
 {
-  public partial class HashMap<TKey,TValue>
+  public partial class HashMap<K,V>
   {
     [SerializeField] // the only serializable field in this class
     protected HashMapParams m_Params = HashMapParams.Default;
 
-    protected IComparator<TKey>   m_KeyComparator   = Comparator<TKey>.Default;
-    protected IComparator<TValue> m_ValueComparator = null;
+    protected IComparator<K> m_KeyComparator   = Comparator<K>.Default;
+    protected IComparator<V> m_ValueComparator = null;
 
+
+    private Bucket[] m_Buckets;
 
     private int m_Count, m_Collisions, m_LoadLimit;
     private int m_Version;
 
     private int m_CachedLookup = int.MinValue;
 
-    #if UNITY_INCLUDE_TESTS
-    internal Bucket[] m_Buckets;
+  #if UNITY_INCLUDE_TESTS
+    internal Bucket[] Buckets => m_Buckets;
     internal int LifetimeAllocs { get; private set; }
-    #else
-    private Bucket[] m_Buckets;
-    #endif
+  #endif
 
 
     internal bool ClearAlloc()
@@ -69,7 +69,8 @@ namespace Ore
       return false;
     }
 
-    private bool TryInsert(TKey key, TValue val, bool overwrite, out int i)
+
+    private bool TryInsert(in K key, in V val, bool overwrite, out int i)
     {
       if (m_KeyComparator.IsNone(key))
       {
@@ -102,20 +103,7 @@ namespace Ore
       {
         var bucket = m_Buckets[i];
 
-        if (bucket.IsEmpty(m_KeyComparator))
-        {
-          if (fallback != -1)
-            i = fallback;
-
-          m_Buckets[i].Fill(key, val, hash31);
-
-          ++m_Count;
-          ++m_Version;
-          return true;
-        }
-
-
-        if (fallback == -1 && bucket.IsSmeared(m_KeyComparator))
+        if (bucket.DirtyHash == int.MinValue && fallback == -1 && m_KeyComparator.IsNone(bucket.Key))
         {
           fallback = i;
         }
@@ -124,7 +112,9 @@ namespace Ore
           if (fallback != -1) // end of smear chain;
             i = fallback;     // we can fill the last smear instead
 
-          m_Buckets[i].Fill(key, val, hash31);
+          m_Buckets[i].Key = key;
+          m_Buckets[i].Value = val;
+          m_Buckets[i].Hash = hash31;
 
           ++m_Count;
           ++m_Version;
@@ -146,6 +136,7 @@ namespace Ore
             return false;
           }
 
+          m_Buckets[i].Key = key;
           m_Buckets[i].Value = val;
           ++m_Version;
 
@@ -157,9 +148,8 @@ namespace Ore
           return true;
         }
 
-        if (fallback == -1 && bucket.DirtyHash >= 0)
+        if (bucket.DirtyHash >= 0)
         {
-          // Mark new collision
           m_Buckets[i].DirtyHash |= int.MinValue;
           ++m_Collisions;
         }
@@ -174,7 +164,9 @@ namespace Ore
 
       if (fallback != -1)
       {
-        m_Buckets[fallback].Fill(key, val, hash31);
+        m_Buckets[fallback].Key = key;
+        m_Buckets[fallback].Value = val;
+        m_Buckets[fallback].Hash = hash31;
         ++m_Count;
         ++m_Version;
 
@@ -190,7 +182,7 @@ namespace Ore
       return false;
     }
 
-    private int FindBucket(in TKey key)
+    private int FindBucket(in K key)
     {
       if (m_Count == 0 || m_KeyComparator.IsNone(key))
       {
@@ -211,12 +203,13 @@ namespace Ore
       do
       {
         var bucket = m_Buckets[i];
-        if (bucket.IsEmpty(m_KeyComparator))
+
+        if (bucket.DirtyHash == 0 && m_KeyComparator.IsNone(bucket.Key))
         {
-          if (bucket.DirtyHash == 0) // not smeared
-            return m_CachedLookup = -i;
+          return m_CachedLookup = -i;
         }
-        else if (bucket.Hash == hash31 && m_KeyComparator.Equals(key, bucket.Key))
+        
+        if (bucket.Hash == hash31 && m_KeyComparator.Equals(key, bucket.Key))
         {
           return m_CachedLookup = i;
         }
@@ -289,7 +282,7 @@ namespace Ore
       int hash31, jump;
       foreach (var bucket in m_Buckets)
       {
-        if (bucket.IsEmpty(m_KeyComparator))
+        if (bucket.MightBeEmpty() && m_KeyComparator.IsNone(bucket.Key))
           continue;
 
         hash31 = bucket.Hash;

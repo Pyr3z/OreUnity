@@ -124,7 +124,7 @@ public static class HashMapSpeed
   }
 
 
-  private static IEnumerator DoLookupTest(IDictionary lookup, string name, float pExist = 0.5f)
+  private static IEnumerator DoLookupTest(IDictionary lookup, string name, float pExist)
   {
     var tests = GetSomeKeysFor(lookup, (int)(pExist * N + 0.5f), (int)((1f-pExist) * N + 0.5f));
 
@@ -174,12 +174,12 @@ public static class HashMapSpeed
   }
 
 
-  private static readonly float[] PERCENTS = { 0f, 0.28f, 0.72f, 1f };
-  private static readonly int[]   SIZES    = { 33, 666, 13374, 3141592 };
+  private static readonly float[] PERCENTS = { 0f, 0.5f, 1f };
+  private static readonly int[]   SIZES    = { 33, 666, 13374 };
 
 
   [UnityTest]
-  private static IEnumerator HashMapLookup(
+  public static IEnumerator HashMapLookup(
     [ValueSource(nameof(PERCENTS))] float percentExist,
     [ValueSource(nameof(SIZES))]      int size )
   {
@@ -192,7 +192,7 @@ public static class HashMapSpeed
   }
 
   [UnityTest]
-  private static IEnumerator DictionaryLookup(
+  public static IEnumerator DictionaryLookup(
     [ValueSource(nameof(PERCENTS))] float percentExist,
     [ValueSource(nameof(SIZES))]      int size )
   {
@@ -205,7 +205,7 @@ public static class HashMapSpeed
   }
 
   [UnityTest]
-  private static IEnumerator HashtableLookup(
+  public static IEnumerator HashtableLookup(
     [ValueSource(nameof(PERCENTS))] float percentExist,
     [ValueSource(nameof(SIZES))]      int size )
   {

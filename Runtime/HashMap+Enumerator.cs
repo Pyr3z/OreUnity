@@ -11,13 +11,13 @@ using JetBrains.Annotations;
 
 namespace Ore
 {
-  public partial class HashMap<TKey,TValue>
+  public partial class HashMap<K,V>
   {
-    public struct Enumerator : IEnumerator<KeyValuePair<TKey,TValue>>, IEnumerator<(TKey key, TValue val)>, IDictionaryEnumerator
+    public struct Enumerator : IEnumerator<KeyValuePair<K,V>>, IEnumerator<(K key, V val)>, IDictionaryEnumerator
     {
-      public (TKey key, TValue val) Current => (m_Bucket.Key,m_Bucket.Value);
+      public (K key, V val) Current => (m_Bucket.Key,m_Bucket.Value);
 
-      KeyValuePair<TKey,TValue> IEnumerator<KeyValuePair<TKey,TValue>>.Current => m_Bucket.GetPair();
+      KeyValuePair<K,V> IEnumerator<KeyValuePair<K,V>>.Current => m_Bucket.GetPair();
 
       object IEnumerator.Current => (m_Bucket.Key, m_Bucket.Value);
 
@@ -28,14 +28,14 @@ namespace Ore
       object IDictionaryEnumerator.Value => m_Bucket.Value;
 
 
-      private HashMap<TKey,TValue> m_Parent;
+      private HashMap<K,V> m_Parent;
 
       private Bucket m_Bucket;
 
       private int m_Pos, m_Count, m_Version;
 
 
-      public Enumerator([NotNull] HashMap<TKey,TValue> forMap)
+      public Enumerator([NotNull] HashMap<K,V> forMap)
       {
         m_Parent  = forMap;
         m_Pos     = forMap.m_Buckets.Length;
@@ -61,7 +61,7 @@ namespace Ore
         {
           m_Bucket = m_Parent.m_Buckets[m_Pos];
         }
-        while (m_Bucket.IsFree(m_Parent.m_KeyComparator) && m_Pos --> 0);
+        while (m_Bucket.MightBeEmpty() && m_Parent.m_KeyComparator.IsNone(m_Bucket.Key) && m_Pos --> 0);
 
         return m_Pos >= 0;
       }

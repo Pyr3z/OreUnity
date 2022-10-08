@@ -117,7 +117,7 @@ public static class HashMapCorrectness
       Assert.AreEqual(value, v);
     }
 
-    Debug.Log($"DoMap({n}): Count={map.Count},Capacity={map.Capacity},LifetimeAllocs={map.LifetimeAllocs}");
+    Debug.Log($"{nameof(Map)}({n}): Count={map.Count},Capacity={map.Capacity},LifetimeAllocs={map.LifetimeAllocs}");
   }
 
   [Test]
