@@ -14,7 +14,6 @@
  *  [ ] HashMap.Clear vs HashMap.ClearNoAlloc
 **/
 
-using System;
 using Ore;
 
 using NUnit.Framework;
@@ -33,8 +32,6 @@ public static class HashMapSpeed
 
   private const int   NFRAMES = 66;
   private const int   N       = 10000;
-  private const int   SMALL   = 33;
-  private const int   LARGE   = 666666;
   private const float TOOSLOW = 100f;
 
 
@@ -177,54 +174,47 @@ public static class HashMapSpeed
   }
 
 
-  private static IEnumerator HashMapLookup(int size)
+  private static readonly float[] PERCENTS = { 0f, 0.28f, 0.72f, 1f };
+  private static readonly int[]   SIZES    = { 33, 666, 13374, 3141592 };
+
+
+  [UnityTest]
+  private static IEnumerator HashMapLookup(
+    [ValueSource(nameof(PERCENTS))] float percentExist,
+    [ValueSource(nameof(SIZES))]      int size )
   {
     const string TESTNAME = "HashMap";
 
     var lookup = GetTestHashMap(size);
 
-    yield return DoLookupTest(lookup, TESTNAME, 0.0f);
-    yield return DoLookupTest(lookup, TESTNAME, 0.5f);
-    yield return DoLookupTest(lookup, TESTNAME, 1.0f);
+    System.GC.Collect();
+    return DoLookupTest(lookup, TESTNAME, percentExist);
   }
 
-  private static IEnumerator DictionaryLookup(int size)
+  [UnityTest]
+  private static IEnumerator DictionaryLookup(
+    [ValueSource(nameof(PERCENTS))] float percentExist,
+    [ValueSource(nameof(SIZES))]      int size )
   {
     const string TESTNAME = "Dictionary";
 
     var lookup = GetTestDict(size);
 
-    yield return DoLookupTest(lookup, TESTNAME, 0.0f);
-    yield return DoLookupTest(lookup, TESTNAME, 0.5f);
-    yield return DoLookupTest(lookup, TESTNAME, 1.0f);
+    System.GC.Collect();
+    return DoLookupTest(lookup, TESTNAME, percentExist);
   }
 
-  private static IEnumerator HashtableLookup(int size)
+  [UnityTest]
+  private static IEnumerator HashtableLookup(
+    [ValueSource(nameof(PERCENTS))] float percentExist,
+    [ValueSource(nameof(SIZES))]      int size )
   {
     const string TESTNAME = "Hashtable";
 
     var lookup = GetTestTable(size);
 
-    yield return DoLookupTest(lookup, TESTNAME, 0.0f);
-    yield return DoLookupTest(lookup, TESTNAME, 0.5f);
-    yield return DoLookupTest(lookup, TESTNAME, 1.0f);
+    System.GC.Collect();
+    return DoLookupTest(lookup, TESTNAME, percentExist);
   }
-
-
-  [UnityTest]
-  public static IEnumerator HashMapLookupSmall() => HashMapLookup(SMALL);
-
-  [UnityTest]
-  public static IEnumerator HashMapLookupLarge() => HashMapLookup(LARGE);
-
-  [UnityTest]
-  public static IEnumerator DictionaryLookupSmall() => DictionaryLookup(SMALL);
-  [UnityTest]
-  public static IEnumerator DictionaryLookupLarge() => DictionaryLookup(LARGE);
-
-  [UnityTest]
-  public static IEnumerator HashtableLookupSmall() => HashtableLookup(SMALL);
-  [UnityTest]
-  public static IEnumerator HashtableLookupLarge() => HashtableLookup(LARGE);
 
 }

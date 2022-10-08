@@ -32,6 +32,43 @@ namespace Ore
     #endif
 
 
+    internal bool ClearAlloc()
+    {
+      bool alreadyClear = m_Count == 0;
+
+      m_Collisions = m_Count = 0;
+      // always reallocate, in case we have dirty buckets
+      m_Buckets = new Bucket[m_Buckets.Length];
+
+    #if UNITY_INCLUDE_TESTS
+      ++LifetimeAllocs;
+    #endif
+
+      if (!alreadyClear)
+      {
+        ++m_Version;
+        return true;
+      }
+
+      return false;
+    }
+
+    internal bool ClearNoAlloc() // tests verify that NoAlloc is consistently faster
+    {
+      bool alreadyClear = m_Count == 0;
+
+      m_Collisions = m_Count = 0;
+      System.Array.Clear(m_Buckets, 0, m_Buckets.Length);
+
+      if (!alreadyClear)
+      {
+        ++m_Version;
+        return true;
+      }
+
+      return false;
+    }
+
     private bool TryInsert(TKey key, TValue val, bool overwrite, out int i)
     {
       if (m_KeyComparator.IsNone(key))

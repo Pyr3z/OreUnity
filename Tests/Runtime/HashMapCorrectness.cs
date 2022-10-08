@@ -95,19 +95,10 @@ public static class HashMapCorrectness
     }
   }
 
-  [Test]
-  public static void Map()
-  {
-    DoMap(1);
-  }
-
-  [Test]
-  public static void BigMap()
-  {
-    DoMap(10000);
-  }
-
-  private static void DoMap(int n)
+  [TestCase(1)]
+  [TestCase(1000)]
+  [TestCase(100000)]
+  public static void Map(int n)
   {
     var map = new HashMap<string,string>();
 
@@ -246,7 +237,7 @@ public static class HashMapCorrectness
   [Test]
   public static void Clear()
   {
-    DoClear(map => map.Clear(), 1);
+    DoClear(map => map.ClearAlloc(), 1);
   }
 
   [Test]

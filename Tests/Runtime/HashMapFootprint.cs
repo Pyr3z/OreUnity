@@ -44,9 +44,9 @@ public static class HashMapFootprint
   }
 
   [UnityTest]
-  public static IEnumerator HashMapClear()
+  public static IEnumerator HashMapClearAlloc()
   {
-    return DoHashMapClear(map => map.Clear());
+    return DoHashMapClear(map => map.ClearAlloc());
   }
 
   [UnityTest]
