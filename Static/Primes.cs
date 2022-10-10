@@ -3,6 +3,7 @@
  *  @date       2022-08-18
 **/
 
+using System.Linq;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
@@ -23,7 +24,7 @@ namespace Ore
       if ((value & 1) == 0) // "is even"
         return value == 2;
 
-      // return (s_ConvenientPrimes.BinarySearch(value) >= 0) ||
+      // return (s_1p2xFactorPrimes.BinarySearch(value) >= 0) ||
       return IsPrimeNoLookup(value, (int)Math.Sqrt(value));
     }
 
@@ -92,7 +93,7 @@ namespace Ore
       if (current >= MaxValue)
         return MaxValue;
 
-      int idx = s_ConvenientPrimes.BinarySearch(current);
+      int idx = s_1p2xFactorPrimes.BinarySearch(current);
       if (idx < 0)
       {
         idx = ~idx;
@@ -100,9 +101,9 @@ namespace Ore
 
       ++idx;
 
-      while (idx < s_ConvenientPrimes.Length) // (average case)
+      while (idx < s_1p2xFactorPrimes.Length) // (average case)
       {
-        current = s_ConvenientPrimes[idx];
+        current = s_1p2xFactorPrimes[idx];
         if ((current - 1) % hashprime != 0)
           return current;
         ++idx;
@@ -154,7 +155,7 @@ namespace Ore
 
     public static IReadOnlyList<int> ConvenientPrimes => s_ConvenientPrimes;
 
-    private static readonly int[] s_ConvenientPrimes =
+    private static readonly int[] s_1p2xFactorPrimes =
     {
       // chooses primes closest to the curve y=2+1.2^x and where (prime - 1) % 101 != 0
       3, 7, 11, 17, 23, 29, 37, 47, 59, 71,
@@ -166,6 +167,38 @@ namespace Ore
       968897, 1162687, 1395263, 1674319, 2009191, 2411033, 2893249, 3471899, 4166287, 4999559,
       5999471, 7199369
     };
+
+    private static readonly int[] s_150SmallPrimes =
+    {
+      31,37,41,43,47,53,59,61,67,71,
+      73,79,83,89,97,101,103,107,109,113,
+      127,131,137,139,149,151,157,163,167,173,
+      179,181,191,193,197,199,211,223,227,229,
+      233,239,241,251,257,263,269,271,277,281,
+      283,293,307,311,313,317,331,337,347,349,
+      353,359,367,373,379,383,389,397,401,409,
+      419,421,431,433,439,443,449,457,461,463,
+      467,479,487,491,499,503,509,521,523,541,
+      547,557,563,569,571,577,587,593,599,601,
+      607,613,617,619,631,641,643,647,653,659,
+      661,673,677,683,691,701,709,719,727,733,
+      739,743,751,757,761,769,773,787,797,809,
+      811,821,823,827,829,839,853,857,859,863,
+      877,881,883,887,907,911,919,929,937,941,
+      947,953,967,971,977,983,991,997,1009,1013,
+      1019,1021,1031,1033,1039,1049,1051,1061,1063,1069,
+    };
+
+    private static readonly int[] s_ConvenientPrimes;
+
+    static Primes()
+    {
+      var primes = new HashSet<int>(s_1p2xFactorPrimes.Concat(s_150SmallPrimes)).ToList();
+
+      primes.Sort();
+
+      s_ConvenientPrimes = primes.ToArray();
+    }
 
   } // end class Primes
 }

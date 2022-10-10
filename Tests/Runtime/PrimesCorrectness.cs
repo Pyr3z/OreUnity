@@ -141,15 +141,17 @@ public static class PrimesCorrectness
   [Test]
   public static void FindGoodHashPrimes()
   {
-    var bob = new System.Text.StringBuilder();
+    var bob = new System.Text.StringBuilder("private static readonly int[] GOODPRIMES = {\n");
 
-    foreach (int prime in Hashing.HashPrimes)
+    int perline = 10;
+
+    foreach (int hashprime in Hashing.HashPrimes)
     {
       bool good = true;
 
-      foreach (int value in Primes.ConvenientPrimes)
+      foreach (int prime in Primes.ConvenientPrimes)
       {
-        if ((value - 1) % prime == 0)
+        if ((prime - 1) % hashprime == 0)
         {
           good = false;
           break;
@@ -158,13 +160,63 @@ public static class PrimesCorrectness
 
       if (good)
       {
-        bob.Append(prime).AppendLine();
+        bob.Append(hashprime).Append(',');
+        if (--perline == 0)
+        {
+          bob.AppendLine();
+          perline = 10;
+        }
       }
     }
 
-    Assert.Greater(bob.Length, 0);
+    bob.Append("\n};");
 
-    bob.Insert(0, "FOUND GOOD PRIMES:\n");
+    Debug.Log(bob.ToString());
+  }
+
+  private static readonly int[] HASHPRIMES =
+  {
+    97, 101, 193, 389, 769,
+    1543, 3079, 6165, 12289
+  };
+
+  [Test, Timeout(10000)]
+  public static void FindGoodSizePrimes(
+    [ValueSource(nameof(HASHPRIMES))] int hashprime,
+    [Values(1.2f, 1.35f, 1.5f)] float growFactor)
+  {
+    var bob = new System.Text.StringBuilder("static readonly int[] PRIMESIZES = {\n");
+
+    const int perline = 10;
+    int count = 0;
+
+    int p = 5;
+    while (p <= Primes.MaxConvenientValue)
+    {
+      if ((p - 1) % hashprime != 0)
+      {
+        bob.Append(p).Append(',');
+
+        if (++count % perline == 0)
+        {
+          bob.AppendLine();
+        }
+      }
+
+      p = (int)(p * growFactor + 0.5f);
+      p = Primes.NearestTo(p);
+    }
+
+    bob.Append("\n};\n");
+
+    bob.Insert(0, $"const int N_PRIMESIZES = {count};\n\n");
+
+    bob.Insert(0, $"const int HASHPRIME = {hashprime};\n\n");
+
+    bob.Insert(0, $"const float GROWFACTOR = {growFactor:F2}f;\n\n");
+
+    Filesystem.TryWriteText($"Temp/PrimeSizes_{growFactor:F2}f_{hashprime}.cs", bob.ToString());
+
     Debug.Log(bob.ToString());
   }
 
