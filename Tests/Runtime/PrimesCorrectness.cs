@@ -190,7 +190,7 @@ public static class PrimesCorrectness
     int count = 0;
 
     int p = 5;
-    while (p <= Primes.MaxHashtableSize * 2)
+    while (p <= Primes.MaxHashtableSize)
     {
       if ((p - 1) % hashprime != 0)
       {
