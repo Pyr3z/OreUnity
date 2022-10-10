@@ -149,7 +149,7 @@ public static class PrimesCorrectness
     {
       bool good = true;
 
-      foreach (int prime in Primes.ConvenientPrimes)
+      foreach (int prime in Primes.HashtableSizes)
       {
         if ((prime - 1) % hashprime == 0)
         {
@@ -176,22 +176,21 @@ public static class PrimesCorrectness
 
   private static readonly int[] HASHPRIMES =
   {
-    97, 101, 193, 389, 769,
-    1543, 3079, 6165, 12289
+    97, 193, 769
   };
 
   [Test, Timeout(10000)]
   public static void FindGoodSizePrimes(
     [ValueSource(nameof(HASHPRIMES))] int hashprime,
-    [Values(1.2f, 1.35f, 1.5f)] float growFactor)
+    [Values(1.1f, 1.2f, 1.44f)] float growFactor)
   {
-    var bob = new System.Text.StringBuilder("static readonly int[] PRIMESIZES = {\n");
+    var bob = new System.Text.StringBuilder("static readonly int[] PRIMESIZES =\n{\n  ");
 
     const int perline = 10;
     int count = 0;
 
     int p = 5;
-    while (p <= Primes.MaxConvenientValue)
+    while (p <= Primes.MaxHashtableSize * 2)
     {
       if ((p - 1) % hashprime != 0)
       {
@@ -199,12 +198,12 @@ public static class PrimesCorrectness
 
         if (++count % perline == 0)
         {
-          bob.AppendLine();
+          bob.AppendLine().Append("  ");
         }
       }
 
       p = (int)(p * growFactor + 0.5f);
-      p = Primes.NearestTo(p);
+      p = Primes.NextNoLookup(p);
     }
 
     bob.Append("\n};\n");

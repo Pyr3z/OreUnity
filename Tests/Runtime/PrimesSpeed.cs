@@ -97,17 +97,17 @@ public static class PrimesSpeed
   }
 
   [UnityTest]
-  public static IEnumerator IsConvenientPrime()
+  public static IEnumerator IsHashtableSize()
   {
-    var convenient = Primes.ConvenientPrimes;
-    var data = new List<int>(convenient);
+    var primes = Primes.HashtableSizes;
+    var data = new List<int>(primes);
 
     while (data.Count < SCALE)
     {
-      data.Add(convenient[Integers.RandomIndex(convenient.Count)]);
+      data.Add(primes[Integers.RandomIndex(primes.Count)]);
     }
 
-    return DoSpeedTest(Primes.IsPrime, "IsPrime(when convient)", 2f, data);
+    return DoSpeedTest(Primes.IsPrime, "IsPrime(when convenient)", 2f, data);
   }
 
 }

@@ -69,9 +69,9 @@ public static class HashMapCorrectness
 
     foreach (int hashprime in new []{ defaultHashPrime }) // TODO test other preset hashprimes?
     {
-      foreach (int value in Primes.ConvenientPrimes)
+      foreach (int prime in Primes.HashtableSizes)
       {
-        Assert.NotZero((value - 1) % hashprime, $"hashprime={hashprime},value={value}");
+        Assert.NotZero((prime - 1) % hashprime, $"hashprime={hashprime},value={prime}");
       }
     }
   }
