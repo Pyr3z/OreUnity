@@ -26,8 +26,10 @@ namespace Ore
 
     private int m_CachedLookup = int.MinValue;
 
-  #if UNITY_INCLUDE_TESTS
+
+  #if UNITY_INCLUDE_TESTS // expose more fields for unit testing purposes
     internal Bucket[] Buckets => m_Buckets;
+    internal int CachedLookup => m_CachedLookup;
     internal int LifetimeAllocs { get; private set; }
   #endif
 
@@ -107,7 +109,7 @@ namespace Ore
         {
           fallback = i;
         }
-        else if (bucket.IsFree(m_KeyComparator))
+        else if ((bucket.DirtyHash & int.MaxValue) == 0 && m_KeyComparator.IsNone(bucket.Key))
         {
           if (fallback != -1) // end of smear chain;
             i = fallback;     // we can fill the last smear instead
@@ -160,7 +162,7 @@ namespace Ore
 
       // MEGA bad if we reach here
 
-      Orator.Error($"HashMap.TryInsert: Too many collisions ({jumps}) hit!");
+      Orator.ErrorOnce($"HashMap.TryInsert: Too many collisions ({jumps}) hit!");
 
       if (fallback != -1)
       {
@@ -272,7 +274,7 @@ namespace Ore
       ++LifetimeAllocs;
       #endif
 
-      if (m_Count == 0 && m_Buckets.Length != newSize)
+      if (m_Count == 0)
       {
         m_Buckets = newBuckets; // potential GC concern
         return;
@@ -288,12 +290,11 @@ namespace Ore
         hash31 = bucket.Hash;
         jump   = m_Params.CalcJump(hash31, newSize);
 
-        m_Collisions += bucket.RehashClone(hash31).ForcePlaceIn(newBuckets, jump, m_KeyComparator);
+        m_Collisions += bucket.RehashClone(hash31).PlaceIn(newBuckets, jump, m_KeyComparator);
 
-        ++count;
+        if (++count == m_Count)
+          break;
       }
-
-      OAssert.True(count == m_Count, "HashMap.Rehash");
 
       m_Count   = count;
       m_Buckets = newBuckets; // potential GC concern

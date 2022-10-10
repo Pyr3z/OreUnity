@@ -123,12 +123,12 @@ public static class PrimesCorrectness
     Assert.AreEqual(5077,  Primes.NearestTo(5068));
     Assert.AreEqual(5077,  Primes.NearestTo(5070));
 
-    var data = Primes10K.GetTestValues(66, 600);
+    var data = Primes10K.GetTestValues(6, 666);
 
     foreach (int value in data)
     {
       int prime = Primes.NearestTo(value);
-      Assert.True(Primes.IsPrime(prime));
+      Assert.True(Primes.IsPrime(prime), $"IsPrime({prime})");
 
       int digits    = Integers.CalcDigits(value);
       int dist      = Math.Abs(value - prime);

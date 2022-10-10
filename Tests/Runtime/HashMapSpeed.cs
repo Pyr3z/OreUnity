@@ -117,7 +117,15 @@ public static class HashMapSpeed
 
     while (nFake --> 0)
     {
-      keys.Add(Strings.MakeGUID());
+      string guid = Strings.MakeGUID();
+      if (lookup.Contains(guid))
+      {
+        ++nFake;
+      }
+      else
+      {
+        keys.Add(guid);
+      }
     }
 
     return keys;
@@ -136,6 +144,7 @@ public static class HashMapSpeed
     while (i --> 0)
     {
       int j = tests.Count;
+      int nExist = 0;
 
       // tests.Shuffle();
 
@@ -145,20 +154,40 @@ public static class HashMapSpeed
       {
         if (lookup.Contains(tests[j]))
         {
-          Assert.AreEqual(tests[j], lookup[tests[j]]);
+          ++nExist;
+
+          try
+          {
+            Assert.AreEqual(tests[j], lookup[tests[j]], "");
+          }
+          catch (AssertionException ae)
+          {
+            if (lookup is HashMap<string,string> fmap)
+            {
+              throw new AssertionException($"CachedLookup={fmap.CachedLookup}; {ae.Message}", ae);
+            }
+
+            throw;
+          }
         }
         else
         {
           // need to do this to make sure tests are balanced
+          object optional = null;
+
           try
           {
-            _ = lookup[tests[j]];
+            optional = lookup[tests[j]];
           }
           catch {  }
+
+          Assert.Null(optional);
         }
       }
 
       stopwatch.Stop();
+
+      Assert.AreEqual(0f, (float)nExist/tests.Count - pExist, 0.03f);
 
       yield return null;
     }
@@ -175,7 +204,7 @@ public static class HashMapSpeed
 
 
   private static readonly float[] PERCENTS = { 0f, 0.5f, 1f };
-  private static readonly int[]   SIZES    = { 33, 666, 13374 };
+  private static readonly int[]   SIZES    = { 33, 666, 1337, 3141592 };
 
 
   [UnityTest]

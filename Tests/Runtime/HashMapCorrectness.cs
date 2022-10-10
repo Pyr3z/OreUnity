@@ -96,8 +96,8 @@ public static class HashMapCorrectness
   }
 
   [TestCase(1)]
-  [TestCase(1000)]
-  [TestCase(100000)]
+  [TestCase(666)]
+  [TestCase(11111)]
   public static void Map(int n)
   {
     var map = new HashMap<string,string>();
@@ -107,6 +107,7 @@ public static class HashMapCorrectness
     foreach (string value in testvalues)
     {
       Assert.True(map.Map(value, value),  "initial mapping");
+      Assert.True(map.ContainsKey(value), $"contains key \"{value}\"");
       Assert.False(map.Map(value, value), "non-overwriting mapping");
     }
 

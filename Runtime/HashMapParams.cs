@@ -26,7 +26,7 @@ namespace Ore
     private const int INTERNALSIZE_MAX     = Primes.MaxConvenientValue;
 
     private const float LOADFACTOR_DEFAULT = 0.72f;
-    private const float LOADFACTOR_MIN     = 0.1f;
+    private const float LOADFACTOR_MIN     = 0.1f * LOADFACTOR_DEFAULT;
     private const float LOADFACTOR_MAX     = 1f;    // danger
 
     private const float GROWFACTOR_DEFAULT = 2f;

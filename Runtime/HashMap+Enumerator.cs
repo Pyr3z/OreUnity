@@ -17,7 +17,7 @@ namespace Ore
     {
       public (K key, V val) Current => (m_Bucket.Key,m_Bucket.Value);
 
-      KeyValuePair<K,V> IEnumerator<KeyValuePair<K,V>>.Current => m_Bucket.GetPair();
+      KeyValuePair<K,V> IEnumerator<KeyValuePair<K,V>>.Current => new KeyValuePair<K,V>(m_Bucket.Key, m_Bucket.Value);
 
       object IEnumerator.Current => (m_Bucket.Key, m_Bucket.Value);
 

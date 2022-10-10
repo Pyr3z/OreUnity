@@ -225,7 +225,7 @@ namespace Ore
         return true;
       }
 
-      if (i >= 0 && (m_Buckets[i].DirtyHash & int.MaxValue) != 0 && m_KeyComparator.IsNone(key))
+      if (i >= 0 && (m_Buckets[i].DirtyHash & int.MaxValue) != 0)
       {
         preexisting = m_Buckets[i].Value;
         return false;
@@ -350,7 +350,7 @@ namespace Ore
                                               m_ValueComparator.Equals(kvp.Value, value));
     }
 
-    public void CopyTo(KeyValuePair<K, V>[] array, int start)
+    void ICollection<KeyValuePair<K,V>>.CopyTo(KeyValuePair<K,V>[] array, int start)
     {
       // TODO
       throw new System.NotImplementedException();
@@ -377,7 +377,7 @@ namespace Ore
     {
       if (array is KeyValuePair<K,V>[] arr)
       {
-        CopyTo(arr, start);
+        ((ICollection<KeyValuePair<K,V>>)this).CopyTo(arr, start);
       }
     }
 

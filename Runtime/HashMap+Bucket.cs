@@ -31,28 +31,9 @@ namespace Ore
 
 
       [Pure]
-      public bool IsFree([NotNull] in IComparator<K> keyEq)
-      {
-        return (DirtyHash & int.MaxValue) == 0 && keyEq.IsNone(Key);
-      }
-
-      [Pure]
-      public bool IsSmeared([NotNull] in IComparator<K> keyEq)
-      {
-        return DirtyHash == int.MinValue && keyEq.IsNone(Key);
-      }
-
-      [Pure]
       public bool MightBeEmpty()
       {
         return (DirtyHash & int.MaxValue) == 0;
-      }
-
-
-      [Pure]
-      public KeyValuePair<K,V> GetPair()
-      {
-        return new KeyValuePair<K,V>(Key, Value);
       }
 
 
@@ -82,41 +63,13 @@ namespace Ore
       }
 
       [Pure]
-      public int PlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] in IComparator<K> keyEq)
-      {
-        int hash       = Hash;
-        int collisions = 0;
-        int i          = hash % buckets.Length;
-
-        var bucket = buckets[i]; // keep in mind bucket != buckets[i] now
-        while (!keyEq.IsNone(bucket.Key))
-        {
-          if (hash == bucket.Hash && keyEq.Equals(Key, bucket.Key))
-          {
-            return collisions | int.MinValue;
-          }
-
-          if (bucket.DirtyHash >= 0)
-          {
-            buckets[i].DirtyHash |= int.MinValue;
-            ++collisions;
-          }
-
-          i = (i + jump) % buckets.Length;
-          bucket = buckets[i];
-        }
-
-        buckets[i] = this;
-        return collisions;
-      }
-
-      [Pure]
-      public int ForcePlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IComparator<K> keyEq)
+      public int PlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IComparator<K> keyEq)
       {
         int collisions = 0;
-        int i          = Hash % buckets.Length;
+        int ilen       = buckets.Length;
+        int i          = Hash % ilen;
 
-        while (!keyEq.IsNone(buckets[i].Key))
+        while (!keyEq.IsNone(buckets[i].Key) && collisions < ilen)
         {
           if (buckets[i].DirtyHash >= 0)
           {
@@ -124,7 +77,7 @@ namespace Ore
             ++collisions;
           }
 
-          i = (i + jump) % buckets.Length;
+          i = (i + jump) % ilen;
         }
 
         buckets[i] = this;
