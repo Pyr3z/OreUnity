@@ -5,8 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-## [UNRELEASED] - 2022-10-
-- fef
+## [UNRELEASED] - 2022-
+
+## [UNRELEASED] - 2022-10-10
+- HashMaps: Fixed: Rare linear probing issue causing large hashmaps (N>10,000) to map collisions incorrectly.
+- HashMaps: Optimized - tests are now within 1% of the speed of Dictionary/Hashtable
 
 ## [2.3.2] - 2022-10-06
 - Removed stubs for APIs that aren't functional from the release track (issue #1).
