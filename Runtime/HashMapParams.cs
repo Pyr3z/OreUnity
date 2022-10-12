@@ -32,7 +32,7 @@ namespace Ore
     private const float GROWFACTOR_MIN     = 1.1f;
     private const float GROWFACTOR_MAX     = 3f;
 
-    private const int HASHPRIME_DEFAULT    = 97; // see Static/Hashing.cs for candidates
+    private const int HASHPRIME_DEFAULT    = 193; // see Static/Hashing.cs for candidates
 
     private const bool ISFIXED_DEFAULT     = false;
 

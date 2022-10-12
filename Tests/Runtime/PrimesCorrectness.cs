@@ -182,7 +182,7 @@ public static class PrimesCorrectness
   [Test, Timeout(10000)]
   public static void FindGoodSizePrimes(
     [ValueSource(nameof(HASHPRIMES))] int hashprime,
-    [Values(1.1f, 1.2f, 1.44f)] float growFactor)
+    [Values(1.1f, 1.15f, 1.19f)] float growFactor)
   {
     var bob = new System.Text.StringBuilder("static readonly int[] PRIMESIZES =\n{\n  ");
 
