@@ -128,7 +128,7 @@ public static class PrimesCorrectness
     foreach (int value in data)
     {
       int prime = Primes.NearestTo(value);
-      Assert.True(Primes.IsPrime(prime), $"IsPrime({prime})");
+      Assert.True(Primes.IsPrime(prime), $"IsPrimeLookup({prime})");
 
       int digits    = Integers.CalcDigits(value);
       int dist      = Math.Abs(value - prime);

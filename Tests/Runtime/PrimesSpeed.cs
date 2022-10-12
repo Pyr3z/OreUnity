@@ -3,7 +3,7 @@
  *  @date       2022-09-29
  *
  *  Speed Tests:
- *  [ ] Primes.IsPrime
+ *  [ ] Primes.IsPrimeLookup
  *  [ ] Primes.IsPrimeNoLookup
  *  [ ] Primes.Next
 **/
@@ -67,9 +67,9 @@ public static class PrimesSpeed
   }
 
   [UnityTest]
-  public static IEnumerator IsPrime()
+  public static IEnumerator IsPrimeLookup()
   {
-    return DoSpeedTest(Primes.IsPrime, nameof(IsPrime), 3f);
+    return DoSpeedTest(Primes.IsPrimeLookup, nameof(IsPrimeLookup), 3f);
   }
 
   [UnityTest]
@@ -107,7 +107,7 @@ public static class PrimesSpeed
       data.Add(primes[Integers.RandomIndex(primes.Count)]);
     }
 
-    return DoSpeedTest(Primes.IsPrime, "IsPrime(when convenient)", 2f, data);
+    return DoSpeedTest(Primes.IsPrime, "IsPrimeLookup(when convenient)", 2f, data);
   }
 
 }

@@ -18,14 +18,18 @@ namespace Ore
     [PublicAPI]
     public static bool IsPrime(int value)
     {
+      return IsPrimeNoLookup(value);
+    }
+
+    internal static bool IsPrimeLookup(int value)
+    {
       if (value < 2)
         return false;
 
-      if ((value & 1) == 0) // "is even"
+      if ((value & 1) == 0)
         return value == 2;
 
-      // return (s_ConvenientPrimes.BinarySearch(value) >= 0) ||
-      return IsPrimeNoLookup(value, (int)Math.Sqrt(value));
+      return s_1p15xHash193Primes.BinarySearch(value) >= 0 || IsPrimeNoLookup(value);
     }
 
     internal static bool IsPrimeNoLookup(int value)
