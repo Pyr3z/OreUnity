@@ -12,6 +12,7 @@ using Encoding = System.Text.Encoding;
 using Exception = System.Exception;
 using UnauthorizedException = System.UnauthorizedAccessException;
 using ArgumentException = System.ArgumentException;
+using Object = UnityEngine.Object;
 
 
 namespace Ore
@@ -57,6 +58,7 @@ namespace Ore
 
         File.WriteAllBytes(filepath, json.ToBytes(Encoding.Unicode));
 
+        s_LastWrittenPath = filepath;
         LastException = null;
         return true;
       }
@@ -80,6 +82,78 @@ namespace Ore
     public static bool TryWriteText([NotNull] string filepath, [CanBeNull] string text, Encoding encoding = null)
     {
       return TryWriteBinary(filepath, text.ToBytes(encoding));
+    }
+
+    [PublicAPI]
+    public static bool TryWriteBinary([NotNull] string filepath, [NotNull] byte[] data)
+    {
+      try
+      {
+        MakePathTo(filepath);
+
+        File.WriteAllBytes(filepath, data);
+
+        s_LastWrittenPath = filepath;
+        LastException = null;
+        return true;
+      }
+      catch (IOException iox)
+      {
+        LastException = iox;
+      }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
+      }
+
+      return false;
+    }
+
+    [PublicAPI]
+    public static bool TryUpdateObject([NotNull] string filepath, [NotNull] object obj, Encoding encoding = null)
+    {
+      if (!TryReadText(filepath, out string json, encoding))
+      {
+        return false;
+      }
+
+      try
+      {
+        JsonUtility.FromJsonOverwrite(json, obj);
+      }
+      catch (Exception e)
+      {
+        LastException = new UnanticipatedException(e);
+      }
+
+      return false;
+    }
+
+    [PublicAPI]
+    public static bool TryReadObject<T>([NotNull] string filepath, [NotNull] out T obj, Encoding encoding = null)
+    {
+      if (!TryReadText(filepath, out string json, encoding))
+      {
+        obj = default;
+        return false;
+      }
+
+      try
+      {
+        obj = JsonUtility.FromJson<T>(json);
+        return obj is {};
+      }
+      catch (Exception e)
+      {
+        LastException = new UnanticipatedException(e);
+      }
+
+      obj = default;
+      return false;
     }
 
     [PublicAPI]
@@ -117,34 +191,6 @@ namespace Ore
     }
 
     [PublicAPI]
-    public static bool TryWriteBinary([NotNull] string filepath, [NotNull] byte[] data)
-    {
-      try
-      {
-        MakePathTo(filepath);
-
-        File.WriteAllBytes(filepath, data);
-
-        LastException = null;
-        return true;
-      }
-      catch (IOException iox)
-      {
-        LastException = iox;
-      }
-      catch (UnauthorizedException auth)
-      {
-        LastException = auth;
-      }
-      catch (Exception ex)
-      {
-        LastException = new UnanticipatedException(ex);
-      }
-
-      return false;
-    }
-
-    [PublicAPI]
     public static bool TryReadBinary([NotNull] string filepath, [NotNull] out byte[] data)
     {
       if (!Paths.IsValidPath(filepath))
@@ -176,6 +222,7 @@ namespace Ore
       data = System.Array.Empty<byte>();
       return false;
     }
+
 
     [PublicAPI]
     public static bool TryMakePathTo([NotNull] string filepath)
@@ -267,6 +314,9 @@ namespace Ore
 
 
   #region INFO & DEBUGGING
+
+    [PublicAPI]
+    public static string LastWrittenPath => s_LastWrittenPath ?? string.Empty;
 
     [PublicAPI]
     public static IOResult GetLastIOResult()
@@ -363,6 +413,8 @@ namespace Ore
 
 
   #region PRIVATE
+
+    private static string s_LastWrittenPath;
 
     private const int EXCEPTION_RING_SZ = 4;
     private static readonly Exception[] s_ExceptionRingBuf = new Exception[EXCEPTION_RING_SZ];

@@ -214,9 +214,14 @@ public static class PrimesCorrectness
 
     bob.Insert(0, $"const float GROWFACTOR = {growFactor:F2}f;\n\n");
 
-    Filesystem.TryWriteText($"Temp/PrimeSizes_{growFactor:F2}f_{hashprime}.cs", bob.ToString());
-
-    Debug.Log(bob.ToString());
+    if (Filesystem.TryWriteText($"Temp/PrimeSizes_{growFactor:F2}f_{hashprime}.cs", bob.ToString()))
+    {
+      Debug.Log($"Wrote C# to \"${Filesystem.LastWrittenPath}\".");
+    }
+    else
+    {
+      Debug.Log(bob.ToString());
+    }
   }
 
   [Test]
