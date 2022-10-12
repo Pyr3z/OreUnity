@@ -127,7 +127,7 @@ namespace Ore
 
       while (current < MaxValue)
       {
-        if (IsPrimeNoLookup(current, sqrt))
+        if ((current - 1) % hashprime != 0 && IsPrimeNoLookup(current, sqrt))
           return current;
 
         current += 2;
