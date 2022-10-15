@@ -26,9 +26,9 @@ using Math = System.Math;
 public static class PrimesCorrectness
 {
   [Test]
-  public static void BinarySearchCorrectness()
+  public static void BinarySearchCorrectness([Values(500)] int n)
   {
-    var testvalues = Primes10K.GetTestValues(500, 500, true);
+    var testvalues = Primes10K.GetTestValues(n, n, true);
 
     foreach (int value in testvalues)
     {
@@ -41,35 +41,33 @@ public static class PrimesCorrectness
   }
 
   [Test]
-  public static void IsPrimeNoLookup() // NoLookup should techically be axiomatic
+  public static void IsPrimeNoLookup([Values(200)] int n) // NoLookup should techically be axiomatic
   {
-    const int N = 200;
+    DoIsPrime(Primes.IsPrimeNoLookup, n);
+  }
 
-    var knownprimes = Primes10K.GetTestValues(N, 0);
-    var knownnons   = Primes10K.GetTestValues(0, N);
+  [Test]
+  public static void IsPrimeLookup([Values(200)] int n)
+  {
+    DoIsPrime(Primes.IsPrimeLookup, n);
+  }
 
-    for (int i = 0; i < N; ++i)
+  private static void DoIsPrime(System.Func<int,bool> testFunc, int n)
+  {
+    var knownprimes = Primes10K.GetTestValues(n, 0);
+    var knownnons   = Primes10K.GetTestValues(0, n);
+
+    for (int i = 0; i < n; ++i)
     {
-      Assert.True(Primes.IsPrimeNoLookup(knownprimes[i]), $"value={knownprimes[i]}");
-      Assert.False(Primes.IsPrimeNoLookup(knownnons[i]),  $"value={knownnons[i]}");
+      Assert.True(testFunc(knownprimes[i]), $"value={knownprimes[i]}");
+      Assert.False(testFunc(knownnons[i]),  $"value={knownnons[i]}");
     }
   }
 
   [Test]
-  public static void IsPrime()
+  private static void IsPrime([Values(100)] int n)
   {
-    const int N = 500;
-
-    var knownprimes = Primes10K.GetTestValues(N, 0);
-    var knownnons   = Primes10K.GetTestValues(0, N);
-
-    for (int i = 0; i < N; ++i)
-    {
-      Assert.True(Primes.IsPrime(knownprimes[i]), $"value={knownprimes[i]}");
-      Assert.False(Primes.IsPrime(knownnons[i]),  $"value={knownnons[i]}");
-    }
-
-    foreach (int value in Primes10K.GetTestValues(N >> 1, N >> 1, true))
+    foreach (int value in Primes10K.GetTestValues(n, n, true))
     {
       bool lookup = Primes.IsPrime(value);
       bool nolook = Primes.IsPrimeNoLookup(value);
