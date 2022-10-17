@@ -20,7 +20,14 @@ namespace Ore
 
     public static int ToInt32(this Color32 c)
     {
+      // I am SO pissed that Unity decided to hide the rgba field...
+      // AND access to the InternalEquals(other) method... 
       return c.a << 24 | c.b << 16 | c.g << 8 | c.r;
+    }
+
+    public static bool AreEqual(Color32 a, Color32 b)
+    {
+      return ToInt32(a) == ToInt32(b);
     }
 
     public static Color32 FromInt32(int i)

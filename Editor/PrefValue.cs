@@ -9,6 +9,7 @@ using JetBrains.Annotations;
 using Convert = System.Convert;
 using IConvertible = System.IConvertible;
 using IFormatProvider = System.IFormatProvider;
+using CultureInfo = System.Globalization.CultureInfo;
 
 
 namespace Ore.Editor
@@ -23,7 +24,7 @@ namespace Ore.Editor
         if (!Load().Equals(value))
         {
           m_Value = value;
-          EditorPrefs.SetString(m_Key, Convert.ToString(m_Value, INVARIANT));
+          EditorPrefs.SetString(m_Key, Convert.ToString(m_Value, CultureInfo.InvariantCulture));
         }
       }
     }
@@ -36,8 +37,6 @@ namespace Ore.Editor
       return pv.Load();
     }
 
-
-    private static readonly IFormatProvider INVARIANT = System.Globalization.CultureInfo.InvariantCulture;
 
     private readonly string m_Key;
     private T               m_Value;
@@ -61,7 +60,7 @@ namespace Ore.Editor
     {
       if (!m_Loaded)
       {
-        var str = EditorPrefs.GetString(m_Key);
+        string str = EditorPrefs.GetString(m_Key);
 
         if (str is T casted)
         {
@@ -70,6 +69,10 @@ namespace Ore.Editor
         else if (!str.IsEmpty())
         {
           m_Value = (T)Convert.ChangeType(str, typeof(T));
+        }
+        else
+        {
+          EditorPrefs.SetString(m_Key, Convert.ToString(m_Value, CultureInfo.InvariantCulture));
         }
 
         m_Loaded = true;

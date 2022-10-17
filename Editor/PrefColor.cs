@@ -17,9 +17,11 @@ namespace Ore.Editor
       get => Load();
       set
       {
+        if (Colors.AreEqual(Load(), value))
+          return;
+
         m_Color = value;
         EditorPrefs.SetString(m_Key, ColorUtility.ToHtmlStringRGBA(m_Color));
-        m_Loaded = true;
       }
     }
 
