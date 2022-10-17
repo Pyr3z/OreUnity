@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 
 using Math = System.Math;
+using Random = UnityEngine.Random;
 
 
 namespace Ore
@@ -145,6 +146,13 @@ namespace Ore
       }
 
       return MaxValue;
+    }
+
+
+    [PublicAPI]
+    public static int GetRandom(int min = MinValue, int max = MaxValue)
+    {
+      return NearestTo(Random.Range(min, max));
     }
 
 
