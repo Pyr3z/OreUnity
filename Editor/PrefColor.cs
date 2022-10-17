@@ -30,6 +30,11 @@ namespace Ore.Editor
     private bool            m_Loaded;
 
 
+    public PrefColor([NotNull] string key)
+      : this(key, DEFAULT_COLOR)
+    {
+    }
+
     public PrefColor([NotNull] string key, Color32 color)
     {
       m_Key    = key;
