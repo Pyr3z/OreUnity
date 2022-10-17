@@ -35,6 +35,15 @@ namespace Ore.Editor
     {
     }
 
+    public PrefColor([NotNull] string key, [NotNull] string htmlhex)
+      : this(key, DEFAULT_COLOR)
+    {
+      if (ColorUtility.TryParseHtmlString(htmlhex, out Color c))
+      {
+        m_Color = c;
+      }
+    }
+
     public PrefColor([NotNull] string key, Color32 color)
     {
       m_Key    = key;
