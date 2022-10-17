@@ -118,6 +118,12 @@ namespace Ore
     }
 
 
+    public static HashMap<K,V> GetFixedSizeMap(int capacity)
+    {
+      return new HashMap<K,V>(HashMapParams.NoAlloc(capacity));
+    }
+
+
     /// <summary>
     /// Fast search for the existence of the given key in this map.
     /// </summary>

@@ -21,7 +21,6 @@ namespace Ore
 
     private const int USERCAPACITY_DEFAULT = 5;
 
-    private const int INTERNALSIZE_DEFAULT = 7;
     private const int INTERNALSIZE_MIN     = Primes.MinValue;
     private const int INTERNALSIZE_MAX     = Primes.MaxConvenientValue;
 
@@ -33,7 +32,7 @@ namespace Ore
     private const float GROWFACTOR_MIN     = 1.1f;
     private const float GROWFACTOR_MAX     = 3f;
 
-    private const int HASHPRIME_DEFAULT    = 101;
+    private const int HASHPRIME_DEFAULT    = 193; // see Static/Hashing.cs for candidates
 
     private const bool ISFIXED_DEFAULT     = false;
 
@@ -46,7 +45,6 @@ namespace Ore
 
   #region Properties + Fields
 
-    public int  UserCapacity    => CalcLoadLimit(m_InitialSize);
     public int  RehashThreshold => m_HashPrime - 1;
     public bool IsFixedSize     => m_GrowFactor < GROWFACTOR_MIN;
 
@@ -124,7 +122,7 @@ namespace Ore
 
     public void ResetGrowth()
     {
-      m_InitialSize = INTERNALSIZE_DEFAULT;
+      m_InitialSize = CalcInternalSize(USERCAPACITY_DEFAULT);
     }
 
     public int StoreLoadLimit(int loadLimit)

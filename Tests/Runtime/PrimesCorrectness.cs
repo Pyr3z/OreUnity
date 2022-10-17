@@ -26,9 +26,9 @@ using Math = System.Math;
 public static class PrimesCorrectness
 {
   [Test]
-  public static void BinarySearchCorrectness()
+  public static void BinarySearchCorrectness([Values(500)] int n)
   {
-    var testvalues = Primes10K.GetTestValues(500, 500, true);
+    var testvalues = Primes10K.GetTestValues(n, n, true);
 
     foreach (int value in testvalues)
     {
@@ -41,35 +41,33 @@ public static class PrimesCorrectness
   }
 
   [Test]
-  public static void IsPrimeNoLookup() // NoLookup should techically be axiomatic
+  public static void IsPrimeNoLookup([Values(200)] int n) // NoLookup should techically be axiomatic
   {
-    const int N = 200;
+    DoIsPrime(Primes.IsPrimeNoLookup, n);
+  }
 
-    var knownprimes = Primes10K.GetTestValues(N, 0);
-    var knownnons   = Primes10K.GetTestValues(0, N);
+  [Test]
+  public static void IsPrimeLookup([Values(200)] int n)
+  {
+    DoIsPrime(Primes.IsPrimeLookup, n);
+  }
 
-    for (int i = 0; i < N; ++i)
+  private static void DoIsPrime(System.Func<int,bool> testFunc, int n)
+  {
+    var knownprimes = Primes10K.GetTestValues(n, 0);
+    var knownnons   = Primes10K.GetTestValues(0, n);
+
+    for (int i = 0; i < n; ++i)
     {
-      Assert.True(Primes.IsPrimeNoLookup(knownprimes[i]), $"value={knownprimes[i]}");
-      Assert.False(Primes.IsPrimeNoLookup(knownnons[i]),  $"value={knownnons[i]}");
+      Assert.True(testFunc(knownprimes[i]), $"value={knownprimes[i]}");
+      Assert.False(testFunc(knownnons[i]),  $"value={knownnons[i]}");
     }
   }
 
   [Test]
-  public static void IsPrime()
+  private static void IsPrime([Values(100)] int n)
   {
-    const int N = 500;
-
-    var knownprimes = Primes10K.GetTestValues(N, 0);
-    var knownnons   = Primes10K.GetTestValues(0, N);
-
-    for (int i = 0; i < N; ++i)
-    {
-      Assert.True(Primes.IsPrime(knownprimes[i]), $"value={knownprimes[i]}");
-      Assert.False(Primes.IsPrime(knownnons[i]),  $"value={knownnons[i]}");
-    }
-
-    foreach (int value in Primes10K.GetTestValues(N >> 1, N >> 1, true))
+    foreach (int value in Primes10K.GetTestValues(n, n, true))
     {
       bool lookup = Primes.IsPrime(value);
       bool nolook = Primes.IsPrimeNoLookup(value);
@@ -128,7 +126,7 @@ public static class PrimesCorrectness
     foreach (int value in data)
     {
       int prime = Primes.NearestTo(value);
-      Assert.True(Primes.IsPrime(prime), $"IsPrime({prime})");
+      Assert.True(Primes.IsPrime(prime), $"IsPrimeLookup({prime})");
 
       int digits    = Integers.CalcDigits(value);
       int dist      = Math.Abs(value - prime);
@@ -141,15 +139,17 @@ public static class PrimesCorrectness
   [Test]
   public static void FindGoodHashPrimes()
   {
-    var bob = new System.Text.StringBuilder();
+    var bob = new System.Text.StringBuilder("private static readonly int[] GOODPRIMES = {\n");
 
-    foreach (int prime in Hashing.HashPrimes)
+    int perline = 10;
+
+    foreach (int hashprime in Hashing.HashPrimes)
     {
       bool good = true;
 
-      foreach (int value in Primes.ConvenientPrimes)
+      foreach (int prime in Primes.HashtableSizes)
       {
-        if ((value - 1) % prime == 0)
+        if ((prime - 1) % hashprime == 0)
         {
           good = false;
           break;
@@ -158,14 +158,68 @@ public static class PrimesCorrectness
 
       if (good)
       {
-        bob.Append(prime).AppendLine();
+        bob.Append(hashprime).Append(',');
+        if (--perline == 0)
+        {
+          bob.AppendLine();
+          perline = 10;
+        }
       }
     }
 
-    Assert.Greater(bob.Length, 0);
+    bob.Append("\n};");
 
-    bob.Insert(0, "FOUND GOOD PRIMES:\n");
     Debug.Log(bob.ToString());
+  }
+
+  private static readonly int[] HASHPRIMES =
+  {
+    97, 193, 769
+  };
+
+  [Test, Timeout(10000)]
+  public static void FindGoodSizePrimes(
+    [ValueSource(nameof(HASHPRIMES))] int hashprime,
+    [Values(1.1f, 1.15f, 1.19f)] float growFactor)
+  {
+    var bob = new System.Text.StringBuilder("static readonly int[] PRIMESIZES =\n{\n  ");
+
+    const int perline = 10;
+    int count = 0;
+
+    int p = 5;
+    while (p <= Primes.MaxHashtableSize)
+    {
+      if ((p - 1) % hashprime != 0)
+      {
+        bob.Append(p).Append(',');
+
+        if (++count % perline == 0)
+        {
+          bob.AppendLine().Append("  ");
+        }
+      }
+
+      p = (int)(p * growFactor + 0.5f);
+      p = Primes.NextNoLookup(p);
+    }
+
+    bob.Append("\n};\n");
+
+    bob.Insert(0, $"const int N_PRIMESIZES = {count};\n\n");
+
+    bob.Insert(0, $"const int HASHPRIME = {hashprime};\n\n");
+
+    bob.Insert(0, $"const float GROWFACTOR = {growFactor:F2}f;\n\n");
+
+    if (Filesystem.TryWriteText($"Temp/PrimeSizes_{growFactor:F2}f_{hashprime}.cs", bob.ToString()))
+    {
+      Debug.Log($"Wrote C# to \"./{Filesystem.LastWrittenPath}\".");
+    }
+    else
+    {
+      Debug.Log(bob.ToString());
+    }
   }
 
   [Test]

@@ -3,6 +3,7 @@
  *  @date       2022-08-18
 **/
 
+using System.Linq;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
@@ -17,14 +18,18 @@ namespace Ore
     [PublicAPI]
     public static bool IsPrime(int value)
     {
+      return IsPrimeNoLookup(value);
+    }
+
+    internal static bool IsPrimeLookup(int value)
+    {
       if (value < 2)
         return false;
 
-      if ((value & 1) == 0) // "is even"
+      if ((value & 1) == 0)
         return value == 2;
 
-      // return (s_ConvenientPrimes.BinarySearch(value) >= 0) ||
-      return IsPrimeNoLookup(value, (int)Math.Sqrt(value));
+      return s_1p15xHash193Primes.BinarySearch(value) >= 0 || IsPrimeNoLookup(value);
     }
 
     internal static bool IsPrimeNoLookup(int value)
@@ -92,7 +97,7 @@ namespace Ore
       if (current >= MaxValue)
         return MaxValue;
 
-      int idx = s_ConvenientPrimes.BinarySearch(current);
+      int idx = s_1p15xHash193Primes.BinarySearch(current);
       if (idx < 0)
       {
         idx = ~idx;
@@ -100,9 +105,9 @@ namespace Ore
 
       ++idx;
 
-      while (idx < s_ConvenientPrimes.Length) // (average case)
+      while (idx < s_1p15xHash193Primes.Length) // (average case)
       {
-        current = s_ConvenientPrimes[idx];
+        current = s_1p15xHash193Primes[idx];
         if ((current - 1) % hashprime != 0)
           return current;
         ++idx;
@@ -126,7 +131,7 @@ namespace Ore
 
       while (current < MaxValue)
       {
-        if (IsPrimeNoLookup(current, sqrt))
+        if ((current - 1) % hashprime != 0 && IsPrimeNoLookup(current, sqrt))
           return current;
 
         current += 2;
@@ -151,20 +156,25 @@ namespace Ore
 
     public const int MaxConvenientValue = 7199369;
 
+    public const int MaxHashtableSize = 13351537;
 
-    public static IReadOnlyList<int> ConvenientPrimes => s_ConvenientPrimes;
 
-    private static readonly int[] s_ConvenientPrimes =
+    [NotNull]
+    public static IReadOnlyList<int> HashtableSizes => s_1p15xHash193Primes;
+
+
+    private static readonly int[] s_1p15xHash193Primes =
     {
-      // chooses primes closest to the curve y=2+1.2^x and where (prime - 1) % 101 != 0
-      3, 7, 11, 17, 23, 29, 37, 47, 59, 71,
-      89, 107, 131, 163, 197, 239, 293, 353, 431, 521,
-      631, 761, 919, 1103, 1327, 1597, 1931, 2333, 2801, 3371,
-      4049, 4861, 5839, 7013, 8419, 10103, 12143, 14591, 17519, 21023,
-      25229, 30293, 36353, 43627, 52361, 62851, 75431, 90523, 108631, 130363,
-      156437, 187751, 225307, 270371, 324449, 389357, 467237, 560689, 672827, 807403,
-      968897, 1162687, 1395263, 1674319, 2009191, 2411033, 2893249, 3471899, 4166287, 4999559,
-      5999471, 7199369
+      5,7,11,17,23,29,37,43,53,67,
+      79,97,127,149,173,199,233,271,317,367,
+      431,499,577,673,787,907,1049,1213,1399,1613,
+      1861,2143,2467,2843,3271,3767,4337,4993,5743,6607,
+      7603,8747,10061,11579,13327,15329,17657,20323,23371,26879,
+      30911,35569,40927,47087,54151,62297,71647,82421,94789,109013,
+      125371,144203,165857,190753,219371,252283,290137,333667,383723,441307,
+      507503,583631,671189,771877,887659,1020821,1173947,1350047,1552561,1785457,
+      2053291,2361323,2715523,3122851,3591281,4129981,4749497,5461931,6281237,7223443,
+      8307001,9553057,10986049,12633961,
     };
 
   } // end class Primes
