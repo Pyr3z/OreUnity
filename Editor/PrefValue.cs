@@ -4,6 +4,7 @@
 **/
 
 using UnityEditor;
+using JetBrains.Annotations;
 
 using Convert = System.Convert;
 using IConvertible = System.IConvertible;
@@ -40,7 +41,7 @@ namespace Ore.Editor
     private bool            m_Loaded;
 
 
-    public PrefValue(string key, T @default = default)
+    public PrefValue([NotNull] string key, T @default = default)
     {
       m_Key    = key;
       m_Value  = @default;
