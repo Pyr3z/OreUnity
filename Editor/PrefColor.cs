@@ -83,10 +83,6 @@ namespace Ore.Editor
         {
           m_Color = c;
         }
-        else
-        {
-          m_Color = DEFAULT_COLOR;
-        }
 
         m_Loaded = true;
       }
