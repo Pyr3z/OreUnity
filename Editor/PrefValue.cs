@@ -28,8 +28,11 @@ namespace Ore.Editor
       }
     }
 
-    public static implicit operator T (PrefValue<T> pv)
+    public static implicit operator T ([CanBeNull] PrefValue<T> pv)
     {
+      if (pv is null)
+        return default;
+
       return pv.Load();
     }
 
@@ -47,6 +50,12 @@ namespace Ore.Editor
       m_Value  = @default;
       m_Loaded = false;
     }
+
+    private PrefValue()
+    {
+      // deleted default constructor
+    }
+
 
     private T Load()
     {

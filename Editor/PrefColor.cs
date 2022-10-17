@@ -12,7 +12,7 @@ namespace Ore.Editor
 {
   public class PrefColor
   {
-    public Color Value
+    public Color32 Value
     {
       get => Load();
       set
@@ -23,10 +23,27 @@ namespace Ore.Editor
       }
     }
 
-    private static readonly Color32 DEFAULT_COLOR = new Color32(0xFF, 0xFF, 0xFF, 0xFF);
+    public static implicit operator Color32 ([CanBeNull] PrefColor pc)
+    {
+      if (pc is null)
+        return DEFAULT_COLOR;
+
+      return pc.Load();
+    }
+
+    public static implicit operator Color ([CanBeNull] PrefColor pc)
+    {
+      if (pc is null)
+        return DEFAULT_COLOR;
+
+      return pc.Load();
+    }
+
+
+    private static readonly Color32 DEFAULT_COLOR = new Color32(0xFF, 0x00, 0xFF, 0xFF);
 
     private readonly string m_Key;
-    private Color           m_Color;
+    private Color32         m_Color;
     private bool            m_Loaded;
 
 
@@ -51,13 +68,22 @@ namespace Ore.Editor
       m_Loaded = false;
     }
 
+    private PrefColor()
+    {
+      // deleted default constructor
+    }
+
 
     private Color32 Load()
     {
       if (!m_Loaded)
       {
         var str = EditorPrefs.GetString(m_Key);
-        if (!ColorUtility.TryParseHtmlString(str, out m_Color))
+        if (ColorUtility.TryParseHtmlString(str, out Color c))
+        {
+          m_Color = c;
+        }
+        else
         {
           m_Color = DEFAULT_COLOR;
         }
