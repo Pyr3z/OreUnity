@@ -63,7 +63,14 @@ namespace Ore.Editor
       {
         var str = EditorPrefs.GetString(m_Key);
 
-        m_Value = (T)Convert.ChangeType(str, typeof(T));
+        if (str is T casted)
+        {
+          m_Value = casted;
+        }
+        else if (!str.IsEmpty())
+        {
+          m_Value = (T)Convert.ChangeType(str, typeof(T));
+        }
 
         m_Loaded = true;
       }
