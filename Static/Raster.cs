@@ -36,6 +36,11 @@ namespace Ore
       return new LineDrawer().Prepare(start, direction, distance);
     }
 
+    public static IEnumerable<Vector2Int> Circle(Vector2Int center, float radius)
+    {
+      return new CircleDrawer().Prepare(center.x, center.y, radius);
+    }
+
 
     public static IEnumerable<Vector2Int> Quad(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3)
     {
@@ -61,12 +66,6 @@ namespace Ore
       {
         yield return cell;
       }
-    }
-
-    public static IEnumerable<Vector2Int> Circle(Vector2 center, float radius)
-    {
-      // TODO iterate on PyroDK impl.
-      throw new System.NotImplementedException();
     }
 
 
@@ -285,8 +284,10 @@ namespace Ore
       public Vector2Int Center  => new Vector2Int(cx, cy);
 
 
+      public int? ForceOctant;
+
       private int x, y;
-      private int cx, cy, r, dx, dy, error, oct;
+      private int cx, cy, r, ex, ey, error, oct;
 
       //                                   OCT#  0   1   2   3   4   5   6   7
       private static readonly int[] s_OctXX = { +1, +0, +0, -1, -1, +0, +0, +1 };
@@ -296,22 +297,22 @@ namespace Ore
 
 
       [PublicAPI]
-      public CircleDrawer Prepare(int centerX, int centerY, int radius)
+      public CircleDrawer Prepare(int centerX, int centerY, float radius)
       {
-        if (radius < 0)
-          r = -radius;
+        if (radius < 0f)
+          r = -1 * (int)(radius - 0.5f);
         else
-          r = +radius;
+          r = (int)(radius + 0.5f);
         
         cx = centerX;
         cy = centerY;
         x  = r;
         y  = 0;
-        dx = dy = 1;
+        ex = 1;
+        ey = 1;
         
-        r *= -2;
-        error = r + 1;
-        oct = 0;
+        error = 1 - (r << 1);
+        oct = -1;
 
         return this;
       }
@@ -319,37 +320,42 @@ namespace Ore
       public bool MoveNext()
       {
         if (r == 0)
+        {
           return false;
+        }
 
-        if (r == x) // prepared
+        if (oct == -1)
         {
-          --x;
+          oct = ForceOctant ?? 0;
           return true;
         }
 
-        if (x < y)
+        if (x <= y)
         {
-          if (++oct == 8)
+          if (++oct >= (ForceOctant ?? 7) + 1)
+          {
             return false;
+          }
 
-          x = r/-2 - 1;
+          x = r;
           y = 0;
-          dx = dy = 1;
-          error = r + 1;
+          ex = 1;
+          ey = 1;
+          error = 1 - (r << 1);
           return true;
         }
 
-        if (error <= 0)
+        if (error <= ex + ey)
         {
           ++y;
-          error += dy;
-          dy += 2;
+          error += ey;
+          ey += 2;
         }
         else
         {
           --x;
-          dx += 2;
-          error -= dx - r;
+          ex += 2;
+          error += (-r << 1) + ex;
         }
 
         return true;
@@ -357,11 +363,12 @@ namespace Ore
 
       public void Reset()
       {
-        x = r/-2;
+        x = r;
         y = 0;
-        dx = dy = 1;
-        error = r + 1;
-        oct = 0;
+        ex = 1;
+        ey = 1;
+        error = 1 - (r << 1);
+        oct = -1;
       }
 
 
