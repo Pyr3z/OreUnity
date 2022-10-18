@@ -21,7 +21,7 @@ namespace Ore.Editor
           return;
 
         m_Color = value;
-        EditorPrefs.SetString(m_Key, ColorUtility.ToHtmlStringRGBA(m_Color));
+        EditorPrefs.SetString(m_Key, m_Color.ToHex());
       }
     }
 
@@ -54,10 +54,10 @@ namespace Ore.Editor
     {
     }
 
-    public PrefColor([NotNull] string key, [NotNull] string htmlhex)
+    public PrefColor([NotNull] string key, [NotNull] string htmlHex)
       : this(key, DEFAULT_COLOR)
     {
-      if (ColorUtility.TryParseHtmlString(htmlhex, out Color c))
+      if (Parsing.TryParseColor32(htmlHex, out Color32 c))
       {
         m_Color = c;
       }
@@ -80,8 +80,8 @@ namespace Ore.Editor
     {
       if (!m_Loaded)
       {
-        var str = EditorPrefs.GetString(m_Key);
-        if (ColorUtility.TryParseHtmlString(str, out Color c))
+        var hex = EditorPrefs.GetString(m_Key);
+        if (Parsing.TryParseColor32(hex, out Color32 c))
         {
           m_Color = c;
         }

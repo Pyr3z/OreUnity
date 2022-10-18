@@ -52,7 +52,12 @@ namespace Ore
 
     public static Color32 FromHex(string hex, Color32 fallback)
     {
-      return Parsing.TryParseColor32(hex, out var c) ? c : fallback;
+      return Parsing.TryParseColor32(hex, out Color32 c) ? c : fallback;
+    }
+
+    public static bool TryParse(string hex, out Color32 c)
+    {
+      return Parsing.TryParseColor32(hex, out c);
     }
 
 
