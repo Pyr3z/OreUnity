@@ -118,7 +118,6 @@ namespace Ore
       private const float D2 = Floats.SQRT2;
 
 
-
       [PublicAPI]
       public static LineDrawer WithBounds(int xmin, int ymin, int xmax, int ymax)
       {
@@ -267,6 +266,115 @@ namespace Ore
       {
       }
     } // end struct LineDrawer
+
+
+    /// <summary>
+    /// Keep a cached field of this struct to reduce GC allocs and keep nice
+    /// algo structure!
+    /// </summary>
+    /// <remarks>
+    /// Based on Bresenham's rasterization, implemented by Levi:
+    /// https://gist.github.com/Pyr3z/46884d67641094d6cf353358566db566
+    /// </remarks>
+    public struct CircleDrawer : IEnumerator<Vector2Int>, IEnumerable<Vector2Int>
+    {
+      [PublicAPI]
+      public Vector2Int Current => new Vector2Int(cx + s_OctXX[oct]*x + s_OctXY[oct]*y,
+                                                  cy + s_OctYY[oct]*y + s_OctYX[oct]*x);
+      [PublicAPI]
+      public Vector2Int Center  => new Vector2Int(cx, cy);
+
+
+      private int x, y;
+      private int cx, cy, r, dx, dy, error, oct;
+
+      //                                   OCT#  0   1   2   3   4   5   6   7
+      private static readonly int[] s_OctXX = { +1, +0, +0, -1, -1, +0, +0, +1 };
+      private static readonly int[] s_OctXY = { +0, +1, -1, +0, +0, -1, +1, +0 };
+      private static readonly int[] s_OctYX = { +0, +1, +1, +0, +0, -1, -1, +0 };
+      private static readonly int[] s_OctYY = { +1, +0, +0, +1, -1, +0, +0, -1 };
+
+
+      [PublicAPI]
+      public CircleDrawer Prepare(int centerX, int centerY, int radius)
+      {
+        if (radius < 0)
+          r = -radius;
+        else
+          r = +radius;
+        
+        cx = centerX;
+        cy = centerY;
+        x  = r;
+        y  = 0;
+        dx = dy = 1;
+        
+        r *= -2;
+        error = r + 1;
+        oct = 0;
+
+        return this;
+      }
+
+      public bool MoveNext()
+      {
+        if (r == 0)
+          return false;
+
+        if (r == x) // prepared
+        {
+          --x;
+          return true;
+        }
+
+        if (x < y)
+        {
+          if (++oct == 8)
+            return false;
+
+          x = r/-2 - 1;
+          y = 0;
+          dx = dy = 1;
+          error = r + 1;
+          return true;
+        }
+
+        if (error <= 0)
+        {
+          ++y;
+          error += dy;
+          dy += 2;
+        }
+        else
+        {
+          --x;
+          dx += 2;
+          error -= dx - r;
+        }
+
+        return true;
+      }
+
+      public void Reset()
+      {
+        x = r/-2;
+        y = 0;
+        dx = dy = 1;
+        error = r + 1;
+        oct = 0;
+      }
+
+
+      object IEnumerator.Current => Current;
+
+      // this trick allows this to be used in a foreach loop:
+      IEnumerator<Vector2Int> IEnumerable<Vector2Int>.GetEnumerator() => this;
+      IEnumerator IEnumerable.GetEnumerator() => this;
+
+      void System.IDisposable.Dispose()
+      {
+      }
+    } // end struct CircleDrawer
 
   } // end class Raster
 }
