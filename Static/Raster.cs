@@ -284,7 +284,9 @@ namespace Ore
       public Vector2Int Center  => new Vector2Int(cx, cy);
 
 
+      #if DEBUG
       public int? ForceOctant;
+      #endif
 
       private int x, y;
       private int cx, cy, r, ex, ey, error, oct;
@@ -295,24 +297,32 @@ namespace Ore
       private static readonly int[] s_OctYX = { +0, +1, +1, +0, +0, -1, -1, +0 };
       private static readonly int[] s_OctYY = { +1, +0, +0, +1, -1, +0, +0, -1 };
 
+      private const int ERROR_X = 1;
+      private const int ERROR_Y = 1;
+      private const float RADIUS_BIAS = 0.35f;
+
 
       [PublicAPI]
       public CircleDrawer Prepare(int centerX, int centerY, float radius)
       {
         if (radius < 0f)
-          r = -1 * (int)(radius - 0.5f);
+          r = -1 * (int)(radius - RADIUS_BIAS);
         else
-          r = (int)(radius + 0.5f);
-        
-        cx = centerX;
-        cy = centerY;
-        x  = r;
-        y  = 0;
-        ex = 1;
-        ey = 1;
-        
+          r = (int)(radius + RADIUS_BIAS);
+
+        cx    = centerX;
+        cy    = centerY;
+        x     = r;
+        y     = 0;
+        ex    = ERROR_X;
+        ey    = ERROR_Y;
         error = 1 - (r << 1);
-        oct = -1;
+
+      #if DEBUG
+        oct = ForceOctant ?? 0;
+      #else
+        oct = 0;
+      #endif
 
         return this;
       }
@@ -324,28 +334,7 @@ namespace Ore
           return false;
         }
 
-        if (oct == -1)
-        {
-          oct = ForceOctant ?? 0;
-          return true;
-        }
-
-        if (x <= y)
-        {
-          if (++oct >= (ForceOctant ?? 7) + 1)
-          {
-            return false;
-          }
-
-          x = r;
-          y = 0;
-          ex = 1;
-          ey = 1;
-          error = 1 - (r << 1);
-          return true;
-        }
-
-        if (error <= ex + ey)
+        if (error < 0)
         {
           ++y;
           error += ey;
@@ -358,17 +347,37 @@ namespace Ore
           error += (-r << 1) + ex;
         }
 
-        return true;
+        if (x > y || ( x == y && (oct & 1) == 0 ))
+        {
+          return true;
+        }
+
+      #if DEBUG
+        if (++oct >= (ForceOctant ?? 7) + 1)
+      #else
+        if (++oct >= 8)
+      #endif
+        {
+          return false;
+        }
+
+        x     = r;
+        y     = 0;
+        ex    = ERROR_X;
+        ey    = ERROR_Y;
+        error = 1 - (r << 1);
+
+        return (oct & 1) == 1 || MoveNext();
       }
 
       public void Reset()
       {
-        x = r;
-        y = 0;
-        ex = 1;
-        ey = 1;
+        x     = r;
+        y     = 0;
+        ex    = ERROR_X;
+        ey    = ERROR_Y;
         error = 1 - (r << 1);
-        oct = -1;
+        oct   = 0;
       }
 
 
