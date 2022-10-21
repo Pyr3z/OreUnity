@@ -77,22 +77,28 @@ public static class HashMapCorrectness
   }
 
   [Test]
-  public static void ContainsKey()
+  public static void HasKey()
   {
     var map = new HashMap<string,string>();
 
-    Assert.False(map.HasKey("fef"));
+    Assert.False(map.HasKey("fef"), "map.HasKey('fef')");
 
-    map.Add("fef", "bub");
+    map["fef"] = "bub";
 
-    Assert.True(map.HasKey("fef"));
+    Assert.True(map.HasKey("fef"), "map.HasKey('fef')");
+    Assert.False(map.HasKey("bub"), "map.HasKey('bub')");
 
     foreach (string key in GetTestStrings(100))
     {
-      map.Remap(key, map.Count.ToString());
-      Assert.True(map.HasKey("fef"), "hath it fef?");
-      Assert.True(map.HasKey(key));
+      map[key] = key;
+
+      Assert.True(map.HasKey(key), "map.HasKey(key)");
+      Assert.True(map.HasKey("fef"), "map.HasKey('fef') (still?)");
     }
+
+    map.Unmap("fef");
+
+    Assert.False(map.HasKey("fef"), "map.HasKey('fef')");
   }
 
   [TestCase(1)]

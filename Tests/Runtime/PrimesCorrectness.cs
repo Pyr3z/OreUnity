@@ -28,6 +28,7 @@ public static class PrimesCorrectness
   [Test]
   public static void BinarySearchCorrectness([Values(500)] int n)
   {
+    // TODO move me
     var testvalues = Primes10K.GetTestValues(n, n, true);
 
     foreach (int value in testvalues)
@@ -61,18 +62,6 @@ public static class PrimesCorrectness
     {
       Assert.True(testFunc(knownprimes[i]), $"value={knownprimes[i]}");
       Assert.False(testFunc(knownnons[i]),  $"value={knownnons[i]}");
-    }
-  }
-
-  [Test]
-  private static void IsPrime([Values(100)] int n)
-  {
-    foreach (int value in Primes10K.GetTestValues(n, n, true))
-    {
-      bool lookup = Primes.IsPrime(value);
-      bool nolook = Primes.IsPrimeNoLookup(value);
-
-      Assert.AreEqual(lookup, nolook, $"value={value}");
     }
   }
 
