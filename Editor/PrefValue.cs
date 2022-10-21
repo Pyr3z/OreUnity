@@ -5,7 +5,7 @@
 
 using UnityEditor;
 using JetBrains.Annotations;
-
+using UnityEngine;
 using Convert = System.Convert;
 using IConvertible = System.IConvertible;
 using IFormatProvider = System.IFormatProvider;
@@ -14,6 +14,7 @@ using CultureInfo = System.Globalization.CultureInfo;
 
 namespace Ore.Editor
 {
+  [PublicAPI]
   public class PrefValue<T> where T : IConvertible
   {
     public T Value

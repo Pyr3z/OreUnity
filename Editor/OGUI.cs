@@ -14,6 +14,8 @@ namespace Ore.Editor
 
   public static class OGUI
   {
+    public static readonly GUIContent ScratchContent = new GUIContent();
+
 
     public static float Indent => EditorGUI.indentLevel * STD_INDENT;
 

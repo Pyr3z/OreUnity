@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 
 namespace Ore.Editor
 {
+  [PublicAPI]
   public class PrefColor
   {
     public Color32 Value
@@ -73,6 +74,30 @@ namespace Ore.Editor
     private PrefColor()
     {
       // deleted default constructor
+    }
+
+
+    public void DrawLayout(string label)
+    {
+      if (label is null)
+      {
+        DrawLayout();
+        return;
+      }
+
+      OGUI.ScratchContent.text = label;
+      DrawLayout(OGUI.ScratchContent);
+      OGUI.ScratchContent.text = string.Empty;
+    }
+
+    public void DrawLayout(GUIContent label = null)
+    {
+      EditorGUI.BeginChangeCheck();
+      Color32 color = EditorGUILayout.ColorField(label ?? GUIContent.none, Value);
+      if (EditorGUI.EndChangeCheck())
+      {
+        Value = color;
+      }
     }
 
 
