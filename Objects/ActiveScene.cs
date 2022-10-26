@@ -292,7 +292,7 @@ namespace Ore
     {
       yield return routine;
 
-      int i = i_hint.AtMost(m_ContractedCoroutines.Count - 1);
+      int i = i_hint.AtMost(m_ContractedCoroutines.Count);
       while (i --> 0)
       {
         var (coru,cont) = m_ContractedCoroutines[i];
@@ -320,7 +320,7 @@ namespace Ore
     {
       yield return routine;
 
-      int i = i_hint.AtMost(m_KeyedCoroutines.Count - 1);
+      int i = i_hint.AtMost(m_KeyedCoroutines.Count);
       while (i --> 0)
       {
         var (coru,kee) = m_KeyedCoroutines[i];
