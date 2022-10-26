@@ -156,7 +156,6 @@ namespace Ore
           }
         }
 
-        s_CoroutineQueue.Clear();
         s_CoroutineQueue = swapq;
       }
     }

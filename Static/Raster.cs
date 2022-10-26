@@ -284,9 +284,9 @@ namespace Ore
       public Vector2Int Center  => new Vector2Int(cx, cy);
 
 
-      #if DEBUG
+    #if DEBUG
       public int? ForceOctant;
-      #endif
+    #endif
 
       private int x, y;
       private int cx, cy, r, ex, ey, error, oct;
