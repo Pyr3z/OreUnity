@@ -1,4 +1,4 @@
-/*! @file       Editor/EditorStateValidator.cs
+/*! @file       Editor/AssetsValidator.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-06
 **/
@@ -13,10 +13,10 @@ namespace Ore.Editor
 {
 
   [InitializeOnLoad]
-  public static class EditorStateValidator
+  public static class AssetsValidator
   {
 
-    static EditorStateValidator()
+    static AssetsValidator()
     {
       EditorApplication.delayCall += ValidateTypeAttributes;
       EditorApplication.delayCall += ValidatePreloadedAssets;
@@ -104,6 +104,6 @@ namespace Ore.Editor
       }
     }
 
-  } // end static calss EditorStateValidator
+  } // end static calss AssetsValidator
 
 }
