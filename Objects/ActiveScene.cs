@@ -10,17 +10,18 @@
 
 using System.Collections;
 using System.Collections.Generic;
-
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 using JetBrains.Annotations;
-using Object = UnityEngine.Object;
-using WeakRef = System.WeakReference;
-
 
 namespace Ore
 {
+
+  using WeakRef       = System.WeakReference;
+  using CoroutineList = List<(Coroutine coru, int id)>;
+
+
   [DefaultExecutionOrder(-500)] // rationale: Many things might depend on this class early-on.
   public class ActiveScene : OSingleton<ActiveScene>
   {
@@ -29,31 +30,21 @@ namespace Ore
     [SerializeField, Range(0, 64), Tooltip("Set to 0 to squelch the warning.")]
     private int m_TooManyCoroutinesWarningThreshold = 16;
 
+
     [System.NonSerialized]
-    private static readonly Dictionary<Scene, float> s_SceneBirthdays = new Dictionary<Scene, float>();
+    private int m_NextCoroutineID, m_ActiveCoroutineCount;
+
+    [System.NonSerialized]
+    private readonly HashMap<object, CoroutineList> m_CoroutineMap = new HashMap<object, CoroutineList>();
 
     [System.NonSerialized]
     private static Queue<(IEnumerator,object)> s_CoroutineQueue;
 
     [System.NonSerialized]
-    private readonly List<(Coroutine,WeakRef)> m_ContractedCoroutines = new List<(Coroutine,WeakRef)>();
-
-    [System.NonSerialized]
-    private readonly List<(Coroutine,string)> m_KeyedCoroutines = new List<(Coroutine, string)>();
+    private static readonly HashMap<Scene, float> s_SceneBirthdays = new HashMap<Scene, float>();
 
 
-    public static bool TryGetScene(out Scene scene)
-    {
-      if (IsActive)
-      {
-        scene = Current.gameObject.scene;
-        return true;
-      }
-
-      scene = default;
-      return false;
-    }
-
+    [PublicAPI]
     public static float GetSceneAge()
     {
       if (IsActive && s_SceneBirthdays.TryGetValue(Instance.gameObject.scene, out float birth))
@@ -63,6 +54,7 @@ namespace Ore
       return 0f;
     }
 
+    [PublicAPI]
     public static float GetSceneAge(Scene scene)
     {
       if (s_SceneBirthdays.TryGetValue(scene, out float birth))
@@ -72,6 +64,7 @@ namespace Ore
       return 0f;
     }
 
+    [PublicAPI]
     public static float GetSceneAge(string scene_name)
     {
       return GetSceneAge(SceneManager.GetSceneByName(scene_name));
@@ -129,18 +122,26 @@ namespace Ore
       }
     }
 
+    [PublicAPI]
+    public static void EnqueueCoroutine([NotNull] IEnumerator routine, [NotNull] out string guidKey)
+    {
+      guidKey = Strings.MakeGUID();
+      EnqueueCoroutine(routine, guidKey);
+    }
+
     /// <summary>
     ///
     /// </summary>
     /// <param name="contract">
-    ///
+    /// The Object instance originally given to EnqueueCoroutine or
+    /// StartCoroutine as a lifetime contract.
     /// </param>
     [PublicAPI]
-    public static void CancelCoroutine([NotNull] Object contract)
+    public static void CancelCoroutinesForContract([NotNull] Object contract)
     {
       if (IsActive)
       {
-        Instance.StopCoroutine(contract);
+        Instance.StopAllCoroutinesWith(contract);
       }
       else if (s_CoroutineQueue?.Count > 0)
       {
@@ -164,14 +165,14 @@ namespace Ore
     ///
     /// </summary>
     /// <param name="key">
-    ///
+    /// The string originally given to EnqueueCoroutine or StartCoroutine.
     /// </param>
     [PublicAPI]
-    public static void CancelCoroutine([NotNull] string key)
+    public static void CancelCoroutinesForKey([NotNull] string key)
     {
       if (IsActive)
       {
-        Instance.StopCoroutine(key);
+        Instance.StopAllCoroutinesWith(key);
       }
       else if (s_CoroutineQueue?.Count > 0)
       {
@@ -193,6 +194,7 @@ namespace Ore
     }
 
 
+    [PublicAPI]
     public /* static */ void SetCoroutineCountWarningThreshold(int threshold)
     {
       if (m_TooManyCoroutinesWarningThreshold == threshold)
@@ -203,13 +205,14 @@ namespace Ore
       CheckCoroutineThreshold();
     }
 
-    // BEGIN MISTAKE CORRECTION:
+
+  #region MonoBehaviour API mistake correction
 
     [System.Obsolete("Do not use the base Unity APIs to start coroutines on the ActiveScene.")]
     public /**/ new /**/ Coroutine StartCoroutine(IEnumerator mistake)
     {
-      Orator.Warn("Don't use the base Unity APIs to start coroutines on the ActiveScene.\nUse the static `EnqueueCoroutine` methods instead.");
-      return StartCoroutine(mistake, this);
+      Orator.Error("Don't use the base Unity APIs to start coroutines on the ActiveScene.\nUse the static `EnqueueCoroutine` methods instead.");
+      return null;
     }
 
     [System.Obsolete("SERIOUSLY don't use this overload =^(", true)]
@@ -225,173 +228,112 @@ namespace Ore
       Orator.Error("SERIOUSLY don't use this overload =^(");
       return null;
     }
+  
+  #endregion MonoBehaviour API mistake correction
 
     // the good overloads:
 
-    public Coroutine StartCoroutine([NotNull] IEnumerator routine, [NotNull] Object contract)
+    public Coroutine StartCoroutine([NotNull] IEnumerator routine, [CanBeNull] object contract)
     {
-      var wref = new WeakRef(contract);
-      var coru = base.StartCoroutine(DoRoutinePlusCleanup(routine, wref, m_ContractedCoroutines.Count));
+      contract ??= this;
 
-      m_ContractedCoroutines.Add((coru, wref));
+      if (contract is Object uobj)
+      {
+        if (!uobj)
+        {
+          Orator.Reached(this);
+          return null;
+        }
+
+        contract = new WeakRef(uobj);
+      }
+
+      var coru = (base.StartCoroutine(DoRoutinePlusCleanup(routine, contract, m_NextCoroutineID)), s_NextCoroutineID: m_NextCoroutineID);
+
+      ++m_NextCoroutineID;
+      ++m_ActiveCoroutineCount;
+
+      if (m_CoroutineMap.TryMap(contract, new CoroutineList { coru }, out CoroutineList prev) == false)
+      {
+        prev.Add(coru);
+      }
 
       CheckCoroutineThreshold();
 
-      return coru;
+      return coru.Item1;
     }
 
-    public Coroutine StartCoroutine([NotNull] IEnumerator routine, [NotNull] string key)
+    public void StopAllCoroutinesWith([NotNull] object contract)
     {
-      var coru = base.StartCoroutine(DoRoutinePlusCleanup(routine, key, m_KeyedCoroutines.Count));
-
-      m_KeyedCoroutines.Add((coru, key));
-
-      CheckCoroutineThreshold();
-
-      return coru;
-    }
-
-    public void StopCoroutine([NotNull] Object contract)
-    {
-      int i = m_ContractedCoroutines.Count;
-      while (i --> 0)
+      if (contract is Object uobj)
       {
-        var (coru,wref) = m_ContractedCoroutines[i];
-        if (coru is null)
-        {
-          m_ContractedCoroutines.RemoveAt(i);
-        }
-        else if (wref is null || !wref.IsAlive || (Object)wref.Target == contract)
+        contract = new WeakRef(uobj);
+      }
+
+      if (!m_CoroutineMap.Pop(contract, out CoroutineList list))
+        return;
+
+      foreach (var (coru, id) in list)
+      {
+        if (coru is {})
         {
           StopCoroutine(coru);
-          m_ContractedCoroutines.RemoveAt(i);
+          --m_ActiveCoroutineCount;
         }
       }
-    }
 
-    public /**/ new /**/ void StopCoroutine([NotNull] string key)
-    {
-      int i = m_KeyedCoroutines.Count;
-      while (i --> 0)
-      {
-        var (coru, kee) = m_KeyedCoroutines[i];
-        if (coru is null)
-        {
-          m_KeyedCoroutines.RemoveAt(i);
-        }
-        else if (key == kee)
-        {
-          StopCoroutine(coru);
-          m_KeyedCoroutines.RemoveAt(i);
-        }
-      }
+      // break the garbage collector's back
     }
 
 
-    private IEnumerator DoRoutinePlusCleanup(IEnumerator routine, WeakRef wref, int i_hint)
+    private IEnumerator DoRoutinePlusCleanup(IEnumerator routine, object contract, int id)
     {
-      yield return routine;
+      var wref = contract as WeakRef;
 
-      int i = i_hint.AtMost(m_ContractedCoroutines.Count);
-      while (i --> 0)
+      while (routine.MoveNext())
       {
-        var (coru,cont) = m_ContractedCoroutines[i];
-        if (coru is null)
+        yield return routine.Current;
+
+        if (wref is { IsAlive: false } || wref is { Target: null })
         {
-          m_ContractedCoroutines.RemoveAt(i);
-          if (cont.IsAlive && cont.Target.Equals(wref.Target))
-            yield break;
-        }
-        else if (!cont.IsAlive)
-        {
-          m_ContractedCoroutines.RemoveAt(i);
-          StopCoroutine(coru);
-        }
-        else if (cont.Target.Equals(wref.Target))
-        {
-          m_ContractedCoroutines.RemoveAt(i);
-          StopCoroutine(coru);
+          m_CoroutineMap.Unmap(contract);
+          --m_ActiveCoroutineCount;
           yield break;
         }
       }
-    }
 
-    private IEnumerator DoRoutinePlusCleanup(IEnumerator routine, string key, int i_hint)
-    {
-      yield return routine;
+      --m_ActiveCoroutineCount;
 
-      int i = i_hint.AtMost(m_KeyedCoroutines.Count);
+      if (OAssert.Fails(m_CoroutineMap.Pop(contract, out CoroutineList list), this))
+      {
+        yield break;
+      }
+
+      int i = list.Count;
       while (i --> 0)
       {
-        var (coru,kee) = m_KeyedCoroutines[i];
-        if (coru is null)
+        if (list[i].id == id)
         {
-          m_KeyedCoroutines.RemoveAt(i);
-        }
-        else if (key == kee)
-        {
-          m_KeyedCoroutines.RemoveAt(i);
-          StopCoroutine(coru);
-          yield break;
+          list.RemoveAt(i);
+          break;
         }
       }
+
+      if (list.Count > 0)
+      {
+        m_CoroutineMap.Map(contract, list);
+      }
     }
+
 
     private void CheckCoroutineThreshold()
     {
-      if (m_TooManyCoroutinesWarningThreshold <= 0)
-        return;
-
-      int count = m_ContractedCoroutines.Count + m_KeyedCoroutines.Count;
-      if (count >= m_TooManyCoroutinesWarningThreshold)
+      if (m_TooManyCoroutinesWarningThreshold > 0 && m_ActiveCoroutineCount >= m_TooManyCoroutinesWarningThreshold)
       {
-        Orator.Warn($"Too many concurrent coroutines running on ActiveScene! n={count}", this);
+        Orator.Warn($"Too many concurrent coroutines running on ActiveScene! n={m_ActiveCoroutineCount}", this);
       }
     }
 
-    private void CleanContractedCoroutines()
-    {
-      int i = m_ContractedCoroutines.Count;
-      while (i --> 0)
-      {
-        var (coru, contract) = m_ContractedCoroutines[i];
-        if (coru is null)
-        {
-          m_ContractedCoroutines.RemoveAt(i);
-        }
-        else if (contract is null || !contract.IsAlive || (contract.Target is Object obj && !obj))
-        {
-          StopCoroutine(coru);
-          m_ContractedCoroutines.RemoveAt(i);
-        }
-      }
-    }
-
-    private void CleanKeyedCoroutines()
-    {
-      int i = m_KeyedCoroutines.Count;
-      while (i --> 0)
-      {
-        if (m_KeyedCoroutines[i].Item1 is null)
-        {
-          m_KeyedCoroutines.RemoveAt(i);
-        }
-      }
-    }
-
-    // This is loop is a necessary evil, and is why I implore you to PLEASE not
-    // abuse this singleton!
-    private void LateUpdate()
-    {
-      // (MUST do every frame)
-      CleanContractedCoroutines();
-
-      // clean up keyed coroutines every once in a while:
-      if (Time.frameCount % 337 == 0) // 337 = roughly every 5s
-      {
-        CleanKeyedCoroutines();
-      }
-    }
 
     protected override void OnEnable()
     {
@@ -400,15 +342,10 @@ namespace Ore
 
       while (s_CoroutineQueue.Count > 0)
       {
-        var (routine, thing) = s_CoroutineQueue.Dequeue();
-        if (routine is {} && thing is {})
+        var (routine, contract) = s_CoroutineQueue.Dequeue();
+        if (routine is {} && contract is {})
         {
-          if (thing is string key)
-            StartCoroutine(routine, key);
-          else if (thing is Object contract && contract)
-            StartCoroutine(routine, contract);
-          else
-            StartCoroutine(routine, thing.ToString());
+          StartCoroutine(routine, contract);
         }
       }
 
@@ -419,8 +356,8 @@ namespace Ore
     {
       base.OnDisable();
       StopAllCoroutines();
-      m_ContractedCoroutines.Clear();
-      m_KeyedCoroutines.Clear();
+      m_ActiveCoroutineCount = 0;
+      m_CoroutineMap.Clear();
     }
 
 

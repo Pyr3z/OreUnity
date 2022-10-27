@@ -256,6 +256,23 @@ namespace Ore
       return false;
     }
 
+    public bool Pop(K key, out V oldVal)
+    {
+      int i = FindBucket(key);
+
+      if (i >= 0)
+      {
+        oldVal = m_Buckets[i].Value;
+        m_Buckets[i].Smear();
+        --m_Count;
+        ++m_Version;
+        return true;
+      }
+
+      oldVal = default;
+      return false;
+    }
+
     public void Remove(K key)
     {
       _ = Unmap(key);

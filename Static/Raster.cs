@@ -36,9 +36,25 @@ namespace Ore
       return new LineDrawer().Prepare(start, direction, distance);
     }
 
+
     public static IEnumerable<Vector2Int> Circle(Vector2Int center, float radius)
     {
       return new CircleDrawer().Prepare(center.x, center.y, radius);
+    }
+
+    public static IEnumerable<Vector2Int> Circle(Vector2 center, float radius)
+    {
+      return new CircleDrawer().Prepare(center, radius);
+    }
+
+    public static IEnumerable<Vector2Int> Circle(Vector2Int center, Vector2Int point)
+    {
+      return new CircleDrawer().Prepare(center, point);
+    }
+
+    public static IEnumerable<Vector2Int> Circle(Vector2 center, Vector2 point)
+    {
+      return new CircleDrawer().Prepare(center, point);
     }
 
 
@@ -104,14 +120,15 @@ namespace Ore
         }
       }
 
+      [PublicAPI]
+      public int Count => ((dx == dy ? dx : dx + dy) / 2 - i + 1).AtLeast(0);
+
 
       public int x, y;
 
-      private int sx, sy, dx, dy, xinc, yinc, i, error, side, state;
-      private int xmin, xmax, ymin, ymax;
 
-      private const int PREPARED  = 0;
-      private const int ITERATING = 1;
+      private int sx, sy, dx, dy, xinc, yinc, i, error, side;
+      private int xmin, xmax, ymin, ymax;
 
       private const float D  = 1f;
       private const float D2 = Floats.SQRT2;
@@ -169,10 +186,9 @@ namespace Ore
           error = dx - dy;
         }
 
-        dx *= 2;
-        dy *= 2;
+        dx *= -2;
+        dy *= -2;
 
-        state = PREPARED;
         return this;
       }
 
@@ -203,9 +219,10 @@ namespace Ore
           return false;
         }
 
-        if (state == PREPARED)
+        if (dx < 0 || dy < 0)
         {
-          state = ITERATING;
+          dx = -dx;
+          dy = -dy;
           return true;
         }
 
@@ -251,7 +268,6 @@ namespace Ore
         y     = sy;
         i     = (dx + dy) / 2;
         error = (dx - dy) / 2;
-        state = PREPARED;
       }
 
 
@@ -283,6 +299,9 @@ namespace Ore
       [PublicAPI]
       public Vector2Int Center  => new Vector2Int(cx, cy);
 
+      [PublicAPI]
+      public int Count => count;
+
 
     #if DEBUG
       public int? ForceOctant;
@@ -290,6 +309,7 @@ namespace Ore
 
       private int x, y;
       private int cx, cy, r, ex, ey, error, oct;
+      private int count;
 
       //                                   OCT#  0   1   2   3   4   5   6   7
       private static readonly int[] s_OctXX = { +1, +0, +0, -1, -1, +0, +0, +1 };
@@ -324,8 +344,35 @@ namespace Ore
         oct = 0;
       #endif
 
+        count = 0;
+
         return this;
       }
+
+      [PublicAPI]
+      public CircleDrawer Prepare(Vector2Int center, float radius)
+      {
+        return Prepare(center.x, center.y, radius);
+      }
+
+      [PublicAPI]
+      public CircleDrawer Prepare(Vector2 center, float radius)
+      {
+        return Prepare(Vector2Int.FloorToInt(center), radius);
+      }
+
+      [PublicAPI]
+      public CircleDrawer Prepare(Vector2Int center, Vector2Int point)
+      {
+        return Prepare(center.x, center.y, (point - center).magnitude);
+      }
+
+      [PublicAPI]
+      public CircleDrawer Prepare(Vector2 center, Vector2 point)
+      {
+        return Prepare((int)center.x, (int)center.y, (point - center).magnitude);
+      }
+
 
       public bool MoveNext()
       {
@@ -349,6 +396,7 @@ namespace Ore
 
         if (x > y || ( x == y && (oct & 1) == 0 ))
         {
+          ++count;
           return true;
         }
 
@@ -367,6 +415,7 @@ namespace Ore
         ey    = ERROR_Y;
         error = 1 - (r << 1);
 
+        count += oct & 1;
         return (oct & 1) == 1 || MoveNext();
       }
 
@@ -378,6 +427,7 @@ namespace Ore
         ey    = ERROR_Y;
         error = 1 - (r << 1);
         oct   = 0;
+        count = 0;
       }
 
 

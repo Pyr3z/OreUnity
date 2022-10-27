@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+
+## [UNRELEASED] - 2022-
+- Added Unit Tests: ActiveScene
+
+## [2.6.0] - 2022-10-26
+- Added: More QoL overloads for Raster shapes + more information properties.
+- Fixed: ActiveScene coroutines improperly cleaning up after they finish.
+- Changed: ActiveScene Coroutine API. In general backwards compatible, though the API has been revamped.
+
 ## [2.5.6] - 2022-10-17
 - Added: PrefValue<T> + PrefColor - helper classes for dealing with EditorPrefs.
 - Merged: HashMap/Primes optimizations

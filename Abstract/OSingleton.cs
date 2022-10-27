@@ -66,6 +66,19 @@ namespace Ore
       return instance && instance.m_IsSingletonInitialized;
     }
 
+    [PublicAPI]
+    public static bool TryGetScene(out Scene scene)
+    {
+      if (IsActive)
+      {
+        scene = Current.gameObject.scene;
+        return true;
+      }
+
+      scene = default;
+      return false;
+    }
+
 
     private static TSelf s_Current;
 
