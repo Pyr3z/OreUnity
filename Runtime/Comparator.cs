@@ -15,6 +15,7 @@ using Type = System.Type;
 
 namespace Ore
 {
+  [PublicAPI]
   public class Comparator<T> : IComparator<T>
   {
     public static readonly Comparator<T> Default = new Comparator<T>();
@@ -23,27 +24,27 @@ namespace Ore
     private readonly TypeCode m_Type = Type.GetTypeCode(typeof(T));
 
 
-    [PublicAPI, Pure]
-    public bool IsNone(T obj)
+    [Pure]
+    public virtual bool IsNone(T obj)
     {
       return obj is null || Equals(obj, default(T));
     }
 
-    [PublicAPI, Pure]
-    public bool Equals(T a, T b)
+    [Pure]
+    public virtual bool Equals(T a, T b)
     {
       // slightly different short-circuiting than object.Equals
       return (object)a == (object)b || (a is { } && a.Equals(b));
     }
 
-    [PublicAPI, Pure]
-    public int GetHashCode([CanBeNull] T obj)
+    [Pure]
+    public virtual int GetHashCode([CanBeNull] T obj)
     {
       return obj?.GetHashCode() ?? 0;
     }
 
-    [PublicAPI, Pure]
-    public int Compare(T a, T b)
+    [Pure]
+    public virtual int Compare(T a, T b)
     {
       if (m_Type == TypeCode.String)
       {
