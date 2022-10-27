@@ -317,8 +317,9 @@ namespace Ore
       private static readonly int[] s_OctYX = { +0, +1, +1, +0, +0, -1, -1, +0 };
       private static readonly int[] s_OctYY = { +1, +0, +0, +1, -1, +0, +0, -1 };
 
-      private const int ERROR_X = 1;
-      private const int ERROR_Y = 1;
+      private const int ERROR_X = 2;
+      private const int ERROR_Y = 2;
+      private const int ERROR_0 = 2;
       private const float RADIUS_BIAS = 0.35f;
 
 
@@ -336,7 +337,7 @@ namespace Ore
         y     = 0;
         ex    = ERROR_X;
         ey    = ERROR_Y;
-        error = 1 - (r << 1);
+        error = ERROR_0 - (r << 1);
 
       #if DEBUG
         oct = ForceOctant ?? 0;
@@ -413,7 +414,7 @@ namespace Ore
         y     = 0;
         ex    = ERROR_X;
         ey    = ERROR_Y;
-        error = 1 - (r << 1);
+        error = ERROR_0 - (r << 1);
 
         count += oct & 1;
         return (oct & 1) == 1 || MoveNext();
@@ -425,7 +426,7 @@ namespace Ore
         y     = 0;
         ex    = ERROR_X;
         ey    = ERROR_Y;
-        error = 1 - (r << 1);
+        error = ERROR_0 - (r << 1);
         oct   = 0;
         count = 0;
       }
