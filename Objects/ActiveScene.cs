@@ -18,7 +18,6 @@ using JetBrains.Annotations;
 namespace Ore
 {
 
-  using WeakRef       = System.WeakReference;
   using CoroutineList = List<(Coroutine coru, int id)>;
 
 
@@ -35,7 +34,10 @@ namespace Ore
     private int m_NextCoroutineID, m_ActiveCoroutineCount;
 
     [System.NonSerialized]
-    private readonly HashMap<object, CoroutineList> m_CoroutineMap = new HashMap<object, CoroutineList>();
+    private readonly HashMap<object, CoroutineList> m_CoroutineMap = new HashMap<object, CoroutineList>()
+    {
+      KeyComparator = ContractComparator.Instance
+    };
 
     [System.NonSerialized]
     private static Queue<(IEnumerator,object)> s_CoroutineQueue;
@@ -90,9 +92,6 @@ namespace Ore
     [PublicAPI]
     public static void EnqueueCoroutine([NotNull] IEnumerator routine, [NotNull] Object contract)
     {
-      if (OAssert.FailsNullChecks(routine, contract))
-        return;
-
       if (IsActive)
       {
         // late comers = just run it now
@@ -108,9 +107,6 @@ namespace Ore
     [PublicAPI]
     public static void EnqueueCoroutine([NotNull] IEnumerator routine, [NotNull] string key)
     {
-      if (OAssert.FailsNullChecks(routine, key))
-        return;
-
       if (IsActive) // late comers
       {
         Instance.StartCoroutine(routine, key);
@@ -129,6 +125,20 @@ namespace Ore
       EnqueueCoroutine(routine, guidKey);
     }
 
+    [PublicAPI]
+    public static void EnqueueCoroutine([NotNull] IEnumerator routine)
+    {
+      if (IsActive)
+      {
+        Instance.StartCoroutine(routine, null);
+      }
+      else
+      {
+        s_CoroutineQueue ??= new Queue<(IEnumerator, object)>();
+        s_CoroutineQueue.Enqueue((routine,null));
+      }
+    }
+
     /// <summary>
     ///
     /// </summary>
@@ -137,7 +147,7 @@ namespace Ore
     /// StartCoroutine as a lifetime contract.
     /// </param>
     [PublicAPI]
-    public static void CancelCoroutinesForContract([NotNull] Object contract)
+    public static void CancelCoroutinesForContract([NotNull] object contract)
     {
       if (IsActive)
       {
@@ -151,7 +161,7 @@ namespace Ore
         while (s_CoroutineQueue.Count > 0)
         {
           var blob = s_CoroutineQueue.Dequeue();
-          if (!(blob.Item2 is Object obj) || obj != contract)
+          if (blob.Item2 != contract)
           {
             swapq.Enqueue(blob);
           }
@@ -161,41 +171,8 @@ namespace Ore
       }
     }
 
-    /// <summary>
-    ///
-    /// </summary>
-    /// <param name="key">
-    /// The string originally given to EnqueueCoroutine or StartCoroutine.
-    /// </param>
     [PublicAPI]
-    public static void CancelCoroutinesForKey([NotNull] string key)
-    {
-      if (IsActive)
-      {
-        Instance.StopAllCoroutinesWith(key);
-      }
-      else if (s_CoroutineQueue?.Count > 0)
-      {
-        // queue delete is notoriously SLOW, but hopefully this is uber rare
-        var swapq = new Queue<(IEnumerator,object)>(s_CoroutineQueue.Count);
-
-        while (s_CoroutineQueue.Count > 0)
-        {
-          var blob = s_CoroutineQueue.Dequeue();
-          if (!(blob.Item2 is string kee) || kee != key)
-          {
-            swapq.Enqueue(blob);
-          }
-        }
-
-        s_CoroutineQueue.Clear();
-        s_CoroutineQueue = swapq;
-      }
-    }
-
-
-    [PublicAPI]
-    public /* static */ void SetCoroutineCountWarningThreshold(int threshold)
+    public /* static */ void SetCoroutineWarningThreshold(int threshold)
     {
       if (m_TooManyCoroutinesWarningThreshold == threshold)
         return;
@@ -237,18 +214,7 @@ namespace Ore
     {
       contract ??= this;
 
-      if (contract is Object uobj)
-      {
-        if (!uobj)
-        {
-          Orator.Reached(this);
-          return null;
-        }
-
-        contract = new WeakRef(uobj);
-      }
-
-      var coru = (base.StartCoroutine(DoRoutinePlusCleanup(routine, contract, m_NextCoroutineID)), s_NextCoroutineID: m_NextCoroutineID);
+      var coru = (base.StartCoroutine(DoRoutinePlusCleanup(routine, contract, m_NextCoroutineID)), m_NextCoroutineID);
 
       ++m_NextCoroutineID;
       ++m_ActiveCoroutineCount;
@@ -265,11 +231,6 @@ namespace Ore
 
     public void StopAllCoroutinesWith([NotNull] object contract)
     {
-      if (contract is Object uobj)
-      {
-        contract = new WeakRef(uobj);
-      }
-
       if (!m_CoroutineMap.Pop(contract, out CoroutineList list))
         return;
 
@@ -288,13 +249,16 @@ namespace Ore
 
     private IEnumerator DoRoutinePlusCleanup(IEnumerator routine, object contract, int id)
     {
-      var wref = contract as WeakRef;
+      if (!(contract is Object wref))
+      {
+        wref = this;
+      }
 
       while (routine.MoveNext())
       {
         yield return routine.Current;
 
-        if (wref is { IsAlive: false } || wref is { Target: null })
+        if (!wref)
         {
           m_CoroutineMap.Unmap(contract);
           --m_ActiveCoroutineCount;
@@ -402,6 +366,19 @@ namespace Ore
       OAssert.True(Current == bud);
 
       return bud;
+    }
+
+
+    private sealed class ContractComparator : Comparator<object>
+    {
+      public static readonly ContractComparator Instance = new ContractComparator();
+
+      public override bool IsNone(object obj)
+      {
+        if (obj is Object uobj)
+          return !uobj;
+        return base.IsNone(obj);
+      }
     }
 
   } // end class ActiveScene
