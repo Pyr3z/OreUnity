@@ -9,8 +9,23 @@
  *    0.72 by default, or user-defined via HashMapParams.
  *
  *  Collision Resolution Policy:
- *    Closed hashing w/ linear probing (as it is the most flexible for all use
- *    cases).
+ *    Closed hashing w/ jump probing.
+ *
+ *  @remarks
+ *    System.Collections.Generic.Dictionary is now a closed-hashed table, with
+ *    indirected chaining for collision resolution. It used to be implemented as
+ *    a red/black tree (bAcK iN mY dAy). This HashMap can occasionally beat
+ *    Dictionary at sanitary speed tests, however where HashMap really wins is
+ *    by supplying a far more flexible API for algorithmic optimization, which
+ *    is where the biggest speed gains are actually won in practice.
+ *
+ *    That said, this HashMap still has a lot of areas that can be worked on to
+ *    improve its performance.
+ *
+ *    System.Collections.Hashtable is implemented with hash jump probing too,
+ *    and buckets with nullable boxed keys. When subtracting the cost of boxing
+ *    allocations, Hashtable tends to beat Dictionary and Hashmap at most speed
+ *    tests; however, it too has an inflexible API.
 **/
 
 using System.Collections;

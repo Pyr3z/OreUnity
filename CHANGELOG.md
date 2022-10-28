@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [UNRELEASED] - 2022-
 - Added Unit Tests: ActiveScene
 
-## [2.6.0] - 2022-10-26
+## [2.6.0] - 2022-10-27
+- Added: Previously-unimplemented HashMap members (KeyCollection, ValueCollection) are now implemented.
+- Added: Better inline documentation for HashMap's specification + comparison to System alternatives.
 - Added: More QoL overloads for Raster shapes + more information properties.
 - Fixed: ActiveScene coroutines improperly cleaning up after they finish.
 - Changed: ActiveScene Coroutine API. In general backwards compatible, though the API has been revamped.
