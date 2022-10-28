@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Collections.Generic;
 
 using UnityEngine;
+using UnityEngine.Diagnostics;
 
 using Debug         = UnityEngine.Debug;
 using AssException  = UnityEngine.Assertions.AssertionException;
@@ -160,6 +161,30 @@ namespace Ore
         Instance.error(msg, ctx);
       else
         Debug.LogError($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
+    }
+
+
+    public static void Panic(string msg, Object ctx = null)
+    {
+      Error(msg, ctx);
+
+    #if UNITY_EDITOR
+      UnityEditor.EditorApplication.Beep();
+      UnityEditor.EditorApplication.Beep();
+      UnityEditor.EditorApplication.Beep();
+
+      if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+      {
+        UnityEditor.EditorApplication.ExitPlaymode();
+      }
+
+      if (ctx)
+      {
+        UnityEditor.EditorGUIUtility.PingObject(ctx);
+      }
+    #else
+      Utils.ForceCrash(ForcedCrashCategory.Abort);
+    #endif // UNITY_EDITOR
     }
 
     #endregion PUBLIC STATIC METHODS

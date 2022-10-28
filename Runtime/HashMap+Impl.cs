@@ -4,7 +4,7 @@
 **/
 
 using System.Collections.Generic;
-
+using JetBrains.Annotations;
 using UnityEngine;
 
 
@@ -165,23 +165,9 @@ namespace Ore
 
       // MEGA bad if we reach here
 
-      Orator.ErrorOnce($"HashMap.TryInsert: Too many collisions ({jumps}) hit!");
+      Orator.Panic($"HashMap.TryInsert: Too many collisions ({jumps}) hit!");
 
-      if (fallback != -1)
-      {
-        m_Buckets[fallback].Key = key;
-        m_Buckets[fallback].Value = val;
-        m_Buckets[fallback].Hash = hash31;
-        ++m_Count;
-        ++m_Version;
-
-        if (jumps >= m_Params.HashPrime)
-        {
-          Rehash();
-        }
-
-        return true;
-      }
+      // Panic() should force a crash, so this is now unreachable code. Overkill?
 
       i = -1;
       return false;
@@ -226,6 +212,26 @@ namespace Ore
       while (++jumps < ilen); // can't be < m_Count because of smearing algorithm =/
 
       return m_CachedLookup = -i;
+    }
+
+    private int FindValue(in V value)
+    {
+      var cmp = m_ValueComparator ?? Comparator<V>.Default;
+
+      for (int i = 0, left = m_Count; left > 0; ++i)
+      {
+        var bucket = m_Buckets[i];
+
+        if (bucket.Hash == 0 && m_KeyComparator.IsNone(bucket.Key))
+          continue;
+
+        if (cmp.Equals(bucket.Value, value))
+          return i;
+
+        --left;
+      }
+
+      return -1;
     }
 
 

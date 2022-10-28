@@ -50,7 +50,7 @@ namespace Ore
 
       public bool Contains(K key)
       {
-        return m_Parent.HasKey(key);
+        return m_Parent.ContainsKey(key);
       }
 
       public void CopyTo(K[] array, int startIndex)

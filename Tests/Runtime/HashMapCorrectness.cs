@@ -4,7 +4,7 @@
  *
  *  Correctness Tests: (x = pass)
  *  [x] HashMapParams.Default
- *  [x] HashMap.HasKey
+ *  [x] HashMap.ContainsKey
  *  [x] HashMap.Map
  *  [x] HashMap.Unmap
  *  [x] HashMap.Remap
@@ -77,28 +77,28 @@ public static class HashMapCorrectness
   }
 
   [Test]
-  public static void HasKey()
+  public static void ContainsKey()
   {
     var map = new HashMap<string,string>();
 
-    Assert.False(map.HasKey("fef"), "map.HasKey('fef')");
+    Assert.False(map.ContainsKey("fef"), "map.ContainsKey('fef')");
 
     map["fef"] = "bub";
 
-    Assert.True(map.HasKey("fef"), "map.HasKey('fef')");
-    Assert.False(map.HasKey("bub"), "map.HasKey('bub')");
+    Assert.True(map.ContainsKey("fef"), "map.ContainsKey('fef')");
+    Assert.False(map.ContainsKey("bub"), "map.ContainsKey('bub')");
 
     foreach (string key in GetTestStrings(100))
     {
       map[key] = key;
 
-      Assert.True(map.HasKey(key), "map.HasKey(key)");
-      Assert.True(map.HasKey("fef"), "map.HasKey('fef') (still?)");
+      Assert.True(map.ContainsKey(key), "map.ContainsKey(key)");
+      Assert.True(map.ContainsKey("fef"), "map.ContainsKey('fef') (still?)");
     }
 
     map.Unmap("fef");
 
-    Assert.False(map.HasKey("fef"), "map.HasKey('fef')");
+    Assert.False(map.ContainsKey("fef"), "map.ContainsKey('fef')");
   }
 
   [TestCase(1)]

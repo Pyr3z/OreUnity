@@ -31,6 +31,9 @@
  *    and buckets with nullable boxed keys. When subtracting the cost of boxing
  *    allocations, Hashtable tends to beat Dictionary and Hashmap at most speed
  *    tests; however, it too has an inflexible API.
+ *
+ *    Note: Non-null keys with a hash code of 0 are still valid keys, and should
+ *    not break this implementation.
 **/
 
 using System.Collections;
@@ -171,23 +174,15 @@ namespace Ore
     /// false  if it doesn't.
     /// </returns>
     [Pure]
-    public bool HasKey(K key)
+    public bool ContainsKey([NotNull] K key)
     {
-      return FindBucket(key) >= 0;
+      return FindBucket(in key) >= 0;
     }
 
     [Pure]
-    public bool HasValue(V value)
+    public bool ContainsValue([CanBeNull] in V value)
     {
-      var cmp = m_ValueComparator ?? Comparator<V>.Default;
-
-      for (int i = 0, ilen = m_Buckets.Length; i < ilen; ++i)
-      {
-        if (m_Buckets[i].MightBeEmpty() && cmp.Equals(value, m_Buckets[i].Value))
-          return true;
-      }
-
-      return true;
+      return FindValue(in value) >= 0;
     }
 
     /// <summary>
@@ -200,9 +195,9 @@ namespace Ore
     /// false  if no value was found.
     /// </returns>
     [Pure]
-    public bool Find(K key, out V value)
+    public bool Find([NotNull] in K key, out V value)
     {
-      int i = FindBucket(key);
+      int i = FindBucket(in key);
       if (i > -1)
       {
         value = m_Buckets[i].Value;
@@ -217,9 +212,9 @@ namespace Ore
     /// For syntactic sugar and familiarity, however no different from Map(),
     /// aside from the void return.
     /// </summary>
-    public void Add(K key, V val)
+    public void Add([NotNull] K key, V val)
     {
-      _ = TryInsert(key, val, overwrite: false, out _ );
+      _ = TryInsert(in key, in val, overwrite: false, out _ );
     }
 
     /// <summary>
@@ -231,9 +226,9 @@ namespace Ore
     /// false  if there was already a value mapped to this key,
     ///        or there was an error.
     /// </returns>
-    public bool Map(K key, V val)
+    public bool Map([NotNull] in K key, in V val)
     {
-      return TryInsert(key, val, overwrite: false, out _ );
+      return TryInsert(in key, in val, overwrite: false, out _ );
     }
 
     /// <summary>
@@ -244,9 +239,9 @@ namespace Ore
     /// false  if the value is identical to a preexisting mapping,
     ///        or there was an error.
     /// </returns>
-    public bool Remap(K key, V val)
+    public bool Remap([NotNull] in K key, in V val)
     {
-      return TryInsert(key, val, overwrite: true, out _ );
+      return TryInsert(in key, in val, overwrite: true, out _ );
     }
 
     /// <summary>
@@ -260,16 +255,16 @@ namespace Ore
     /// false  if new value was NOT mapped because there is a preexisting value,
     /// null   if null key (likely), or map state error (unlikely).
     /// </returns>
-    public bool? TryMap(K key, V val, out V preexisting)
+    public bool? TryMap([NotNull] in K key, in V val, out V preexisting)
     {
       preexisting = default;
 
-      if (TryInsert(key, val, overwrite: false, out int i))
+      if (TryInsert(in key, in val, overwrite: false, out int i))
       {
         return true;
       }
 
-      if (i >= 0 && (m_Buckets[i].DirtyHash & int.MaxValue) != 0)
+      if (i >= 0 && !m_KeyComparator.IsNone(m_Buckets[i].Key))
       {
         preexisting = m_Buckets[i].Value;
         return false;
@@ -279,7 +274,7 @@ namespace Ore
     }
 
 
-    public bool Unmap(K key)
+    public bool Unmap([NotNull] in K key)
     {
       int i = FindBucket(key);
 
@@ -294,7 +289,7 @@ namespace Ore
       return false;
     }
 
-    public bool Pop(K key, out V oldVal)
+    public bool Pop([NotNull] in K key, out V oldVal)
     {
       int i = FindBucket(key);
 
@@ -311,7 +306,7 @@ namespace Ore
       return false;
     }
 
-    public void Remove(K key)
+    public void Remove([NotNull] in K key)
     {
       _ = Unmap(key);
     }
@@ -368,26 +363,6 @@ namespace Ore
     public bool TryGetValue(K key, out V value)
     {
       return Find(key, out value);
-    }
-
-    public bool ContainsKey(K key)
-    {
-      return HasKey(key);
-    }
-
-    public bool ContainsValue(V value)
-    {
-      var cmp = m_ValueComparator ?? Comparator<V>.Default;
-
-      for (int i = 0, ilen = m_Buckets.Length, left = m_Count; left > 0 && i < ilen; ++i, --left)
-      {
-        if (!m_Buckets[i].MightBeEmpty() && cmp.Equals(m_Buckets[i].Value, value))
-        {
-          return true;
-        }
-      }
-
-      return false;
     }
 
     public bool Remove(KeyValuePair<K,V> kvp)
@@ -472,7 +447,7 @@ namespace Ore
 
     bool IDictionary.Contains(object key)
     {
-      return key is K k && HasKey(k);
+      return key is K k && ContainsKey(k);
     }
 
     IDictionaryEnumerator IDictionary.GetEnumerator()
