@@ -6,10 +6,11 @@
  *    Default for type TKey, or user-defined via custom IComparator<TKey>.
  *
  *  Load Factor Grow Threshold:
- *    0.72 by default, or user-defined via HashMapParams
+ *    0.72 by default, or user-defined via HashMapParams.
  *
  *  Collision Resolution Policy:
- *    Linear probing (as it is the most flexible for all use cases).
+ *    Closed hashing w/ linear probing (as it is the most flexible for all use
+ *    cases).
 **/
 
 using System.Collections;
@@ -27,25 +28,33 @@ namespace Ore
   public partial class HashMap<K,V> : IDictionary<K,V>, IDictionary
   {
     public Type KeyType => typeof(K);
+
     public Type ValueType => typeof(V);
+
     public IComparator<K> KeyComparator
     {
       get => m_KeyComparator;
       set => m_KeyComparator = value ?? Comparator<K>.Default;
     }
+
     public IComparator<V> ValueComparator
     {
       get => m_ValueComparator;
       set => m_ValueComparator = value; // null is allowed
     }
+
     public int Count => m_Count;
+
     public int Capacity
     {
       get => m_LoadLimit;
       set => _ = EnsureCapacity(value);
     }
+
     public HashMapParams Parameters => m_Params;
+
     public int Version => m_Version;
+
     public V this[K key]
     {
       get
@@ -55,6 +64,7 @@ namespace Ore
       }
       set  => _ = TryInsert(key, value, overwrite: true, out _ );
     }
+
     public bool IsFixedSize => m_Params.IsFixedSize;
 
 
@@ -313,13 +323,13 @@ namespace Ore
 
   #region IDictionary<K,V>
 
-    public ICollection<K> Keys   { get; } // TODO
-    ICollection IDictionary.Keys { get; } // TODO
-
-    public ICollection<V> Values   { get; } // TODO
-    ICollection IDictionary.Values { get; } // TODO
+    public ICollection<K> Keys     => new KeyCollection(this);
+    ICollection IDictionary.Keys   => new KeyCollection(this);
+    public ICollection<V> Values   => new ValueCollection(this);
+    ICollection IDictionary.Values => new ValueCollection(this);
 
     public bool IsReadOnly => false;
+
     object IDictionary.this[object key]
     {
       get => this[(K)key];
@@ -335,6 +345,21 @@ namespace Ore
     public bool ContainsKey(K key)
     {
       return HasKey(key);
+    }
+
+    public bool ContainsValue(V value)
+    {
+      var cmp = m_ValueComparator ?? Comparator<V>.Default;
+
+      for (int i = 0, ilen = m_Buckets.Length, left = m_Count; left > 0 && i < ilen; ++i, --left)
+      {
+        if (!m_Buckets[i].MightBeEmpty() && cmp.Equals(m_Buckets[i].Value, value))
+        {
+          return true;
+        }
+      }
+
+      return false;
     }
 
     public bool Remove(KeyValuePair<K,V> kvp)

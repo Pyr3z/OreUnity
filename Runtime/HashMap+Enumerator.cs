@@ -13,7 +13,10 @@ namespace Ore
 {
   public partial class HashMap<K,V>
   {
-    public struct Enumerator : IEnumerator<KeyValuePair<K,V>>, IEnumerator<(K key, V val)>, IDictionaryEnumerator
+    public struct Enumerator :
+      IEnumerator<(K key, V val)>,
+      IEnumerator<KeyValuePair<K,V>>,
+      IDictionaryEnumerator
     {
       public (K key, V val) Current => (m_Bucket.Key,m_Bucket.Value);
 
@@ -82,6 +85,7 @@ namespace Ore
       public void Dispose()
       {
         m_Parent = null;
+        m_Bucket = default;
       }
 
     } // end struct Enumerator
