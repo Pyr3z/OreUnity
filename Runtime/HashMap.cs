@@ -90,45 +90,52 @@ namespace Ore
 
 
     public HashMap()
+      : this(null)
     {
-      MakeBuckets();
     }
 
     public HashMap(HashMapParams parms)
+      : this(null, parms)
     {
-      if (parms.Check())
-      {
-        m_Params = parms;
-      }
-      else
-      {
-        Orator.Warn("Bad HashMapParams passed into ctor.");
-      }
-
-      MakeBuckets();
     }
 
     public HashMap([CanBeNull] IComparator<K> keyComparator, HashMapParams parms = default)
     {
+      if (keyComparator is {})
+      {
+        m_KeyComparator = keyComparator;
+      }
+
       if (parms.Check())
       {
         m_Params = parms;
       }
 
-      MakeBuckets();
-
-      m_KeyComparator = keyComparator ?? Comparator<K>.Default;
+      m_Buckets = new Bucket[m_Params.InitialSize];
+      m_LoadLimit = m_Params.MakeBuckets(out m_Buckets);
+      #if UNITY_INCLUDE_TESTS
+      LifetimeAllocs = 1;
+      #endif
     }
 
     public HashMap([NotNull] IReadOnlyCollection<K> keys, [NotNull] IReadOnlyCollection<V> values)
     {
       OAssert.False(keys.Count < values.Count);
 
-      m_Params.StoreLoadLimit(keys.Count);
+      int size = m_Params.StoreLoadLimit(keys.Count);
+      m_Buckets = new Bucket[size];
+      m_LoadLimit = m_Params.CalcLoadLimit(size);
 
-      MakeBuckets();
+      OAssert.True(m_LoadLimit >= keys.Count);
 
-      // TODO optimize
+      #if UNITY_INCLUDE_TESTS
+      LifetimeAllocs = 1;
+      #endif
+
+      //
+      // TODO optimize the following:
+      //
+
       var keyiter = keys.GetEnumerator();
       var valiter = values.GetEnumerator();
 
@@ -141,6 +148,7 @@ namespace Ore
       valiter.Dispose();
     }
 
+
     public HashMap<K,V> WithValueComparator(IComparator<V> cmp)
     {
       m_ValueComparator = cmp;
@@ -148,9 +156,9 @@ namespace Ore
     }
 
 
-    public static HashMap<K,V> GetFixedSizeMap(int capacity)
+    public static HashMap<K,V> FixedCapacity(int capacity)
     {
-      return new HashMap<K,V>(HashMapParams.NoAlloc(capacity));
+      return new HashMap<K,V>(HashMapParams.FixedCapacity(capacity));
     }
 
 

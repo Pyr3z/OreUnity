@@ -51,16 +51,17 @@ namespace Ore
     private const float LOADFACTOR_MIN     = 0.1f * LOADFACTOR_DEFAULT;
     private const float LOADFACTOR_MAX     = 1f;    // danger
 
-    private const float GROWFACTOR_DEFAULT = 2f;
-    private const float GROWFACTOR_MIN     = 1.1f;
-    private const float GROWFACTOR_MAX     = 4f;
+    private const float GROWFACTOR_MIN     = 1.05f;
+
+    private static readonly AnimationCurve GROWTHCURVE_DEFAULT
+      = AnimationCurve.Constant(0f, 0f, 2f);
 
   #endregion Constants + Defaults
 
 
   #region Properties + Fields
 
-    public bool IsFixedSize => GrowFactor < GROWFACTOR_MIN;
+    public bool IsFixedSize => m_GrowthCurve is null;
 
 
     [SerializeField, Range(INTERNALSIZE_MIN, INTERNALSIZE_MAX)]
@@ -69,14 +70,16 @@ namespace Ore
     [SerializeField, Range(LOADFACTOR_MIN, LOADFACTOR_MAX)]
     public float LoadFactor;
 
-    [SerializeField, Range(0f, GROWFACTOR_MAX)]
-    public float GrowFactor;
-
-    [SerializeField, Min(53)]
+    [SerializeField, Min(Primes.MinValue)]
     public int HashPrime;
 
     [SerializeField]
     public CollisionPolicy Policy;
+
+
+    // private due to class reference danger:
+    [SerializeField]
+    private AnimationCurve m_GrowthCurve;
 
   #endregion Properties + Fields
 
@@ -84,11 +87,11 @@ namespace Ore
   #region Constructors + Factory Funcs
 
     [PublicAPI]
-    public static HashMapParams NoAlloc(int userCapacity, float loadFactor = LOADFACTOR_DEFAULT)
+    public static HashMapParams FixedCapacity(int userCapacity, float loadFactor = LOADFACTOR_DEFAULT)
     {
       return new HashMapParams(
         initialCapacity: userCapacity,
-        growFactor:      0f,
+        isFixed:         true,
         loadFactor:      loadFactor,
         hashPrime:       Primes.Next((int)(userCapacity / loadFactor)));
     }
@@ -100,34 +103,51 @@ namespace Ore
     /// <param name="initialCapacity">
     /// Interpreted as initial "user" capacity, not physical capacity.
     /// </param>
-    /// <param name="loadFactor"></param>
-    /// <param name="growFactor"></param>
-    /// <param name="hashPrime"></param>
-    /// <param name="collisionPolicy"></param>
+    /// <param name="hashPrime">
+    /// You should (probably) select a pre-designated hashprime, such as from
+    /// the <see cref="Hashing"/> class. If a non-prime number is given, the
+    /// nearest prime number will be used instead.
+    /// </param>
+    /// <param name="collisionPolicy">
+    /// Choices other than the default are not yet implemented.
+    /// </param>
     [PublicAPI]
     public HashMapParams(
       int             initialCapacity,
       float           loadFactor      = LOADFACTOR_DEFAULT,
-      float           growFactor      = GROWFACTOR_DEFAULT,
+      bool            isFixed         = false,
       int             hashPrime       = HASHPRIME_DEFAULT,
       CollisionPolicy collisionPolicy = CollisionPolicy.Default)
     {
-      if (growFactor < Floats.EPSILON)
-        GrowFactor = 1f;
-      else if (growFactor < GROWFACTOR_MIN)
-        GrowFactor = GROWFACTOR_MIN;
-      else if (growFactor > GROWFACTOR_MAX)
-        GrowFactor = GROWFACTOR_MAX;
-      else
-        GrowFactor = growFactor;
+      LoadFactor = loadFactor.Clamp(LOADFACTOR_MIN, LOADFACTOR_MAX);
 
       HashPrime = Primes.NearestTo(hashPrime & int.MaxValue);
 
-      LoadFactor = loadFactor.Clamp(LOADFACTOR_MIN, LOADFACTOR_MAX);
-
-      InitialSize = Primes.Next((int)(initialCapacity / LoadFactor), HashPrime);
+      InitialSize = Primes.NextHashableSize((int)(initialCapacity / LoadFactor), HashPrime, 0);
 
       Policy = CollisionPolicy.Default;
+
+      m_GrowthCurve = isFixed ? null : GROWTHCURVE_DEFAULT;
+    }
+
+    public HashMapParams WithGrowthCurve([CanBeNull] AnimationCurve growthCurve)
+    {
+      m_GrowthCurve = growthCurve;
+      return this;
+    }
+
+    public HashMapParams WithGrowFactor(float factor, int atSize)
+    {
+      if (m_GrowthCurve is null)
+      {
+        m_GrowthCurve = new AnimationCurve(new Keyframe(atSize, factor));
+      }
+      else
+      {
+        _ = m_GrowthCurve.AddKey(atSize, factor);
+      }
+
+      return this;
     }
 
   #endregion Constructors + Factory Funcs
@@ -137,12 +157,16 @@ namespace Ore
 
     public bool Check()
     {
+      #if UNITY_EDITOR || DEBUG || UNITY_INCLUDE_TESTS
       // ReSharper is saying the next line of code is always true, but I disagree.
       // Just consider if this struct was default constructed, and InitialSize = 0...
       return  (INTERNALSIZE_MIN <= InitialSize && InitialSize <= INTERNALSIZE_MAX) &&
               (LOADFACTOR_MIN <= LoadFactor && LoadFactor <= LOADFACTOR_MAX)       &&
-              (GrowFactor <= GROWFACTOR_MAX)                                       &&
-              (HashPrime == HASHPRIME_DEFAULT || Primes.IsPrime(HashPrime));
+              (HashPrime == HASHPRIME_DEFAULT || Primes.IsPrime(HashPrime))        &&
+              (InitialSize == 7 || Primes.IsPrime(InitialSize));
+      #else
+      return InitialSize > 0 && HashPrime > Primes.MinValue;
+      #endif
     }
 
     public void ResetGrowth()
@@ -180,13 +204,17 @@ namespace Ore
 
     public int CalcNextSize(int prevSize, int maxSize = Primes.MaxValue)
     {
-      if (GrowFactor <= 1f)
+      if (m_GrowthCurve is null)
         return prevSize;
 
-      if ((int)(maxSize / GrowFactor) < prevSize)
+      float growFactor = m_GrowthCurve.Evaluate(prevSize);
+      if (growFactor < GROWFACTOR_MIN)
+        return prevSize;
+
+      if ((int)(maxSize / growFactor) < prevSize)
         return maxSize;
 
-      return Primes.Next((int)(prevSize * GrowFactor), HashPrime);
+      return Primes.NextHashableSize((int)(prevSize * growFactor), HashPrime);
     }
 
   #endregion Methods

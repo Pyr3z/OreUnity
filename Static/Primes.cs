@@ -30,7 +30,7 @@ namespace Ore
       if ((value & 1) == 0)
         return value == 2;
 
-      return s_1p15xHash193Primes.BinarySearch(value) >= 0 || IsPrimeNoLookup(value);
+      return s_1p15xHash193Sizes.BinarySearch(value) >= 0 || IsPrimeNoLookup(value);
     }
 
     internal static bool IsPrimeNoLookup(int value)
@@ -98,7 +98,7 @@ namespace Ore
       if (current >= MaxValue)
         return MaxValue;
 
-      int idx = s_1p15xHash193Primes.BinarySearch(current);
+      int idx = s_1p15xHash193Sizes.BinarySearch(current);
       if (idx < 0)
       {
         idx = ~idx;
@@ -106,9 +106,9 @@ namespace Ore
 
       idx += incr;
 
-      while (idx < s_1p15xHash193Primes.Length) // (average case)
+      while (idx < s_1p15xHash193Sizes.Length) // (average case)
       {
-        current = s_1p15xHash193Primes[idx];
+        current = s_1p15xHash193Sizes[idx];
         if ((current - 1) % hashprime != 0)
           return current;
         ++idx;
@@ -172,10 +172,10 @@ namespace Ore
 
 
     [NotNull]
-    public static IReadOnlyList<int> HashableSizes => s_1p15xHash193Primes;
+    public static IReadOnlyList<int> HashableSizes => s_1p15xHash193Sizes;
 
 
-    private static readonly int[] s_1p15xHash193Primes =
+    private static readonly int[] s_1p15xHash193Sizes =
     {
       5,7,11,17,23,29,37,43,53,67,
       79,97,127,149,173,199,233,271,317,367,
