@@ -294,8 +294,8 @@ namespace Ore
     public struct CircleDrawer : IEnumerator<Vector2Int>, IEnumerable<Vector2Int>
     {
       [PublicAPI]
-      public Vector2Int Current => new Vector2Int(cx + s_OctXX[oct]*x + s_OctXY[oct]*y,
-                                                  cy + s_OctYY[oct]*y + s_OctYX[oct]*x);
+      public Vector2Int Current => new Vector2Int(cx + X_X[oct]*x + X_Y[oct]*y,
+                                                  cy + Y_Y[oct]*y + Y_X[oct]*x);
       [PublicAPI]
       public Vector2Int Center  => new Vector2Int(cx, cy);
 
@@ -303,24 +303,26 @@ namespace Ore
       public int Count => count;
 
 
-    #if DEBUG
-      public int? ForceOctant;
-    #endif
-
       private int x, y;
       private int cx, cy, r, ex, ey, error, oct;
       private int count;
 
-      //                                   OCT#  0   1   2   3   4   5   6   7
-      private static readonly int[] s_OctXX = { +1, +0, +0, -1, -1, +0, +0, +1 };
-      private static readonly int[] s_OctXY = { +0, +1, -1, +0, +0, -1, +1, +0 };
-      private static readonly int[] s_OctYX = { +0, +1, +1, +0, +0, -1, -1, +0 };
-      private static readonly int[] s_OctYY = { +1, +0, +0, +1, -1, +0, +0, -1 };
+      //                               OCT#  0   1   2   3   4   5   6   7
+      private static readonly int[] X_X = { +1, +0, +0, -1, -1, +0, +0, +1 };
+      private static readonly int[] X_Y = { +0, +1, -1, +0, +0, -1, +1, +0 };
+      private static readonly int[] Y_X = { +0, +1, +1, +0, +0, -1, -1, +0 };
+      private static readonly int[] Y_Y = { +1, +0, +0, +1, -1, +0, +0, -1 };
 
+    #if DEBUG
+      public static int? FORCE_OCTANT = null;
+      public static int ERROR_X = 2;
+      public static int ERROR_Y = 2;
+      public static float RADIUS_BIAS = 0.35f;
+    #else
       private const int ERROR_X = 2;
       private const int ERROR_Y = 2;
-      private const int ERROR_0 = 2;
       private const float RADIUS_BIAS = 0.35f;
+    #endif
 
 
       [PublicAPI]
@@ -337,10 +339,10 @@ namespace Ore
         y     = 0;
         ex    = ERROR_X;
         ey    = ERROR_Y;
-        error = ERROR_0 - (r << 1);
+        error = -r;
 
       #if DEBUG
-        oct = ForceOctant ?? 0;
+        oct = FORCE_OCTANT ?? 0;
       #else
         oct = 0;
       #endif
@@ -402,7 +404,7 @@ namespace Ore
         }
 
       #if DEBUG
-        if (++oct >= (ForceOctant ?? 7) + 1)
+        if (++oct >= (FORCE_OCTANT ?? 7) + 1)
       #else
         if (++oct >= 8)
       #endif
@@ -414,7 +416,7 @@ namespace Ore
         y     = 0;
         ex    = ERROR_X;
         ey    = ERROR_Y;
-        error = ERROR_0 - (r << 1);
+        error = -r;
 
         count += oct & 1;
         return (oct & 1) == 1 || MoveNext();
@@ -426,7 +428,7 @@ namespace Ore
         y     = 0;
         ex    = ERROR_X;
         ey    = ERROR_Y;
-        error = ERROR_0 - (r << 1);
+        error = -r;
         oct   = 0;
         count = 0;
       }
