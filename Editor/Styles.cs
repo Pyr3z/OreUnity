@@ -16,6 +16,44 @@ namespace Ore.Editor
   [InitializeOnLoad]
   public static class Styles
   {
+    public static class Defaults
+    {
+
+      public static GUIStyle Label         = null;
+
+      public static float    LabelWidth    = 150f;
+
+      public static int      LabelFontSize = 10;
+
+    } // end static class Defaults
+
+
+    public static class Dark // TODO nix
+    {
+
+      public static readonly Color32 Error = Colors.FromHex("#CA2622FF");
+
+      public static readonly Color32 Comment = Colors.FromHex("#57A64AFF");
+
+      public static readonly Color32 ReferenceTypeName = Colors.FromHex("#4EC9B1FF");
+
+      public static readonly Color32 ValueTypeName = Colors.FromHex("#86C691FF");
+
+    } // end static class Dark
+
+
+    public static string ColorText(string text, Color32 color)
+    {
+      // TODO RichText class
+      return $"<color=#{color.ToHex()}>{text}</color>";
+    }
+
+    public static string BigText(string text, int size = 14)
+    {
+      return $"<size={size}>{text}</size>";
+    }
+
+
 
     static Styles()
     {
@@ -40,6 +78,7 @@ namespace Ore.Editor
         EditorGUIUtility.hierarchyMode = false;
 
         Defaults.LabelWidth = EditorGUIUtility.labelWidth;
+        Defaults.LabelFontSize = Defaults.Label.fontSize;
 
         EditorGUIUtility.labelWidth = restore_lw;
         EditorGUIUtility.hierarchyMode = restore_hm;
@@ -60,34 +99,6 @@ namespace Ore.Editor
         }
       }
     }
-
-
-    public static string ColorText(string text, Color32 color)
-    {
-      // TODO RichText class
-      return $"<color=#{color.ToHex()}>{text}</color>";
-    }
-
-
-    public static class Defaults
-    {
-      public static GUIStyle Label = null;
-
-      public static float LabelWidth = 150f;
-    }
-
-    public static class Dark
-    {
-
-      public static readonly Color32 Error = Colors.FromHex("#CA2622FF");
-
-      public static readonly Color32 Comment = Colors.FromHex("#57A64AFF");
-
-      public static readonly Color32 ReferenceTypeName = Colors.FromHex("#4EC9B1FF");
-
-      public static readonly Color32 ValueTypeName = Colors.FromHex("#86C691FF");
-
-    } // end static class Dark
 
   } // end static class Styles
 
