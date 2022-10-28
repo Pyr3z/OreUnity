@@ -17,12 +17,35 @@ namespace Ore
   public struct HashMapParams
   {
 
+    public enum CollisionPolicy
+    {
+      Default,
+
+      HashProbing = Default,
+      LinearProbing,
+      QuadraticProbing,
+
+      RobinHoodHashing,
+      HopscotchHashing,
+      CuckooHashing,
+
+      SeparateChaining,
+      ParallelChaining,
+    }
+
+
   #region Constants + Defaults
+
+    [PublicAPI]
+    public static readonly HashMapParams Default = new HashMapParams(USERCAPACITY_DEFAULT);
+
 
     private const int USERCAPACITY_DEFAULT = 5;
 
+    private const int HASHPRIME_DEFAULT    = Hashing.DefaultHashPrime;
+
     private const int INTERNALSIZE_MIN     = Primes.MinValue;
-    private const int INTERNALSIZE_MAX     = Primes.MaxConvenientValue;
+    private const int INTERNALSIZE_MAX     = Primes.MaxSizePrime;
 
     private const float LOADFACTOR_DEFAULT = 0.72f;
     private const float LOADFACTOR_MIN     = 0.1f * LOADFACTOR_DEFAULT;
@@ -30,33 +53,30 @@ namespace Ore
 
     private const float GROWFACTOR_DEFAULT = 2f;
     private const float GROWFACTOR_MIN     = 1.1f;
-    private const float GROWFACTOR_MAX     = 3f;
-
-    private const int HASHPRIME_DEFAULT    = 193; // see Static/Hashing.cs for candidates
-
-    private const bool ISFIXED_DEFAULT     = false;
-
-
-    [PublicAPI]
-    public static readonly HashMapParams Default = new HashMapParams(USERCAPACITY_DEFAULT);
+    private const float GROWFACTOR_MAX     = 4f;
 
   #endregion Constants + Defaults
 
 
   #region Properties + Fields
 
-    public int  RehashThreshold => m_HashPrime - 1;
-    public bool IsFixedSize     => m_GrowFactor < GROWFACTOR_MIN;
+    public bool IsFixedSize => GrowFactor < GROWFACTOR_MIN;
 
 
     [SerializeField, Range(INTERNALSIZE_MIN, INTERNALSIZE_MAX)]
-    private int   m_InitialSize;
+    public int InitialSize;
+
     [SerializeField, Range(LOADFACTOR_MIN, LOADFACTOR_MAX)]
-    private float m_LoadFactor;
+    public float LoadFactor;
+
     [SerializeField, Range(0f, GROWFACTOR_MAX)]
-    private float m_GrowFactor;
+    public float GrowFactor;
+
     [SerializeField, Min(53)]
-    private int   m_HashPrime;
+    public int HashPrime;
+
+    [SerializeField]
+    public CollisionPolicy Policy;
 
   #endregion Properties + Fields
 
@@ -68,43 +88,46 @@ namespace Ore
     {
       return new HashMapParams(
         initialCapacity: userCapacity,
-        isFixed:         true,
+        growFactor:      0f,
         loadFactor:      loadFactor,
         hashPrime:       Primes.Next((int)(userCapacity / loadFactor)));
     }
 
+    /// <summary>
+    /// You should only need to instantiate this struct if you're trying to play
+    /// around with or optimize a particular HashMap instance.
+    /// </summary>
+    /// <param name="initialCapacity">
+    /// Interpreted as initial "user" capacity, not physical capacity.
+    /// </param>
+    /// <param name="loadFactor"></param>
+    /// <param name="growFactor"></param>
+    /// <param name="hashPrime"></param>
+    /// <param name="collisionPolicy"></param>
     [PublicAPI]
     public HashMapParams(
-      int   initialCapacity, // "user" capacity, not physical capacity.
-      bool  isFixed    = ISFIXED_DEFAULT,
-      float loadFactor = LOADFACTOR_DEFAULT,
-      float growFactor = GROWFACTOR_DEFAULT,
-      int   hashPrime  = HASHPRIME_DEFAULT)
+      int             initialCapacity,
+      float           loadFactor      = LOADFACTOR_DEFAULT,
+      float           growFactor      = GROWFACTOR_DEFAULT,
+      int             hashPrime       = HASHPRIME_DEFAULT,
+      CollisionPolicy collisionPolicy = CollisionPolicy.Default)
     {
-      if (isFixed)
-        m_GrowFactor = 1f;
+      if (growFactor < Floats.EPSILON)
+        GrowFactor = 1f;
       else if (growFactor < GROWFACTOR_MIN)
-        m_GrowFactor = GROWFACTOR_MIN;
+        GrowFactor = GROWFACTOR_MIN;
       else if (growFactor > GROWFACTOR_MAX)
-        m_GrowFactor = GROWFACTOR_MAX;
+        GrowFactor = GROWFACTOR_MAX;
       else
-        m_GrowFactor = growFactor;
+        GrowFactor = growFactor;
 
-      if (hashPrime != HASHPRIME_DEFAULT)
-      {
-        hashPrime &= int.MaxValue;
+      HashPrime = Primes.NearestTo(hashPrime & int.MaxValue);
 
-        if (!Primes.IsPrime(hashPrime))
-        {
-          hashPrime = Primes.Next(hashPrime);
-        }
-      }
+      LoadFactor = loadFactor.Clamp(LOADFACTOR_MIN, LOADFACTOR_MAX);
 
-      m_HashPrime = hashPrime;
+      InitialSize = Primes.Next((int)(initialCapacity / LoadFactor), HashPrime);
 
-      m_LoadFactor = loadFactor.Clamp(LOADFACTOR_MIN, LOADFACTOR_MAX);
-
-      m_InitialSize = Primes.Next((int)(initialCapacity / m_LoadFactor), m_HashPrime);
+      Policy = CollisionPolicy.Default;
     }
 
   #endregion Constructors + Factory Funcs
@@ -114,61 +137,56 @@ namespace Ore
 
     public bool Check()
     {
-      return  (INTERNALSIZE_MIN <= m_InitialSize && m_InitialSize <= INTERNALSIZE_MAX) &&
-              (LOADFACTOR_MIN <= m_LoadFactor && m_LoadFactor <= LOADFACTOR_MAX)       &&
-              (m_GrowFactor <= GROWFACTOR_MAX)                                         &&
-              (m_HashPrime == HASHPRIME_DEFAULT || Primes.IsPrime(m_HashPrime));
+      // ReSharper is saying the next line of code is always true, but I disagree.
+      // Just consider if this struct was default constructed, and InitialSize = 0...
+      return  (INTERNALSIZE_MIN <= InitialSize && InitialSize <= INTERNALSIZE_MAX) &&
+              (LOADFACTOR_MIN <= LoadFactor && LoadFactor <= LOADFACTOR_MAX)       &&
+              (GrowFactor <= GROWFACTOR_MAX)                                       &&
+              (HashPrime == HASHPRIME_DEFAULT || Primes.IsPrime(HashPrime));
     }
 
     public void ResetGrowth()
     {
-      m_InitialSize = CalcInternalSize(USERCAPACITY_DEFAULT);
+      InitialSize = CalcInternalSize(USERCAPACITY_DEFAULT);
     }
 
     public int StoreLoadLimit(int loadLimit)
     {
-      return m_InitialSize = CalcInternalSize(loadLimit);
+      return InitialSize = CalcInternalSize(loadLimit);
     }
 
 
     public int MakeBuckets<T>(out T[] buckets)
     {
-      buckets = new T[m_InitialSize];
-      return CalcLoadLimit(m_InitialSize);
+      buckets = new T[InitialSize];
+      return CalcLoadLimit(InitialSize);
     }
 
     public int CalcInternalSize(int loadLimit)
     {
-      loadLimit = (int)(loadLimit / m_LoadFactor); // saving on stacksize; this is now internal size
-
-      if ((loadLimit - 1) % m_HashPrime != 0 && Primes.IsPrime(loadLimit))
-      {
-        return loadLimit;
-      }
-
-      return Primes.Next(loadLimit, m_HashPrime);
+      return Primes.NextHashableSize((int)(loadLimit / LoadFactor), HashPrime, 0);
     }
 
     public int CalcLoadLimit(int internalSize) // AKA User Capacity
     {
       // without the rounding, we get wonky EnsureCapacity behavior
-      return (int)(internalSize * m_LoadFactor + 0.5f);
+      return (int)(internalSize * LoadFactor + 0.5f);
     }
 
     public int CalcJump(int hash31, int size)
     {
-      return 1 + (hash31 * m_HashPrime & int.MaxValue) % (size - 1);
+      return 1 + (hash31 * HashPrime & int.MaxValue) % (size - 1);
     }
 
     public int CalcNextSize(int prevSize, int maxSize = Primes.MaxValue)
     {
-      if (m_GrowFactor <= 1f)
+      if (GrowFactor <= 1f)
         return prevSize;
 
-      if ((int)(maxSize / m_GrowFactor) < prevSize)
+      if ((int)(maxSize / GrowFactor) < prevSize)
         return maxSize;
 
-      return Primes.Next((int)(prevSize * m_GrowFactor), m_HashPrime);
+      return Primes.Next((int)(prevSize * GrowFactor), HashPrime);
     }
 
   #endregion Methods

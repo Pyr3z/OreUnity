@@ -18,7 +18,7 @@ using System.Collections.Generic;
 
 public static class Primes10K
 {
-  private const int MAX_TEST_VALUE = 2 * Primes.MaxConvenientValue;
+  private const int MAX_TEST_VALUE = Primes.MaxSizePrime;
 
   public static List<int> GetTestValues(int nPrime, int nNonPrime, bool includeConstantValues = false)
   {

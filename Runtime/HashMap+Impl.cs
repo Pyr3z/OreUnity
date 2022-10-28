@@ -88,7 +88,7 @@ namespace Ore
           return false;
         }
       }
-      else if (m_Collisions > m_LoadLimit && m_Count > m_Params.RehashThreshold)
+      else if (m_Collisions > m_LoadLimit * m_Params.LoadFactor) // essentially LF squared
       {
         Rehash();
       }
@@ -107,7 +107,10 @@ namespace Ore
 
         if (bucket.DirtyHash == int.MinValue && fallback == -1 && m_KeyComparator.IsNone(bucket.Key))
         {
+          // fallback is a smeared bucket.
           fallback = i;
+          // if it ends up being the final smeared bucket in the jump chain,
+          // it will be used instead of the next empty slot.
         }
         else if ((bucket.DirtyHash & int.MaxValue) == 0 && m_KeyComparator.IsNone(bucket.Key))
         {
@@ -121,7 +124,7 @@ namespace Ore
           ++m_Count;
           ++m_Version;
 
-          if (jumps > m_Params.RehashThreshold)
+          if (jumps >= m_Params.HashPrime)
           {
             Rehash();
           }
@@ -142,7 +145,7 @@ namespace Ore
           m_Buckets[i].Value = val;
           ++m_Version;
 
-          if (jumps > m_Params.RehashThreshold)
+          if (jumps >= m_Params.HashPrime)
           {
             Rehash();
           }
@@ -172,7 +175,7 @@ namespace Ore
         ++m_Count;
         ++m_Version;
 
-        if (jumps > m_Params.RehashThreshold)
+        if (jumps >= m_Params.HashPrime)
         {
           Rehash();
         }

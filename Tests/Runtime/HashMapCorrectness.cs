@@ -65,11 +65,11 @@ public static class HashMapCorrectness
   [Test]
   public static void DefaultParameters()
   {
-    int defaultHashPrime = HashMapParams.Default.RehashThreshold + 1;
+    int defaultHashPrime = HashMapParams.Default.HashPrime;
 
     foreach (int hashprime in new []{ defaultHashPrime }) // TODO test other preset hashprimes?
     {
-      foreach (int prime in Primes.HashtableSizes)
+      foreach (int prime in Primes.HashableSizes)
       {
         Assert.NotZero((prime - 1) % hashprime, $"hashprime={hashprime},value={prime}");
       }

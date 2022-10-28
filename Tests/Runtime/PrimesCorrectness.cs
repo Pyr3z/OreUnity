@@ -11,6 +11,7 @@
  *  [~] Hash collision ratio
 **/
 
+using System.Collections;
 using Ore;
 
 using System.Linq;
@@ -77,6 +78,19 @@ public static class PrimesCorrectness
     DoNext(Primes.NextNoLookup);
   }
 
+  [Test]
+  public static void NextHashableSize()
+  {
+    DoNext((p,hp) => Primes.NextHashableSize(p, hp));
+
+    int p = Primes.GetRandom(max: Primes.MaxSizePrime >> 1);
+    p = Primes.NextHashableSize(p);
+
+    Assert.True(Primes.IsPrime(p));
+    Assert.Contains(p, Primes.HashableSizes as ICollection);
+    Assert.AreEqual(p, Primes.NextHashableSize(p, incr: 0));
+  }
+
   private static void DoNext(System.Func<int, int, int> nextFunc)
   {
     var testvalues = Primes10K.GetTestValues(100, 100);
@@ -136,7 +150,7 @@ public static class PrimesCorrectness
     {
       bool good = true;
 
-      foreach (int prime in Primes.HashtableSizes)
+      foreach (int prime in Primes.HashableSizes)
       {
         if ((prime - 1) % hashprime == 0)
         {
@@ -177,7 +191,7 @@ public static class PrimesCorrectness
     int count = 0;
 
     int p = 5;
-    while (p <= Primes.MaxHashtableSize)
+    while (p <= Primes.MaxSizePrime)
     {
       if ((p - 1) % hashprime != 0)
       {

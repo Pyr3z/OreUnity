@@ -19,6 +19,11 @@
  *    by supplying a far more flexible API for algorithmic optimization, which
  *    is where the biggest speed gains are actually won in practice.
  *
+ *    Some examples of "flexible API for algorithmic optimization":
+ *      - Map() doesn't overwrite and can be used like HashSet.Add().
+ *      - TryMap() allows algorithms to either insert or update existing
+ *        entries, for the cost of only 1 lookup.
+ *
  *    That said, this HashMap still has a lot of areas that can be worked on to
  *    improve its performance.
  *

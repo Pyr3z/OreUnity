@@ -17,6 +17,8 @@ namespace Ore
     [PublicAPI]
     public static IReadOnlyList<int> HashPrimes => HASHPRIMES;
 
+    public const int DefaultHashPrime = 193; // HASHPRIMES[3]
+
 
     public static int SafeGetHashCode(object obj)
     {
@@ -28,22 +30,25 @@ namespace Ore
     {
       return h0 + (h0 << 5 | h0 >> 27) ^ h1;
     }
-    public static uint MixHashes(int h0, int h1) => MixHashes((uint)h0, (uint)h1);
+    public static uint MixHashes(int h0, int h1)
+      => MixHashes((uint)h0, (uint)h1);
 
     public static uint MixHashes(uint h0, uint h1, uint h2)
     {
-      h0 = h0 + (h0 << 5 | h0 >> 27) ^ h1;
+        h0 = h0 + (h0 << 5 | h0 >> 27) ^ h1;
       return h0 + (h0 << 5 | h0 >> 27) ^ h2;
     }
-    public static uint MixHashes(int h0, int h1, int h2) => MixHashes((uint)h0, (uint)h1, (uint)h2);
+    public static uint MixHashes(int h0, int h1, int h2)
+      => MixHashes((uint)h0, (uint)h1, (uint)h2);
 
     public static uint MixHashes(uint h0, uint h1, uint h2, uint h3)
     {
-      h0 = h0 + (h0 << 5 | h0 >> 27) ^ h1;
-      h0 = h0 + (h0 << 5 | h0 >> 27) ^ h2;
+        h0 = h0 + (h0 << 5 | h0 >> 27) ^ h1;
+        h0 = h0 + (h0 << 5 | h0 >> 27) ^ h2;
       return h0 + (h0 << 5 | h0 >> 27) ^ h3;
     }
-    public static uint MixHashes(int h0, int h1, int h2, int h3) => MixHashes((uint)h0, (uint)h1, (uint)h2, (uint)h3);
+    public static uint MixHashes(int h0, int h1, int h2, int h3)
+      => MixHashes((uint)h0, (uint)h1, (uint)h2, (uint)h3);
 
 
     public static int MakeHash(object a, object b)

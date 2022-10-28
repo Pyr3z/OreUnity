@@ -91,7 +91,7 @@ namespace Ore
 
 
     [PublicAPI]
-    public static int Next(int current, int hashprime = int.MaxValue)
+    public static int NextHashableSize(int current, int hashprime = int.MaxValue, int incr = 1)
     {
       if (current < MinValue)
         return MinValue;
@@ -104,7 +104,7 @@ namespace Ore
         idx = ~idx;
       }
 
-      ++idx;
+      idx += incr;
 
       while (idx < s_1p15xHash193Primes.Length) // (average case)
       {
@@ -115,6 +115,12 @@ namespace Ore
       }
 
       // rarer case (will happen for massive data structures, or really bad hashprimes)
+      return NextNoLookup(current + incr, hashprime);
+    }
+
+    [PublicAPI]
+    public static int Next(int current, int hashprime = int.MaxValue)
+    {
       return NextNoLookup(current, hashprime);
     }
 
@@ -126,7 +132,7 @@ namespace Ore
       if (current >= MaxValue)
         return MaxValue;
 
-      current = current | 1 + 2;
+      current = (current | 1) + 2;
 
       int sqrt = (int)Math.Sqrt(current);
 
@@ -162,13 +168,11 @@ namespace Ore
 
     public const int MaxValue = 2146435069; // largest prime that can also be an array size
 
-    public const int MaxConvenientValue = 7199369;
-
-    public const int MaxHashtableSize = 13351537;
+    public const int MaxSizePrime = 12633961;
 
 
     [NotNull]
-    public static IReadOnlyList<int> HashtableSizes => s_1p15xHash193Primes;
+    public static IReadOnlyList<int> HashableSizes => s_1p15xHash193Primes;
 
 
     private static readonly int[] s_1p15xHash193Primes =

@@ -85,9 +85,9 @@ public static class PrimesSpeed
   }
 
   [UnityTest]
-  public static IEnumerator Next()
+  public static IEnumerator NextHashableSize()
   {
-    return DoSpeedTest((p) => Primes.Next(p) > p + 5, nameof(Next), 5f);
+    return DoSpeedTest((p) => Primes.NextHashableSize(p) > p + 5, nameof(NextHashableSize), 5f);
   }
 
   [UnityTest]
@@ -99,7 +99,7 @@ public static class PrimesSpeed
   [UnityTest]
   public static IEnumerator IsHashtableSize()
   {
-    var primes = Primes.HashtableSizes;
+    var primes = Primes.HashableSizes;
     var data = new List<int>(primes);
 
     while (data.Count < SCALE)
