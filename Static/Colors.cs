@@ -34,7 +34,7 @@ namespace Ore
     public static readonly Color32 Medium     = new Color32(0xD3, 0xD8, 0xD8, 0xFF);
     public static readonly Color32 Dim        = new Color32(0xAA, 0x9C, 0x9C, 0xFF);
     public static readonly Color32 Boring     = new Color32(0x5C, 0x5C, 0x5C, 0xFF);
-    public static readonly Color32 Faint      = new Color32(0x12, 0x10, 0x10, 0xFF);
+    public static readonly Color32 Dark       = new Color32(0x12, 0x10, 0x10, 0xFF);
 
     public static readonly Color32 Background = new Color32(0x2C, 0x2A, 0x2A, 0xDB);
     public static readonly Color32 Attention  = new Color32(0xCA, 0x26, 0x22, 0xFF);
@@ -78,6 +78,7 @@ namespace Ore
       return c;
     }
 
+
     /// <summary>
     /// Inverts the R,G,B channels of a color.
     /// </summary>
@@ -100,6 +101,18 @@ namespace Ore
       return c;
     }
 
+
+    public static Color32 Alpha(this Color32 c, byte a)
+    {
+      c.a = a;
+      return c;
+    }
+
+    public static Color32 Alpha(this Color32 c, float percent)
+    {
+      c.a = (byte)(percent * 0xFF);
+      return c;
+    }
 
     public static Color32 AlphaBump(this Color32 c)
     {

@@ -57,6 +57,88 @@ namespace Ore.Editor
     public const float MIN_TOGGLE_H = STD_TOGGLE_H - 2f;
 
 
+    public static class Draw
+    {
+
+      public static void Separator(float yOffset = STD_LINE_HALF)
+      {
+        var pos = GUILayoutUtility.GetRect(ContentWidth, yOffset * 2f);
+
+        float y = pos.y + yOffset;
+
+        if (EditorGUI.indentLevel > 0)
+        {
+          Line(
+            p0:    new Vector2(pos.xMin, y),
+            p1:    new Vector2(pos.xMax, y),
+            color: Colors.Dim
+          );
+        }
+        else
+        {
+          Line(
+            p0:    new Vector2(pos.xMin - STD_INDENT_0 + STD_PAD, y),
+            p1:    new Vector2(pos.xMax, y),
+            color: Colors.Dim
+          );
+        }
+      }
+
+      public static void FillBar(Rect pos, Color32 fill, float t, Color32 textColor = default)
+      {
+        if (Event.current.type != EventType.Repaint)
+          return;
+
+        Rect(pos, outline: Colors.Dark);
+
+        var fillRect = new Rect(pos.x, pos.y, pos.width * t, pos.height);
+
+        Rect(fillRect, outline: Colors.Dark, fill.Alpha(0.5f));
+
+        if (textColor.IsClear())
+          return;
+
+        string text = $"{(int)(t * 100f + 0.5f):0}%";
+        text = Styles.ColorText(text, textColor);
+        text = Styles.BigText(text);
+
+        LabelAlign.Push(TextAnchor.MiddleCenter);
+        GUI.Label(pos, text);
+        LabelAlign.Pop();
+      }
+
+      public static void Rect(Rect pos, Color32 outline, Color32 fill = default, bool always = false)
+      {
+        if (!always && Event.current.type != EventType.Repaint)
+          return;
+
+        Handles.BeginGUI();
+
+        using (new Handles.DrawingScope(Color.white))
+        {
+          Handles.DrawSolidRectangleWithOutline(pos, fill, outline);
+        }
+
+        Handles.EndGUI();
+      }
+
+      public static void Line(Vector2 p0, Vector2 p1, Color32 color, bool always = false)
+      {
+        if (!always && (Event.current.type != EventType.Repaint || color.IsClear()))
+          return;
+
+        Handles.BeginGUI();
+
+        using (new Handles.DrawingScope(color))
+        {
+          Handles.DrawLine(p0, p1);
+        }
+
+        Handles.EndGUI();
+      }
+
+    } // end static class Draw
+
 
     public static class LabelWidth
     {
