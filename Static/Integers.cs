@@ -9,6 +9,7 @@
 **/
 
 using JetBrains.Annotations;
+
 using IConvertible = System.IConvertible;
 
 
@@ -37,11 +38,6 @@ namespace Ore
     public static string MakeIndexPreformattedString(int size)
     {
       return $"[{{0,{CalcDigits(size)}}}]";
-    }
-
-    public static string ToInvariantString(this IConvertible self)
-    {
-      return self?.ToString(Strings.InvariantFormatter);
     }
 
 

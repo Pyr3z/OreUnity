@@ -14,6 +14,7 @@ using StringBuilder = System.Text.StringBuilder;
 using Encoding      = System.Text.Encoding;
 using Convert       = System.Convert;
 using IFormatter    = System.IFormatProvider;
+using IConvertible  = System.IConvertible;
 
 
 namespace Ore
@@ -36,6 +37,12 @@ namespace Ore
     public static bool IsEmpty(this string str)
     {
       return str is null || str.Length == 0;
+    }
+
+
+    public static string ToInvariantString(this IConvertible self)
+    {
+      return self?.ToString(InvariantFormatter).ToLowerInvariant();
     }
 
 
