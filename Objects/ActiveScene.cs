@@ -214,15 +214,18 @@ namespace Ore
     {
       contract ??= this;
 
+      if (m_CoroutineMap.TryMap(contract, new CoroutineList(), out CoroutineList list) == null)
+      {
+        Orator.Error($"Failed to start coroutine for {contract}; HashMap state error.");
+        return null;
+      }
+
       var coru = (base.StartCoroutine(DoRoutinePlusCleanup(routine, contract, m_NextCoroutineID)), m_NextCoroutineID);
+
+      list.Add(coru);
 
       ++m_NextCoroutineID;
       ++m_ActiveCoroutineCount;
-
-      if (m_CoroutineMap.TryMap(contract, new CoroutineList { coru }, out CoroutineList prev) == false)
-      {
-        prev.Add(coru);
-      }
 
       CheckCoroutineThreshold();
 
