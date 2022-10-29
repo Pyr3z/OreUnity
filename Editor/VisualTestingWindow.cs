@@ -6,6 +6,10 @@
 using UnityEngine;
 using UnityEditor;
 
+using EG  = UnityEditor.EditorGUI;
+using EGL = UnityEditor.EditorGUILayout;
+using EGU = UnityEditor.EditorGUIUtility;
+
 
 namespace Ore.Editor
 {
@@ -59,7 +63,11 @@ namespace Ore.Editor
     [SerializeField]
     private int m_CircleErrorX = Raster.CircleDrawer.ERROR_X;
     [SerializeField]
+    private int m_MaxCircleErrorX = 16;
+    [SerializeField]
     private int m_CircleErrorY = Raster.CircleDrawer.ERROR_Y;
+    [SerializeField]
+    private int m_MaxCircleErrorY = 16;
     [SerializeField]
     private float m_CircleRadiusBias = Raster.CircleDrawer.RADIUS_BIAS;
 
@@ -67,7 +75,8 @@ namespace Ore.Editor
     private void OnBecameVisible()
     {
       titleContent.text = "[Ore]";
-      name = "";
+      name              = "";
+      minSize           = new Vector2(300f, 300f);
     }
 
     private void OnEnable()
@@ -83,23 +92,25 @@ namespace Ore.Editor
 
     private void OnGUI()
     {
-      m_Foldout = EditorGUILayout.InspectorTitlebar(m_Foldout, this);
+      m_Foldout = EGL.InspectorTitlebar(m_Foldout, this);
 
       if (!m_Foldout)
         return;
 
-      EditorGUILayout.Space();
+      OGUI.LabelWidth.PushDelta(-50f);
 
-      OGUI.LabelAlign.Push(TextAnchor.MiddleCenter);
-      m_Mode = (Mode)EditorGUILayout.EnumPopup(Styles.BoldText("Active Mode"), m_Mode);
-      OGUI.LabelAlign.Pop();
+      EGL.Space();
 
-      m_PrimaryColor   = EditorGUILayout.ColorField("Color 1", m_PrimaryColor);
-      m_SecondaryColor = EditorGUILayout.ColorField("Color 2", m_SecondaryColor);
+      m_Mode = (Mode)EGL.EnumPopup(Styles.BoldText("Active Mode"), m_Mode);
+
+      EGL.Space();
+
+      m_PrimaryColor   = EGL.ColorField("Color 1", m_PrimaryColor);
+      m_SecondaryColor = EGL.ColorField("Color 2", m_SecondaryColor);
 
       OGUI.Draw.Separator();
 
-      OGUI.IndentLevel.Increase(fixLabelWidth: false);
+      ++EG.indentLevel;
 
       switch (m_Mode)
       {
@@ -109,11 +120,12 @@ namespace Ore.Editor
         case Mode.ColorAnalysis:  ColorAnalysisInspector(); break;
 
         default:
-          EditorGUILayout.SelectableLabel("(there's nothing else here...)");
+          EGL.SelectableLabel("(there's nothing else here...)");
           break;
       }
 
-      OGUI.IndentLevel.Pop();
+      --EG.indentLevel;
+      OGUI.LabelWidth.Pop();
     }
 
     private void OnSceneGUI(SceneView view)
@@ -151,30 +163,49 @@ namespace Ore.Editor
 
     private void SelfInspector()
     {
-      EditorGUILayout.LabelField("Docked?", docked.ToInvariantString());
+      EGL.LabelField("Docked?", docked.ToInvariant());
 
-      EditorGUI.BeginDisabledGroup(docked);
+      EG.BeginDisabledGroup(docked);
       if (docked)
       {
-        EditorGUILayout.RectField("Window Pos:", position);
+        EGL.RectField("Window Pos:", position);
       }
       else
       {
-        position = EditorGUILayout.RectField("Window Pos:", position);
+        position = EGL.RectField("Window Pos:", position);
       }
-      EditorGUI.EndDisabledGroup();
+      EG.EndDisabledGroup();
+
+      EGL.Space();
+
+      EGL.LabelField("Label Width", $"{EGU.labelWidth:N1}");
+      EGL.LabelField("Field Width", $"{EGU.fieldWidth:N1}");
+
+      EGL.Space();
+
+      EGL.LabelField("This", "is a GUI rectangle");
+      var rect = GUILayoutUtility.GetLastRect();
+      OGUI.Draw.Rect(rect, Colors.Comment);
+
+      EGL.Space();
+
+      var target = EGL.BeginBuildTargetSelectionGrouping();
+
+      EGL.LabelField("Platform:", target.ToInvariant());
+
+      EGL.EndBuildTargetSelectionGrouping();
     }
 
 
     private void RasterLineInspector()
     {
-      EditorGUILayout.BeginHorizontal();
+      EGL.BeginHorizontal();
 
-      EditorGUILayout.PrefixLabel("Line Length");
-      m_Length = EditorGUILayout.Slider(m_Length, 0f, m_MaxLength);
-      m_MaxLength = EditorGUILayout.DelayedFloatField(m_MaxLength, GUILayout.Width(60f));
+      EGL.PrefixLabel("Line Length");
+      m_Length = EGL.Slider(m_Length, 0f, m_MaxLength);
+      m_MaxLength = EGL.DelayedFloatField(m_MaxLength, GUILayout.Width(60f));
 
-      EditorGUILayout.EndHorizontal();
+      EGL.EndHorizontal();
     }
 
     private void RasterLineSceneGUI(RectInt visible, Vector2 mouse)
@@ -207,38 +238,25 @@ namespace Ore.Editor
 
     private void RasterCircleInspector()
     {
-      const float kSliderBoundW = 64f;
+      OGUI.SliderPlus("Radius", ref m_Length, 0f, ref m_MaxLength);
 
-      var rect = EditorGUILayout.GetControlRect(hasLabel: false, OGUI.STD_LINE_HEIGHT);
+      OGUI.SliderPlus("Radius Bias", ref m_CircleRadiusBias, 0f, 1f);
 
-      OGUI.ScratchContent.text = "Radius";
-      rect = EditorGUI.PrefixLabel(rect, OGUI.ScratchContent);
+      OGUI.SliderPlus("Error X", ref m_CircleErrorX, -10, ref m_MaxCircleErrorX);
 
-      rect.xMin -= OGUI.Indent;
-      rect.width -= kSliderBoundW - 10f;
-      m_Length = EditorGUI.Slider(rect, m_Length, 0f, m_MaxLength);
+      OGUI.SliderPlus("Error Y", ref m_CircleErrorY, -10, ref m_MaxCircleErrorY);
 
-      rect.x += rect.width - 10f;
-      rect.width = kSliderBoundW;
-      m_MaxLength = EditorGUI.DelayedFloatField(rect, m_MaxLength);
-
-
-      m_CircleRadiusBias = EditorGUILayout.Slider("Radius Bias", m_CircleRadiusBias, 0f, 1f);
-      m_CircleErrorX = EditorGUILayout.IntSlider("Error X", m_CircleErrorX, -10, 30);
-      m_CircleErrorY = EditorGUILayout.IntSlider("Error Y", m_CircleErrorY, -10, 30);
-
-      m_UseExtraInts = EditorGUILayout.BeginToggleGroup("Force Octant?", m_UseExtraInts);
+      m_UseExtraInts = EGL.BeginToggleGroup("Force Octant?", m_UseExtraInts);
       if (m_UseExtraInts)
       {
-        float popwidth = EditorGUIUtility.labelWidth;
-        EditorGUIUtility.labelWidth = 50f;
-        ++EditorGUI.indentLevel;
+        OGUI.LabelWidth.Push(50f);
+        --EG.indentLevel;
 
         for (int i = 0, ilen = Mathf.Min(m_ExtraInts.Length, 8); i < ilen; ++i)
         {
-          m_ExtraInts[i] = EditorGUILayout.IntSlider(i.ToString(), m_ExtraInts[i], 0, 7).Clamp(0, 7);
+          m_ExtraInts[i] = EGL.IntSlider(i.ToString(), m_ExtraInts[i], 0, 7).Clamp(0, 7);
 
-          if (GUILayout.Button("-", GUILayout.Width(EditorGUIUtility.labelWidth)))
+          if (GUILayout.Button("-", GUILayout.Width(EGU.labelWidth)))
           {
             var arr = new int[m_ExtraInts.Length - 1];
             for (int j = 0, k = 0; j < arr.Length; ++j, ++k)
@@ -265,11 +283,11 @@ namespace Ore.Editor
           }
         }
 
-        EditorGUIUtility.labelWidth = popwidth;
-        ++EditorGUI.indentLevel;
+        ++EG.indentLevel;
+        OGUI.LabelWidth.Pop();
       }
 
-      EditorGUILayout.EndToggleGroup(); // end "Force Octant?" group
+      EGL.EndToggleGroup(); // end "Force Octant?" group
     }
 
     private void RasterCircleSceneGUI(RectInt visible, Vector2 mouse)
@@ -286,6 +304,7 @@ namespace Ore.Editor
         Handles.DrawWireArc(new Vector3(center.x + 0.5f, center.y + 0.5f), Vector3.forward, Vector3.right, 360f, radius);
       }
 
+      Raster.CircleDrawer.FORCE_OCTANT = null;
       Raster.CircleDrawer.RADIUS_BIAS = m_CircleRadiusBias;
       Raster.CircleDrawer.ERROR_X = m_CircleErrorX;
       Raster.CircleDrawer.ERROR_Y = m_CircleErrorY;
@@ -315,13 +334,13 @@ namespace Ore.Editor
 
     private void ColorAnalysisInspector()
     {
-      EditorGUILayout.Space();
-      EditorGUILayout.LabelField("Color1: ToInt32():", m_PrimaryColor.ToInt32().ToString("X8"));
-      EditorGUILayout.LabelField("Color1: GetHashCode():", m_PrimaryColor.GetHashCode().ToString("X8"));
-      EditorGUILayout.Space();
-      EditorGUILayout.LabelField("Color2: ToInt32():", m_SecondaryColor.ToInt32().ToString("X8"));
-      EditorGUILayout.LabelField("Color2: GetHashCode():", m_SecondaryColor.GetHashCode().ToString("X8"));
-      EditorGUILayout.Space();
+      EGL.Space();
+      EGL.LabelField("Color1: ToInt32():", m_PrimaryColor.ToInt32().ToString("X8"));
+      EGL.LabelField("Color1: GetHashCode():", m_PrimaryColor.GetHashCode().ToString("X8"));
+      EGL.Space();
+      EGL.LabelField("Color2: ToInt32():", m_SecondaryColor.ToInt32().ToString("X8"));
+      EGL.LabelField("Color2: GetHashCode():", m_SecondaryColor.GetHashCode().ToString("X8"));
+      EGL.Space();
     }
 
 

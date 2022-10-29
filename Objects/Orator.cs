@@ -296,7 +296,7 @@ namespace Ore
 
       foreach (int hash in s_LoggedOnceHashes)
       {
-        _ = strb.Append(hash.ToInvariantString()).Append('\n');
+        _ = strb.Append(hash.ToInvariant()).Append('\n');
       }
 
       return Filesystem.TryWriteText(CACHE_PATH, strb.ToString());

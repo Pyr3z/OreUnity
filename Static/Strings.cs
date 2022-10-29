@@ -40,9 +40,19 @@ namespace Ore
     }
 
 
-    public static string ToInvariantString(this IConvertible self)
+    public static string ToInvariant([NotNull] this IConvertible self)
     {
-      return self?.ToString(InvariantFormatter).ToLowerInvariant();
+      return self.ToString(InvariantFormatter);
+    }
+
+    public static string ToInvariantLower([NotNull] this IConvertible self)
+    {
+      return self.ToString(InvariantFormatter).ToLowerInvariant();
+    }
+
+    public static string ToInvariantUpper([NotNull] this IConvertible self)
+    {
+      return self.ToString(InvariantFormatter).ToUpperInvariant();
     }
 
 

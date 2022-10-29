@@ -57,10 +57,95 @@ namespace Ore.Editor
     public const float MIN_TOGGLE_H = STD_TOGGLE_H - 2f;
 
 
+    public static void SliderPlus(string label, ref float current, float min, ref float max)
+    {
+      SliderPlus(
+        EditorGUILayout.GetControlRect(hasLabel: false, STD_LINE_HEIGHT),
+        label,
+        ref current,
+        min,
+        ref max
+      );
+    }
+
+    public static void SliderPlus(string label, ref float current, float min, float max)
+    {
+      SliderPlus(
+        EditorGUILayout.GetControlRect(hasLabel: false, STD_LINE_HEIGHT),
+        label,
+        ref current,
+        min,
+        max
+      );
+    }
+
+    public static void SliderPlus(string label, ref int current, int min, ref int max)
+    {
+      SliderPlus(
+        EditorGUILayout.GetControlRect(hasLabel: false, STD_LINE_HEIGHT),
+        label,
+        ref current,
+        min,
+        ref max
+      );
+    }
+
+    public static void SliderPlus(Rect pos, string label, ref float current, float min, float max)
+    {
+      pos.width -= 54f;
+      current = EditorGUI.Slider(pos, label, current, min, max);
+    }
+
+    public static void SliderPlus(Rect pos, string label, ref float current, float min, ref float max)
+    {
+      const float kPlusFieldW   = 64f;
+      const float kMarginAdjust = 10f;
+
+      if (!label.IsEmpty())
+      {
+        ScratchContent.text = label;
+        pos = EditorGUI.PrefixLabel(pos, OGUI.ScratchContent);
+      }
+
+      pos.xMin -= Indent;
+      pos.width -= kPlusFieldW - kMarginAdjust;
+      current = EditorGUI.Slider(pos, current, min, max);
+
+      pos.x += pos.width - kMarginAdjust;
+      pos.width = kPlusFieldW;
+      max = EditorGUI.DelayedFloatField(pos, max);
+    }
+
+    public static void SliderPlus(Rect pos, string label, ref int current, int min, ref int max)
+    {
+      const float kPlusFieldW   = 64f;
+      const float kMarginAdjust = 10f;
+
+      if (!label.IsEmpty())
+      {
+        ScratchContent.text = label;
+        pos                 = EditorGUI.PrefixLabel(pos, OGUI.ScratchContent);
+      }
+
+      pos.xMin  -= Indent;
+      pos.width -= kPlusFieldW - kMarginAdjust;
+      current   =  EditorGUI.IntSlider(pos, current, min, max);
+
+      pos.x     += pos.width - kMarginAdjust;
+      pos.width =  kPlusFieldW;
+      max       =  EditorGUI.DelayedIntField(pos, max);
+    }
+
+
     public static class Draw
     {
 
       public static void Separator(float yOffset = STD_LINE_HALF)
+      {
+        Separator(Colors.Boring, yOffset);
+      }
+
+      public static void Separator(Color32 lineColor, float yOffset = STD_LINE_HALF)
       {
         var pos = GUILayoutUtility.GetRect(ContentWidth, yOffset * 2f);
 
@@ -71,7 +156,7 @@ namespace Ore.Editor
           Line(
             p0:    new Vector2(pos.xMin, y),
             p1:    new Vector2(pos.xMax, y),
-            color: Colors.Dim
+            color: lineColor
           );
         }
         else
@@ -79,7 +164,7 @@ namespace Ore.Editor
           Line(
             p0:    new Vector2(pos.xMin - STD_INDENT_0 + STD_PAD, y),
             p1:    new Vector2(pos.xMax, y),
-            color: Colors.Dim
+            color: lineColor
           );
         }
       }
@@ -107,7 +192,7 @@ namespace Ore.Editor
         LabelAlign.Pop();
       }
 
-      public static void Rect(Rect pos, Color32 outline, Color32 fill = default, bool always = false)
+      public static void Rect(Rect pos, Color32 outline = default, Color32 fill = default, bool always = false)
       {
         if (!always && Event.current.type != EventType.Repaint)
           return;
@@ -116,7 +201,10 @@ namespace Ore.Editor
 
         using (new Handles.DrawingScope(Color.white))
         {
-          Handles.DrawSolidRectangleWithOutline(pos, fill, outline);
+          if (outline.IsDefault())
+            Handles.DrawSolidRectangleWithOutline(pos, fill, Colors.Bright);
+          else
+            Handles.DrawSolidRectangleWithOutline(pos, fill, outline);
         }
 
         Handles.EndGUI();
@@ -225,10 +313,12 @@ namespace Ore.Editor
 
     public static class IndentLevel
     {
+      private const bool FIX_LABEL_WIDTH_DEFAULT = false;
+
       private static readonly List<int> s_IndentStack = new List<int>(4);
 
 
-      public static void Push(int lvl, bool fixLabelWidth = true)
+      public static void Push(int lvl, bool fixLabelWidth = FIX_LABEL_WIDTH_DEFAULT)
       {
         if (lvl < 0)
           lvl = 0;
@@ -241,17 +331,17 @@ namespace Ore.Editor
           LabelWidth.Push(LabelWidthBase - STD_INDENT * lvl);
       }
 
-      public static void PushDelta(int delta, bool fixLabelWidth = true)
+      public static void PushDelta(int delta, bool fixLabelWidth = FIX_LABEL_WIDTH_DEFAULT)
       {
         Push(EditorGUI.indentLevel + delta, fixLabelWidth);
       }
 
-      public static void Increase(bool fixLabelWidth = true)
+      public static void Increase(bool fixLabelWidth = FIX_LABEL_WIDTH_DEFAULT)
       {
         Push(EditorGUI.indentLevel + 1, fixLabelWidth);
       }
 
-      public static void Pop(bool fixLabelWidth = true)
+      public static void Pop(bool fixLabelWidth = FIX_LABEL_WIDTH_DEFAULT)
       {
         if (s_IndentStack.IsEmpty())
           EditorGUI.indentLevel = s_IndentStack.PopBack();
