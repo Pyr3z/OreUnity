@@ -231,7 +231,7 @@ namespace Ore.Editor
       while (line.MoveNext())
       {
         tile.position = line.Current;
-        Handles.DrawSolidRectangleWithOutline(tile, m_PrimaryColor, Color.gray);
+        Handles.DrawSolidRectangleWithOutline(tile, m_PrimaryColor, m_SecondaryColor);
       }
     }
 
@@ -322,13 +322,13 @@ namespace Ore.Editor
         foreach (var cell in circle.Prepare(center.x, center.y, radius))
         {
           tile.position = cell;
-          Handles.DrawSolidRectangleWithOutline(tile, m_PrimaryColor, Color.grey);
+          Handles.DrawSolidRectangleWithOutline(tile, m_PrimaryColor,  m_SecondaryColor);
         }
 
       } while (m_UseExtraInts && ++i < m_ExtraInts.Length);
 
       tile.position = center;
-      Handles.DrawSolidRectangleWithOutline(tile, m_PrimaryColor, Color.grey);
+      Handles.DrawSolidRectangleWithOutline(tile, m_SecondaryColor, m_PrimaryColor);
     }
 
 
