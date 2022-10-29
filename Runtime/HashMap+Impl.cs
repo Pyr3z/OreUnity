@@ -88,7 +88,7 @@ namespace Ore
           return false;
         }
       }
-      else if (m_Collisions > m_LoadLimit * m_Params.LoadFactor) // essentially LF squared
+      else if (m_Collisions >= m_LoadLimit - 1)
       {
         Rehash();
       }
@@ -234,16 +234,6 @@ namespace Ore
       return -1;
     }
 
-
-    private void MakeBuckets()
-    {
-      m_Count = m_Collisions = 0;
-      m_LoadLimit = m_Params.MakeBuckets(out m_Buckets);
-
-      #if UNITY_INCLUDE_TESTS
-      ++LifetimeAllocs;
-      #endif
-    }
 
     private int Grow()
     {

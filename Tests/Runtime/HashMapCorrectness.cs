@@ -112,7 +112,7 @@ public static class HashMapCorrectness
 
     foreach (string value in testvalues)
     {
-      Assert.True(map.Map(value, value),  "initial mapping");
+      Assert.True(map.Map(value, value), $"initial mapping. key={value}, count={map.Count}, capacity={map.Capacity}");
       Assert.True(map.ContainsKey(value), $"contains key \"{value}\"");
       Assert.False(map.Map(value, value), "non-overwriting mapping");
     }
@@ -193,7 +193,7 @@ public static class HashMapCorrectness
 
     Assert.Null(map.TryMap(null, null, out string prev));
 
-    var testvalues = GetTestStrings(1);
+    var testvalues = GetTestStrings(50);
 
     for (int i = 0, ilen = testvalues.Count / 2; i < ilen; ++i)
     {
@@ -210,11 +210,12 @@ public static class HashMapCorrectness
 
       if (result == true)
       {
-        Assert.Null(prev);
+        Assert.AreEqual("flee", prev);
         Assert.AreEqual("flee", map[key]);
       }
       else
       {
+        Assert.NotNull(result);
         Assert.AreEqual("bub", prev);
       }
     }

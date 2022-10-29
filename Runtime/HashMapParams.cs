@@ -36,10 +36,6 @@ namespace Ore
 
   #region Constants + Defaults
 
-    [PublicAPI]
-    public static readonly HashMapParams Default = new HashMapParams(USERCAPACITY_DEFAULT);
-
-
     private const int USERCAPACITY_DEFAULT = 5;
 
     private const int HASHPRIME_DEFAULT    = Hashing.DefaultHashPrime;
@@ -55,6 +51,10 @@ namespace Ore
 
     private static readonly AnimationCurve GROWTHCURVE_DEFAULT
       = AnimationCurve.Constant(0f, 0f, 2f);
+
+
+    [PublicAPI]
+    public static readonly HashMapParams Default = new HashMapParams(USERCAPACITY_DEFAULT);
 
   #endregion Constants + Defaults
 
@@ -179,12 +179,6 @@ namespace Ore
       return InitialSize = CalcInternalSize(loadLimit);
     }
 
-
-    public int MakeBuckets<T>(out T[] buckets)
-    {
-      buckets = new T[InitialSize];
-      return CalcLoadLimit(InitialSize);
-    }
 
     public int CalcInternalSize(int loadLimit)
     {

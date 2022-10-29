@@ -115,7 +115,7 @@ namespace Ore
       }
 
       m_Buckets = new Bucket[m_Params.InitialSize];
-      m_LoadLimit = m_Params.MakeBuckets(out m_Buckets);
+      m_LoadLimit = m_Params.CalcLoadLimit(m_Params.InitialSize);
       #if UNITY_INCLUDE_TESTS
       LifetimeAllocs = 1;
       #endif
