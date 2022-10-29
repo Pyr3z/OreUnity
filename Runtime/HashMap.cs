@@ -249,7 +249,7 @@ namespace Ore
     /// </summary>
     /// <param name="key">The key to map the new value to.</param>
     /// <param name="val">The value to be mapped.</param>
-    /// <param name="preexisting">Conditional output value, which is only valid if false is returned.</param>
+    /// <param name="preexisting"><paramref name="val"/> if returns true or null; the preexisting value otherwise.</param>
     /// <returns>
     /// true   if new value was mapped successfully,
     /// false  if new value was NOT mapped because there is a preexisting value,
@@ -257,7 +257,7 @@ namespace Ore
     /// </returns>
     public bool? TryMap([NotNull] in K key, in V val, out V preexisting)
     {
-      preexisting = default;
+      preexisting = val;
 
       if (TryInsert(in key, in val, overwrite: false, out int i))
       {
