@@ -21,30 +21,17 @@ namespace Ore.Editor
 
       public static GUIStyle Label         = null;
 
+      public static int      LabelFontSize = 10;
+
       public static float    LabelWidth    = 150f;
 
-      public static int      LabelFontSize = 10;
+      public static float    FieldWidth    = 50f;
 
     } // end static class Defaults
 
 
-    public static class Dark // TODO nix
-    {
-
-      public static readonly Color32 Error = Colors.FromHex("#CA2622FF");
-
-      public static readonly Color32 Comment = Colors.FromHex("#57A64AFF");
-
-      public static readonly Color32 ReferenceTypeName = Colors.FromHex("#4EC9B1FF");
-
-      public static readonly Color32 ValueTypeName = Colors.FromHex("#86C691FF");
-
-    } // end static class Dark
-
-
     public static string ColorText(string text, Color32 color)
     {
-      // TODO RichText class
       return $"<color=#{color.ToHex()}>{text}</color>";
     }
 

@@ -22,7 +22,7 @@ namespace Ore.Editor
     // TODO this is defunct in reorderable lists!
     public static float LabelStartX => STD_INDENT_0 + EditorGUI.indentLevel * STD_INDENT;
     public static float LabelEndX => FieldStartX - STD_PAD;
-    public static float LabelWidthRaw => LabelWidth.Stack.Front(fallback: EditorGUIUtility.labelWidth);
+    public static float LabelWidthBase => LabelWidth.Stack.Front(fallback: EditorGUIUtility.labelWidth);
     public static float LabelWidthHalf => EditorGUIUtility.labelWidth * 0.45f;
 
     public static float FieldStartX => FieldStartXRaw - EditorGUI.indentLevel * STD_INDENT;
@@ -142,7 +142,7 @@ namespace Ore.Editor
 
     public static class LabelWidth
     {
-      internal static List<float> Stack = new List<float>(4);
+      internal static readonly List<float> Stack = new List<float>(4);
 
       public static float Peek()
       {
@@ -153,6 +153,11 @@ namespace Ore.Editor
       {
         Stack.PushBack(EditorGUIUtility.labelWidth);
         EditorGUIUtility.labelWidth = width;
+      }
+
+      public static void PushDelta(float delta)
+      {
+        Push(EditorGUIUtility.labelWidth + delta);
       }
 
       public static void Pop()
@@ -173,6 +178,7 @@ namespace Ore.Editor
           Stack.Clear();
         }
       }
+
     } // end static class LabelWidth
 
 
@@ -180,7 +186,9 @@ namespace Ore.Editor
     {
       public static TextAnchor DEFAULT => Styles.Defaults.Label.alignment;
 
-      internal static List<TextAnchor> Stack = new List<TextAnchor>(4);
+
+      internal static readonly List<TextAnchor> Stack = new List<TextAnchor>(4);
+
 
       public static TextAnchor Peek()
       {
@@ -219,6 +227,7 @@ namespace Ore.Editor
     {
       internal static List<int> Stack = new List<int>(4);
 
+
       public static void Push(int lvl, bool fixLabelWidth = true)
       {
         if (lvl < 0)
@@ -229,7 +238,17 @@ namespace Ore.Editor
         EditorGUI.indentLevel = lvl;
 
         if (fixLabelWidth)
-          LabelWidth.Push(LabelWidthRaw - STD_INDENT * lvl);
+          LabelWidth.Push(LabelWidthBase - STD_INDENT * lvl);
+      }
+
+      public static void PushDelta(int delta, bool fixLabelWidth = true)
+      {
+        Push(EditorGUI.indentLevel + delta, fixLabelWidth);
+      }
+
+      public static void Increase(bool fixLabelWidth = true)
+      {
+        Push(EditorGUI.indentLevel + 1, fixLabelWidth);
       }
 
       public static void Pop(bool fixLabelWidth = true)
@@ -249,11 +268,6 @@ namespace Ore.Editor
       {
         Stack.Clear();
         EditorGUI.indentLevel = 0;
-      }
-
-      public static void Increase(bool fixLabelWidth = true, int delta = 1)
-      {
-        Push(EditorGUI.indentLevel + delta, fixLabelWidth);
       }
 
     } // end static class IndentLevel

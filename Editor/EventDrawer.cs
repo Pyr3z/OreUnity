@@ -17,10 +17,10 @@ namespace Ore.Editor
     private const string UNITYEVENT_LAST_PROPERTY = "m_PersistentCalls";
     private const string LABEL_SUFFIX_DISABLED = " (event disabled)";
 
-    private const float STD_PAD = OGUI.STD_PAD;
-    private const float STD_LINE_HEIGHT = OGUI.STD_LINE_HEIGHT;
-    private const float STD_PAD_HALF = STD_PAD / 2f;
-    private const float UNEXPANDED_HEIGHT = STD_LINE_HEIGHT + STD_PAD;
+    private const float STD_PAD           = OGUI.STD_PAD;
+    private const float STD_LINE_HEIGHT   = OGUI.STD_LINE_HEIGHT;
+    private const float STD_PAD_HALF      = OGUI.STD_PAD / 2f;
+    private const float UNEXPANDED_HEIGHT = STD_LINE_HEIGHT + OGUI.STD_PAD;
 
     private class DrawerState : PropertyDrawerState
     {
@@ -47,7 +47,7 @@ namespace Ore.Editor
                iterator.depth == root.depth + 1 &&
                iterator.propertyPath.StartsWith(root.propertyPath))
         {
-          ExtraHeight += EditorGUI.GetPropertyHeight(iterator, iterator.isExpanded) + STD_PAD;
+          ExtraHeight += EditorGUI.GetPropertyHeight(iterator, iterator.isExpanded) + OGUI.STD_PAD;
           ++ChildCount;
         }
 
@@ -183,16 +183,16 @@ namespace Ore.Editor
 
           if (state.RunInGlobalContext.boolValue)
           {
-            label.text = $"→ will run on Runtime {Styles.ColorText(nameof(ActiveScene), Styles.Dark.ReferenceTypeName)}";
+            label.text = $"→ will run on Runtime {Styles.ColorText(nameof(ActiveScene), Colors.Reference)}";
           }
           else if (state.Context != null && state.Context.objectReferenceValue)
           {
-            label.text = $"→ will run on this {Styles.ColorText(state.Context.objectReferenceValue.GetType().Name, Styles.Dark.ReferenceTypeName)}";
+            label.text = $"→ will run on this {Styles.ColorText(state.Context.objectReferenceValue.GetType().Name, Colors.Reference)}";
           }
           else
           {
             Orator.Error($"{nameof(EventDrawer)} failed to set a valid context reference when one was expected.", prop.serializedObject.targetObject);
-            label.text = Styles.ColorText("ERR: bad serial context", Styles.Dark.Error);
+            label.text = Styles.ColorText("ERR: bad serial context", Colors.Attention);
           }
 
           EditorGUI.LabelField(pos, label);
