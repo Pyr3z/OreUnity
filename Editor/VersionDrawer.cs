@@ -96,7 +96,7 @@ namespace Ore.Editor
       }
       else if (prop.isExpanded)
       {
-        OGUI.IndentLevel.Increase(fix_label_width: false);
+        OGUI.IndentLevel.Increase(fixLabelWidth: false);
 
         pos = new Rect(total)
         {
@@ -112,7 +112,7 @@ namespace Ore.Editor
           str_prop.stringValue = str;
         }
 
-        OGUI.IndentLevel.Pop(fix_label_width: false);
+        OGUI.IndentLevel.Pop(fixLabelWidth: false);
       }
     }
 

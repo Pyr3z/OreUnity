@@ -49,6 +49,7 @@ namespace Ore
         Key        = default;
         Value      = default;
         DirtyHash &= int.MinValue;
+        // (this isn't guaranteed to result in a smeared bucket; it might have 0 collisions.)
       }
 
       [Pure]

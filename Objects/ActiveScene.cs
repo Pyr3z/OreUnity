@@ -36,7 +36,7 @@ namespace Ore
     [System.NonSerialized]
     private readonly HashMap<object, CoroutineList> m_CoroutineMap = new HashMap<object, CoroutineList>()
     {
-      KeyComparator = ContractComparator.Instance
+      KeyComparator = new ContractComparator()
     };
 
     [System.NonSerialized]
@@ -294,7 +294,7 @@ namespace Ore
     {
       if (m_TooManyCoroutinesWarningThreshold > 0 && m_ActiveCoroutineCount >= m_TooManyCoroutinesWarningThreshold)
       {
-        Orator.Warn($"Too many concurrent coroutines running on ActiveScene! n={m_ActiveCoroutineCount}", this);
+        Orator.Warn($"Too many concurrent coroutines running on {name}! n={m_ActiveCoroutineCount}", this);
       }
     }
 
@@ -371,13 +371,11 @@ namespace Ore
 
     private sealed class ContractComparator : Comparator<object>
     {
-      public static readonly ContractComparator Instance = new ContractComparator();
-
-      public override bool IsNone(object obj)
+      public override bool IsNone(in object obj)
       {
         if (obj is Object uobj)
           return !uobj;
-        return base.IsNone(obj);
+        return base.IsNone(in obj);
       }
     }
 

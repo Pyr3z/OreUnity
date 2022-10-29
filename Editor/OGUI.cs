@@ -219,7 +219,7 @@ namespace Ore.Editor
     {
       internal static List<int> Stack = new List<int>(4);
 
-      public static void Push(int lvl, bool fix_label_width = true)
+      public static void Push(int lvl, bool fixLabelWidth = true)
       {
         if (lvl < 0)
           lvl = 0;
@@ -228,11 +228,11 @@ namespace Ore.Editor
 
         EditorGUI.indentLevel = lvl;
 
-        if (fix_label_width)
+        if (fixLabelWidth)
           LabelWidth.Push(LabelWidthRaw - STD_INDENT * lvl);
       }
 
-      public static void Pop(bool fix_label_width = true)
+      public static void Pop(bool fixLabelWidth = true)
       {
         if (Stack.IsEmpty())
           EditorGUI.indentLevel = Stack.PopBack();
@@ -241,7 +241,7 @@ namespace Ore.Editor
           EditorGUI.indentLevel = 0;
         }
 
-        if (fix_label_width)
+        if (fixLabelWidth)
           LabelWidth.Pop();
       }
 
@@ -251,9 +251,9 @@ namespace Ore.Editor
         EditorGUI.indentLevel = 0;
       }
 
-      public static void Increase(bool fix_label_width = true, int delta = 1)
+      public static void Increase(bool fixLabelWidth = true, int delta = 1)
       {
-        Push(EditorGUI.indentLevel + delta, fix_label_width);
+        Push(EditorGUI.indentLevel + delta, fixLabelWidth);
       }
 
     } // end static class IndentLevel

@@ -276,7 +276,7 @@ namespace Ore
 
     public bool Unmap([NotNull] in K key)
     {
-      int i = FindBucket(key);
+      int i = FindBucket(in key);
 
       if (i >= 0)
       {
@@ -291,7 +291,7 @@ namespace Ore
 
     public bool Pop([NotNull] in K key, out V oldVal)
     {
-      int i = FindBucket(key);
+      int i = FindBucket(in key);
 
       if (i >= 0)
       {
@@ -308,7 +308,7 @@ namespace Ore
 
     public void Remove([NotNull] in K key)
     {
-      _ = Unmap(key);
+      _ = Unmap(in key);
     }
 
     public bool Clear()
