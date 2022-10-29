@@ -40,6 +40,11 @@ namespace Ore.Editor
       return $"<size={size}>{text}</size>";
     }
 
+    public static string BoldText(string text)
+    {
+      return $"<b>{text}</b>";
+    }
+
 
 
     static Styles()

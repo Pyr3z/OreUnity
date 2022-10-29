@@ -28,9 +28,10 @@ namespace Ore.Editor
     private enum Mode
     {
       None,
+      Self,
       RasterLine,
       RasterCircle,
-      Colors,
+      ColorAnalysis,
       HashMaps
     }
 
@@ -66,107 +67,8 @@ namespace Ore.Editor
     private void OnBecameVisible()
     {
       titleContent.text = "[Ore]";
+      name = "";
     }
-
-    private void OnGUI()
-    {
-      m_Foldout = EditorGUILayout.InspectorTitlebar(m_Foldout, this);
-
-      if (!m_Foldout)
-        return;
-
-      EditorGUILayout.Space();
-
-      m_Mode = (Mode)EditorGUILayout.EnumPopup("Testing Mode:", m_Mode);
-
-      OGUI.Draw.Separator();
-
-      if (m_Mode == Mode.None)
-        return;
-
-      EditorGUILayout.Space();
-
-      OGUI.IndentLevel.Increase(fixLabelWidth: false);
-
-      m_PrimaryColor = EditorGUILayout.ColorField("Color 1", m_PrimaryColor);
-      m_SecondaryColor = EditorGUILayout.ColorField("Color 2", m_SecondaryColor);
-
-      if (m_Mode == Mode.RasterLine)
-      {
-        _ = EditorGUILayout.BeginHorizontal();
-
-        EditorGUILayout.PrefixLabel("Line Length");
-        m_Length = EditorGUILayout.Slider(m_Length, 0f, m_MaxLength);
-        m_MaxLength = EditorGUILayout.DelayedFloatField(m_MaxLength, GUILayout.Width(60f));
-
-        EditorGUILayout.EndHorizontal();
-      }
-      else if (m_Mode == Mode.RasterCircle)
-      {
-        m_MaxLength = EditorGUILayout.DelayedFloatField("Max Radius", m_MaxLength);
-        m_Length = EditorGUILayout.Slider("Radius", m_Length, 0f, m_MaxLength);
-
-        m_CircleRadiusBias = EditorGUILayout.Slider("Radius Bias", m_CircleRadiusBias, 0f, 1f);
-        m_CircleErrorX = EditorGUILayout.IntSlider("Error X", m_CircleErrorX, -10, 30);
-        m_CircleErrorY = EditorGUILayout.IntSlider("Error Y", m_CircleErrorY, -10, 30);
-
-        m_UseExtraInts = EditorGUILayout.BeginToggleGroup("Force Octant?", m_UseExtraInts);
-        if (m_UseExtraInts)
-        {
-          float popwidth = EditorGUIUtility.labelWidth;
-          EditorGUIUtility.labelWidth = 50f;
-          ++EditorGUI.indentLevel;
-
-          for (int i = 0, ilen = Mathf.Min(m_ExtraInts.Length, 8); i < ilen; ++i)
-          {
-            m_ExtraInts[i] = EditorGUILayout.IntSlider(i.ToString(), m_ExtraInts[i], 0, 7).Clamp(0, 7);
-
-            if (GUILayout.Button("-", GUILayout.Width(EditorGUIUtility.labelWidth)))
-            {
-              var arr = new int[m_ExtraInts.Length - 1];
-              for (int j = 0, k = 0; j < arr.Length; ++j, ++k)
-              {
-                if (j == i)
-                {
-                  if (++k == m_ExtraInts.Length)
-                    break;
-                }
-
-                arr[j] = m_ExtraInts[k];
-              }
-
-              m_ExtraInts = arr;
-              break;
-            }
-          }
-
-          if (m_ExtraInts.Length < 8)
-          {
-            if (GUILayout.Button("+ Add Octant"))
-            {
-              System.Array.Resize(ref m_ExtraInts, m_ExtraInts.Length + 1);
-            }
-          }
-
-          EditorGUIUtility.labelWidth = popwidth;
-          ++EditorGUI.indentLevel;
-        }
-        EditorGUILayout.EndToggleGroup(); // "Force Octant?"
-      }
-      else if (m_Mode == Mode.Colors)
-      {
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Color1: ToInt32():", m_PrimaryColor.ToInt32().ToString("X8"));
-        EditorGUILayout.LabelField("Color1: GetHashCode():", m_PrimaryColor.GetHashCode().ToString("X8"));
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Color2: ToInt32():", m_SecondaryColor.ToInt32().ToString("X8"));
-        EditorGUILayout.LabelField("Color2: GetHashCode():", m_SecondaryColor.GetHashCode().ToString("X8"));
-        EditorGUILayout.Space();
-      }
-
-      OGUI.IndentLevel.Pop();
-    }
-
 
     private void OnEnable()
     {
@@ -178,6 +80,41 @@ namespace Ore.Editor
       SceneView.duringSceneGui -= OnSceneGUI;
     }
 
+
+    private void OnGUI()
+    {
+      m_Foldout = EditorGUILayout.InspectorTitlebar(m_Foldout, this);
+
+      if (!m_Foldout)
+        return;
+
+      EditorGUILayout.Space();
+
+      OGUI.LabelAlign.Push(TextAnchor.MiddleCenter);
+      m_Mode = (Mode)EditorGUILayout.EnumPopup(Styles.BoldText("Active Mode"), m_Mode);
+      OGUI.LabelAlign.Pop();
+
+      m_PrimaryColor   = EditorGUILayout.ColorField("Color 1", m_PrimaryColor);
+      m_SecondaryColor = EditorGUILayout.ColorField("Color 2", m_SecondaryColor);
+
+      OGUI.Draw.Separator();
+
+      OGUI.IndentLevel.Increase(fixLabelWidth: false);
+
+      switch (m_Mode)
+      {
+        case Mode.Self:           SelfInspector();          break;
+        case Mode.RasterLine:     RasterLineInspector();    break;
+        case Mode.RasterCircle:   RasterCircleInspector();  break;
+        case Mode.ColorAnalysis:  ColorAnalysisInspector(); break;
+
+        default:
+          EditorGUILayout.SelectableLabel("(there's nothing else here...)");
+          break;
+      }
+
+      OGUI.IndentLevel.Pop();
+    }
 
     private void OnSceneGUI(SceneView view)
     {
@@ -203,15 +140,139 @@ namespace Ore.Editor
 
       if (m_Mode == Mode.RasterLine)
       {
-        DrawLine(visible, mouse);
+        RasterLineSceneGUI(visible, mouse);
       }
       else if (m_Mode == Mode.RasterCircle)
       {
-        DrawCircle(visible, mouse);
+        RasterCircleSceneGUI(visible, mouse);
       }
     }
 
-    private void DrawCircle(RectInt visible, Vector2 mouse)
+
+    private void SelfInspector()
+    {
+      EditorGUILayout.LabelField("Docked?", docked.ToInvariantString());
+
+      EditorGUI.BeginDisabledGroup(docked);
+      if (docked)
+      {
+        EditorGUILayout.RectField("Window Pos:", position);
+      }
+      else
+      {
+        position = EditorGUILayout.RectField("Window Pos:", position);
+      }
+      EditorGUI.EndDisabledGroup();
+    }
+
+
+    private void RasterLineInspector()
+    {
+      EditorGUILayout.BeginHorizontal();
+
+      EditorGUILayout.PrefixLabel("Line Length");
+      m_Length = EditorGUILayout.Slider(m_Length, 0f, m_MaxLength);
+      m_MaxLength = EditorGUILayout.DelayedFloatField(m_MaxLength, GUILayout.Width(60f));
+
+      EditorGUILayout.EndHorizontal();
+    }
+
+    private void RasterLineSceneGUI(RectInt visible, Vector2 mouse)
+    {
+      var start = visible.center;
+      var direction = mouse - start;
+      float distance = direction.magnitude;
+      direction /= distance;
+
+      if (m_Length > 0f)
+      {
+        distance = m_Length;
+      }
+
+      var tile = new Rect(0f, 0f, 1f, 1f);
+      var line = new Raster.LineDrawer().Prepare(start, direction, distance);
+
+      using (new Handles.DrawingScope(m_PrimaryColor.Inverted()))
+      {
+        Handles.DrawLine(new Vector2((int)start.x, (int)start.y), mouse);
+      }
+
+      while (line.MoveNext())
+      {
+        tile.position = line.Current;
+        Handles.DrawSolidRectangleWithOutline(tile, m_PrimaryColor, Color.gray);
+      }
+    }
+
+
+    private void RasterCircleInspector()
+    {
+      const float kSliderBoundW = 64f;
+
+      var rect = EditorGUILayout.GetControlRect(hasLabel: false, OGUI.STD_LINE_HEIGHT);
+
+      OGUI.ScratchContent.text = "Radius";
+      rect = EditorGUI.PrefixLabel(rect, OGUI.ScratchContent);
+
+      rect.xMin -= OGUI.Indent;
+      rect.width -= kSliderBoundW - 10f;
+      m_Length = EditorGUI.Slider(rect, m_Length, 0f, m_MaxLength);
+
+      rect.x += rect.width - 10f;
+      rect.width = kSliderBoundW;
+      m_MaxLength = EditorGUI.DelayedFloatField(rect, m_MaxLength);
+
+
+      m_CircleRadiusBias = EditorGUILayout.Slider("Radius Bias", m_CircleRadiusBias, 0f, 1f);
+      m_CircleErrorX = EditorGUILayout.IntSlider("Error X", m_CircleErrorX, -10, 30);
+      m_CircleErrorY = EditorGUILayout.IntSlider("Error Y", m_CircleErrorY, -10, 30);
+
+      m_UseExtraInts = EditorGUILayout.BeginToggleGroup("Force Octant?", m_UseExtraInts);
+      if (m_UseExtraInts)
+      {
+        float popwidth = EditorGUIUtility.labelWidth;
+        EditorGUIUtility.labelWidth = 50f;
+        ++EditorGUI.indentLevel;
+
+        for (int i = 0, ilen = Mathf.Min(m_ExtraInts.Length, 8); i < ilen; ++i)
+        {
+          m_ExtraInts[i] = EditorGUILayout.IntSlider(i.ToString(), m_ExtraInts[i], 0, 7).Clamp(0, 7);
+
+          if (GUILayout.Button("-", GUILayout.Width(EditorGUIUtility.labelWidth)))
+          {
+            var arr = new int[m_ExtraInts.Length - 1];
+            for (int j = 0, k = 0; j < arr.Length; ++j, ++k)
+            {
+              if (j == i)
+              {
+                if (++k == m_ExtraInts.Length)
+                  break;
+              }
+
+              arr[j] = m_ExtraInts[k];
+            }
+
+            m_ExtraInts = arr;
+            break;
+          }
+        }
+
+        if (m_ExtraInts.Length < 8)
+        {
+          if (GUILayout.Button("+ Add Octant"))
+          {
+            System.Array.Resize(ref m_ExtraInts, m_ExtraInts.Length + 1);
+          }
+        }
+
+        EditorGUIUtility.labelWidth = popwidth;
+        ++EditorGUI.indentLevel;
+      }
+
+      EditorGUILayout.EndToggleGroup(); // end "Force Octant?" group
+    }
+
+    private void RasterCircleSceneGUI(RectInt visible, Vector2 mouse)
     {
       var center = Vector2Int.FloorToInt(visible.center);
       float radius = m_Length;
@@ -251,31 +312,22 @@ namespace Ore.Editor
       Handles.DrawSolidRectangleWithOutline(tile, m_PrimaryColor, Color.grey);
     }
 
-    private void DrawLine(RectInt visible, Vector2 mouse)
+
+    private void ColorAnalysisInspector()
     {
-      var start = visible.center;
-      var direction = mouse - start;
-      float distance = direction.magnitude;
-      direction /= distance;
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("Color1: ToInt32():", m_PrimaryColor.ToInt32().ToString("X8"));
+      EditorGUILayout.LabelField("Color1: GetHashCode():", m_PrimaryColor.GetHashCode().ToString("X8"));
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("Color2: ToInt32():", m_SecondaryColor.ToInt32().ToString("X8"));
+      EditorGUILayout.LabelField("Color2: GetHashCode():", m_SecondaryColor.GetHashCode().ToString("X8"));
+      EditorGUILayout.Space();
+    }
 
-      if (m_Length > 0f)
-      {
-        distance = m_Length;
-      }
 
-      var tile = new Rect(0f, 0f, 1f, 1f);
-      var line = new Raster.LineDrawer().Prepare(start, direction, distance);
+    private void HashMapsInspector()
+    {
 
-      using (new Handles.DrawingScope(m_PrimaryColor.Inverted()))
-      {
-        Handles.DrawLine(new Vector2((int)start.x, (int)start.y), mouse);
-      }
-
-      while (line.MoveNext())
-      {
-        tile.position = line.Current;
-        Handles.DrawSolidRectangleWithOutline(tile, m_PrimaryColor, Color.gray);
-      }
     }
 
   } // end class VisualTestingWindow

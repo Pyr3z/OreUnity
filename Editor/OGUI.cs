@@ -187,36 +187,36 @@ namespace Ore.Editor
       public static TextAnchor DEFAULT => Styles.Defaults.Label.alignment;
 
 
-      internal static readonly List<TextAnchor> Stack = new List<TextAnchor>(4);
+      private static readonly List<TextAnchor> s_AlignStack = new List<TextAnchor>(4);
 
 
       public static TextAnchor Peek()
       {
-        return Stack.Back(fallback: DEFAULT);
+        return s_AlignStack.Back(fallback: DEFAULT);
       }
 
       public static void Push(TextAnchor align)
       {
-        Stack.PushBack(EditorStyles.label.alignment);
+        s_AlignStack.PushBack(EditorStyles.label.alignment);
         EditorStyles.label.alignment = align;
       }
 
       public static void Pop()
       {
-        if (Stack.IsEmpty())
-          EditorStyles.label.alignment = Stack.PopBack();
-        else
+        if (s_AlignStack.IsEmpty())
           EditorStyles.label.alignment = DEFAULT;
+        else
+          EditorStyles.label.alignment = s_AlignStack.PopBack();
       }
 
       public static void Reset()
       {
-        if (Stack.IsEmpty())
+        if (s_AlignStack.IsEmpty())
           EditorStyles.label.alignment = DEFAULT;
         else
         {
-          EditorStyles.label.alignment = Stack[0];
-          Stack.Clear();
+          EditorStyles.label.alignment = s_AlignStack[0];
+          s_AlignStack.Clear();
         }
       }
 
@@ -225,7 +225,7 @@ namespace Ore.Editor
 
     public static class IndentLevel
     {
-      internal static List<int> Stack = new List<int>(4);
+      private static readonly List<int> s_IndentStack = new List<int>(4);
 
 
       public static void Push(int lvl, bool fixLabelWidth = true)
@@ -233,7 +233,7 @@ namespace Ore.Editor
         if (lvl < 0)
           lvl = 0;
 
-        Stack.PushBack(EditorGUI.indentLevel);
+        s_IndentStack.PushBack(EditorGUI.indentLevel);
 
         EditorGUI.indentLevel = lvl;
 
@@ -253,8 +253,8 @@ namespace Ore.Editor
 
       public static void Pop(bool fixLabelWidth = true)
       {
-        if (Stack.IsEmpty())
-          EditorGUI.indentLevel = Stack.PopBack();
+        if (s_IndentStack.IsEmpty())
+          EditorGUI.indentLevel = s_IndentStack.PopBack();
         else
         {
           EditorGUI.indentLevel = 0;
@@ -266,7 +266,7 @@ namespace Ore.Editor
 
       public static void Reset()
       {
-        Stack.Clear();
+        s_IndentStack.Clear();
         EditorGUI.indentLevel = 0;
       }
 
