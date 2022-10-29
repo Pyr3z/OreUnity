@@ -204,7 +204,7 @@ public static class HashMapSpeed
 
 
   private static readonly float[] PERCENTS = { 0f, 0.5f, 1f };
-  private static readonly int[]   SIZES    = { 33, 666, 1337, 3141592 };
+  private static readonly int[]   SIZES    = { 5, 1337 };
 
 
   [UnityTest]
