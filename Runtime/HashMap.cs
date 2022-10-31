@@ -350,6 +350,11 @@ namespace Ore
       }
     }
 
+    public void Rehash()
+    {
+      Rehash(m_Buckets.Length);
+    }
+
     /// <summary>
     /// Tries to ensure the HashMap can hold at least loadLimit items.
     /// </summary>

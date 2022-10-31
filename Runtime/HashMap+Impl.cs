@@ -30,6 +30,7 @@ namespace Ore
   #if UNITY_INCLUDE_TESTS // expose more fields for unit testing purposes
     internal Bucket[] Buckets => m_Buckets;
     internal int CachedLookup => m_CachedLookup;
+    internal int Collisions => m_Collisions;
     internal int LifetimeAllocs { get; private set; }
   #endif
 
@@ -248,11 +249,6 @@ namespace Ore
       }
 
       return m_LoadLimit;
-    }
-
-    private void Rehash()
-    {
-      Rehash(m_Buckets.Length);
     }
 
     private void Rehash(int newSize)
