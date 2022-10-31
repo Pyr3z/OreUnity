@@ -104,6 +104,17 @@ namespace Ore
     }
 
 
+    public static Color32 Average(Color32 a, Color32 b)
+    {
+      return new Color32(
+        r: (byte)((a.r + b.r) >> 1),
+        g: (byte)((a.g + b.g) >> 1),
+        b: (byte)((a.b + b.b) >> 1),
+        a: (byte)((a.a + b.a) >> 1)
+      );
+    }
+
+
     public static Color32 Quantized(this Color c)
     {
       // silly but handy...

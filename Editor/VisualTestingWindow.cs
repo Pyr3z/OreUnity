@@ -541,6 +541,9 @@ namespace Ore.Editor
 
       OGUI.Draw.Separator();
 
+      string dirtyColor = m_SecondaryColor.ToHex();
+      string lastDirtyColor = Colors.Average(m_PrimaryColor, m_SecondaryColor).HSVValue(0.85f).ToHex();
+
       using (var scrollView = new EGL.ScrollViewScope(m_ScrollViewPos))
       {
         for (int i = 0, ilen = m_HashMap.Buckets.Length; i < ilen; ++i)
@@ -553,7 +556,9 @@ namespace Ore.Editor
           EGL.BeginHorizontal();
 
           if (bucket.DirtyHash < 0)
-            OGUI.ScratchContent.text = $"<color=#{m_SecondaryColor.ToHex()}>slot {i}:</color>";
+            OGUI.ScratchContent.text = $"<color=#{dirtyColor}>slot {i}:</color>";
+          else if (bucket.DirtyHash % ilen != i)
+            OGUI.ScratchContent.text = $"<color=#{lastDirtyColor}>slot {i}:</color>";
           else
             OGUI.ScratchContent.text = $"slot {i}:";
 
@@ -611,8 +616,20 @@ namespace Ore.Editor
       guiSize -= HandleUtility.WorldToGUIPoint(tile.position);
       guiSize.y *= -1;
 
-      for (int i = 0; i < m_HashMap.Buckets.Length; ++i)
+      var lastDirtyColor = Colors.Average(m_PrimaryColor, m_SecondaryColor).HSVValue(0.85f);
+
+      bool isClick = Event.current.type == EventType.MouseDown && Event.current.button == 0;
+
+      int ilen = m_HashMap.Buckets.Length;
+      for (int i = 0; i < ilen; ++i)
       {
+        if (isClick && tile.Contains(mouse))
+        {
+          m_ExtraInts = new [] { i };
+          m_UseExtraInts = false;
+          Event.current.Use();
+        }
+
         var bucket = m_HashMap.Buckets[i];
 
         Color32 fill, outline;
@@ -623,8 +640,6 @@ namespace Ore.Editor
         }
         else if (bucket.DirtyHash < 0)
         {
-          m_SceneLabelStyle.normal.textColor = m_SecondaryColor;
-
           if (bucket.Value is null)
           {
             fill = Colors.Clear;
@@ -636,15 +651,29 @@ namespace Ore.Editor
             outline = m_SecondaryColor;
           }
         }
+        else if (bucket.DirtyHash % ilen != i)
+        {
+          fill = Colors.Boring;
+          outline = lastDirtyColor;
+        }
         else
         {
           fill = Colors.Boring;
           outline = m_PrimaryColor;
         }
 
-        Handles.DrawSolidRectangleWithOutline(tile, fill, outline);
+        if (m_UseExtraInts && m_ExtraInts[0] == i)
+        {
+          Handles.DrawSolidRectangleWithOutline(tile, fill, outline.HSVValue(0.96f));
+        }
+        else
+        {
+          Handles.DrawSolidRectangleWithOutline(tile, fill, outline);
+        }
 
         Handles.BeginGUI();
+
+        m_SceneLabelStyle.normal.textColor = outline;
 
         GUI.Label(
           new Rect(HandleUtility.WorldToGUIPoint(tile.position + Vector2.up), guiSize), 
@@ -653,8 +682,6 @@ namespace Ore.Editor
         );
 
         Handles.EndGUI();
-
-        m_SceneLabelStyle.normal.textColor = m_PrimaryColor;
 
         if ((int)tile.x == visible.xMax)
         {
@@ -665,6 +692,21 @@ namespace Ore.Editor
         {
           tile.x += 1f;
         }
+      } // end for loop
+
+      if (isClick && Event.current.type != EventType.Used)
+      {
+        m_ExtraInts = System.Array.Empty<int>();
+        m_UseExtraInts = false;
+      }
+      else if (!m_UseExtraInts)
+      {
+        m_UseExtraInts = m_ExtraInts?.Length > 0 && m_ExtraInts[0] >= 0 &&
+                         m_ExtraInts[0] < ilen;
+      }
+      else
+      {
+        // TODO draw jump graph
       }
     }
 

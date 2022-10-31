@@ -124,9 +124,11 @@ namespace Ore
           ++m_Count;
           ++m_Version;
 
+          m_CachedLookup = i;
+
           return true;
         }
-        else if (dirtyHash == hash31 && m_KeyComparator.Equals(key, currKey))
+        else if ((dirtyHash & int.MaxValue) == hash31 && m_KeyComparator.Equals(key, currKey))
         {
           // equivalent bucket found
 
@@ -139,6 +141,8 @@ namespace Ore
           m_Buckets[i].Key = key;
           m_Buckets[i].Value = val;
           ++m_Version;
+
+          m_CachedLookup = i;
 
           return true;
         }
@@ -179,7 +183,7 @@ namespace Ore
       int hash31 = m_KeyComparator.GetHashCode(key) & int.MaxValue;
       int i      = hash31 % ilen;
       int jump   = m_Params.CalcJump(hash31, ilen);
-      int jumps  = 0;
+      int jumps  = m_LongestChain;
 
       do
       {
@@ -199,7 +203,7 @@ namespace Ore
 
         i = (i + jump) % ilen;
       }
-      while (++jumps < ilen); // can't be < m_Count because of smearing algorithm =/
+      while (jumps --> 0);
 
       return m_CachedLookup = -i;
     }
