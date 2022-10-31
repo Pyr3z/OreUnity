@@ -73,12 +73,14 @@ namespace Ore.Editor
     private float m_CircleRadiusBias = Raster.CircleDrawer.RADIUS_BIAS;
 
     [SerializeField]
-    private int[] m_HashMapKeys;
+    private int[] m_IntKeys;
     [SerializeField]
-    private string[] m_HashMapValues;
+    private string[] m_StringKeys;
+    [SerializeField]
+    private string[] m_StringValues;
 
     [System.NonSerialized]
-    private readonly HashMap<int,string> m_HashMap = new HashMap<int, string>();
+    private readonly HashMap<object,string> m_HashMap = new HashMap<object,string>();
 
     [System.NonSerialized]
     private GUIStyle m_SceneLabelStyle;
@@ -103,14 +105,27 @@ namespace Ore.Editor
 
     void ISerializationCallbackReceiver.OnBeforeSerialize()
     {
-      m_HashMapKeys = new int[m_HashMap.Count];
-      m_HashMapValues = new string[m_HashMap.Count];
+      m_IntKeys = new int[m_HashMap.Count];
+      m_StringKeys = new string[m_HashMap.Count];
+      m_StringValues = new string[m_HashMap.Count];
 
       int i = 0;
       foreach (var (key,val) in m_HashMap)
       {
-        m_HashMapKeys[i] = key;
-        m_HashMapValues[i] = val;
+        if (key is string str)
+        {
+          m_StringKeys[i] = str;
+        }
+        else if (key is int ik)
+        {
+          m_IntKeys[i] = ik;
+        }
+        else
+        {
+          continue;
+        }
+
+        m_StringValues[i] = val;
         ++ i;
       }
     }
@@ -119,10 +134,13 @@ namespace Ore.Editor
     {
       m_HashMap.Clear();
 
-      int i = m_HashMapKeys?.Length ?? 0;
+      int i = m_IntKeys?.Length ?? 0;
       while (i --> 0)
       {
-        m_HashMap[m_HashMapKeys[i]] = m_HashMapValues[i];
+        if (m_StringKeys[i].IsEmpty())
+          m_HashMap[m_IntKeys[i]] = m_StringValues[i];
+        else
+          m_HashMap[m_StringKeys[i]] = m_StringValues[i];
       }
     }
 
@@ -202,17 +220,17 @@ namespace Ore.Editor
       mouse.y = Screen.height - mouse.y;
       mouse = cam.ScreenToWorldPoint(mouse);
 
-      if (m_Mode == Mode.RasterLine)
+      switch (m_Mode)
       {
-        RasterLineSceneGUI(visible, mouse);
-      }
-      else if (m_Mode == Mode.RasterCircle)
-      {
-        RasterCircleSceneGUI(visible, mouse);
-      }
-      else if (m_Mode == Mode.HashMaps)
-      {
-        HashMapsSceneGUI(visible, mouse);
+        case Mode.RasterLine:
+          RasterLineSceneGUI(visible, mouse);
+          break;
+        case Mode.RasterCircle:
+          RasterCircleSceneGUI(visible, mouse);
+          break;
+        case Mode.HashMaps:
+          HashMapsSceneGUI(visible, mouse);
+          break;
       }
     }
 
@@ -493,17 +511,21 @@ namespace Ore.Editor
       }
       EGL.EndHorizontal();
 
+      EGL.BeginHorizontal();
       if (GUILayout.Button("Map random int->string"))
       {
         m_HashMap.Map(Integers.RandomIndex(Primes.MaxValue), Colors.Random().ToHex());
       }
+      if (GUILayout.Button("Map random string->string"))
+      {
+        m_HashMap.Map(Strings.MakeGUID(), Colors.Random().ToHex());
+      }
+      EGL.EndHorizontal();
 
       OGUI.IndentLevel.Push(0);
       OGUI.LabelWidth.Push(55f);
 
-      var editQueue = new Queue<(int k,string v)>();
-
-      for (int i = 0; i < m_HashMap.Buckets.Length; ++i)
+      for (int i = 0, ilen = Mathf.Min(m_HashMap.Buckets.Length, 32); i < ilen; ++i)
       {
         var bucket = m_HashMap.Buckets[i];
 
@@ -518,34 +540,32 @@ namespace Ore.Editor
           OGUI.ScratchContent.text = $"slot {i}:";
 
         EG.BeginChangeCheck();
-        int editKey = EGL.DelayedIntField(OGUI.ScratchContent, bucket.Key);
+        string editKey = EGL.DelayedTextField(OGUI.ScratchContent, bucket.Key.ToString());
         if (EG.EndChangeCheck())
         {
-          editQueue.Enqueue((bucket.Key,null));
-          editQueue.Enqueue((editKey,bucket.Value));
+          m_HashMap.Unmap(bucket.Key);
+
+          if (int.TryParse(editKey, out int ikey))
+          {
+            m_HashMap[ikey] = bucket.Value;
+          }
+          else if (!editKey.IsEmpty())
+          {
+            m_HashMap[editKey] = bucket.Value;
+          }
+
+          EGL.EndHorizontal();
+          break;
         }
 
         EG.BeginChangeCheck();
         string edit = EGL.DelayedTextField(bucket.Value);
         if (EG.EndChangeCheck())
         {
-          editQueue.Enqueue((bucket.Key, edit));
+          m_HashMap[bucket.Key] = edit;
         }
 
         EGL.EndHorizontal();
-      }
-
-      while (editQueue.Count > 0)
-      {
-        var (key,val) = editQueue.Dequeue();
-        if (val.IsEmpty())
-        {
-          m_HashMap.Unmap(key);
-        }
-        else
-        {
-          m_HashMap[key] = val;
-        }
       }
 
       OGUI.LabelWidth.Pop();
@@ -557,7 +577,7 @@ namespace Ore.Editor
       const float kOffset = 0.015f;
 
       visible.xMax -= 1;
-      visible.yMax -= 3;
+      visible.yMax -= 1;
 
       var tile = new Rect(
         visible.xMin + kOffset,
