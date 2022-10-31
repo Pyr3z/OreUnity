@@ -22,6 +22,7 @@ namespace Ore
     private Bucket[] m_Buckets;
 
     private int m_Count, m_Collisions, m_LoadLimit;
+    private int m_LongestChain;
     private int m_Version;
 
     private int m_CachedLookup = int.MinValue;
@@ -31,6 +32,7 @@ namespace Ore
     internal Bucket[] Buckets => m_Buckets;
     internal int CachedLookup => m_CachedLookup;
     internal int Collisions => m_Collisions;
+    internal int LongestChain => m_LongestChain;
     internal int LifetimeAllocs { get; private set; }
   #endif
 
@@ -39,7 +41,7 @@ namespace Ore
     {
       bool alreadyClear = m_Count == 0;
 
-      m_Collisions = m_Count = 0;
+      m_LongestChain = m_Collisions = m_Count = 0;
       // always reallocate, in case we have dirty buckets
       m_Buckets = new Bucket[m_Buckets.Length];
 
@@ -60,7 +62,7 @@ namespace Ore
     {
       bool alreadyClear = m_Count == 0;
 
-      m_Collisions = m_Count = 0;
+      m_LongestChain = m_Collisions = m_Count = 0;
       System.Array.Clear(m_Buckets, 0, m_Buckets.Length);
 
       if (!alreadyClear)
@@ -88,10 +90,6 @@ namespace Ore
           i = -1;
           return false;
         }
-      }
-      else if (m_Collisions >= m_LoadLimit - 1)
-      {
-        Rehash();
       }
 
       int hash31 = m_KeyComparator.GetHashCode(key) & int.MaxValue;
@@ -125,11 +123,6 @@ namespace Ore
           ++m_Count;
           ++m_Version;
 
-          if (jumps >= m_Params.HashPrime)
-          {
-            Rehash();
-          }
-
           return true;
         }
         else if (bucket.Hash == hash31 && m_KeyComparator.Equals(key, bucket.Key))
@@ -146,11 +139,6 @@ namespace Ore
           m_Buckets[i].Value = val;
           ++m_Version;
 
-          if (jumps >= m_Params.HashPrime)
-          {
-            Rehash();
-          }
-
           return true;
         }
 
@@ -161,17 +149,17 @@ namespace Ore
         }
 
         i = (i + jump) % m_Buckets.Length;
+
+        if (++jumps > m_LongestChain)
+        {
+          m_LongestChain = jumps;
+        }
       }
-      while (++jumps < m_Buckets.Length);
+      while (jumps < m_Buckets.Length);
 
       // MEGA bad if we reach here
 
-      Orator.Panic($"HashMap.TryInsert: Too many collisions ({jumps}) hit!");
-
-      // Panic() should force a crash, so this is now unreachable code. Overkill?
-
-      i = -1;
-      return false;
+      throw new UnanticipatedException($"HashMap.TryInsert: Too many consecutive collisions! hash31={hash31}, jumps={jumps}, key={key}");
     }
 
     private int FindBucket(in K key)
@@ -259,7 +247,7 @@ namespace Ore
         return;
       }
 
-      m_Collisions = 0;
+      m_LongestChain = m_Collisions = 0;
       m_CachedLookup = -1;
       m_LoadLimit  = m_Params.CalcLoadLimit(newSize);
 
@@ -276,16 +264,18 @@ namespace Ore
       }
 
       int count = 0;
-      int hash31, jump;
       foreach (var bucket in m_Buckets)
       {
         if (bucket.MightBeEmpty() && m_KeyComparator.IsNone(bucket.Key))
           continue;
 
-        hash31 = bucket.Hash;
-        jump   = m_Params.CalcJump(hash31, newSize);
+        int hash31 = bucket.Hash;
+        int jump   = m_Params.CalcJump(hash31, newSize);
 
-        m_Collisions += bucket.RehashClone(hash31).PlaceIn(newBuckets, jump, m_KeyComparator);
+        var (c,j) = bucket.RehashClone(hash31).PlaceIn(newBuckets, jump, m_KeyComparator);
+        if (j > m_LongestChain)
+          m_LongestChain = j;
+        m_Collisions += c;
 
         if (++count == m_Count)
           break;

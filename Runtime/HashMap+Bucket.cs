@@ -64,13 +64,14 @@ namespace Ore
       }
 
       [Pure]
-      public int PlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IComparator<K> keyEq)
+      public (int,int) PlaceIn([NotNull] Bucket[] buckets, int jump, [NotNull] IComparator<K> keyEq)
       {
         int collisions = 0;
+        int jumps      = 0;
         int ilen       = buckets.Length;
         int i          = Hash % ilen;
 
-        while (!keyEq.IsNone(buckets[i].Key) && collisions < ilen)
+        while (!keyEq.IsNone(buckets[i].Key) && jumps++ < ilen)
         {
           if (buckets[i].DirtyHash >= 0)
           {
@@ -82,7 +83,7 @@ namespace Ore
         }
 
         buckets[i] = this;
-        return collisions;
+        return (collisions,jumps);
       }
 
     } // end struct Bucket

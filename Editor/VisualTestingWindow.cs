@@ -73,6 +73,9 @@ namespace Ore.Editor
     private float m_CircleRadiusBias = Raster.CircleDrawer.RADIUS_BIAS;
 
     [SerializeField]
+    private Vector2 m_ScrollViewPos;
+
+    [SerializeField]
     private int[] m_IntKeys;
     [SerializeField]
     private string[] m_StringKeys;
@@ -471,7 +474,12 @@ namespace Ore.Editor
 
     private void HashMapsInspector()
     {
+      EGL.BeginHorizontal();
+
       EGL.LabelField("Internal Size:", m_HashMap.Buckets.Length.ToString());
+      EGL.LabelField("Lifetime Allocs:", m_HashMap.LifetimeAllocs.ToString());
+
+      EGL.EndHorizontal();
 
       EGL.BeginHorizontal();
       EGL.LabelField("Grow Threshold:", m_HashMap.Capacity.ToString());
@@ -495,6 +503,12 @@ namespace Ore.Editor
       else
         OGUI.Draw.FillBar(ratio);
       EGL.EndHorizontal();
+
+      EGL.LabelField("Longest Chain:", m_HashMap.LongestChain.ToString());
+
+      // EGL.LabelField("Cached Slot:", m_HashMap.CachedLookup.ToString());
+
+      EGL.Space();
 
       EGL.BeginHorizontal();
       if (GUILayout.Button("Clear"))
@@ -525,47 +539,54 @@ namespace Ore.Editor
       OGUI.IndentLevel.Push(0);
       OGUI.LabelWidth.Push(55f);
 
-      for (int i = 0, ilen = Mathf.Min(m_HashMap.Buckets.Length, 32); i < ilen; ++i)
+      OGUI.Draw.Separator();
+
+      using (var scrollView = new EGL.ScrollViewScope(m_ScrollViewPos))
       {
-        var bucket = m_HashMap.Buckets[i];
-
-        if (bucket.Key == default)
-          continue;
-
-        EGL.BeginHorizontal();
-
-        if (bucket.DirtyHash < 0)
-          OGUI.ScratchContent.text = $"<color=#{m_SecondaryColor.ToHex()}>slot {i}:</color>";
-        else
-          OGUI.ScratchContent.text = $"slot {i}:";
-
-        EG.BeginChangeCheck();
-        string editKey = EGL.DelayedTextField(OGUI.ScratchContent, bucket.Key.ToString());
-        if (EG.EndChangeCheck())
+        for (int i = 0, ilen = m_HashMap.Buckets.Length; i < ilen; ++i)
         {
-          m_HashMap.Unmap(bucket.Key);
+          var bucket = m_HashMap.Buckets[i];
 
-          if (int.TryParse(editKey, out int ikey))
+          if (bucket.Key == default)
+            continue;
+
+          EGL.BeginHorizontal();
+
+          if (bucket.DirtyHash < 0)
+            OGUI.ScratchContent.text = $"<color=#{m_SecondaryColor.ToHex()}>slot {i}:</color>";
+          else
+            OGUI.ScratchContent.text = $"slot {i}:";
+
+          EG.BeginChangeCheck();
+          string editKey = EGL.DelayedTextField(OGUI.ScratchContent, bucket.Key.ToString());
+          if (EG.EndChangeCheck())
           {
-            m_HashMap[ikey] = bucket.Value;
+            m_HashMap.Unmap(bucket.Key);
+
+            if (int.TryParse(editKey, out int ikey))
+            {
+              m_HashMap[ikey] = bucket.Value;
+            }
+            else if (!editKey.IsEmpty())
+            {
+              m_HashMap[editKey] = bucket.Value;
+            }
+
+            EGL.EndHorizontal();
+            break;
           }
-          else if (!editKey.IsEmpty())
+
+          EG.BeginChangeCheck();
+          string edit = EGL.DelayedTextField(bucket.Value, GUILayout.Width(72f));
+          if (EG.EndChangeCheck())
           {
-            m_HashMap[editKey] = bucket.Value;
+            m_HashMap[bucket.Key] = edit;
           }
 
           EGL.EndHorizontal();
-          break;
         }
 
-        EG.BeginChangeCheck();
-        string edit = EGL.DelayedTextField(bucket.Value);
-        if (EG.EndChangeCheck())
-        {
-          m_HashMap[bucket.Key] = edit;
-        }
-
-        EGL.EndHorizontal();
+        m_ScrollViewPos = scrollView.scrollPosition;
       }
 
       OGUI.LabelWidth.Pop();
