@@ -28,7 +28,7 @@ namespace Ore.Editor
     public static float FieldStartX => FieldStartXRaw - EditorGUI.indentLevel * STD_INDENT;
     public static float FieldStartXRaw => FieldEndX * 0.45f - STD_INDENT_0;
     public static float FieldEndX => EditorGUIUtility.currentViewWidth - STD_PAD_RIGHT;
-    public static float FieldWidth => Mathf.Max(FieldEndX - FieldStartXRaw, EditorGUIUtility.fieldWidth);
+    public static float FieldWidth => Mathf.Max(FieldEndX - FieldStartX, EditorGUIUtility.fieldWidth);
 
     public static float ViewWidth => EditorGUIUtility.currentViewWidth;
     public static float ContentWidth => FieldEndX - LabelStartX;
@@ -169,27 +169,60 @@ namespace Ore.Editor
         }
       }
 
-      public static void FillBar(Rect pos, Color32 fill, float t, Color32 textColor = default)
+      public static void FillBar(float t, string label = null, Color32 fill = default, Color32 textColor = default)
+      {
+        var pos = EditorGUILayout.GetControlRect(hasLabel: false);
+
+        if (label != null)
+        {
+          pos.width = EditorGUIUtility.labelWidth;
+          EditorGUI.LabelField(pos, label);
+          pos.x += pos.width + STD_PAD;
+          pos.xMax = EditorGUIUtility.currentViewWidth - STD_PAD_RIGHT;
+        }
+        else
+        {
+          pos = EditorGUI.IndentedRect(pos);
+        }
+
+        FillBar(pos, t, fill, textColor);
+      }
+
+      public static void FillBar(Rect pos, float t, Color32 fill = default, Color32 textColor = default)
       {
         if (Event.current.type != EventType.Repaint)
           return;
 
+        if (fill.IsDefault())
+          fill = Colors.Boring;
+
+        pos.y += 1f;
+        pos.height -= 2f;
+
         Rect(pos, outline: Colors.Dark);
 
-        var fillRect = new Rect(pos.x, pos.y, pos.width * t, pos.height);
+        var fillRect = new Rect(pos.x, pos.y, pos.width * t, pos.height - 1f);
 
-        Rect(fillRect, outline: Colors.Dark, fill.Alpha(0.5f));
+        Rect(fillRect, fill: fill);
+
+        if (textColor.IsDefault())
+          textColor = fill.Inverted();
 
         if (textColor.IsClear())
           return;
 
-        string text = $"{(int)(t * 100f + 0.5f):0}%";
+        string text = $"{t:P0}";
         text = Styles.ColorText(text, textColor);
-        text = Styles.BigText(text);
+        text = Styles.BoldText(text);
+
+        ScratchContent.text = text;
+        ScratchContent.tooltip = $"{t:P2}";
 
         LabelAlign.Push(TextAnchor.MiddleCenter);
-        GUI.Label(pos, text);
+        GUI.Label(pos, ScratchContent, EditorStyles.label);
         LabelAlign.Pop();
+
+        ScratchContent.text = ScratchContent.tooltip = string.Empty;
       }
 
       public static void Rect(Rect pos, Color32 outline = default, Color32 fill = default, bool always = false)
@@ -197,14 +230,16 @@ namespace Ore.Editor
         if (!always && Event.current.type != EventType.Repaint)
           return;
 
+        if (outline.IsDefault() && fill.IsDefault())
+        {
+          outline = Colors.Boring;
+        }
+
         Handles.BeginGUI();
 
         using (new Handles.DrawingScope(Color.white))
         {
-          if (outline.IsDefault())
-            Handles.DrawSolidRectangleWithOutline(pos, fill, Colors.Bright);
-          else
-            Handles.DrawSolidRectangleWithOutline(pos, fill, outline);
+          Handles.DrawSolidRectangleWithOutline(pos, fill, outline);
         }
 
         Handles.EndGUI();

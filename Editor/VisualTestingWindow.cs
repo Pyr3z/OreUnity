@@ -341,6 +341,57 @@ namespace Ore.Editor
       EGL.LabelField("Color2: ToInt32():", m_SecondaryColor.ToInt32().ToString("X8"));
       EGL.LabelField("Color2: GetHashCode():", m_SecondaryColor.GetHashCode().ToString("X8"));
       EGL.Space();
+
+      if (GUILayout.Button("Randomize Colors"))
+      {
+        m_PrimaryColor = Colors.Random();
+        m_SecondaryColor = Colors.Random();
+      }
+
+      if (GUILayout.Button("Randomize Colors (Gray)"))
+      {
+        m_PrimaryColor = Colors.RandomGray();
+        m_SecondaryColor = Colors.RandomGray();
+      }
+
+      if (GUILayout.Button("Randomize Colors (Dark)"))
+      {
+        m_PrimaryColor = Colors.RandomDark();
+        m_SecondaryColor = Colors.RandomDark();
+      }
+
+      if (GUILayout.Button("Randomize Colors (Light)"))
+      {
+        m_PrimaryColor = Colors.RandomLight();
+        m_SecondaryColor = Colors.RandomLight();
+      }
+
+      if (GUILayout.Button("Randomize Colors (Dark + Light)"))
+      {
+        m_PrimaryColor = Colors.RandomDark();
+        m_SecondaryColor = Colors.RandomLight();
+      }
+
+      if (GUILayout.Button("Randomize Colors (Light + Dark)"))
+      {
+        m_PrimaryColor   = Colors.RandomLight();
+        m_SecondaryColor = Colors.RandomDark();
+      }
+
+      if (GUILayout.Button("Invert Secondary"))
+      {
+        m_SecondaryColor = m_PrimaryColor.Inverted();
+      }
+
+      EGL.Space();
+
+      m_Length = EditorGUILayout.Slider("Fill Bar %", m_Length, 0f, 1f);
+
+      OGUI.Draw.FillBar(m_Length, fill: m_PrimaryColor, textColor: m_SecondaryColor);
+
+      OGUI.Draw.FillBar(m_Length, "With Label", fill: m_PrimaryColor, textColor: m_SecondaryColor);
+
+      OGUI.Draw.FillBar(m_Length, "Default Colors");
     }
 
 
