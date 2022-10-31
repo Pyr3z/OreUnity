@@ -31,7 +31,7 @@ namespace Ore
   #if UNITY_INCLUDE_TESTS // expose more fields for unit testing purposes
     internal Bucket[] Buckets => m_Buckets;
     internal int CachedLookup => m_CachedLookup;
-    internal int Collisions => m_Collisions;
+    internal int Collisions   => m_Collisions;
     internal int LongestChain => m_LongestChain;
     internal int LifetimeAllocs { get; private set; }
   #endif
@@ -102,35 +102,36 @@ namespace Ore
 
       do
       {
-        var bucket = m_Buckets[i];
+        var currKey = m_Buckets[i].Key;
+        int dirtyHash = m_Buckets[i].DirtyHash;
 
-        if (bucket.DirtyHash == int.MinValue && fallback == -1 && m_KeyComparator.IsNone(bucket.Key))
+        if (dirtyHash == int.MinValue && fallback == -1 && m_KeyComparator.IsNone(currKey))
         {
           // fallback is a smeared bucket.
           fallback = i;
           // if it ends up being the final smeared bucket in the jump chain,
           // it will be used instead of the next empty slot.
         }
-        else if ((bucket.DirtyHash & int.MaxValue) == 0 && m_KeyComparator.IsNone(bucket.Key))
+        else if ((dirtyHash & int.MaxValue) == 0 && m_KeyComparator.IsNone(currKey))
         {
           if (fallback != -1) // end of smear chain;
             i = fallback;     // we can fill the last smear instead
 
-          m_Buckets[i].Key = key;
-          m_Buckets[i].Value = val;
-          m_Buckets[i].Hash = hash31;
+          m_Buckets[i].Key       = key;
+          m_Buckets[i].Value     = val;
+          m_Buckets[i].DirtyHash = hash31 | (dirtyHash & int.MinValue);
 
           ++m_Count;
           ++m_Version;
 
           return true;
         }
-        else if (bucket.Hash == hash31 && m_KeyComparator.Equals(key, bucket.Key))
+        else if (dirtyHash == hash31 && m_KeyComparator.Equals(key, currKey))
         {
           // equivalent bucket found
 
           if (!overwrite || (m_ValueComparator is {} &&
-                             m_ValueComparator.Equals(val, bucket.Value)))
+                             m_ValueComparator.Equals(val, m_Buckets[i].Value)))
           {
             return false;
           }
@@ -142,9 +143,9 @@ namespace Ore
           return true;
         }
 
-        if (bucket.DirtyHash >= 0)
+        if (dirtyHash >= 0)
         {
-          m_Buckets[i].DirtyHash |= int.MinValue;
+          m_Buckets[i].DirtyHash = dirtyHash | int.MinValue;
           ++m_Collisions;
         }
 
@@ -189,7 +190,7 @@ namespace Ore
           return m_CachedLookup = -i;
         }
         
-        if (bucket.Hash == hash31 && m_KeyComparator.Equals(key, bucket.Key))
+        if ((bucket.DirtyHash & int.MaxValue) == hash31 && m_KeyComparator.Equals(key, bucket.Key))
         {
           return m_CachedLookup = i;
         }
@@ -211,13 +212,13 @@ namespace Ore
       {
         var bucket = m_Buckets[i];
 
-        if (bucket.Hash == 0 && m_KeyComparator.IsNone(bucket.Key))
+        if ((bucket.DirtyHash & int.MaxValue) == 0 && m_KeyComparator.IsNone(bucket.Key))
           continue;
 
         if (cmp.Equals(bucket.Value, value))
           return i;
 
-        --left;
+        -- left;
       }
 
       return -1;
@@ -269,7 +270,7 @@ namespace Ore
         if (bucket.MightBeEmpty() && m_KeyComparator.IsNone(bucket.Key))
           continue;
 
-        int hash31 = bucket.Hash;
+        int hash31 = bucket.DirtyHash & int.MaxValue;
         int jump   = m_Params.CalcJump(hash31, newSize);
 
         var (c,j) = bucket.RehashClone(hash31).PlaceIn(newBuckets, jump, m_KeyComparator);

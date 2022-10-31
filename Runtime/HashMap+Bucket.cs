@@ -16,15 +16,6 @@ namespace Ore
     {
       // not sure if struct is actually better in this case~
 
-      public int Hash
-      {
-        [Pure]
-        get => DirtyHash & int.MaxValue;
-        internal
-        set => DirtyHash = (value & int.MaxValue) | (DirtyHash & int.MinValue);
-      }
-
-
       public int DirtyHash; // "dirty" bit implements linear probing for collision resolution
       public K   Key;
       public V   Value; // direct member access is faster
@@ -69,7 +60,7 @@ namespace Ore
         int collisions = 0;
         int jumps      = 0;
         int ilen       = buckets.Length;
-        int i          = Hash % ilen;
+        int i          = (DirtyHash & int.MaxValue) % ilen;
 
         while (!keyEq.IsNone(buckets[i].Key) && jumps++ < ilen)
         {
