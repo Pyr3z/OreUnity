@@ -315,12 +315,12 @@ namespace Ore
 
     #if DEBUG
       public static int? FORCE_OCTANT = null;
-      public static int ERROR_X = 2;
-      public static int ERROR_Y = 2;
+      public static int ERROR_X = 1;
+      public static int ERROR_Y = 3;
       public static float RADIUS_BIAS = 0.35f;
     #else
-      private const int ERROR_X = 2;
-      private const int ERROR_Y = 2;
+      private const int ERROR_X = 1;
+      private const int ERROR_Y = 3;
       private const float RADIUS_BIAS = 0.35f;
     #endif
 
