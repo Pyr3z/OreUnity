@@ -53,6 +53,11 @@ namespace Ore
     private const byte BUMP_STEP = 0x28;
     private const byte BUMP_CEIL = 0xFF - BUMP_STEP;
 
+    private const float GOOD_MIN_HSV_VALUE  = 0.09f;
+    private const float GOOD_MAX_HSV_VALUE  = 0.91f;
+    private const float HSV_VALUE_DARK      = 0.52f;
+    private const float HSV_VALUE_LIGHT     = 0.55f;
+
 
     public static bool IsClear(this Color32 c)
     {
@@ -69,6 +74,33 @@ namespace Ore
     public static bool AreEqual(Color32 a, Color32 b)
     {
       return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
+    }
+
+
+    public static Color32 Random(float minHsvValue = GOOD_MIN_HSV_VALUE, float maxHsvValue = GOOD_MAX_HSV_VALUE)
+    {
+      minHsvValue *= 255f;
+      maxHsvValue *= 255f;
+      return new Color32(
+        r: (byte)(minHsvValue + UnityEngine.Random.value * (maxHsvValue - minHsvValue)).AtMost(255f),
+        g: (byte)(minHsvValue + UnityEngine.Random.value * (maxHsvValue - minHsvValue)).AtMost(255f),
+        b: (byte)(minHsvValue + UnityEngine.Random.value * (maxHsvValue - minHsvValue)).AtMost(255f),
+        a: 0xFF
+      );
+    }
+
+    public static Color32 RandomDark()
+      => Random(maxHsvValue: HSV_VALUE_DARK);
+
+    public static Color32 RandomLight()
+      => Random(minHsvValue: HSV_VALUE_LIGHT);
+
+    public static Color32 RandomGray(float minHsvValue = GOOD_MIN_HSV_VALUE, float maxHsvValue = GOOD_MAX_HSV_VALUE)
+    {
+      minHsvValue *= 255f;
+      maxHsvValue *= 255f;
+      byte v = (byte)(minHsvValue + UnityEngine.Random.value * (maxHsvValue - minHsvValue)).AtMost(255f);
+      return new Color32(v, v, v, 0xFF);
     }
 
 
@@ -179,6 +211,28 @@ namespace Ore
       c.b = (byte)(c.b + (gray - c.b) * t);
 
       return c;
+    }
+
+
+    public static float HSVValue(this Color32 c)
+    {
+      if (c.r >= c.g && c.r >= c.b)
+        return c.r / 255f;
+      if (c.g >= c.r && c.g >= c.b)
+        return c.g / 255f;
+      else
+        return c.b / 255f;
+    }
+
+    public static Color32 HSVValue(this Color32 c, float newValue)
+    {
+      newValue /= HSVValue(c);
+      return new Color32(
+        r: (byte)(c.r * newValue).AtMost(255f),
+        g: (byte)(c.g * newValue).AtMost(255f),
+        b: (byte)(c.b * newValue).AtMost(255f),
+        a: c.a
+      );
     }
 
 
