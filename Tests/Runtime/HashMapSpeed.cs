@@ -146,46 +146,20 @@ public static class HashMapSpeed
       int j = tests.Count;
       int nExist = 0;
 
-      // tests.Shuffle();
-
-      stopwatch.Start();
-
       while (j --> 0)
       {
+        stopwatch.Start();
         if (lookup.Contains(tests[j]))
         {
+          stopwatch.Stop();
+          Assert.AreEqual(tests[j], lookup[tests[j]], "key==value");
           ++nExist;
-
-          try
-          {
-            Assert.AreEqual(tests[j], lookup[tests[j]], "");
-          }
-          catch (AssertionException ae)
-          {
-            if (lookup is HashMap<string,string> fmap)
-            {
-              throw new AssertionException($"CachedLookup={fmap.CachedLookup}; {ae.Message}", ae);
-            }
-
-            throw;
-          }
         }
         else
         {
-          // need to do this to make sure tests are balanced
-          object optional = null;
-
-          try
-          {
-            optional = lookup[tests[j]];
-          }
-          catch {  }
-
-          Assert.Null(optional);
+          stopwatch.Stop();
         }
       }
-
-      stopwatch.Stop();
 
       Assert.AreEqual(0f, (float)nExist/tests.Count - pExist, 0.03f);
 
@@ -195,7 +169,7 @@ public static class HashMapSpeed
     float ms = stopwatch.ElapsedMilliseconds / (float)NFRAMES;
 
     // RFC 4180 CSV:
-    Debug.Log($"\"{name}\",\"{lookup.Count}\",\"{tests.Count}\",\"{pExist:P0}\",\"{ms:N2}\"");
+    Debug.Log($"\"{name}\",\"{lookup.Count}\",\"{tests.Count}\",\"{pExist:P0}\",\"{ms:N3}\"");
 
     // Debug.Log($"{name}[{lookup.Count}]: Average ms per {N} lookups = {ms:N1}ms  ({ms / tooslow:P0} of budget)");
 
@@ -204,15 +178,15 @@ public static class HashMapSpeed
 
 
   private static readonly float[] PERCENTS = { 0f, 0.5f, 1f };
-  private static readonly int[]   SIZES    = { 5, 1337 };
+  private static readonly int[]   SIZES    = { 5, 513, 1337 };
 
 
   [UnityTest]
-  public static IEnumerator HashMapLookup(
+  public static IEnumerator LookupHashMap(
     [ValueSource(nameof(PERCENTS))] float percentExist,
     [ValueSource(nameof(SIZES))]      int size )
   {
-    const string TESTNAME = "HashMap";
+    const string TESTNAME = nameof(LookupHashMap);
 
     var lookup = GetTestHashMap(size);
 
@@ -221,11 +195,11 @@ public static class HashMapSpeed
   }
 
   [UnityTest]
-  public static IEnumerator DictionaryLookup(
+  public static IEnumerator LookupDictionary(
     [ValueSource(nameof(PERCENTS))] float percentExist,
     [ValueSource(nameof(SIZES))]      int size )
   {
-    const string TESTNAME = "Dictionary";
+    const string TESTNAME = nameof(LookupDictionary);
 
     var lookup = GetTestDict(size);
 
@@ -234,16 +208,209 @@ public static class HashMapSpeed
   }
 
   [UnityTest]
-  public static IEnumerator HashtableLookup(
+  public static IEnumerator LookupHashtable(
     [ValueSource(nameof(PERCENTS))] float percentExist,
     [ValueSource(nameof(SIZES))]      int size )
   {
-    const string TESTNAME = "Hashtable";
+    const string TESTNAME = nameof(LookupHashtable);
 
     var lookup = GetTestTable(size);
 
     System.GC.Collect();
     return DoLookupTest(lookup, TESTNAME, percentExist);
+  }
+
+
+  [UnityTest]
+  public static IEnumerator LookupBoxlessHashMap(
+    [ValueSource(nameof(PERCENTS))] float pExist,
+    [ValueSource(nameof(SIZES))]    int   size )
+  {
+    const string TESTNAME = nameof(LookupBoxlessHashMap);
+
+    System.GC.Collect();
+
+    var lookup = GetTestHashMap(size);
+
+    var tests = GetSomeKeysFor(lookup, (int)(pExist * N + 0.5f), (int)((1f -pExist) * N + 0.5f));
+
+    var stopwatch = new Stopwatch();
+
+    yield return null;
+
+    int i = NFRAMES;
+    while (i --> 0)
+    {
+      int j      = tests.Count;
+      int nExist = 0;
+
+      while (j --> 0)
+      {
+        stopwatch.Start();
+        if (lookup.Find(tests[j], out string result))
+        {
+          stopwatch.Stop();
+          Assert.AreEqual(tests[j], result);
+          ++nExist;
+        }
+        else
+        {
+          stopwatch.Stop();
+        }
+      }
+
+      Assert.AreEqual(0f, (float)nExist /tests.Count - pExist, 0.03f);
+
+      yield return null;
+    }
+
+    float ms = stopwatch.ElapsedMilliseconds / (float)NFRAMES;
+
+    // RFC 4180 CSV:
+    Debug.Log($"\"{TESTNAME}\",\"{lookup.Count}\",\"{tests.Count}\",\"{pExist:P0}\",\"{ms:N3}\"");
+
+    Assert.Less(ms, TOOSLOW);
+  }
+
+  [UnityTest]
+  public static IEnumerator LookupBoxlessDictionary(
+    [ValueSource(nameof(PERCENTS))] float pExist,
+    [ValueSource(nameof(SIZES))]    int   size )
+  {
+    const string TESTNAME = nameof(LookupBoxlessDictionary);
+
+    System.GC.Collect();
+
+    var lookup = GetTestDict(size);
+
+    var tests = GetSomeKeysFor(lookup, (int)(pExist * N + 0.5f), (int)((1f -pExist) * N + 0.5f));
+
+    var stopwatch = new Stopwatch();
+
+    yield return null;
+
+    int i = NFRAMES;
+    while (i --> 0)
+    {
+      int j      = tests.Count;
+      int nExist = 0;
+
+
+      while (j --> 0)
+      {
+        stopwatch.Start();
+        if (lookup.TryGetValue(tests[j], out string result))
+        {
+          stopwatch.Stop();
+          Assert.AreEqual(tests[j], result);
+          ++nExist;
+        }
+        else
+        {
+          stopwatch.Stop();
+        }
+      }
+
+      Assert.AreEqual(0f, (float)nExist /tests.Count - pExist, 0.03f);
+
+      yield return null;
+    }
+
+    float ms = stopwatch.ElapsedMilliseconds / (float)NFRAMES;
+
+    // RFC 4180 CSV:
+    Debug.Log($"\"{TESTNAME}\",\"{lookup.Count}\",\"{tests.Count}\",\"{pExist:P0}\",\"{ms:N3}\"");
+
+    Assert.Less(ms, TOOSLOW);
+  }
+
+
+  [UnityTest]
+  public static IEnumerator InsertBoxlessHashMap([ValueSource(nameof(SIZES))] int size)
+  {
+    const string TESTNAME = nameof(InsertBoxlessHashMap);
+
+    System.GC.Collect();
+
+    var stopwatch = new Stopwatch();
+
+    yield return null;
+
+    int i = NFRAMES;
+    while (i --> 0)
+    {
+      var lookup = new HashMap<string,string>();
+      var tests = GetTestList(size);
+
+      int j = size;
+
+      while (j --> 0)
+      {
+        string test = tests[j];
+        int precount = lookup.Count;
+
+        stopwatch.Start();
+        lookup[test] = test;
+        lookup[test] = test;
+        stopwatch.Stop();
+
+        Assert.AreEqual(precount + 1, lookup.Count);
+        Assert.AreEqual(test,         lookup[test]);
+      }
+
+      yield return null;
+    }
+
+    float ms = stopwatch.ElapsedMilliseconds / (float)NFRAMES;
+
+    // RFC 4180 CSV:
+    Debug.Log($"\"{TESTNAME}\",\"{size}\",\"{ms:N3}\"");
+
+    Assert.Less(ms, TOOSLOW);
+  }
+
+  [UnityTest]
+  public static IEnumerator InsertBoxlessDictionary([ValueSource(nameof(SIZES))] int size)
+  {
+    const string TESTNAME = nameof(InsertBoxlessDictionary);
+
+    System.GC.Collect();
+
+    var stopwatch = new Stopwatch();
+
+    yield return null;
+
+    int i = NFRAMES;
+    while (i --> 0)
+    {
+      var lookup = new Dictionary<string,string>();
+      var tests = GetTestList(size);
+
+      int j = size;
+
+      while (j --> 0)
+      {
+        string test     = tests[j];
+        int    precount = lookup.Count;
+
+        stopwatch.Start();
+        lookup[test] = test;
+        lookup[test] = test;
+        stopwatch.Stop();
+
+        Assert.AreEqual(precount + 1, lookup.Count);
+        Assert.AreEqual(test,         lookup[test]);
+      }
+
+      yield return null;
+    }
+
+    float ms = stopwatch.ElapsedMilliseconds / (float)NFRAMES;
+
+    // RFC 4180 CSV:
+    Debug.Log($"\"{TESTNAME}\",\"{size}\",\"{ms:N3}\"");
+
+    Assert.Less(ms, TOOSLOW);
   }
 
 }
