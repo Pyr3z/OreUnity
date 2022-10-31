@@ -115,7 +115,7 @@ namespace Ore
       }
 
       m_Buckets = new Bucket[m_Params.InitialSize];
-      m_LoadLimit = m_Params.CalcLoadLimit(m_Params.InitialSize);
+      m_LoadLimit = m_Params.CalcLoadLimit();
       #if UNITY_INCLUDE_TESTS
       LifetimeAllocs = 1;
       #endif
@@ -316,6 +316,39 @@ namespace Ore
       return ClearNoAlloc(); // tests verify that NoAlloc is consistently faster
     }
 
+
+    public void ResetCapacity()
+    {
+      m_Params.ResetInitialSize();
+
+      int loadLimit = m_Params.CalcLoadLimit();
+
+      if (m_Count == 0)
+      {
+        m_Collisions = 0;
+        m_LoadLimit = loadLimit;
+
+        if (m_Buckets.Length == m_Params.InitialSize)
+        {
+          Array.Clear(m_Buckets, 0, m_Buckets.Length);
+        }
+        else
+        {
+          m_Buckets = new Bucket[m_Params.InitialSize];
+          #if UNITY_INCLUDE_TESTS
+          ++ LifetimeAllocs;
+          #endif
+        }
+      }
+      else if (m_Count > loadLimit)
+      {
+        Rehash(m_Params.CalcInternalSize(m_Count));
+      }
+      else
+      {
+        Rehash(m_Params.InitialSize);
+      }
+    }
 
     /// <summary>
     /// Tries to ensure the HashMap can hold at least loadLimit items.

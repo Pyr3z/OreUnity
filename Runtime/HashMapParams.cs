@@ -169,7 +169,7 @@ namespace Ore
       #endif
     }
 
-    public void ResetGrowth()
+    public void ResetInitialSize()
     {
       InitialSize = CalcInternalSize(USERCAPACITY_DEFAULT);
     }
@@ -189,6 +189,11 @@ namespace Ore
     {
       // without the rounding, we get wonky EnsureCapacity behavior
       return (int)(internalSize * LoadFactor + 0.5f);
+    }
+
+    public int CalcLoadLimit()
+    {
+      return (int)(InitialSize * LoadFactor + 0.5f);
     }
 
     public int CalcJump(int hash31, int size)
