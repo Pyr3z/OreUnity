@@ -602,6 +602,9 @@ namespace Ore.Editor
     {
       const float kOffset = 0.015f;
 
+      if (m_HashMap.Buckets.Length > 999)
+        return;
+
       visible.xMax -= 1;
       visible.yMax -= 1;
 
