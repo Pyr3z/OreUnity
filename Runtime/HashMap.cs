@@ -33,7 +33,11 @@
  *    tests; however, it too has an inflexible API.
  *
  *    Note: Non-null keys with a hash code of 0 are still valid keys, and should
- *    not break this implementation.
+ *    not break this implementation—EXCEPT if type K is such that default(K) is
+ *    also equal to 0! ... This sucks in many ways, but that's how it is by
+ *    default for now. Technically you could work around this limitation with a
+ *    custom IComparator<K> provided, and perhaps a custom type K itself to
+ *    boot... but that's up to you.
 **/
 
 using System.Collections;

@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [UNRELEASED] - 2022-
 - Added Unit Tests: ActiveScene
 
+## [2.7.0] - 2022-10-31
+- Added: (Editor) New GUI drawing helpers in `OGUI` / new class `OGUI.Draw`.
+- Added: (Editor) Visual Testing Window (A.K.A. "VTW")! Menu bar -> Bore -> Tools -> Ore Visual Testing.
+  - VTW Mode: "Raster Line" - visualizes the line drawing algorithm(s) from the `Raster` class.
+  - VTW Mode: "Raster Circle" - same but for the circle drawer(s).
+  - VTW Mode: "Color Analysis" - easy testing suite for various color APIs, primarily those in Ore's own `Colors` class.
+  - VTW Mode: "Hash Maps" - datastructure visualizer for Ore's `HashMap<K,V>` class. Could also be useful for testing hash algorithm distribution in the future.
+- Added: More public control over the internal load of HashMaps. (`ResetCapacity`, `Rehash`, also `HashMapParams.WithGrowthCurve`,`.WithGrowFactor`)
+- Changed: Various internals about HashMap logic to garner a notable performance increase. (never enough though~)
+- Changed: Improved speed tests in `HashMapSpeed`. Also lowered the test parameters so they no longer take forever to complete overall.
+- Changed: `Primes` API rearranged to be more specific about what the returned primes should be used for, and replaced internal implementations with their test-determined faster counterparts.
+- Changed: `IComparator` - all parameters are passed with the `in` ref keyword. Caller does not need to acquiesce.
+- Fixed: `Raster.CircleDrawer` now makes a more correct circle by default (thanks to the VTW!).
+- Added: Many new `Colors` utility APIs, such as `Colors.Random` (with `Dark` and `Light` variants), `Inverted`, `Grayscale`, (...)
+
 ## [2.6.0] - 2022-10-27
 - Added: Previously-unimplemented HashMap members (KeyCollection, ValueCollection) are now implemented.
 - Added: Better inline documentation for HashMap's specification + comparison to System alternatives.

@@ -17,7 +17,7 @@ namespace Ore.Editor
   public class VisualTestingWindow : EditorWindow, ISerializationCallbackReceiver
   {
 
-    [MenuItem("Ore/Tools/Visual Testing (Ore)")]
+    [MenuItem("Ore/Tools/Ore Visual Testing")]
     private static void OpenWindow()
     {
       var win = GetWindow<VisualTestingWindow>();

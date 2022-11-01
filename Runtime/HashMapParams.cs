@@ -93,7 +93,7 @@ namespace Ore
         initialCapacity: userCapacity,
         isFixed:         true,
         loadFactor:      loadFactor,
-        hashPrime:       Primes.Next((int)(userCapacity / loadFactor)));
+        hashPrime:       HASHPRIME_DEFAULT);
     }
 
     /// <summary>
