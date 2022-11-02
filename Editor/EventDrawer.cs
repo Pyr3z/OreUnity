@@ -12,6 +12,7 @@ namespace Ore.Editor
 
   [CustomPropertyDrawer(typeof(IEvent), useForChildren: true)] // interfaces don't actually work..
   [CustomPropertyDrawer(typeof(DelayedEvent), useForChildren: true)] // ... so gotta be explicit.
+  [CustomPropertyDrawer(typeof(VoidEvent), useForChildren: true)]
   internal class EventDrawer : UnityEditorInternal.UnityEventDrawer
   {
     private const string UNITYEVENT_LAST_PROPERTY = "m_PersistentCalls";
@@ -95,7 +96,10 @@ namespace Ore.Editor
       {
         // MonoBehaviour m_Context
         Context = root.FindPropertyRelative("m_Context");
-        if (OAssert.Fails(Context != null && Context.propertyType == SerializedPropertyType.ObjectReference))
+        if (Context is null)
+        {
+        }
+        else if (OAssert.Fails(Context is { propertyType: SerializedPropertyType.ObjectReference }))
         {
           Context = null;
         }
@@ -111,7 +115,10 @@ namespace Ore.Editor
 
         // bool m_RunInGlobalContext
         RunInGlobalContext = root.FindPropertyRelative("m_RunInGlobalContext");
-        if (OAssert.Fails(RunInGlobalContext != null && RunInGlobalContext.propertyType == SerializedPropertyType.Boolean))
+        if (RunInGlobalContext is null)
+        {
+        }
+        else if (OAssert.Fails(RunInGlobalContext is { propertyType: SerializedPropertyType.Boolean }))
         {
           RunInGlobalContext = null;
         }

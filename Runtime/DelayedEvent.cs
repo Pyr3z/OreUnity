@@ -16,13 +16,8 @@ namespace Ore
 
   [System.Serializable]
   [SuppressMessage("ReSharper", "MemberInitializerValueIgnored")]
-  public class DelayedEvent : UnityEvent, IEvent
+  public class DelayedEvent : VoidEvent
   {
-    public bool IsEnabled
-    {
-      get => m_IsEnabled;
-      set => m_IsEnabled = value;
-    }
     public float DelaySeconds
     {
       get => m_DelaySeconds.AtLeast(0f);
@@ -45,16 +40,10 @@ namespace Ore
     private const float DEFAULT_TARGET_FPS       = 60f;
     private const float MIN_DELAY_SECONDS_ASYNC  = 1f / 90f;
 
-
     [SerializeField, HideInInspector]
-    private bool m_IsEnabled;
-
+    protected Object m_Context; // auto-assigned in EventDrawer.cs
     [SerializeField, HideInInspector]
-    private Object m_Context; // auto-assigned in EventDrawer.cs
-
-    [SerializeField, HideInInspector]
-    private bool m_RunInGlobalContext;
-
+    protected bool m_RunInGlobalContext;
 
     [SerializeField]
     private bool m_ScaledTime = DEFAULT_SCALED_TIME;
@@ -85,18 +74,22 @@ namespace Ore
     }
 
 
-    public new void Invoke()
+    public override bool TryInvoke()
     {
-      bool ok = TryInvoke();
-      OAssert.True(ok, nameof(TryInvoke), m_Context);
-    }
+      if (!m_IsEnabled)
+        return true;
 
-    public bool TryInvoke()
-    {
       if (m_RunInGlobalContext || m_Context is ScriptableObject)
       {
-        if (m_IsEnabled)
+        if (m_DelaySeconds < MIN_DELAY_SECONDS_ASYNC)
+        {
+          ((UnityEvent)this).Invoke();
+        }
+        else
+        {
           ActiveScene.EnqueueCoroutine(DelayedInvokeCoroutine(), m_Context);
+        }
+
         return true;
       }
 
@@ -110,7 +103,7 @@ namespace Ore
 
       if (m_DelaySeconds < MIN_DELAY_SECONDS_ASYNC)
       {
-        base.Invoke();
+        ((UnityEvent)this).Invoke();
       }
       else if (m_Invocation == null && component && component.isActiveAndEnabled)
       {
@@ -127,13 +120,6 @@ namespace Ore
 
     private IEnumerator DelayedInvokeCoroutine()
     {
-      if (m_DelaySeconds <= 0f)
-      {
-        base.Invoke();
-        m_Invocation = null;
-        yield break;
-      }
-
       if (m_ScaledTime)
         yield return new WaitForSeconds(m_DelaySeconds);
       else if (m_DelaySeconds < 1f / 30f)
@@ -141,8 +127,7 @@ namespace Ore
       else
         yield return new WaitForSecondsRealtime(m_DelaySeconds);
 
-      base.Invoke();
-
+      ((UnityEvent)this).Invoke();
       m_Invocation = null;
     }
 
