@@ -27,7 +27,10 @@ namespace Ore
 
   [Header("ActiveScene")]
     [SerializeField, Range(0, 64), Tooltip("Set to 0 to squelch the warning.")]
-    private int m_TooManyCoroutinesWarningThreshold = 16;
+    private int m_CoroutineWarnThreshold = 16;
+
+    [SerializeField]
+    private VoidEvent m_OnActiveSceneChanged = new VoidEvent();
 
 
     [System.NonSerialized]
@@ -174,10 +177,10 @@ namespace Ore
     [PublicAPI]
     public /* static */ void SetCoroutineWarningThreshold(int threshold)
     {
-      if (m_TooManyCoroutinesWarningThreshold == threshold)
+      if (m_CoroutineWarnThreshold == threshold)
         return;
 
-      m_TooManyCoroutinesWarningThreshold = threshold;
+      m_CoroutineWarnThreshold = threshold;
 
       CheckCoroutineThreshold();
     }
@@ -224,8 +227,8 @@ namespace Ore
 
       list.Add(coru);
 
-      ++m_NextCoroutineID;
-      ++m_ActiveCoroutineCount;
+      ++ m_NextCoroutineID;
+      ++ m_ActiveCoroutineCount;
 
       CheckCoroutineThreshold();
 
@@ -242,7 +245,7 @@ namespace Ore
         if (coru is {})
         {
           StopCoroutine(coru);
-          --m_ActiveCoroutineCount;
+          -- m_ActiveCoroutineCount;
         }
       }
 
@@ -264,12 +267,12 @@ namespace Ore
         if (!wref)
         {
           m_CoroutineMap.Unmap(contract);
-          --m_ActiveCoroutineCount;
+          -- m_ActiveCoroutineCount;
           yield break;
         }
       }
 
-      --m_ActiveCoroutineCount;
+      -- m_ActiveCoroutineCount;
 
       if (OAssert.Fails(m_CoroutineMap.Pop(contract, out CoroutineList list), this))
       {
@@ -295,7 +298,7 @@ namespace Ore
 
     private void CheckCoroutineThreshold()
     {
-      if (m_TooManyCoroutinesWarningThreshold > 0 && m_ActiveCoroutineCount >= m_TooManyCoroutinesWarningThreshold)
+      if (m_CoroutineWarnThreshold > 0 && m_ActiveCoroutineCount >= m_CoroutineWarnThreshold)
       {
         Orator.Warn($"Too many concurrent coroutines running on {name}! n={m_ActiveCoroutineCount}", this);
       }
@@ -346,6 +349,8 @@ namespace Ore
       OAssert.Exists(curr, $"{nameof(ActiveScene)}.{nameof(Current)}");
 
       curr.SetDontDestroyOnLoad(!next.isLoaded);
+
+      curr.m_OnActiveSceneChanged.Invoke();
     }
 
     private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
