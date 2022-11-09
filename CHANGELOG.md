@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [UNRELEASED] - 2022-
 - Added Unit Tests: ActiveScene
 
+## [2.8.0] - 2022-11-09
+- Added: TimeInterval struct + a custom drawer for it.
+
 ## [2.7.0] - 2022-10-31
 - Added: (Editor) New GUI drawing helpers in `OGUI` / new class `OGUI.Draw`.
 - Added: (Editor) Visual Testing Window (A.K.A. "VTW")! Menu bar -> Bore -> Tools -> Ore Visual Testing.
