@@ -51,6 +51,12 @@ namespace Ore
       => MixHashes((uint)h0, (uint)h1, (uint)h2, (uint)h3);
 
 
+    public static int MakeHash(long i64)
+    {
+      return (int)MixHashes((uint)i64, (uint)(i64 >> 32));
+    }
+
+
     public static int MakeHash(object a, object b)
     {
       return (int)MixHashes((uint)SafeGetHashCode(a),
