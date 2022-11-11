@@ -83,7 +83,7 @@ namespace Ore.Editor
     private string[] m_StringValues;
 
     [System.NonSerialized]
-    private readonly HashMap<object,string> m_HashMap = new HashMap<object,string>();
+    private HashMap<object,string> m_HashMap = new HashMap<object,string>();
 
     [System.NonSerialized]
     private GUIStyle m_SceneLabelStyle;
@@ -517,7 +517,10 @@ namespace Ore.Editor
       }
       if (GUILayout.Button("Reset Capacity"))
       {
-        m_HashMap.ResetCapacity();
+        if (m_HashMap.IsEmpty() && m_HashMap.Capacity == HashMapParams.Default.CalcLoadLimit())
+          m_HashMap = new HashMap<object, string>();
+        else
+          m_HashMap.ResetCapacity();
       }
       if (GUILayout.Button("Rehash"))
       {

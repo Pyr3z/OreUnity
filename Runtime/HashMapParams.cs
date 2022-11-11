@@ -155,6 +155,7 @@ namespace Ore
 
   #region Methods
 
+    [Pure]
     public bool Check()
     {
       #if UNITY_EDITOR || DEBUG || UNITY_INCLUDE_TESTS
@@ -180,27 +181,32 @@ namespace Ore
     }
 
 
+    [Pure]
     public int CalcInternalSize(int loadLimit)
     {
       return Primes.NextHashableSize((int)(loadLimit / LoadFactor), HashPrime, 0);
     }
 
+    [Pure]
     public int CalcLoadLimit(int internalSize) // AKA User Capacity
     {
       // without the rounding, we get wonky EnsureCapacity behavior
       return (int)(internalSize * LoadFactor + 0.5f);
     }
 
+    [Pure]
     public int CalcLoadLimit()
     {
       return (int)(InitialSize * LoadFactor + 0.5f);
     }
 
+    [Pure]
     public int CalcJump(int hash31, int size)
     {
       return 1 + (hash31 * HashPrime & int.MaxValue) % (size - 1);
     }
 
+    [Pure]
     public int CalcNextSize(int prevSize, int maxSize = Primes.MaxValue)
     {
       if (m_GrowthCurve is null)
