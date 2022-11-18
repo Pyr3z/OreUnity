@@ -24,12 +24,7 @@ namespace Ore.Editor
       "Days",
     };
 
-    private const double TICKS2MS  = 1e-4;
-    private const double TICKS2SEC = TICKS2MS  / 1000;
-    private const double TICKS2MIN = TICKS2SEC / 60;
-    private const double TICKS2HR  = TICKS2MIN / 60;
-    private const double TICKS2DAY = TICKS2HR  / 24;
-
+    // class field will be shared in arrays of TimeIntervals (fine to keep for now)
     private int m_Units = 2;
 
 
@@ -53,24 +48,24 @@ namespace Ore.Editor
           edit = EditorGUI.LongField(pos, prop.longValue);
           break;
         case 1:  // Milliseconds
-          d    = EditorGUI.DoubleField(pos, prop.longValue * TICKS2MS);
-          edit = (long)(d / TICKS2MS + (d >= 0 ? 0.5 : -0.5));
+          d    = EditorGUI.DoubleField(pos, prop.longValue * TimeInterval.TICKS2MS);
+          edit = (long)(d / TimeInterval.TICKS2MS + (d >= 0 ? 0.5 : -0.5));
           break;
         case 2:  // Seconds
-          d    = EditorGUI.DoubleField(pos, prop.longValue * TICKS2SEC);
-          edit = (long)(d / TICKS2SEC + (d >= 0 ? 0.5 : -0.5));
+          d    = EditorGUI.DoubleField(pos, prop.longValue * TimeInterval.TICKS2SEC);
+          edit = (long)(d / TimeInterval.TICKS2SEC + (d >= 0 ? 0.5 : -0.5));
           break;
         case 3:  // Minutes
-          d    = EditorGUI.DoubleField(pos, prop.longValue * TICKS2MIN);
-          edit = (long)(d / TICKS2MIN + (d >= 0 ? 0.5 : -0.5));
+          d    = EditorGUI.DoubleField(pos, prop.longValue * TimeInterval.TICKS2MIN);
+          edit = (long)(d / TimeInterval.TICKS2MIN + (d >= 0 ? 0.5 : -0.5));
           break;
         case 4: // Hours
-          d    = EditorGUI.DoubleField(pos, prop.longValue * TICKS2HR);
-          edit = (long)(d / TICKS2HR + (d >= 0 ? 0.5 : -0.5));
+          d    = EditorGUI.DoubleField(pos, prop.longValue * TimeInterval.TICKS2HR);
+          edit = (long)(d / TimeInterval.TICKS2HR + (d >= 0 ? 0.5 : -0.5));
           break;
         case 5: // Days
-          d    = EditorGUI.DoubleField(pos, prop.longValue * TICKS2DAY);
-          edit = (long)(d / TICKS2DAY + (d >= 0 ? 0.5 : -0.5));
+          d    = EditorGUI.DoubleField(pos, prop.longValue * TimeInterval.TICKS2DAY);
+          edit = (long)(d / TimeInterval.TICKS2DAY + (d >= 0 ? 0.5 : -0.5));
           break;
       }
       if (EditorGUI.EndChangeCheck())

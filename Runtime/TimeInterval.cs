@@ -9,20 +9,52 @@
 **/
 
 using System;
+using JetBrains.Annotations;
 using UnityEngine;
 
 
 namespace Ore
 {
   [Serializable]
+  [PublicAPI]
   public struct TimeInterval :
     IComparable<TimeInterval>, IEquatable<TimeInterval>,
     IComparable<TimeSpan>, IEquatable<TimeSpan>
   {
+    public const double TICKS2MS  = 1e-4;
+    public const double TICKS2SEC = TICKS2MS  / 1000;
+    public const double TICKS2MIN = TICKS2SEC / 60;
+    public const double TICKS2HR  = TICKS2MIN / 60;
+    public const double TICKS2DAY = TICKS2HR  / 24;
+
+    public double Milliseconds
+    {
+      get => Ticks * TICKS2MS;
+      set => Ticks = (long)(value / TICKS2MS + (value >= 0 ? 0.5 : -0.5));
+    }
+
     public double Seconds
     {
-      get => Ticks * 1e-7;
-      set => Ticks = (long)(value / 1e-7);
+      get => Ticks * TICKS2SEC;
+      set => Ticks = (long)(value / TICKS2SEC + (value >= 0 ? 0.5 : -0.5));
+    }
+
+    public double Minutes
+    {
+      get => Ticks * TICKS2MIN;
+      set => Ticks = (long)(value / TICKS2MIN + (value >= 0 ? 0.5 : -0.5));
+    }
+
+    public double Hours
+    {
+      get => Ticks * TICKS2HR;
+      set => Ticks = (long)(value / TICKS2HR + (value >= 0 ? 0.5 : -0.5));
+    }
+
+    public double Days
+    {
+      get => Ticks * TICKS2DAY;
+      set => Ticks = (long)(value / TICKS2DAY + (value >= 0 ? 0.5 : -0.5));
     }
 
 
@@ -35,14 +67,29 @@ namespace Ore
       Ticks = ticks;
     }
 
+    public static TimeInterval OfMilliseconds(double ms)
+    {
+      return new TimeInterval((long)(ms / TICKS2MS + (ms >= 0 ? 0.5 : -0.5)));
+    }
+
     public static TimeInterval OfSeconds(double s)
     {
-      return new TimeInterval((long)(s * 1000 + (s >= 0 ? 0.5 : -0.5)) * 10000);
+      return new TimeInterval((long)(s / TICKS2SEC + (s >= 0 ? 0.5 : -0.5)));
     }
 
     public static TimeInterval OfMinutes(double m)
     {
-      return new TimeInterval((long)(m * 60000 + (m >= 0 ? 0.5 : -0.5)) * 10000);
+      return new TimeInterval((long)(m / TICKS2MIN + (m >= 0 ? 0.5 : -0.5)));
+    }
+
+    public static TimeInterval OfHours(double h)
+    {
+      return new TimeInterval((long)(h / TICKS2HR + (h >= 0 ? 0.5 : -0.5)));
+    }
+
+    public static TimeInterval OfDays(double d)
+    {
+      return new TimeInterval((long)(d / TICKS2DAY + (d >= 0 ? 0.5 : -0.5)));
     }
 
 
