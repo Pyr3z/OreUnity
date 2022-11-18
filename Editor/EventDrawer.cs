@@ -164,84 +164,80 @@ namespace Ore.Editor
       pos.x = total.x;
       pos.xMax = btn_begin - STD_PAD * 2;
 
-      EditorGUI.BeginDisabledGroup(!state.Event.IsEnabled);
-
-      if (FoldoutHeader.Open(pos, label, prop, out var header, prop.depth + 1))
+      using (var header = FoldoutHeader.Open(pos, label, prop, !state.Event.IsEnabled, indent: prop.depth+1))
       {
-        pos.x = header.Rect.x;
-        pos.xMax = total.xMax;
-        pos.y += pos.height + STD_PAD;
-
-        // draw the optional field for "Run In Global Context" bool (if applicable)
-        if (state.RunInGlobalContext != null)
+        if (header.IsOpen)
         {
-          label.text = state.RunInGlobalContext.displayName;
-          pos.height = STD_LINE_HEIGHT;
-
-          pos.xMax = OGUI.LabelEndX;
-
-          EditorGUI.BeginDisabledGroup(prop.serializedObject.targetObject is ScriptableObject);
-          _ = EditorGUI.PropertyField(pos, state.RunInGlobalContext, label);
-          EditorGUI.EndDisabledGroup();
-
-          // draw context reference (read-only info)
-          pos.x = pos.xMax + STD_LINE_HEIGHT;
-          pos.xMax = total.xMax;
-
-          if (state.RunInGlobalContext.boolValue)
-          {
-            label.text = $"→ will run on Runtime {Styles.ColorText(nameof(ActiveScene), Colors.Reference)}";
-          }
-          else if (state.Context != null && state.Context.objectReferenceValue)
-          {
-            label.text = $"→ will run on this {Styles.ColorText(state.Context.objectReferenceValue.GetType().Name, Colors.Reference)}";
-          }
-          else
-          {
-            Orator.Error($"{nameof(EventDrawer)} failed to set a valid context reference when one was expected.", prop.serializedObject.targetObject);
-            label.text = Styles.ColorText("ERR: bad serial context", Colors.Attention);
-          }
-
-          EditorGUI.LabelField(pos, label);
-
           pos.x = header.Rect.x;
-
           pos.xMax = total.xMax;
           pos.y += pos.height + STD_PAD;
-        }
 
-        // get the property iterator for our extra members:
-        var child_prop = state.GetChildIterator();
-        if (child_prop != null)
-        {
-          int i = 0;
-
-          // iterate:
-          while (i++ < state.ChildCount && child_prop.NextVisible(false))
+          // draw the optional field for "Run In Global Context" bool (if applicable)
+          if (state.RunInGlobalContext != null)
           {
-            label.text = child_prop.displayName;
-            pos.height = EditorGUI.GetPropertyHeight(child_prop, label, includeChildren: true);
+            label.text = state.RunInGlobalContext.displayName;
+            pos.height = STD_LINE_HEIGHT;
 
-            _ = EditorGUI.PropertyField(pos, child_prop, label, includeChildren: true);
+            pos.xMax = OGUI.LabelEndX;
 
+            EditorGUI.BeginDisabledGroup(prop.serializedObject.targetObject is ScriptableObject);
+            _ = EditorGUI.PropertyField(pos, state.RunInGlobalContext, label);
+            EditorGUI.EndDisabledGroup();
+
+            // draw context reference (read-only info)
+            pos.x = pos.xMax + STD_LINE_HEIGHT;
+            pos.xMax = total.xMax;
+
+            if (state.RunInGlobalContext.boolValue)
+            {
+              label.text = $"→ will run on Runtime {Styles.ColorText(nameof(ActiveScene), Colors.Reference)}";
+            }
+            else if (state.Context != null && state.Context.objectReferenceValue)
+            {
+              label.text = $"→ will run on this {Styles.ColorText(state.Context.objectReferenceValue.GetType().Name, Colors.Reference)}";
+            }
+            else
+            {
+              Orator.Error($"{nameof(EventDrawer)} failed to set a valid context reference when one was expected.", prop.serializedObject.targetObject);
+              label.text = Styles.ColorText("ERR: bad serial context", Colors.Attention);
+            }
+
+            EditorGUI.LabelField(pos, label);
+
+            pos.x = header.Rect.x;
+
+            pos.xMax = total.xMax;
             pos.y += pos.height + STD_PAD;
           }
 
-          child_prop.Dispose();
+          // get the property iterator for our extra members:
+          var child_prop = state.GetChildIterator();
+          if (child_prop != null)
+          {
+            int i = 0;
+
+            // iterate:
+            while (i++ < state.ChildCount && child_prop.NextVisible(false))
+            {
+              label.text = child_prop.displayName;
+              pos.height = EditorGUI.GetPropertyHeight(child_prop, label, includeChildren: true);
+
+              _ = EditorGUI.PropertyField(pos, child_prop, label, includeChildren: true);
+
+              pos.y += pos.height + STD_PAD;
+            }
+
+            child_prop.Dispose();
+          }
+
+          // finally, draw the vanilla event interface:
+          pos.xMin += OGUI.Indent;
+          pos.yMax = total.yMax;
+
+          label.text = state.EventLabel;
+          base.OnGUI(pos, prop, label);
         }
-
-        // finally, draw the vanilla event interface:
-        pos.xMin += OGUI.Indent;
-        pos.yMax = total.yMax;
-
-        label.text = state.EventLabel;
-        base.OnGUI(pos, prop, label);
       }
-
-      EditorGUI.EndDisabledGroup();
-
-      header.Rect.yMax = pos.yMax + STD_PAD;
-      header.Dispose();
     }
 
 

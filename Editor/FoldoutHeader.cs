@@ -14,10 +14,30 @@ namespace Ore.Editor
   {
     const bool FIX_LABEL_WIDTH = false;
 
-    public static bool Open(Rect total, GUIContent content, SerializedProperty prop, out FoldoutHeader header, int indent = -1)
+    public static bool Open(Rect               total,
+                            GUIContent         content,
+                            SerializedProperty prop,
+                        out FoldoutHeader      header,
+                            bool               isDisabled = false,
+                            int                indent     = -1)
     {
-      return prop.isExpanded = header = new FoldoutHeader(total, content, prop.isExpanded, prop.IsArrayElement(), indent);
+      return prop.isExpanded = header =
+        new FoldoutHeader(total, content, indent, prop.isExpanded, prop.IsArrayElement(), isDisabled);
     }
+
+    public static FoldoutHeader Open(Rect               total,
+                                     GUIContent         content,
+                                     SerializedProperty prop,
+                                     bool               isDisabled = false,
+                                     int                indent     = -1)
+    {
+      var header = new FoldoutHeader(total, content, indent, prop.isExpanded, prop.IsArrayElement(), isDisabled);
+
+      prop.isExpanded = header.IsOpen;
+
+      return header;
+    }
+
 
     public static implicit operator bool(FoldoutHeader fh)
     {
@@ -26,27 +46,33 @@ namespace Ore.Editor
 
 
     public Rect Rect;
-    public readonly bool IsOpen, IsVanilla, IsListElement;
     public readonly int Indent;
+    public readonly bool IsOpen, IsVanilla, IsListElement, IsDisabled;
 
 
-    private FoldoutHeader(Rect pos, GUIContent content, bool is_open, bool is_list_el, int indent)
+    private FoldoutHeader(Rect pos, GUIContent content, int indent, bool isOpen, bool isListElm, bool isDisabled)
     {
-      if (is_list_el)
+      if (isListElm)
       {
         pos.xMin += 5f;
         OGUI.LabelWidth.Push(EditorGUIUtility.labelWidth - 8f);
         indent -= 2;
       }
 
+      Rect = pos;
+
       if (indent > 0)
+      {
         OGUI.IndentLevel.Push(indent, FIX_LABEL_WIDTH);
+      }
 
       Indent = indent;
-      Rect = pos;
       IsVanilla = true;
-      IsListElement = is_list_el;
-      IsOpen = EditorGUI.BeginFoldoutHeaderGroup(pos, is_open, content);
+      IsListElement = isListElm;
+
+      IsOpen = EditorGUI.BeginFoldoutHeaderGroup(pos, isOpen, content);
+
+      EditorGUI.BeginDisabledGroup(IsDisabled = isDisabled);
     }
 
 
@@ -62,6 +88,8 @@ namespace Ore.Editor
 
       if (IsListElement)
         OGUI.LabelWidth.Pop();
+
+      EditorGUI.EndDisabledGroup();
     }
 
   } // end class FoldoutHeader
