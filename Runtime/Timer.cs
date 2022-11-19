@@ -3,7 +3,9 @@
  *  @date       2022-11-08
 **/
 
+using JetBrains.Annotations;
 using UnityEngine;
+using UnityEngine.Events;
 
 
 namespace Ore
@@ -12,17 +14,39 @@ namespace Ore
   [System.Serializable]
   public sealed class Timer
   {
+    public event UnityAction OnTimerDone
+    {
+      add    => m_Action.AddListener(value);
+      remove => m_Action.RemoveListener(value);
+    }
 
-    [SerializeField]
+    public TimeInterval Interval
+    {
+      get => m_Interval;
+      set => m_Interval = value;
+    }
+
+    public int Cycles
+    {
+      get => m_Cycles;
+      set => m_Cycles = value;
+    }
+
+
+    [SerializeField, Tooltip("(N < 0) = disabled\n(N == 0) = every frame")]
     private TimeInterval m_Interval;
-    [SerializeField]
+
+    [SerializeField, Min(-1), Tooltip("(N < 0) = disabled\n(N == 0) = infinite")]
     private int m_Cycles;
 
+    [SerializeField]
+    private VoidEvent m_Action = new VoidEvent();
 
-    public Timer(float interval, int cycles = 1)
+
+    public Timer(TimeInterval interval, int cycles = 1)
     {
-      m_Interval = TimeInterval.OfSeconds(interval);
-      m_Cycles = cycles;
+      m_Interval = interval;
+      m_Cycles   = cycles;
     }
 
   } // end class Timer

@@ -6,8 +6,6 @@
 using UnityEngine;
 using UnityEditor;
 
-using Math = System.Math;
-
 
 namespace Ore.Editor
 {
