@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [UNRELEASED] - 2022-
 - Added Unit Tests: ActiveScene
 
+## [2.9.0] - 2022-11-18
+- Added: VoidEvent (like a DelayedEvent, but no delay).
+- Added: Flesh to the TimeInterval API, makes it easier to use.
+
 ## [2.8.0] - 2022-11-09
 - Added: TimeInterval struct + a custom drawer for it.
 
