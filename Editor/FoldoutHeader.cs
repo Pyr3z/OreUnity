@@ -52,7 +52,7 @@ namespace Ore.Editor
 
     private FoldoutHeader(Rect pos, GUIContent content, int indent, bool isOpen, bool isListElm, bool isDisabled)
     {
-      if (isListElm)
+      if ((IsListElement = isListElm) == true)
       {
         pos.xMin += 5f;
         OGUI.LabelWidth.Push(EditorGUIUtility.labelWidth - 8f);
@@ -64,11 +64,11 @@ namespace Ore.Editor
       if (indent > 0)
       {
         OGUI.IndentLevel.Push(indent, FIX_LABEL_WIDTH);
+        pos.xMin += (indent-1) * OGUI.STD_INDENT;
       }
 
       Indent = indent;
       IsVanilla = true;
-      IsListElement = isListElm;
 
       IsOpen = EditorGUI.BeginFoldoutHeaderGroup(pos, isOpen, content);
 
