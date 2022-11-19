@@ -140,6 +140,17 @@ namespace Ore
       return new TimeInterval(tspan.Ticks);
     }
 
+    public static implicit operator TimeInterval (long ticks)
+    {
+      return new TimeInterval(ticks);
+    }
+
+    public static implicit operator TimeInterval (double seconds)
+    {
+      return OfSeconds(seconds);
+    }
+
+
     public static bool operator < (TimeInterval lhs, TimeInterval rhs)
     {
       return lhs.Ticks < rhs.Ticks;
