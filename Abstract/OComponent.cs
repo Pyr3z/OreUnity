@@ -111,15 +111,14 @@ namespace Ore
         else_action();
     }
 
-    protected static IEnumerator InvokeInSeconds(Action action, float s)
+    protected static IEnumerator DelayInvoke(Action action, TimeInterval t)
     {
-      if (s < Floats.EPSILON)
-        action();
-      else
+      if (t >= TimeInterval.Frame)
       {
-        yield return new WaitForSeconds(s);
-        action();
+        yield return new WaitForSeconds(t.FSeconds);
       }
+
+      action();
     }
 
     #endregion STATIC SECTION

@@ -21,16 +21,29 @@ namespace Ore
     IComparable<TimeInterval>, IEquatable<TimeInterval>,
     IComparable<TimeSpan>, IEquatable<TimeSpan>
   {
+    public static readonly TimeInterval Zero = new TimeInterval(0L);
+
+    public static TimeInterval Frame     => OfSeconds(1.0 / Application.targetFrameRate);
+    public static TimeInterval HalfFrame => OfSeconds(0.5 / Application.targetFrameRate);
+
+
     public const double TICKS2MS  = 1e-4;
     public const double TICKS2SEC = TICKS2MS  / 1000;
     public const double TICKS2MIN = TICKS2SEC / 60;
     public const double TICKS2HR  = TICKS2MIN / 60;
     public const double TICKS2DAY = TICKS2HR  / 24;
 
-    public double Milliseconds
+
+    public double Millis
     {
       get => Ticks * TICKS2MS;
       set => Ticks = (long)(value / TICKS2MS + (value >= 0 ? 0.5 : -0.5));
+    }
+
+    public float FMillis
+    {
+      get => (float)(Ticks * TICKS2MS);
+      set => Ticks = (long)(value / TICKS2MS + (value >= 0f ? 0.5f : -0.5f));
     }
 
     public double Seconds
@@ -39,10 +52,22 @@ namespace Ore
       set => Ticks = (long)(value / TICKS2SEC + (value >= 0 ? 0.5 : -0.5));
     }
 
+    public float FSeconds
+    {
+      get => (float)(Ticks * TICKS2SEC);
+      set => Ticks = (long)(value / TICKS2SEC + (value >= 0f ? 0.5f : -0.5f));
+    }
+
     public double Minutes
     {
       get => Ticks * TICKS2MIN;
       set => Ticks = (long)(value / TICKS2MIN + (value >= 0 ? 0.5 : -0.5));
+    }
+
+    public float FMinutes
+    {
+      get => (float)(Ticks * TICKS2MIN);
+      set => Ticks = (long)(value / TICKS2MIN + (value >= 0f ? 0.5f : -0.5f));
     }
 
     public double Hours
@@ -51,10 +76,22 @@ namespace Ore
       set => Ticks = (long)(value / TICKS2HR + (value >= 0 ? 0.5 : -0.5));
     }
 
+    public float FHours
+    {
+      get => (float)(Ticks * TICKS2HR);
+      set => Ticks = (long)(value / TICKS2HR + (value >= 0f ? 0.5f : -0.5f));
+    }
+
     public double Days
     {
       get => Ticks * TICKS2DAY;
       set => Ticks = (long)(value / TICKS2DAY + (value >= 0 ? 0.5 : -0.5));
+    }
+
+    public float FDays
+    {
+      get => (float)(Ticks * TICKS2DAY);
+      set => Ticks = (long)(value / TICKS2DAY + (value >= 0f ? 0.5f : -0.5f));
     }
 
 
@@ -67,7 +104,7 @@ namespace Ore
       Ticks = ticks;
     }
 
-    public static TimeInterval OfMilliseconds(double ms)
+    public static TimeInterval OfMillis(double ms)
     {
       return new TimeInterval((long)(ms / TICKS2MS + (ms >= 0 ? 0.5 : -0.5)));
     }
@@ -90,6 +127,11 @@ namespace Ore
     public static TimeInterval OfDays(double d)
     {
       return new TimeInterval((long)(d / TICKS2DAY + (d >= 0 ? 0.5 : -0.5)));
+    }
+
+    public static TimeInterval OfFrames(int nFrames)
+    {
+      return Frame * nFrames;
     }
 
 
@@ -148,6 +190,43 @@ namespace Ore
     public static implicit operator TimeInterval (double seconds)
     {
       return OfSeconds(seconds);
+    }
+
+
+    public static TimeInterval operator * (TimeInterval lhs, int rhs)
+    {
+      lhs.Ticks *= rhs;
+      return lhs;
+    }
+
+    public static TimeInterval operator / (TimeInterval lhs, int rhs)
+    {
+      lhs.Ticks /= rhs;
+      return lhs;
+    }
+
+    public static TimeInterval operator * (TimeInterval lhs, double rhs)
+    {
+      lhs.Ticks = (long)Math.Round(lhs.Ticks * rhs);
+      return lhs;
+    }
+
+    public static TimeInterval operator / (TimeInterval lhs, double rhs)
+    {
+      lhs.Ticks = (long)Math.Round(lhs.Ticks / rhs);
+      return lhs;
+    }
+
+    public static TimeInterval operator + (TimeInterval lhs, TimeInterval rhs)
+    {
+      lhs.Ticks += rhs.Ticks;
+      return lhs;
+    }
+
+    public static TimeInterval operator - (TimeInterval lhs, TimeInterval rhs)
+    {
+      lhs.Ticks -= rhs.Ticks;
+      return lhs;
     }
 
 
