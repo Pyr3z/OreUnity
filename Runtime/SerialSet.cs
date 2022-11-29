@@ -14,9 +14,27 @@ using UnityEngine;
 namespace Ore
 {
   [System.Serializable]
-  public class StringSet : SerialSet<string> { }
+  public class StringSet : SerialSet<string>
+  {
+    public StringSet() : base()
+    {
+    }
+    public StringSet([CanBeNull] IEnumerable<string> items) : base(items)
+    {
+    }
+  }
+
   [System.Serializable]
-  public class ObjectSet : SerialSet<Object> { }
+  public class ObjectSet : SerialSet<Object>
+  {
+    public ObjectSet() : base()
+    {
+    }
+    public ObjectSet([CanBeNull] IEnumerable<Object> items) : base(items)
+    {
+    }
+  }
+
 
   /// <summary>
   /// Serializable HashSet. The original plan was to implement a faster version,
@@ -46,14 +64,7 @@ namespace Ore
 
     public SerialSet([CanBeNull] IEnumerable<T> items)
     {
-      if (items is null)
-      {
-        m_Set = new HashSet<T>();
-      }
-      else
-      {
-        m_Set = new HashSet<T>(items);
-      }
+      m_Set = items is null ? new HashSet<T>() : new HashSet<T>(items);
     }
 
 
