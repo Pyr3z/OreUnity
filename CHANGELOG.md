@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [UNRELEASED] - 2022-
 - Added Unit Tests: ActiveScene
 
+## [2.9.2] - 2022-11-29
+- Added: `Transforms` static class, with space manipulation extensions.
+- Fixed: Missing constructors for SerialSet subclasses.
+
 ## [2.9.1] - 2022-11-18
 - Added: VoidEvent (like a DelayedEvent, but no delay).
 - Added: Flesh to the TimeInterval API, makes it easier to use.
