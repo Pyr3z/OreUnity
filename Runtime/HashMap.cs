@@ -315,10 +315,12 @@ namespace Ore
       _ = Unmap(in key);
     }
 
-    public void RemoveAllKeys([NotNull] System.Predicate<K> where)
+    public int UnmapAllKeys([NotNull] System.Predicate<K> where)
     {
       if (m_Count == 0)
-        return;
+        return 0;
+
+      int precount = m_Count;
 
       using (var enumerator = new Enumerator(this))
       {
@@ -330,12 +332,16 @@ namespace Ore
           }
         }
       }
+
+      return precount - m_Count;
     }
 
-    public void RemoveAllValues([NotNull] System.Predicate<V> where)
+    public int UnmapAllValues([NotNull] System.Predicate<V> where)
     {
       if (m_Count == 0)
-        return;
+        return 0;
+
+      int precount = m_Count;
 
       using (var enumerator = new Enumerator(this))
       {
@@ -347,6 +353,8 @@ namespace Ore
           }
         }
       }
+
+      return precount - m_Count;
     }
 
     public bool Clear()
