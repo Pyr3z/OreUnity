@@ -18,7 +18,12 @@ namespace Ore
       IEnumerator<KeyValuePair<K,V>>,
       IDictionaryEnumerator
     {
-      public (K key, V val) Current => (m_Bucket.Key,m_Bucket.Value);
+      public (K key, V val) Current      => (m_Bucket.Key,m_Bucket.Value);
+      public K              CurrentKey   => m_Bucket.Key;
+      public V              CurrentValue => m_Bucket.Value;
+
+      internal int          CurrentIndex => m_Pos;
+
 
       KeyValuePair<K,V> IEnumerator<KeyValuePair<K,V>>.Current => new KeyValuePair<K,V>(m_Bucket.Key, m_Bucket.Value);
 

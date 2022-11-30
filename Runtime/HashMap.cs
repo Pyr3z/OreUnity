@@ -285,8 +285,8 @@ namespace Ore
       if (i >= 0)
       {
         m_Buckets[i].Smear();
-        --m_Count;
-        ++m_Version;
+        -- m_Count;
+        ++ m_Version;
         return true;
       }
 
@@ -301,8 +301,8 @@ namespace Ore
       {
         oldVal = m_Buckets[i].Value;
         m_Buckets[i].Smear();
-        --m_Count;
-        ++m_Version;
+        -- m_Count;
+        ++ m_Version;
         return true;
       }
 
@@ -313,6 +313,66 @@ namespace Ore
     public void Remove([NotNull] in K key)
     {
       _ = Unmap(in key);
+    }
+
+    public void RemoveAllKeys([NotNull] System.Predicate<K> where)
+    {
+      if (m_Count == 0)
+        return;
+
+      int removed = 0;
+
+      using (var iterator = new Enumerator(this))
+      {
+        while (iterator.MoveNext())
+        {
+          if (where(iterator.CurrentKey))
+          {
+            m_Buckets[iterator.CurrentIndex].Smear();
+            ++ removed;
+          }
+        }
+      }
+
+      if (removed == m_Count)
+      {
+        ClearNoAlloc();
+      }
+      else if (removed > 0)
+      {
+        m_Count -= removed;
+        ++ m_Version;
+      }
+    }
+
+    public void RemoveAllValues([NotNull] System.Predicate<V> where)
+    {
+      if (m_Count == 0)
+        return;
+
+      int removed = 0;
+
+      using (var iterator = new Enumerator(this))
+      {
+        while (iterator.MoveNext())
+        {
+          if (where(iterator.CurrentValue))
+          {
+            m_Buckets[iterator.CurrentIndex].Smear();
+            ++ removed;
+          }
+        }
+      }
+
+      if (removed == m_Count)
+      {
+        ClearNoAlloc();
+      }
+      else if (removed > 0)
+      {
+        m_Count -= removed;
+        ++ m_Version;
+      }
     }
 
     public bool Clear()
