@@ -41,21 +41,23 @@ namespace Ore
       private Bucket m_Bucket;
 
       private int m_Pos, m_Count, m_Version;
+      private int m_Removed;
 
 
       public Enumerator([NotNull] HashMap<K,V> forMap)
       {
         m_Parent  = forMap;
+        m_Bucket  = default;
         m_Pos     = forMap.m_Buckets.Length;
         m_Count   = forMap.m_Count;
         m_Version = forMap.m_Version;
-        m_Bucket  = default;
+        m_Removed = 0;
       }
 
 
       public bool MoveNext()
       {
-        if (--m_Count < 0 || --m_Pos < 0)
+        if (-- m_Count < 0 || -- m_Pos < 0)
         {
           return false;
         }
@@ -81,6 +83,8 @@ namespace Ore
           throw new System.InvalidOperationException("HashMap.Enumerator.Reset() cannot be called after disposal.");
         }
 
+        ProcessUnmappedBuckets();
+
         m_Pos     = m_Parent.m_Buckets.Length;
         m_Count   = m_Parent.m_Count;
         m_Version = m_Parent.m_Version;
@@ -89,8 +93,42 @@ namespace Ore
 
       public void Dispose()
       {
+        ProcessUnmappedBuckets();
+
         m_Parent = null;
         m_Bucket = default;
+      }
+
+      public void UnmapCurrent()
+      {
+        if (m_Count < 0 || m_Pos < 0 || m_Parent is null)
+        {
+          // it's fine just let it go
+          return;
+        }
+
+        m_Parent.m_Buckets[m_Pos].Smear();
+
+        ++ m_Removed;
+      }
+
+
+      private void ProcessUnmappedBuckets()
+      {
+        if (m_Parent is null)
+          return;
+
+        if (m_Removed == m_Parent.m_Count)
+        {
+          m_Parent.Clear();
+        }
+        else if (m_Removed > 0)
+        {
+          m_Parent.m_Count -= m_Removed;
+          ++ m_Parent.m_Version;
+        }
+
+        m_Removed = 0;
       }
 
     } // end struct Enumerator

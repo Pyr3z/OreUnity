@@ -19,8 +19,10 @@ using Ore;
 
 using NUnit.Framework;
 
-using System.Collections.Generic;
 using UnityEngine;
+
+using System.Collections.Generic;
+using System.Linq;
 
 
 public static class HashMapCorrectness
@@ -339,6 +341,46 @@ public static class HashMapCorrectness
     {
       Assert.True(data[kvp.Key] == kvp.Value);
     }
+  }
+
+  [Test]
+  public static void EnumeratorUnmapCurrent()
+  {
+    var data = GetTestStrings(321, includeConsts: true);
+    var map = new HashMap<string,string>(data, System.Array.Empty<string>());
+
+    foreach (string test in CONST_TEST_STRINGS)
+    {
+      Assert.True(map.ContainsKey(test));
+
+      int precount = map.Count;
+
+      using (var enumerator = map.GetEnumerator())
+      {
+        while (enumerator.MoveNext())
+        {
+          if (enumerator.CurrentKey == test)
+          {
+            enumerator.UnmapCurrent();
+          }
+        }
+      }
+
+      Assert.False(map.ContainsKey(test));
+      Assert.AreEqual(precount-1, map.Count);
+    }
+
+    Assert.Positive(map.Count);
+
+    using (var enumerator = map.GetEnumerator())
+    {
+      while (enumerator.MoveNext())
+      {
+        enumerator.UnmapCurrent();
+      }
+    }
+
+    Assert.Zero(map.Count);
   }
 
 }

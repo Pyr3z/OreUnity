@@ -320,28 +320,15 @@ namespace Ore
       if (m_Count == 0)
         return;
 
-      int removed = 0;
-
-      using (var iterator = new Enumerator(this))
+      using (var enumerator = new Enumerator(this))
       {
-        while (iterator.MoveNext())
+        while (enumerator.MoveNext())
         {
-          if (where(iterator.CurrentKey))
+          if (where(enumerator.CurrentKey))
           {
-            m_Buckets[iterator.CurrentIndex].Smear();
-            ++ removed;
+            enumerator.UnmapCurrent();
           }
         }
-      }
-
-      if (removed == m_Count)
-      {
-        ClearNoAlloc();
-      }
-      else if (removed > 0)
-      {
-        m_Count -= removed;
-        ++ m_Version;
       }
     }
 
@@ -350,28 +337,15 @@ namespace Ore
       if (m_Count == 0)
         return;
 
-      int removed = 0;
-
-      using (var iterator = new Enumerator(this))
+      using (var enumerator = new Enumerator(this))
       {
-        while (iterator.MoveNext())
+        while (enumerator.MoveNext())
         {
-          if (where(iterator.CurrentValue))
+          if (where(enumerator.CurrentValue))
           {
-            m_Buckets[iterator.CurrentIndex].Smear();
-            ++ removed;
+            enumerator.UnmapCurrent();
           }
         }
-      }
-
-      if (removed == m_Count)
-      {
-        ClearNoAlloc();
-      }
-      else if (removed > 0)
-      {
-        m_Count -= removed;
-        ++ m_Version;
       }
     }
 
