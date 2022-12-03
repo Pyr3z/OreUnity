@@ -18,12 +18,12 @@ using Object = UnityEngine.Object;
 namespace Ore
 {
 
+  [PublicAPI]
   public static class Filesystem
   {
 
   #region FUNDAMENTAL FILE I/O
 
-    [PublicAPI]
     public static bool TryWriteObject([NotNull] string filepath, [CanBeNull] object obj)
     {
       #if DEBUG // default value for "pretty print JSON" relies on debug build status
@@ -33,7 +33,6 @@ namespace Ore
       #endif
     }
 
-    [PublicAPI]
     public static bool TryWriteObject([NotNull] string filepath, [CanBeNull] object obj, bool pretty)
     {
       try
@@ -78,13 +77,11 @@ namespace Ore
       return false;
     }
 
-    [PublicAPI]
     public static bool TryWriteText([NotNull] string filepath, [CanBeNull] string text, Encoding encoding = null)
     {
       return TryWriteBinary(filepath, text.ToBytes(encoding));
     }
 
-    [PublicAPI]
     public static bool TryWriteBinary([NotNull] string filepath, [NotNull] byte[] data)
     {
       try
@@ -113,7 +110,6 @@ namespace Ore
       return false;
     }
 
-    [PublicAPI]
     public static bool TryUpdateObject([NotNull] string filepath, [NotNull] object obj, Encoding encoding = null)
     {
       if (!TryReadText(filepath, out string json, encoding))
@@ -133,7 +129,6 @@ namespace Ore
       return false;
     }
 
-    [PublicAPI]
     public static bool TryReadObject<T>([NotNull] string filepath, [NotNull] out T obj, Encoding encoding = null)
     {
       if (!TryReadText(filepath, out string json, encoding))
@@ -156,7 +151,6 @@ namespace Ore
       return false;
     }
 
-    [PublicAPI]
     public static bool TryReadText([NotNull] string filepath, [NotNull] out string text, Encoding encoding = null)
     {
       if (TryReadBinary(filepath, out byte[] data))
@@ -176,7 +170,6 @@ namespace Ore
       return false;
     }
 
-    [PublicAPI]
     public static bool TryReadLines([NotNull] string filepath, [NotNull] out string[] lines, char newline = '\n', Encoding encoding = null)
     {
       if (TryReadText(filepath, out string text, encoding))
@@ -190,7 +183,6 @@ namespace Ore
       return false;
     }
 
-    [PublicAPI]
     public static bool TryReadBinary([NotNull] string filepath, [NotNull] out byte[] data)
     {
       if (!Paths.IsValidPath(filepath))
@@ -224,7 +216,6 @@ namespace Ore
     }
 
 
-    [PublicAPI]
     public static bool TryMakePathTo([NotNull] string filepath)
     {
       try
@@ -249,7 +240,6 @@ namespace Ore
       return false;
     }
 
-    [PublicAPI]
     public static void MakePathTo([NotNull] string filepath) // throws
     {
       if (Paths.IsValidPath(filepath) && Paths.ExtractDirectoryPath(filepath, out string dirpath))
@@ -264,13 +254,11 @@ namespace Ore
       }
     }
 
-    [PublicAPI]
     public static bool PathExists([CanBeNull] string path)
     {
       return File.Exists(path) || Directory.Exists(path);
     }
 
-    [PublicAPI]
     public static bool TryDeletePath([CanBeNull] string path)
     {
       try
@@ -315,10 +303,8 @@ namespace Ore
 
   #region INFO & DEBUGGING
 
-    [PublicAPI]
     public static string LastWrittenPath => s_LastWrittenPath ?? string.Empty;
 
-    [PublicAPI]
     public static IOResult GetLastIOResult()
     {
       if (s_ExceptionRingIdx == 0)
@@ -327,7 +313,6 @@ namespace Ore
       return InterpretException(LastException);
     }
 
-    [PublicAPI]
     public static IOResult InterpretException([CanBeNull] Exception ex)
     {
     TOP:
@@ -376,7 +361,6 @@ namespace Ore
       }
     }
 
-    [PublicAPI]
     public static bool TryGetLastException(out Exception ex, bool consume = false)
     {
       // funky for-loop is necessary to preserve actual order of buffer reads
@@ -401,7 +385,6 @@ namespace Ore
       return false; ;
     }
 
-    [PublicAPI]
     [System.Diagnostics.Conditional("DEBUG")]
     public static void LogLastException()
     {
