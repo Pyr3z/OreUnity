@@ -7,12 +7,11 @@ using System.IO;
 using JetBrains.Annotations;
 using UnityEngine;
 
-using Encoding = System.Text.Encoding;
-
-using Exception = System.Exception;
+using Encoding              = System.Text.Encoding;
+using Exception             = System.Exception;
 using UnauthorizedException = System.UnauthorizedAccessException;
-using ArgumentException = System.ArgumentException;
-using Object = UnityEngine.Object;
+using ArgumentException     = System.ArgumentException;
+using DateTime              = System.DateTime;
 
 
 namespace Ore
@@ -281,6 +280,40 @@ namespace Ore
         return true;
 
         #endif // UNITY_EDITOR
+      }
+      catch (IOException iox)
+      {
+        LastException = iox;
+      }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
+      }
+
+      return false;
+    }
+
+    public static bool TryTouch([NotNull] string filepath)
+    {
+      try
+      {
+        MakePathTo(filepath);
+
+        if (!File.Exists(filepath))
+        {
+          File.Create(filepath).Close();
+        }
+        else
+        {
+          File.SetLastWriteTimeUtc(filepath, DateTime.UtcNow);
+        }
+
+        LastException = null;
+        return true;
       }
       catch (IOException iox)
       {

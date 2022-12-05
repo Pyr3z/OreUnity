@@ -9,11 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [UNRELEASED] - 2022-
 - Added Unit Tests: ActiveScene
 
-## [2.9.3] - 2022-11-29
+## [2.9.4] - 2022-12-05
 - Added: `HashMap.UnmapAllKeys(where)` + `HashMap.UnmapAllValues(where)`
   - Bonus: HashMap.Enumerator now allows for deletion while iterating.
   - Added: new HashMap unit tests
 - Added: `Transforms` static class, with space manipulation extensions.
+- Added: `Filesystem.TryTouch(filepath)` - works like Unix `touch`.
 - Fixed: Missing constructors for SerialSet subclasses.
 
 ## [2.9.1] - 2022-11-18
