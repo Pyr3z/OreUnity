@@ -16,8 +16,22 @@ namespace Ore
 
   [DisallowMultipleComponent]
   [AddComponentMenu("Ore//Coroutine Runner")] // though usually instantiated dynamically~
-  public class CoroutineRunner : OComponent, ICoroutineRunner
+  public sealed class CoroutineRunner : OComponent, ICoroutineRunner
   {
+    [PublicAPI]
+    public int ActiveCoroutineCount => m_ActiveCoroutineCount;
+
+    [PublicAPI]
+    public int ActiveCoroutineWarnThreshold
+    {
+      get => m_CoroutineWarnThreshold;
+      set
+      {
+        m_CoroutineWarnThreshold = value;
+        CheckCoroutineThreshold();
+      }
+    }
+
 
     [SerializeField, Range(0, 64), Tooltip("Set to 0 to squelch the warning.")]
     private int m_CoroutineWarnThreshold = 16;
@@ -80,7 +94,7 @@ namespace Ore
 
 
     [CanBeNull]
-    public Coroutine StartCoroutine([NotNull] IEnumerator routine, [NotNull] object key)
+    private Coroutine StartCoroutine([NotNull] IEnumerator routine, [NotNull] object key)
     {
       if (key is Object contract)
       {
@@ -98,8 +112,8 @@ namespace Ore
         return null;
       }
 
-      var cpc = new CoroutinePlusCleanup(this, routine, key, m_NextCoroutineID, contract);
-      var coruPair = (base.StartCoroutine(cpc), m_NextCoroutineID);
+      var scr = new SelfCleaningRoutine(this, routine, key, m_NextCoroutineID, contract);
+      var coruPair = (base.StartCoroutine(scr), m_NextCoroutineID);
 
       list.Add(coruPair);
 
@@ -136,7 +150,7 @@ namespace Ore
     }
 
 
-    private struct CoroutinePlusCleanup : IEnumerator
+    private struct SelfCleaningRoutine : IEnumerator
     {
       public object Current => m_Routine.Current;
 
@@ -149,7 +163,7 @@ namespace Ore
       readonly Object          m_Contract;
 
 
-      public CoroutinePlusCleanup(CoroutineRunner runner, IEnumerator routine, object key, int id, Object contract)
+      internal SelfCleaningRoutine(CoroutineRunner runner, IEnumerator routine, object key, int id, Object contract)
       {
         m_Routine  = routine;
         m_Runner   = runner;
@@ -159,7 +173,7 @@ namespace Ore
       }
 
 
-      public bool MoveNext()
+      bool IEnumerator.MoveNext()
       {
         if (m_Routine is null)
         {

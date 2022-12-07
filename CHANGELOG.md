@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [UNRELEASED] - 2022-
 - Added Unit Tests: ActiveScene
 
+## [2.10.0] - 2022-12-07
+- Added: New struct `DeferringRoutine` optimizes trivial coroutine use cases.
+    - Note: DeferringRoutine's speed vs conventional `yield return` equivalents still need to be measured.
+- Added: New types (ICoroutineRunner, CoroutineRunner, CoroutineRunnerBuffer) to make ActiveScene pretty again.
+- Improved: Utility APIs and operators in `TimeInterval`.
+    - Also: Now using TimeInterval in more pre-existing places.
+- Deprecated: The old ActiveScene.EnqueueCoroutine and related APIs are now implemented through the static `ActiveScene.Coroutines.*` interface. The old APIs will be completely removed in Ore 3.
+
 ## [2.9.4] - 2022-12-05
 - Added: `HashMap.UnmapAllKeys(where)` + `HashMap.UnmapAllValues(where)`
   - Bonus: HashMap.Enumerator now allows for deletion while iterating.
