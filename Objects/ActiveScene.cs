@@ -22,8 +22,12 @@ namespace Ore
 
 
   [DefaultExecutionOrder(-500)] // rationale: Many things might depend on this class early-on.
+  [DisallowMultipleComponent]
   public class ActiveScene : OSingleton<ActiveScene>
   {
+    [PublicAPI]
+    public static Scene Scene => s_ActiveScene;
+
 
   [Header("ActiveScene")]
     [SerializeField, Range(0, 64), Tooltip("Set to 0 to squelch the warning.")]
@@ -44,8 +48,12 @@ namespace Ore
       KeyComparator = new ContractComparator()
     };
 
+
     [System.NonSerialized]
     private static Queue<(IEnumerator,object)> s_CoroutineQueue;
+
+    [System.NonSerialized]
+    private static Scene s_ActiveScene; // only the size of an int, so why not?
 
     [System.NonSerialized]
     private static readonly HashMap<Scene, float> s_SceneBirthdays = new HashMap<Scene, float>();
@@ -54,7 +62,7 @@ namespace Ore
     [PublicAPI]
     public static float GetSceneAge()
     {
-      if (IsActive && s_SceneBirthdays.TryGetValue(Instance.gameObject.scene, out float birth))
+      if (s_SceneBirthdays.TryGetValue(s_ActiveScene, out float birth))
       {
         return Time.realtimeSinceStartup - birth;
       }
@@ -344,6 +352,8 @@ namespace Ore
 
     private static void OnActiveSceneChanged(Scene prev, Scene next)
     {
+      s_ActiveScene = next;
+
       var curr = Current;
       if (!curr)
         curr = Instantiate();
