@@ -3,6 +3,7 @@
  *  @date       2022-08
 **/
 
+using UnityEngine;
 using IEnumerator = System.Collections.IEnumerator;
 using Action      = System.Action;
 using Condition   = System.Func<bool>;
@@ -15,15 +16,20 @@ namespace Ore
   {
     public object Current => null;
 
-    Action    m_OnSatisfied;
-    Condition m_Condition;
-    int       m_FrameCountdown;
+    Action             m_OnSatisfied;
+    TimeInterval       m_Countdown;
+    readonly Condition m_Condition;
 
-    public DeferringRoutine(Action onSatisfied, Condition condition = null, int inFrames = 1)
+    public DeferringRoutine(Action onSatisfied, Condition condition = null)
+      : this(onSatisfied, TimeInterval.One, condition)
     {
-      m_OnSatisfied    = onSatisfied;
-      m_Condition      = condition;
-      m_FrameCountdown = inFrames;
+    }
+
+    public DeferringRoutine(Action onSatisfied, TimeInterval delay, Condition condition = null)
+    {
+      m_OnSatisfied = onSatisfied;
+      m_Countdown   = delay;
+      m_Condition   = condition;
     }
 
     public bool MoveNext()
@@ -33,7 +39,7 @@ namespace Ore
         return false;
       }
 
-      if (m_FrameCountdown-- == 0)
+      if (m_Countdown.Ticks <= 0L)
       {
         try
         {
@@ -46,9 +52,13 @@ namespace Ore
         {
           m_OnSatisfied = null;
         }
+
+        return false;
       }
 
-      return m_FrameCountdown >= 0;
+      m_Countdown.SubtractSeconds(Time.unscaledDeltaTime);
+
+      return true;
     }
 
     void IEnumerator.Reset()

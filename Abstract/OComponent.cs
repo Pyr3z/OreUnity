@@ -100,12 +100,7 @@ namespace Ore
 
     protected static IEnumerator DelayInvoke(Action action, TimeInterval t)
     {
-      if (t >= TimeInterval.Frame)
-      {
-        yield return new WaitForSeconds(t.FSeconds);
-      }
-
-      action();
+      return new DeferringRoutine(action, t);
     }
 
     #endregion STATIC SECTION
