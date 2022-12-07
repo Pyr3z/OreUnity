@@ -87,7 +87,7 @@ namespace Ore
         }
         else
         {
-          ActiveScene.EnqueueCoroutine(DelayedInvokeCoroutine(), m_Context);
+          ActiveScene.Coroutines.Run(DelayedInvokeCoroutine(), m_Context);
         }
 
         return true;

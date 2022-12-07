@@ -28,32 +28,32 @@ namespace Ore
     [System.NonSerialized]
     private readonly HashMap<object, CoroutineList> m_Map = new HashMap<object, CoroutineList>()
     {
-      KeyComparator = new ContractComparator()
+      KeyComparator = new ObjectSavvyComparator()
     };
 
 
-    public void EnqueueCoroutine(IEnumerator routine, Object key)
+    public void Run(IEnumerator routine, Object key)
     {
       _ = StartCoroutine(routine, key);
     }
 
-    public void EnqueueCoroutine(IEnumerator routine, string key)
+    public void Run(IEnumerator routine, string key)
     {
       _ = StartCoroutine(routine, key);
     }
 
-    public void EnqueueCoroutine(IEnumerator routine, out string key)
+    public void Run(IEnumerator routine, out string guidKey)
     {
-      key = Strings.MakeGUID();
-      _ = StartCoroutine(routine, key);
+      guidKey = Strings.MakeGUID();
+            _ = StartCoroutine(routine, guidKey);
     }
 
-    public void EnqueueCoroutine(IEnumerator routine)
+    public void Run(IEnumerator routine)
     {
       _ = StartCoroutine(routine, this);
     }
 
-    public void CancelCoroutinesFor(object key)
+    public void Halt(object key)
     {
       if (!m_Map.Pop(key, out CoroutineList list))
         return;
@@ -71,7 +71,7 @@ namespace Ore
       // let the garbage collector eat it since we called m_Map.Pop
     }
 
-    public void CancelAllCoroutines()
+    public void HaltAll()
     {
       StopAllCoroutines();
       m_Map.Clear();
@@ -112,12 +112,9 @@ namespace Ore
     }
 
 
-    public void AdoptQueue([NotNull] CoroutineQueue queue)
+    public void AdoptAndRun([NotNull] CoroutineRunnerBuffer buffer)
     {
-      if (queue.IsEmpty)
-        return;
-
-      foreach (var (routine,key) in queue)
+      foreach (var (routine,key) in buffer)
       {
         if (routine is {} && key is {})
         {
@@ -125,7 +122,7 @@ namespace Ore
         }
       }
 
-      queue.Clear();
+      buffer.HaltAll();
     }
 
 
@@ -144,11 +141,12 @@ namespace Ore
       public object Current => m_Routine.Current;
 
 
-      IEnumerator     m_Routine;
-      CoroutineRunner m_Runner;
-      readonly object m_Key;
-      readonly int    m_ID;
-      Object          m_Contract;
+      IEnumerator m_Routine;
+
+      readonly CoroutineRunner m_Runner;
+      readonly object          m_Key;
+      readonly int             m_ID;
+      readonly Object          m_Contract;
 
 
       public CoroutinePlusCleanup(CoroutineRunner runner, IEnumerator routine, object key, int id, Object contract)
@@ -163,7 +161,7 @@ namespace Ore
 
       public bool MoveNext()
       {
-        if (ReferenceEquals(m_Runner, null))
+        if (m_Routine is null)
         {
           return false;
         }
@@ -175,7 +173,7 @@ namespace Ore
             -- m_Runner.m_ActiveCoroutineCount;
           }
 
-          m_Runner = null;
+          m_Routine = null;
           return false;
         }
 
@@ -184,22 +182,22 @@ namespace Ore
           return true;
         }
 
+        m_Routine = null;
+
         -- m_Runner.m_ActiveCoroutineCount;
 
         if (OAssert.Fails(m_Runner.m_Map.Pop(m_Key, out CoroutineList list), m_Runner))
         {
-          m_Runner = null;
           return false;
         }
 
         int i = list.Count;
-        while (i --> 0)
+
+        while (i --> 0 && list[i].id != m_ID) ;
+
+        if (i >= 0)
         {
-          if (list[i].id == m_ID)
-          {
-            list.RemoveAt(i);
-            break;
-          }
+          list.RemoveAt(i);
         }
 
         if (list.Count > 0)
@@ -208,7 +206,6 @@ namespace Ore
           m_Runner.m_Map.Map(m_Key, list);
         }
 
-        m_Runner = null;
         return false;
       }
 
@@ -218,15 +215,5 @@ namespace Ore
       }
     }
 
-
-    private sealed class ContractComparator : Comparator<object>
-    {
-      public override bool IsNone(in object obj)
-      {
-        if (obj is Object uobj)
-          return !uobj;
-        return base.IsNone(in obj);
-      }
-    }
   } // end class CoroutineRunner
 }

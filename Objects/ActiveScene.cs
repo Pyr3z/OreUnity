@@ -28,35 +28,27 @@ namespace Ore
     [PublicAPI]
     public static Scene Scene => s_ActiveScene;
 
+    [PublicAPI]
+    public static ICoroutineRunner Coroutines
+    {
+      get
+      {
+        return s_Coroutiner ??= new CoroutineRunnerBuffer();
+      }
+    }
 
-  [Header("ActiveScene")]
-    [SerializeField, Range(0, 64), Tooltip("Set to 0 to squelch the warning.")]
-    private int m_CoroutineWarnThreshold = 16;
 
+    [SerializeField]
+    private TimeInterval m_DelayStartCoroutineRunner = TimeInterval.Frame;
     [SerializeField]
     private VoidEvent m_OnActiveSceneChanged = new VoidEvent();
 
 
-    // TODO refactor coroutine runner to separate class
-
-    [System.NonSerialized]
-    private int m_NextCoroutineID, m_ActiveCoroutineCount;
-
-    [System.NonSerialized]
-    private readonly HashMap<object, CoroutineList> m_CoroutineMap = new HashMap<object, CoroutineList>()
-    {
-      KeyComparator = new ContractComparator()
-    };
-
-
-    [System.NonSerialized]
-    private static Queue<(IEnumerator,object)> s_CoroutineQueue;
-
-    [System.NonSerialized]
     private static Scene s_ActiveScene; // only the size of an int, so why not?
 
-    [System.NonSerialized]
     private static readonly HashMap<Scene, float> s_SceneBirthdays = new HashMap<Scene, float>();
+
+    private static ICoroutineRunner s_Coroutiner;
 
 
     [PublicAPI]
@@ -86,116 +78,6 @@ namespace Ore
     }
 
 
-    // Global static Coroutine impl:
-
-    /// <summary>
-    /// Primarily useful for non-Scene-bound code to enqueue a coroutine even if
-    /// no scenes are loaded yet.
-    /// </summary>
-    ///
-    /// <param name="routine">
-    /// A valid IEnumerator object representing a coroutine function body.
-    /// </param>
-    ///
-    /// <param name="contract">
-    /// A WeakRef to this contract object will be stored. When the contract
-    /// expires (either due to GC cleanup or Unity Object deletion), the
-    /// associated coroutine will stop if it is still running.
-    /// </param>
-    [PublicAPI]
-    public static void EnqueueCoroutine([NotNull] IEnumerator routine, [NotNull] Object contract)
-    {
-      if (IsActive)
-      {
-        // late comers = just run it now
-        Instance.StartCoroutine(routine, contract);
-      }
-      else
-      {
-        s_CoroutineQueue ??= new Queue<(IEnumerator,object)>();
-        s_CoroutineQueue.Enqueue((routine,contract));
-      }
-    }
-
-    [PublicAPI]
-    public static void EnqueueCoroutine([NotNull] IEnumerator routine, [NotNull] string key)
-    {
-      if (IsActive) // late comers
-      {
-        Instance.StartCoroutine(routine, key);
-      }
-      else
-      {
-        s_CoroutineQueue ??= new Queue<(IEnumerator,object)>();
-        s_CoroutineQueue.Enqueue((routine,key));
-      }
-    }
-
-    [PublicAPI]
-    public static void EnqueueCoroutine([NotNull] IEnumerator routine, [NotNull] out string guidKey)
-    {
-      guidKey = Strings.MakeGUID();
-      EnqueueCoroutine(routine, guidKey);
-    }
-
-    [PublicAPI]
-    public static void EnqueueCoroutine([NotNull] IEnumerator routine)
-    {
-      if (IsActive)
-      {
-        Instance.StartCoroutine(routine, null);
-      }
-      else
-      {
-        s_CoroutineQueue ??= new Queue<(IEnumerator, object)>();
-        s_CoroutineQueue.Enqueue((routine,null));
-      }
-    }
-
-    /// <summary>
-    ///
-    /// </summary>
-    /// <param name="contract">
-    /// The Object instance originally given to EnqueueCoroutine or
-    /// StartCoroutine as a lifetime contract.
-    /// </param>
-    [PublicAPI]
-    public static void CancelCoroutinesForContract([NotNull] object contract)
-    {
-      if (IsActive)
-      {
-        Instance.StopAllCoroutinesWith(contract);
-      }
-      else if (s_CoroutineQueue?.Count > 0)
-      {
-        // queue delete is notoriously SLOW, but hopefully this is uber rare
-        var swapq = new Queue<(IEnumerator,object)>(s_CoroutineQueue.Count);
-
-        while (s_CoroutineQueue.Count > 0)
-        {
-          var blob = s_CoroutineQueue.Dequeue();
-          if (blob.Item2 != contract)
-          {
-            swapq.Enqueue(blob);
-          }
-        }
-
-        s_CoroutineQueue = swapq;
-      }
-    }
-
-    [PublicAPI]
-    public /* static */ void SetCoroutineWarningThreshold(int threshold)
-    {
-      if (m_CoroutineWarnThreshold == threshold)
-        return;
-
-      m_CoroutineWarnThreshold = threshold;
-
-      CheckCoroutineThreshold();
-    }
-
-
   #region MonoBehaviour API mistake correction
 
     [System.Obsolete("Do not use the base Unity APIs to start coroutines on the ActiveScene.")]
@@ -218,128 +100,31 @@ namespace Ore
       Orator.Error("SERIOUSLY don't use this overload =^(");
       return null;
     }
-  
+
   #endregion MonoBehaviour API mistake correction
 
-    // the good overloads:
 
-    public Coroutine StartCoroutine([NotNull] IEnumerator routine, [CanBeNull] object contract)
+    IEnumerator Start()
     {
-      contract ??= this;
-
-      if (m_CoroutineMap.TryMap(contract, new CoroutineList(), out CoroutineList list) == null)
-      {
-        Orator.Error($"Failed to start coroutine for {contract}; HashMap state error.");
-        return null;
-      }
-
-      var coru = (base.StartCoroutine(DoRoutinePlusCleanup(routine, contract, m_NextCoroutineID)), m_NextCoroutineID);
-
-      list.Add(coru);
-
-      ++ m_NextCoroutineID;
-      ++ m_ActiveCoroutineCount;
-
-      CheckCoroutineThreshold();
-
-      return coru.Item1;
-    }
-
-    public void StopAllCoroutinesWith([NotNull] object contract)
-    {
-      if (!m_CoroutineMap.Pop(contract, out CoroutineList list))
-        return;
-
-      foreach (var (coru, id) in list)
-      {
-        if (coru is {})
-        {
-          StopCoroutine(coru);
-          -- m_ActiveCoroutineCount;
-        }
-      }
-
-      // break the garbage collector's back
+      return new DeferringRoutine(SetupCoroutineRunner, m_DelayStartCoroutineRunner);
     }
 
 
-    private IEnumerator DoRoutinePlusCleanup(IEnumerator routine, object contract, int id)
+    private void SetupCoroutineRunner()
     {
-      if (!(contract is Object wref))
+      var coroutiner = GetComponent<CoroutineRunner>();
+      if (!coroutiner)
       {
-        wref = this;
+        coroutiner = gameObject.AddComponent<CoroutineRunner>();
       }
 
-      while (routine.MoveNext())
+      if (s_Coroutiner is CoroutineRunnerBuffer buffer)
       {
-        yield return routine.Current;
-
-        if (!wref)
-        {
-          m_CoroutineMap.Unmap(contract);
-          -- m_ActiveCoroutineCount;
-          yield break;
-        }
+        coroutiner.AdoptAndRun(buffer);
       }
 
-      -- m_ActiveCoroutineCount;
-
-      if (OAssert.Fails(m_CoroutineMap.Pop(contract, out CoroutineList list), this))
-      {
-        yield break;
-      }
-
-      int i = list.Count;
-      while (i --> 0)
-      {
-        if (list[i].id == id)
-        {
-          list.RemoveAt(i);
-          break;
-        }
-      }
-
-      if (list.Count > 0)
-      {
-        m_CoroutineMap.Map(contract, list);
-      }
+      s_Coroutiner = coroutiner;
     }
-
-
-    private void CheckCoroutineThreshold()
-    {
-      if (m_CoroutineWarnThreshold > 0 && m_ActiveCoroutineCount >= m_CoroutineWarnThreshold)
-      {
-        Orator.Warn($"Too many concurrent coroutines running on {name}! n={m_ActiveCoroutineCount}", this);
-      }
-    }
-
-
-    protected override void OnEnable()
-    {
-      if (!TryInitialize(this) || s_CoroutineQueue == null)
-        return;
-
-      while (s_CoroutineQueue.Count > 0)
-      {
-        var (routine, contract) = s_CoroutineQueue.Dequeue();
-        if (routine is {} && contract is {})
-        {
-          StartCoroutine(routine, contract);
-        }
-      }
-
-      s_CoroutineQueue = null;
-    }
-
-    protected override void OnDisable()
-    {
-      base.OnDisable();
-      StopAllCoroutines();
-      m_ActiveCoroutineCount = 0;
-      m_CoroutineMap.Clear();
-    }
-
 
     // the rest ensures this singleton is ALWAYS on the "active" scene.
 
@@ -386,17 +171,6 @@ namespace Ore
       OAssert.True(Current == bud);
 
       return bud;
-    }
-
-
-    private sealed class ContractComparator : Comparator<object>
-    {
-      public override bool IsNone(in object obj)
-      {
-        if (obj is Object uobj)
-          return !uobj;
-        return base.IsNone(in obj);
-      }
     }
 
   } // end class ActiveScene
