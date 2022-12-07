@@ -21,10 +21,15 @@ namespace Ore
     IComparable<TimeInterval>, IEquatable<TimeInterval>,
     IComparable<TimeSpan>, IEquatable<TimeSpan>
   {
-    public static readonly TimeInterval Zero = new TimeInterval(0L);
+    public static readonly TimeInterval Zero      = new TimeInterval(0L);
+    public static readonly TimeInterval MinValue  = new TimeInterval(long.MinValue);
+    public static readonly TimeInterval MaxValue  = new TimeInterval(long.MaxValue);
 
-    public static TimeInterval Frame     => OfSeconds(1.0 / Application.targetFrameRate);
-    public static TimeInterval HalfFrame => OfSeconds(0.5 / Application.targetFrameRate);
+    public static readonly TimeInterval One       = new TimeInterval(1L);
+    public static readonly TimeInterval Epsilon   = new TimeInterval(11L);
+
+    public static readonly TimeInterval Frame     = new TimeInterval(TICKS_PER_FRAME);
+    public static readonly TimeInterval HalfFrame = new TimeInterval(TICKS_PER_FRAME / 2);
 
 
     public const double TICKS2MS  = 1e-4;
@@ -32,6 +37,9 @@ namespace Ore
     public const double TICKS2MIN = TICKS2SEC / 60;
     public const double TICKS2HR  = TICKS2MIN / 60;
     public const double TICKS2DAY = TICKS2HR  / 24;
+
+    // using constant now since Application.targetFrameRate cannot be called in all contexts...
+    private const long TICKS_PER_FRAME = (long)(1.0 / 60 / TICKS2SEC);
 
 
     public double Millis
@@ -94,6 +102,18 @@ namespace Ore
       set => Ticks = (long)(value / TICKS2DAY + (value >= 0f ? 0.5f : -0.5f));
     }
 
+    public double Frames
+    {
+      get => (double)Ticks / TICKS_PER_FRAME;
+      set => Ticks = (long)(value * TICKS_PER_FRAME + (value > 0 ? 0.5 : -0.5));
+    }
+
+    public float FFrames
+    {
+      get => (float)Ticks / TICKS_PER_FRAME;
+      set => Ticks = (long)(value * TICKS_PER_FRAME + (value > 0f ? 0.5f : -0.5f));
+    }
+
 
     [SerializeField]
     public long Ticks;
@@ -131,7 +151,33 @@ namespace Ore
 
     public static TimeInterval OfFrames(int nFrames)
     {
-      return Frame * nFrames;
+      return new TimeInterval(TICKS_PER_FRAME * nFrames);
+    }
+
+    public static TimeInterval OfFrames(double qFrames)
+    {
+      return new TimeInterval((long)(TICKS_PER_FRAME * qFrames));
+    }
+
+
+    public void AddSeconds(double s)
+    {
+      Ticks += (long)(s / TICKS2SEC + 0.5);
+    }
+
+    public void AddSeconds(float s)
+    {
+      Ticks += (long)(s / TICKS2SEC + 0.5f);
+    }
+
+    public void SubtractSeconds(double s)
+    {
+      Ticks -= (long)(s / TICKS2SEC + 0.5);
+    }
+
+    public void SubtractSeconds(float s)
+    {
+      Ticks -= (long)(s / TICKS2SEC + 0.5f);
     }
 
 
@@ -195,38 +241,38 @@ namespace Ore
 
     public static TimeInterval operator * (TimeInterval lhs, int rhs)
     {
-      lhs.Ticks *= rhs;
-      return lhs;
+      return new TimeInterval(lhs.Ticks * rhs);
     }
 
     public static TimeInterval operator / (TimeInterval lhs, int rhs)
     {
-      lhs.Ticks /= rhs;
-      return lhs;
+      return new TimeInterval(lhs.Ticks / rhs);
     }
 
     public static TimeInterval operator * (TimeInterval lhs, double rhs)
     {
-      lhs.Ticks = (long)Math.Round(lhs.Ticks * rhs);
-      return lhs;
+      return new TimeInterval((long)Math.Round(lhs.Ticks * rhs));
     }
 
     public static TimeInterval operator / (TimeInterval lhs, double rhs)
     {
-      lhs.Ticks = (long)Math.Round(lhs.Ticks / rhs);
-      return lhs;
+      return new TimeInterval((long)Math.Round(lhs.Ticks / rhs));
     }
 
     public static TimeInterval operator + (TimeInterval lhs, TimeInterval rhs)
     {
-      lhs.Ticks += rhs.Ticks;
-      return lhs;
+      return new TimeInterval(lhs.Ticks + rhs.Ticks);
     }
 
     public static TimeInterval operator - (TimeInterval lhs, TimeInterval rhs)
     {
-      lhs.Ticks -= rhs.Ticks;
-      return lhs;
+      return new TimeInterval(lhs.Ticks - rhs.Ticks);
+    }
+
+
+    public static TimeInterval operator - (TimeInterval self)
+    {
+      return new TimeInterval(self.Ticks * -1);
     }
 
 
