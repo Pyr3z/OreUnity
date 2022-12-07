@@ -88,17 +88,17 @@ namespace Ore
 
     #region STATIC SECTION
 
-    protected static IEnumerator InvokeNextFrame(Action action)
+    protected static DeferringRoutine InvokeNextFrame(Action action)
     {
       return new DeferringRoutine(action);
     }
 
-    protected static IEnumerator InvokeNextFrameIf(Action action, Condition condition)
+    protected static DeferringRoutine InvokeNextFrameIf(Action action, Condition condition)
     {
       return new DeferringRoutine(action, condition);
     }
 
-    protected static IEnumerator DelayInvoke(Action action, TimeInterval t)
+    protected static DeferringRoutine DelayInvoke(Action action, TimeInterval t)
     {
       return new DeferringRoutine(action, t);
     }
