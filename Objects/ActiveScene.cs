@@ -173,6 +173,52 @@ namespace Ore
       return bud;
     }
 
+
+  #region DEPRECATIONS
+
+    const string OBSOLETE_MSG_EnqueueCoroutine =
+      "ActiveScene.EnqueueCoroutine is obsolete. Use ActiveScene.Coroutines.Run " +
+      "instead (UnityUpgradeable) -> [Ore] Ore.ActiveScene.Coroutines.Run(*)";
+    const bool OBSOLETE_ERR_EnqueueCoroutine   = false;
+
+    const string OBSOLETE_MSG_CancelCoroutinesForContract =
+      "ActiveScene.CancelCoroutinesForContract is obsolete. Use ActiveScene.Coroutines.Halt " +
+      "instead (UnityUpgradeable) -> [Ore] Ore.ActiveScene.Coroutines.Halt(*)";
+    const bool OBSOLETE_ERR_CancelCoroutinesForContract   = false;
+
+
+    [System.Obsolete(OBSOLETE_MSG_EnqueueCoroutine, OBSOLETE_ERR_EnqueueCoroutine)]
+    public static void EnqueueCoroutine([NotNull] IEnumerator routine)
+    {
+      Coroutines.Run(routine);
+    }
+
+    [System.Obsolete(OBSOLETE_MSG_EnqueueCoroutine, OBSOLETE_ERR_EnqueueCoroutine)]
+    public static void EnqueueCoroutine([NotNull] IEnumerator routine, [NotNull] Object contract)
+    {
+      Coroutines.Run(routine, contract);
+    }
+
+    [System.Obsolete(OBSOLETE_MSG_EnqueueCoroutine, OBSOLETE_ERR_EnqueueCoroutine)]
+    public static void EnqueueCoroutine([NotNull] IEnumerator routine, [NotNull] string key)
+    {
+      Coroutines.Run(routine, key);
+    }
+
+    [System.Obsolete(OBSOLETE_MSG_EnqueueCoroutine, OBSOLETE_ERR_EnqueueCoroutine)]
+    public static void EnqueueCoroutine([NotNull] IEnumerator routine, [NotNull] out string guidKey)
+    {
+      Coroutines.Run(routine, out guidKey);
+    }
+
+    [System.Obsolete(OBSOLETE_MSG_CancelCoroutinesForContract, OBSOLETE_ERR_CancelCoroutinesForContract)]
+    public static void CancelCoroutinesForContract([NotNull] object contract)
+    {
+      Coroutines.Halt(contract);
+    }
+
+  #endregion DEPRECATIONS
+
   } // end class ActiveScene
 
 }
