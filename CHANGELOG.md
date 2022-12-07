@@ -10,9 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Unit Tests: ActiveScene
 
 ## [2.10.0] - 2022-12-07
-- Added: New struct `DeferringRoutine` optimizes trivial coroutine use cases.
+- Added: struct `DeferringRoutine` optimizes trivial coroutine use cases.
     - Note: DeferringRoutine's speed vs conventional `yield return` equivalents still need to be measured.
-- Added: New types (ICoroutineRunner, CoroutineRunner, CoroutineRunnerBuffer) to make ActiveScene pretty again.
+- Added: instance types (ICoroutineRunner, CoroutineRunner, CoroutineRunnerBuffer) to make ActiveScene pretty again.
+- Added: `Invoke` static API - namely good for `Invoke.NextFrame(*)` and `Invoke.AfterDelay(*)`.
+    - Note: Invoke.AfterDelay probably has undefined behaviour if called before any scenes are loaded. Will investigate later.
 - Improved: Utility APIs and operators in `TimeInterval`.
     - Also: Now using TimeInterval in more pre-existing places.
 - Deprecated: The old ActiveScene.EnqueueCoroutine and related APIs are now implemented through the static `ActiveScene.Coroutines.*` interface. The old APIs will be completely removed in Ore 3.
