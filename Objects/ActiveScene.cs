@@ -33,6 +33,8 @@ namespace Ore
     private VoidEvent m_OnActiveSceneChanged = new VoidEvent();
 
 
+    // TODO refactor coroutine runner to separate class
+
     [System.NonSerialized]
     private int m_NextCoroutineID, m_ActiveCoroutineCount;
 

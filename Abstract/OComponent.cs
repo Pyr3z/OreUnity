@@ -3,12 +3,12 @@
  *  @date       2022-01-20
 **/
 
-using System.Collections;
 using JetBrains.Annotations;
 using UnityEngine;
 
-using Action = System.Action;
-using Condition = System.Func<bool>;
+using IEnumerator = System.Collections.IEnumerator;
+using Action      = System.Action;
+using Condition   = System.Func<bool>;
 
 
 namespace Ore
@@ -17,6 +17,7 @@ namespace Ore
   ///   Base class for Bore MonoBehaviour components of GameObjects
   ///   (AKA "Scene objects").
   /// </summary>
+  [PublicAPI]
   public abstract class OComponent : MonoBehaviour
   {
 
@@ -65,21 +66,21 @@ namespace Ore
 
 
     [PublicAPI]
-    public void DestroySelf(float in_seconds = 0f)
+    public void DestroySelf(float inSeconds = 0f)
     {
-      if (Application.isEditor && in_seconds.IsZero())
+      if (Application.isEditor && inSeconds.IsZero())
         DestroyImmediate(this);
       else
-        Destroy(this, in_seconds);
+        Destroy(this, inSeconds);
     }
 
     [PublicAPI]
-    public void DestroyGameObject(float in_seconds = 0f)
+    public void DestroyGameObject(float inSeconds = 0f)
     {
-      if (Application.isEditor && in_seconds.IsZero())
+      if (Application.isEditor && inSeconds.IsZero())
         DestroyImmediate(gameObject);
       else
-        Destroy(gameObject, in_seconds);
+        Destroy(gameObject, inSeconds);
     }
 
     #endregion  EVENT CALLBACK ACTIONS
@@ -89,26 +90,12 @@ namespace Ore
 
     protected static IEnumerator InvokeNextFrame(Action action)
     {
-      yield return new WaitForEndOfFrame();
-      action();
+      return new DeferringRoutine(action);
     }
 
     protected static IEnumerator InvokeNextFrameIf(Action action, Condition condition)
     {
-      yield return new WaitForEndOfFrame();
-
-      if (condition())
-        action();
-    }
-
-    protected static IEnumerator InvokeNextFrameIf(Action action, Condition condition, Action else_action)
-    {
-      yield return new WaitForEndOfFrame();
-
-      if (condition())
-        action();
-      else
-        else_action();
+      return new DeferringRoutine(action, condition);
     }
 
     protected static IEnumerator DelayInvoke(Action action, TimeInterval t)
