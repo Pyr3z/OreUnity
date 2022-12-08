@@ -12,6 +12,17 @@ using Object      = UnityEngine.Object;
 
 namespace Ore
 {
+  /// <summary>
+  /// Static utility class that allows you to invoke actions at different times,
+  /// or in special ways.
+  /// </summary>
+  ///
+  /// <remarks>
+  /// If in a MonoBehaviour class, you will need to call this API as
+  /// "Ore.Invoke" rather than just "Invoke"—even if you have a
+  /// "using Ore" statement in your file! This is my bad... may rename
+  /// this API later.
+  /// </remarks>
   [PublicAPI]
   public static class Invoke
   {
