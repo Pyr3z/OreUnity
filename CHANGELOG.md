@@ -17,7 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Note: Invoke.AfterDelay probably has undefined behaviour if called before any scenes are loaded. Will investigate later.
 - Improved: Utility APIs and operators in `TimeInterval`.
     - Also: Now using TimeInterval in more pre-existing places.
-- Deprecated: The old ActiveScene.EnqueueCoroutine and related APIs are now implemented through the static `ActiveScene.Coroutines.*` interface. The old APIs will be completely removed in Ore 3.
+- Deprecated: The functionality of `ActiveScene.EnqueueCoroutine` and related APIs are now implemented through the static `ActiveScene.Coroutines.*` interface.
+    - These APIs will not be fully removed until Ore v3.
+- Deprecated: Coroutine-related helpers: `OComponent.{InvokeNextFrame,InvokeNextFrameIf,DelayInvoke}`. Using the new DeferringRoutine or static Invoke APIs is now the way.
+    - Also will not be fully removed until at least Ore v3.
 
 ## [2.9.4] - 2022-12-05
 - Added: `HashMap.UnmapAllKeys(where)` + `HashMap.UnmapAllValues(where)`

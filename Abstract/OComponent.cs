@@ -21,10 +21,8 @@ namespace Ore
   public abstract class OComponent : MonoBehaviour
   {
 
-    #region EVENT CALLBACK ACTIONS
-
-    [System.Diagnostics.Conditional("DEBUG")]
     [PublicAPI]
+    [System.Diagnostics.Conditional("DEBUG")]
     public void DebugLog(string message)
     {
       Orator.Log(message, this);
@@ -83,27 +81,28 @@ namespace Ore
         Destroy(gameObject, inSeconds);
     }
 
-    #endregion  EVENT CALLBACK ACTIONS
 
+  #region DEPRECATIONS
 
-    #region STATIC SECTION
-
+    [System.Obsolete("Construct a DeferringRoutine(*) directly, or use the new Invoke.NextFrame(*) API instead.", false)]
     protected static DeferringRoutine InvokeNextFrame(Action action)
     {
       return new DeferringRoutine(action);
     }
 
+    [System.Obsolete("Construct a DeferringRoutine(*) directly, or use the new Invoke.NextFrame(*) API instead.", false)]
     protected static DeferringRoutine InvokeNextFrameIf(Action action, Condition condition)
     {
       return new DeferringRoutine(action, condition);
     }
 
+    [System.Obsolete("Construct a DeferringRoutine(*) directly, or use the new Invoke.AfterDelay(*) API instead.", false)]
     protected static DeferringRoutine DelayInvoke(Action action, TimeInterval t)
     {
       return new DeferringRoutine(action, t);
     }
 
-    #endregion STATIC SECTION
+  #endregion DEPRECATIONS
 
   } // end class OComponent
 
