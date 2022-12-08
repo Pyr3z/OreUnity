@@ -13,6 +13,9 @@ namespace Ore
 {
   public sealed class CoroutineRunnerBuffer : ICoroutineRunner, IEnumerable<(IEnumerator routine, object key)>
   {
+    public int Count => m_Queue.Count;
+
+
     readonly List<(IEnumerator routine, object key)> m_Queue = new List<(IEnumerator routine, object key)>();
 
 

@@ -32,9 +32,23 @@ namespace Ore
       }
     }
 
+    [PublicAPI]
+    public bool QueueCoroutinesWhileDisabled
+    {
+      get => m_QueueCoroutinesWhileDisabled;
+      set => m_QueueCoroutinesWhileDisabled = value;
+    }
+
+    [PublicAPI]
+    public int QueuedCoroutineCount => m_BufferWhileDisabled.Count;
+
 
     [SerializeField, Range(0, 64), Tooltip("Set to 0 to squelch the warning.")]
     private int m_CoroutineWarnThreshold = 16;
+
+    [SerializeField, Tooltip("if on, queued routines will be started once the runner is re-enabled in the Scene.")]
+    private bool m_QueueCoroutinesWhileDisabled = true;
+
 
     [System.NonSerialized]
     private int m_NextCoroutineID, m_ActiveCoroutineCount;
@@ -55,7 +69,7 @@ namespace Ore
       {
         _ = StartCoroutine(routine, key);
       }
-      else
+      else if (m_QueueCoroutinesWhileDisabled)
       {
         m_BufferWhileDisabled.Run(routine, key);
       }
@@ -67,7 +81,7 @@ namespace Ore
       {
         _ = StartCoroutine(routine, key);
       }
-      else
+      else if (m_QueueCoroutinesWhileDisabled)
       {
         m_BufferWhileDisabled.Run(routine, key);
       }
@@ -81,7 +95,7 @@ namespace Ore
       {
         _ = StartCoroutine(routine, guidKey);
       }
-      else
+      else if (m_QueueCoroutinesWhileDisabled)
       {
         m_BufferWhileDisabled.Run(routine, guidKey);
       }
@@ -93,7 +107,7 @@ namespace Ore
       {
         _ = StartCoroutine(routine, this);
       }
-      else
+      else if (m_QueueCoroutinesWhileDisabled)
       {
         m_BufferWhileDisabled.Run(routine, this);
       }
@@ -101,6 +115,16 @@ namespace Ore
 
     public void Halt(object key)
     {
+      if (!isActiveAndEnabled)
+      {
+        if (m_QueueCoroutinesWhileDisabled)
+        {
+          m_BufferWhileDisabled.Halt(key);
+        }
+
+        return;
+      }
+
       if (!m_ActiveMap.Pop(key, out CoroutineList list))
         return;
 
@@ -125,7 +149,7 @@ namespace Ore
         m_ActiveMap.Clear();
         m_ActiveCoroutineCount = 0;
       }
-      else
+      else if (m_QueueCoroutinesWhileDisabled)
       {
         m_BufferWhileDisabled.HaltAll();
       }
@@ -134,6 +158,9 @@ namespace Ore
 
     public void AdoptAndRun([NotNull] CoroutineRunnerBuffer buffer)
     {
+      if (buffer.Count == 0)
+        return;
+
       foreach (var (routine,key) in buffer)
       {
         if (routine is {} && key is {})
