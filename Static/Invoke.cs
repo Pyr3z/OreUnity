@@ -35,7 +35,7 @@ namespace Ore
 
     public static void AfterDelay([NotNull]   Action       action,
                                               TimeInterval delay,
-                                              Object       ifAlive = null,
+                                  [CanBeNull] Object       ifAlive = null,
                                   [CanBeNull] Condition    ifTrue  = null)
     {
       if (delay.Ticks > 0L)
