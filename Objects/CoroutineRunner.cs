@@ -40,36 +40,68 @@ namespace Ore
     private int m_NextCoroutineID, m_ActiveCoroutineCount;
 
     [System.NonSerialized]
-    private readonly HashMap<object, CoroutineList> m_Map = new HashMap<object, CoroutineList>()
+    private readonly HashMap<object, CoroutineList> m_ActiveMap = new HashMap<object, CoroutineList>()
     {
       KeyComparator = new ObjectSavvyComparator()
     };
 
+    [System.NonSerialized]
+    private readonly CoroutineRunnerBuffer m_BufferWhileDisabled = new CoroutineRunnerBuffer();
+
 
     public void Run(IEnumerator routine, Object key)
     {
-      _ = StartCoroutine(routine, key);
+      if (isActiveAndEnabled)
+      {
+        _ = StartCoroutine(routine, key);
+      }
+      else
+      {
+        m_BufferWhileDisabled.Run(routine, key);
+      }
     }
 
     public void Run(IEnumerator routine, string key)
     {
-      _ = StartCoroutine(routine, key);
+      if (isActiveAndEnabled)
+      {
+        _ = StartCoroutine(routine, key);
+      }
+      else
+      {
+        m_BufferWhileDisabled.Run(routine, key);
+      }
     }
 
     public void Run(IEnumerator routine, out string guidKey)
     {
       guidKey = Strings.MakeGUID();
-            _ = StartCoroutine(routine, guidKey);
+
+      if (isActiveAndEnabled)
+      {
+        _ = StartCoroutine(routine, guidKey);
+      }
+      else
+      {
+        m_BufferWhileDisabled.Run(routine, guidKey);
+      }
     }
 
     public void Run(IEnumerator routine)
     {
-      _ = StartCoroutine(routine, this);
+      if (isActiveAndEnabled)
+      {
+        _ = StartCoroutine(routine, this);
+      }
+      else
+      {
+        m_BufferWhileDisabled.Run(routine, this);
+      }
     }
 
     public void Halt(object key)
     {
-      if (!m_Map.Pop(key, out CoroutineList list))
+      if (!m_ActiveMap.Pop(key, out CoroutineList list))
         return;
 
       int i = list.Count;
@@ -82,20 +114,45 @@ namespace Ore
         }
       }
 
-      // let the garbage collector eat it since we called m_Map.Pop
+      // let the garbage collector eat list since we called m_ActiveMap.Pop
     }
 
     public void HaltAll()
     {
-      StopAllCoroutines();
-      m_Map.Clear();
-      m_ActiveCoroutineCount = 0;
+      if (isActiveAndEnabled)
+      {
+        StopAllCoroutines();
+        m_ActiveMap.Clear();
+        m_ActiveCoroutineCount = 0;
+      }
+      else
+      {
+        m_BufferWhileDisabled.HaltAll();
+      }
+    }
+
+
+    public void AdoptAndRun([NotNull] CoroutineRunnerBuffer buffer)
+    {
+      foreach (var (routine,key) in buffer)
+      {
+        if (routine is {} && key is {})
+        {
+          _ = StartCoroutine(routine, key == buffer ? this : key);
+        }
+      }
+
+      buffer.HaltAll();
     }
 
 
     [CanBeNull]
     private Coroutine StartCoroutine([NotNull] IEnumerator routine, [NotNull] object key)
     {
+      #if UNITY_ASSERTIONS
+      OAssert.True(isActiveAndEnabled);
+      #endif
+
       if (key is Object contract)
       {
         if (!contract)
@@ -106,7 +163,7 @@ namespace Ore
         contract = this;
       }
 
-      if (null == m_Map.TryMap(key, new CoroutineList(), out CoroutineList list))
+      if (null == m_ActiveMap.TryMap(key, new CoroutineList(), out CoroutineList list))
       {
         Orator.Error($"Failed to start coroutine for \"{key}\"; HashMap state error.");
         return null;
@@ -125,28 +182,24 @@ namespace Ore
       return coruPair.Item1;
     }
 
-
-    public void AdoptAndRun([NotNull] CoroutineRunnerBuffer buffer)
-    {
-      foreach (var (routine,key) in buffer)
-      {
-        if (routine is {} && key is {})
-        {
-          StartCoroutine(routine, key);
-        }
-      }
-
-      buffer.HaltAll();
-    }
-
-
-
     private void CheckCoroutineThreshold()
     {
       if (m_CoroutineWarnThreshold > 0 && m_ActiveCoroutineCount >= m_CoroutineWarnThreshold)
       {
         Orator.Warn($"Too many concurrent coroutines running on this object! n={m_ActiveCoroutineCount}", this);
       }
+    }
+
+
+    private void OnEnable()
+    {
+      AdoptAndRun(m_BufferWhileDisabled);
+    }
+
+    private void OnDisable()
+    {
+      m_ActiveMap.Clear();
+      m_ActiveCoroutineCount = 0;
     }
 
 
@@ -182,7 +235,7 @@ namespace Ore
 
         if (!m_Contract)
         {
-          if (m_Runner.m_Map.Unmap(m_Key))
+          if (m_Runner.m_ActiveMap.Unmap(m_Key))
           {
             -- m_Runner.m_ActiveCoroutineCount;
           }
@@ -200,7 +253,7 @@ namespace Ore
 
         -- m_Runner.m_ActiveCoroutineCount;
 
-        if (OAssert.Fails(m_Runner.m_Map.Pop(m_Key, out CoroutineList list), m_Runner))
+        if (OAssert.Fails(m_Runner.m_ActiveMap.Pop(m_Key, out CoroutineList list), m_Runner))
         {
           return false;
         }
@@ -217,7 +270,7 @@ namespace Ore
         if (list.Count > 0)
         {
           // uncommon case: push the remainder of the list back
-          m_Runner.m_Map.Map(m_Key, list);
+          m_Runner.m_ActiveMap.Map(m_Key, list);
         }
 
         return false;

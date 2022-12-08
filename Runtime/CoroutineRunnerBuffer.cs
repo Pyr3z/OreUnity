@@ -40,7 +40,7 @@ namespace Ore
 
     public void Run(IEnumerator routine)
     {
-      m_Queue.Add((routine,Strings.MakeGUID()));
+      m_Queue.Add((routine,this));
     }
 
     public void Halt(object key)

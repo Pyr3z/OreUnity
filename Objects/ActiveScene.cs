@@ -29,13 +29,7 @@ namespace Ore
     public static Scene Scene => s_ActiveScene;
 
     [PublicAPI]
-    public static ICoroutineRunner Coroutines
-    {
-      get
-      {
-        return s_Coroutiner ??= new CoroutineRunnerBuffer();
-      }
-    }
+    public static ICoroutineRunner Coroutines => s_Coroutiner ??= new CoroutineRunnerBuffer();
 
 
     [SerializeField]
