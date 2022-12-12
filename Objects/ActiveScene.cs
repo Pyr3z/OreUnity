@@ -40,7 +40,7 @@ namespace Ore
 
     private static Scene s_ActiveScene; // only the size of an int, so why not?
 
-    private static readonly HashMap<Scene, float> s_SceneBirthdays = new HashMap<Scene, float>();
+    private static readonly Dictionary<Scene, float> s_SceneBirthdays = new Dictionary<Scene, float>();
 
     private static ICoroutineRunner s_Coroutiner;
 
