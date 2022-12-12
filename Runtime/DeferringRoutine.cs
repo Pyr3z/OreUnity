@@ -70,7 +70,7 @@ namespace Ore
       if (delay.Ticks <= 0L)
         m_DoneTime = -1f;
       else
-        m_DoneTime = (float)(Time.unscaledTimeAsDouble + delay.Seconds);
+        m_DoneTime = Time.unscaledTime + delay.FSeconds;
     }
 
     public bool MoveNext()

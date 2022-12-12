@@ -203,7 +203,7 @@ namespace Ore
 
     public override bool Equals(object obj)
     {
-      return obj is {} && GetHashCode() == obj.GetHashCode();
+      return !(obj is null) && GetHashCode() == obj.GetHashCode();
     }
 
     public override int GetHashCode()

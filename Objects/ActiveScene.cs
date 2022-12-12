@@ -28,8 +28,9 @@ namespace Ore
     [PublicAPI]
     public static Scene Scene => s_ActiveScene;
 
+    // ReSharper disable once ConvertToNullCoalescingCompoundAssignment
     [PublicAPI]
-    public static ICoroutineRunner Coroutines => s_Coroutiner ??= new CoroutineRunnerBuffer();
+    public static ICoroutineRunner Coroutines => s_Coroutiner ?? (s_Coroutiner = new CoroutineRunnerBuffer());
 
 
     [SerializeField]

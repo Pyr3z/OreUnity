@@ -29,7 +29,11 @@ public static class PrimesSpeed
 
   private static IEnumerator DoSpeedTest(System.Func<int,bool> testFunc, string name, float acceptableMS, List<int> data = null)
   {
-    data ??= Primes10K.GetTestValues(SCALE >> 1, SCALE >> 1);
+    // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
+    if (data is null)
+    {
+      data = Primes10K.GetTestValues(SCALE >> 1, SCALE >> 1);
+    }
 
     var stopwatch = new Stopwatch();
 

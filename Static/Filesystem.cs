@@ -39,7 +39,7 @@ namespace Ore
         MakePathTo(filepath);
 
         string json;
-        if (obj is {})
+        if (!(obj is null))
         {
           json = JsonUtility.ToJson(obj, pretty);
 
@@ -128,7 +128,7 @@ namespace Ore
       return false;
     }
 
-    public static bool TryReadObject<T>([NotNull] string filepath, [NotNull] out T obj, Encoding encoding = null)
+    public static bool TryReadObject<T>([NotNull] string filepath, [CanBeNull] out T obj, Encoding encoding = null)
     {
       if (!TryReadText(filepath, out string json, encoding))
       {
@@ -139,7 +139,7 @@ namespace Ore
       try
       {
         obj = JsonUtility.FromJson<T>(json);
-        return obj is {};
+        return obj != null;
       }
       catch (Exception e)
       {
@@ -384,7 +384,7 @@ namespace Ore
 
         case UnanticipatedException unant:
         {
-          if ((ex = unant.InnerException) is {})
+          if (!((ex = unant.InnerException) is null))
             goto TOP; // fuck recursion.
           return IOResult.UnknownFailure;
         }

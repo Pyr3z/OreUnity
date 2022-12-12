@@ -131,11 +131,11 @@ namespace Ore
       int i = list.Count;
       while (i --> 0)
       {
-        if (list[i].coru is {})
-        {
-          StopCoroutine(list[i].coru);
-          -- m_ActiveCoroutineCount;
-        }
+        if (list[i].coru is null)
+          continue;
+
+        StopCoroutine(list[i].coru);
+        -- m_ActiveCoroutineCount;
       }
 
       // let the garbage collector eat list since we called m_ActiveMap.Pop
@@ -163,10 +163,10 @@ namespace Ore
 
       foreach (var (routine,key) in buffer)
       {
-        if (routine is {} && key is {})
-        {
-          _ = StartCoroutine(routine, key == buffer ? this : key);
-        }
+        if (routine is null || key is null)
+          continue;
+
+        _ = StartCoroutine(routine, key == buffer ? this : key);
       }
 
       buffer.HaltAll();

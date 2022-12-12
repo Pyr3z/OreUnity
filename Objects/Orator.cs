@@ -234,10 +234,17 @@ namespace Ore
       #if UNITY_EDITOR
 
       var stage = UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+      #if UNITY_2020_3_OR_NEWER
       if (stage)
       {
         hash = Hashing.MakeHash(msg, stage.assetPath);
       }
+      #else
+      if (stage != null && stage.prefabContentsRoot)
+      {
+        hash = Hashing.MakeHash(msg, stage.prefabAssetPath);
+      }
+      #endif
       else
       {
         hash = Hashing.MakeHash(msg, ctx);
@@ -583,7 +590,6 @@ namespace Ore
       if (!ctx)
       {
         ctx = this;
-        msg ??= string.Empty;
       }
       else if (m_IncludeContextInMessages)
       {
@@ -602,7 +608,9 @@ namespace Ore
           msg = $"[{ctx.GetType().Name}] {msg}\n(asset name: \"{ctx.name}\")";
         }
       }
-      else if (msg == null)
+
+      // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
+      if (msg is null)
       {
         msg = string.Empty;
       }

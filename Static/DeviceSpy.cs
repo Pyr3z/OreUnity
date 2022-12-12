@@ -29,7 +29,10 @@ namespace Ore
     {
       get
       {
-        return s_OSVersion ??= VersionID.ExtractOSVersion(SystemInfo.operatingSystem);
+        // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
+        if (s_OSVersion is null)
+          s_OSVersion = VersionID.ExtractOSVersion(SystemInfo.operatingSystem);
+        return s_OSVersion;
       }
     }
 
@@ -77,7 +80,10 @@ namespace Ore
     {
       get
       {
-        return s_DiagonalInches ??= CalcScreenDiagonalInches();
+        // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
+        if (s_DiagonalInches is null)
+          s_DiagonalInches = CalcScreenDiagonalInches();
+        return (float)s_DiagonalInches;
       }
     }
 
@@ -85,7 +91,10 @@ namespace Ore
     {
       get
       {
-        return s_AspectRatio ??= CalcAspectRatio();
+        // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
+        if (s_AspectRatio is null)
+          s_AspectRatio = CalcAspectRatio();
+        return (float)s_AspectRatio;
       }
     }
 
@@ -93,7 +102,10 @@ namespace Ore
     {
       get
       {
-        return s_IsTablet ??= CalcIsTablet();
+        // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
+        if (s_IsTablet is null)
+          s_IsTablet = CalcIsTablet();
+        return (bool)s_IsTablet;
       }
     }
 
@@ -101,7 +113,10 @@ namespace Ore
     {
       get
       {
-        return s_IsBlueStacks ??= CalcIsBlueStacks();
+        // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
+        if (s_IsBlueStacks is null)
+          s_IsBlueStacks = CalcIsBlueStacks();
+        return (bool)s_IsBlueStacks;
       }
     }
 
@@ -110,7 +125,10 @@ namespace Ore
     {
       get
       {
-        return s_ABIArch ??= CalcABIArch();
+        // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
+        if (s_ABIArch is null)
+          s_ABIArch = CalcABIArch();
+        return (ABIArch)s_ABIArch;
       }
     }
 

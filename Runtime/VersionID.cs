@@ -61,7 +61,7 @@ namespace Ore
 
     public bool IsValid => !m_Vers.IsEmpty() && (m_OrderedHash & HASH_MASK_RESERVED) == 0x00;
 
-    public bool IsDeep => m_Vers is {} && m_Vers.Length > 3;
+    public bool IsDeep => !(m_Vers is null) && m_Vers.Length > 3;
 
     public int Major => this[0];
     public int Minor => this[1];
@@ -193,7 +193,7 @@ namespace Ore
     public static bool operator < ([CanBeNull] VersionID lhs, [CanBeNull] VersionID rhs)
     {
       if (lhs is null)
-        return rhs is {};
+        return !(rhs is null);
       return lhs.CompareTo(rhs) < 0;
     }
 
@@ -214,7 +214,7 @@ namespace Ore
     public static bool operator != ([CanBeNull] VersionID lhs, [CanBeNull] VersionID rhs)
     {
       if (lhs is null)
-        return rhs is { IsValid: true };
+        return !(rhs is null) && rhs.IsValid;
       return lhs.CompareTo(rhs) != 0;
     }
 
