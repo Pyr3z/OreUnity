@@ -132,7 +132,7 @@ namespace Ore
         {
           // equivalent bucket found
 
-          if (!overwrite || (m_ValueComparator is {} &&
+          if (!overwrite || (!(m_ValueComparator is null) &&
                              m_ValueComparator.Equals(val, m_Buckets[i].Value)))
           {
             return false;

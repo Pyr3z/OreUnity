@@ -206,7 +206,9 @@ namespace Ore.Editor
         };
       }
 
+      #if UNITY_2020_1_OR_NEWER
       view.sceneViewState.alwaysRefresh = true;
+      #endif
 
       var cam = view.camera;
       var min = cam.ViewportToWorldPoint(new Vector2(0.01f, 0.01f));
@@ -240,6 +242,10 @@ namespace Ore.Editor
 
     private void SelfInspector()
     {
+      #if !UNITY_2020_1_OR_NEWER
+      bool docked = true;
+      #endif
+
       EGL.LabelField("Docked?", docked.ToInvariant());
 
       EG.BeginDisabledGroup(docked);

@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## [UNRELEASED] - 2022-
-- Added Unit Tests: ActiveScene
+- Tests: ActiveScene
+- Tests: DeferringRoutine
+- Tests: Invoke
+
+## [2.10.1] - 2022-12-12
+- Fixed: C# syntaxes being used that were incompatible with Unity 2019.x.
 
 ## [2.10.0] - 2022-12-07
 - Added: struct `DeferringRoutine` optimizes trivial coroutine use cases.

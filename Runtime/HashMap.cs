@@ -108,7 +108,7 @@ namespace Ore
 
     public HashMap([CanBeNull] IComparator<K> keyComparator, HashMapParams parms = default)
     {
-      if (keyComparator is {})
+      if (!(keyComparator is null))
       {
         m_KeyComparator = keyComparator;
       }
@@ -455,7 +455,7 @@ namespace Ore
       if (i < 0)
         return false;
 
-      if (m_ValueComparator is {} && !m_ValueComparator.Equals(kvp.Value, m_Buckets[i].Value))
+      if (!(m_ValueComparator is null) && !m_ValueComparator.Equals(kvp.Value, m_Buckets[i].Value))
         return false;
 
       m_Buckets[i].Smear();

@@ -99,7 +99,7 @@ namespace Ore.Editor
         if (Context is null)
         {
         }
-        else if (OAssert.Fails(Context is { propertyType: SerializedPropertyType.ObjectReference }))
+        else if (OAssert.Fails(Context.propertyType == SerializedPropertyType.ObjectReference))
         {
           Context = null;
         }
@@ -118,7 +118,7 @@ namespace Ore.Editor
         if (RunInGlobalContext is null)
         {
         }
-        else if (OAssert.Fails(RunInGlobalContext is { propertyType: SerializedPropertyType.Boolean }))
+        else if (OAssert.Fails(RunInGlobalContext.propertyType == SerializedPropertyType.Boolean))
         {
           RunInGlobalContext = null;
         }

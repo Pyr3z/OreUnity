@@ -418,7 +418,7 @@ namespace Ore
     {
       for (int i = 0, ilen = objs?.Length ?? 0; i < ilen; ++i)
       {
-        if (objs[i] is { })
+        if (!(objs[i] is null))
           continue;
 
         if (Orator)

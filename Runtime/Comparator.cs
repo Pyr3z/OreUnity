@@ -36,7 +36,7 @@ namespace Ore
     {
       if (typeof(T) == typeof(object))
       {
-        return obj is null ? s_Type : Type.GetTypeCode(obj.GetType());
+        return ReferenceEquals(obj, null) ? s_Type : Type.GetTypeCode(obj.GetType());
       }
 
       return s_Type;
@@ -45,14 +45,14 @@ namespace Ore
     [Pure]
     public virtual bool IsNone(in T obj)
     {
-      return obj is null || Equals(obj, default(T));
+      return ReferenceEquals(obj, null) || Equals(obj, default(T));
     }
 
     [Pure]
     public virtual bool Equals(in T a, in T b)
     {
       // slightly different short-circuiting than object.Equals
-      return (object)a == (object)b || (a is { } && a.Equals(b));
+      return ReferenceEquals(a, b) || (!ReferenceEquals(a, null) && a.Equals(b));
     }
 
     [Pure]
@@ -69,17 +69,17 @@ namespace Ore
         return StringComparer.Ordinal.Compare(a as string, b as string);
       }
 
-      if ((object)a == (object)b)
+      if (ReferenceEquals(a, b))
       {
         return  0;
       }
 
-      if (a is null)
+      if (ReferenceEquals(a, null))
       {
         return -1;
       }
 
-      if (b is null)
+      if (ReferenceEquals(b, null))
       {
         return +1;
       }
