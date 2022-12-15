@@ -8,6 +8,7 @@ using UnityEngine;
 
 namespace Ore
 {
+  [PublicAPI]
   public static class Transforms
   {
 
