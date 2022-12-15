@@ -11,12 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests: DeferringRoutine
 - Tests: Invoke
 
+## [2.10.2] - 2022-12-15
+- Changed: package.json now properly accepts Unity 2019.4.
+
 ## [2.10.1] - 2022-12-12
 - Fixed: C# syntaxes being used that were incompatible with Unity 2019.x.
 
 ## [2.10.0] - 2022-12-07
-- Added: struct `DeferringRoutine` optimizes trivial coroutine use cases.
-    - Note: DeferringRoutine's speed vs conventional `yield return` equivalents still need to be measured.
+- Added: struct `DelayedRoutine` optimizes trivial coroutine use cases.
+    - Note: DelayedRoutine's speed vs conventional `yield return` equivalents still needs to be measured.
 - Added: instance types (ICoroutineRunner, CoroutineRunner, CoroutineRunnerBuffer) to make ActiveScene pretty again.
 - Added: `Invoke` static API - namely good for `Invoke.NextFrame(*)` and `Invoke.AfterDelay(*)`.
     - Note: Invoke.AfterDelay probably has undefined behaviour if called before any scenes are loaded. Will investigate later.

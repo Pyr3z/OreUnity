@@ -1,10 +1,10 @@
 {
   "name":         "dev.leviperez.ore",
-  "version":      "2.10.1",
+  "version":      "2.10.2",
 
   "displayName":  "[Ore]",
   "description":  "Core package intended for Bore use, and (ideally) free of any hard dependencies.",
-  "unity":        "2020.3",
+  "unity":        "2019.4",
 
   "author": {
     "name": "Levi Perez", "email": "levi@leviperez.dev"
