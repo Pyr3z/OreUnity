@@ -84,22 +84,22 @@ namespace Ore
 
   #region DEPRECATIONS
 
-    [System.Obsolete("Construct a DeferringRoutine(*) directly, or use the new Invoke.NextFrame(*) API instead.", false)]
-    protected static DeferringRoutine InvokeNextFrame(Action action)
+    [System.Obsolete("Construct a DelayedRoutine(*) directly, or use the new Invoke.NextFrame(*) API instead.", false)]
+    protected static DelayedRoutine InvokeNextFrame(Action action)
     {
-      return new DeferringRoutine(action);
+      return new DelayedRoutine(action);
     }
 
-    [System.Obsolete("Construct a DeferringRoutine(*) directly, or use the new Invoke.NextFrame(*) API instead.", false)]
-    protected static DeferringRoutine InvokeNextFrameIf(Action action, Condition condition)
+    [System.Obsolete("Construct a DelayedRoutine(*) directly, or use the new Invoke.NextFrame(*) API instead.", false)]
+    protected static DelayedRoutine InvokeNextFrameIf(Action action, Condition condition)
     {
-      return new DeferringRoutine(action, condition);
+      return new DelayedRoutine(action, condition);
     }
 
-    [System.Obsolete("Construct a DeferringRoutine(*) directly, or use the new Invoke.AfterDelay(*) API instead.", false)]
-    protected static DeferringRoutine DelayInvoke(Action action, TimeInterval t)
+    [System.Obsolete("Construct a DelayedRoutine(*) directly, or use the new Invoke.AfterDelay(*) API instead.", false)]
+    protected static DelayedRoutine DelayInvoke(Action action, TimeInterval t)
     {
-      return new DeferringRoutine(action, t);
+      return new DelayedRoutine(action, t);
     }
 
   #endregion DEPRECATIONS

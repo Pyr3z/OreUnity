@@ -1,4 +1,4 @@
-/*! @file       Runtime/DeferringRoutine.cs
+/*! @file       Runtime/DelayedRoutine.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-08
 **/
@@ -13,7 +13,7 @@ using Condition   = System.Func<bool>;
 namespace Ore
 {
 
-  public struct DeferringRoutine : IEnumerator
+  public struct DelayedRoutine : IEnumerator
   {
     public object Current => null;
 
@@ -35,8 +35,8 @@ namespace Ore
     /// If not null, <paramref name="payload"/> will only trigger if the
     /// condition evaluates to true.
     /// </param>
-    public DeferringRoutine([CanBeNull] Action    payload,
-                            [CanBeNull] Condition condition = null)
+    public DelayedRoutine([CanBeNull] Action    payload,
+                          [CanBeNull] Condition condition = null)
       : this(payload, TimeInterval.Epsilon, condition)
     {
     }
@@ -60,9 +60,9 @@ namespace Ore
     /// If not null, <paramref name="payload"/> will only trigger after the
     /// delay interval if the condition evaluates to true.
     /// </param>
-    public DeferringRoutine([CanBeNull] Action       payload,
-                                        TimeInterval delay,
-                            [CanBeNull] Condition    condition = null)
+    public DelayedRoutine([CanBeNull] Action       payload,
+                                      TimeInterval delay,
+                          [CanBeNull] Condition    condition = null)
     {
       m_Payload   = payload;
       m_Condition = condition;
@@ -105,6 +105,6 @@ namespace Ore
       throw new System.InvalidOperationException();
     }
 
-  } // end struct DeferringRoutine
+  } // end struct DelayedRoutine
 
 }

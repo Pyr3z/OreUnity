@@ -31,7 +31,7 @@ namespace Ore
                                  [CanBeNull] Object    ifAlive = null,
                                  [CanBeNull] Condition ifTrue  = null)
     {
-      var routine = new DeferringRoutine(action, ifTrue);
+      var routine = new DelayedRoutine(action, ifTrue);
 
       if (ifAlive is null)
       {
@@ -53,11 +53,11 @@ namespace Ore
       {
         if (ifAlive is null)
         {
-          ActiveScene.Coroutines.Run(new DeferringRoutine(action, delay, ifTrue));
+          ActiveScene.Coroutines.Run(new DelayedRoutine(action, delay, ifTrue));
         }
         else
         {
-          ActiveScene.Coroutines.Run(new DeferringRoutine(action, delay, ifTrue), ifAlive);
+          ActiveScene.Coroutines.Run(new DelayedRoutine(action, delay, ifTrue), ifAlive);
         }
       }
       else if ((ifTrue is null || ifTrue.Invoke()) && (ifAlive is null || ifAlive))

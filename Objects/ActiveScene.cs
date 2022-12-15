@@ -101,7 +101,7 @@ namespace Ore
 
     IEnumerator Start()
     {
-      return new DeferringRoutine(SetupCoroutineRunner, m_DelayStartCoroutineRunner);
+      return new DelayedRoutine(SetupCoroutineRunner, m_DelayStartCoroutineRunner);
     }
 
 
