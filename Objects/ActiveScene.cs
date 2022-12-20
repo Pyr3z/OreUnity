@@ -33,6 +33,7 @@ namespace Ore
     public static ICoroutineRunner Coroutines => s_Coroutiner ?? (s_Coroutiner = new CoroutineRunnerBuffer());
 
 
+  [Header("[ActiveScene]"), Space]
     [SerializeField]
     private TimeInterval m_DelayStartCoroutineRunner = TimeInterval.Frame;
     [SerializeField]
@@ -101,7 +102,14 @@ namespace Ore
 
     IEnumerator Start()
     {
-      return new DelayedRoutine(SetupCoroutineRunner, m_DelayStartCoroutineRunner);
+      if (m_DelayStartCoroutineRunner <= TimeInterval.Frame)
+      {
+        return new DelayedRoutine(SetupCoroutineRunner, frameDelay: 1);
+      }
+      else
+      {
+        return new DelayedRoutine(SetupCoroutineRunner, m_DelayStartCoroutineRunner);
+      }
     }
 
 
