@@ -12,26 +12,22 @@ namespace Ore
   [PublicAPI]
   public static class Heap
   {
-    public static void Make<T>(IList<T> list, System.Comparison<T> cmp)
+    public static void Make<T>([NotNull] IList<T> list, [NotNull] System.Comparison<T> cmp)
     {
-      OAssert.AllNotNull(list, cmp);
-
       // `node` is the index of the last non-leaf node.
       // We start there and iterate backwards because any leaf nodes can be skipped.
-      for (int node = (list.Count - 1 - 1) / 2; node >= 0; --node)
+      for (int node = (list.Count - 2) / 2; node >= 0; --node)
       {
         HeapifyDown(list, node, cmp);
       }
     }
 
-    public static void Push<T>(IList<T> list, T push, System.Comparison<T> cmp)
+    public static void Push<T>([NotNull] List<T> list, T push, [NotNull] System.Comparison<T> cmp)
     {
-      OAssert.AllNotNull(list, cmp);
-
       int child  = list.Count;
       int parent = (child - 1) / 2;
 
-      list.Add(push);
+      list.Add(push); // isn't supported when IList<T> is an array
 
       // heapify up
       while (child > 0 && cmp(list[child], list[parent]) > 0)
@@ -42,30 +38,75 @@ namespace Ore
       }
     }
 
-    public static T Pop<T>(IList<T> list, System.Comparison<T> cmp)
+    public static void Push<T>([NotNull] T[] arr, int n, T push, [NotNull] System.Comparison<T> cmp)
     {
-      OAssert.AllNotNull(list, cmp);
+      #if UNITY_ASSERTIONS
+        OAssert.True(n < arr.Length, "n < arr.Length");
+      #endif
 
+      arr[n] = push;
+
+      int parent = (n - 1) / 2;
+
+      // heapify up
+      while (n > 0 && cmp(arr[n], arr[parent]) > 0)
+      {
+        (arr[n],arr[parent]) = (arr[parent],arr[n]);
+        n                    = parent;
+        parent               = (parent - 1) / 2;
+      }
+    }
+
+    public static T Pop<T>([NotNull] List<T> list, [NotNull] System.Comparison<T> cmp)
+    {
       int last = list.Count - 1;
       if (last < 0)
         return default;
 
       var item = list[0];
 
-      if (last > 1)
+      if (last > 0)
       {
         (list[0],list[last]) = (list[last],list[0]);
-        list.RemoveAt(last);
+        list.RemoveAt(last); // isn't supported when IList<T> is an array
         HeapifyDown(list, 0, cmp);
+      }
+      else
+      {
+        list.RemoveAt(0);
       }
 
       return item;
     }
 
-    public static void HeapifyDown<T>(IList<T> list, int node, System.Comparison<T> cmp)
+    public static T Pop<T>([NotNull] T[] arr, int n, [NotNull] System.Comparison<T> cmp)
     {
-      OAssert.AllNotNull(list, cmp);
+      #if UNITY_ASSERTIONS
+        OAssert.True(n < arr.Length, "n < arr.Length");
+      #endif
 
+      int last = n - 1;
+      if (last < 0)
+        return default;
+
+      var item = arr[0];
+
+      if (last > 0)
+      {
+        (arr[0],arr[last]) = (arr[last],arr[0]);
+        arr[last] = default;
+        HeapifyDown(arr, 0, cmp);
+      }
+      else
+      {
+        arr[0] = default;
+      }
+
+      return item;
+    }
+
+    public static void HeapifyDown<T>([NotNull] IList<T> list, int node, [NotNull] System.Comparison<T> cmp)
+    {
       // This is way faster than the recursive version!
 
       int count = list.Count;
@@ -93,10 +134,8 @@ namespace Ore
     }
 
     [System.Obsolete("This version is way slower than the non-recursive version! (UnityUpgradable) -> HeapifyDown<T>(*)")]
-    public static void HeapifyDownRecursive<T>(IList<T> list, int node, System.Comparison<T> cmp)
+    public static void HeapifyDownRecursive<T>([NotNull] IList<T> list, int node, [NotNull] System.Comparison<T> cmp)
     {
-      OAssert.AllNotNull(list, cmp);
-
       // eww, recursion!
 
       int max = node;

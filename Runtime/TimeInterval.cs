@@ -26,10 +26,10 @@ namespace Ore
     public static readonly TimeInterval MaxValue  = new TimeInterval(long.MaxValue);
 
     public static readonly TimeInterval One       = new TimeInterval(1L);
-    public static readonly TimeInterval Epsilon   = new TimeInterval(11L);
+    public static readonly TimeInterval Epsilon   = new TimeInterval(TICKS_ARE_FRAMES_THRESH);
 
-    public static readonly TimeInterval Frame     = new TimeInterval(TICKS_PER_FRAME);
-    public static readonly TimeInterval HalfFrame = new TimeInterval(TICKS_PER_FRAME / 2);
+    public static readonly TimeInterval Frame     = new TimeInterval(1L); // special value
+    public static readonly TimeInterval Second    = new TimeInterval(10000000L);
 
 
     public const double TICKS2MS  = 1e-4;
@@ -39,7 +39,10 @@ namespace Ore
     public const double TICKS2DAY = TICKS2HR  / 24;
 
     // using constant now since Application.targetFrameRate cannot be called in all contexts...
-    private const long TICKS_PER_FRAME = (long)(1.0 / 60 / TICKS2SEC);
+    public const long TICKS_PER_FRAME_60FPS = (long)(1.0 / 60 / TICKS2SEC);
+
+    // when ticks are < threshold, they are treated as a frame count instead of clock ticks.
+    public const int TICKS_ARE_FRAMES_THRESH = 999;
 
 
     public double Millis
@@ -102,16 +105,30 @@ namespace Ore
       set => Ticks = (long)(value / TICKS2DAY + (value >= 0f ? 0.5f : -0.5f));
     }
 
-    public double Frames
+    public int Frames
     {
-      get => (double)Ticks / TICKS_PER_FRAME;
-      set => Ticks = (long)(value * TICKS_PER_FRAME + (value > 0 ? 0.5 : -0.5));
-    }
-
-    public float FFrames
-    {
-      get => (float)Ticks / TICKS_PER_FRAME;
-      set => Ticks = (long)(value * TICKS_PER_FRAME + (value > 0f ? 0.5f : -0.5f));
+      get
+      {
+        if (Ticks >= -TICKS_ARE_FRAMES_THRESH && Ticks <= TICKS_ARE_FRAMES_THRESH)
+        {
+          return (int)Ticks;
+        }
+        else
+        {
+          return (int)(Ticks / TICKS_PER_FRAME_60FPS);
+        }
+      }
+      set
+      {
+        if (value >= -TICKS_ARE_FRAMES_THRESH && value <= TICKS_ARE_FRAMES_THRESH)
+        {
+          Ticks = value;
+        }
+        else
+        {
+          Ticks = value * TICKS_PER_FRAME_60FPS;
+        }
+      }
     }
 
 
@@ -151,12 +168,19 @@ namespace Ore
 
     public static TimeInterval OfFrames(int nFrames)
     {
-      return new TimeInterval(TICKS_PER_FRAME * nFrames);
+      if (nFrames >= -TICKS_ARE_FRAMES_THRESH && nFrames <= TICKS_ARE_FRAMES_THRESH)
+      {
+        return new TimeInterval(nFrames);
+      }
+      else
+      {
+        return new TimeInterval(TICKS_PER_FRAME_60FPS * nFrames);
+      }
     }
 
     public static TimeInterval OfFrames(double qFrames)
     {
-      return new TimeInterval((long)(TICKS_PER_FRAME * qFrames));
+      return new TimeInterval((long)(TICKS_PER_FRAME_60FPS * qFrames));
     }
 
 

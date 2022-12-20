@@ -3,6 +3,7 @@
  *  @date     2022-01-20
 **/
 
+using System;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -41,7 +42,7 @@ namespace Ore
       get
       {
         if (s_Brand is null)
-          (s_Brand, s_Model) = GetMakeModel();
+          (s_Brand, s_Model) = CalcMakeModel();
         return s_Brand;
       }
     }
@@ -51,17 +52,26 @@ namespace Ore
       get
       {
         if (s_Model is null)
-          (s_Brand, s_Model) = GetMakeModel();
+          (s_Brand, s_Model) = CalcMakeModel();
         return s_Model;
       }
     }
+
+    // ReSharper disable once ConvertToNullCoalescingCompoundAssignment
+    public static string Browser => s_Browser ?? (s_Browser = CalcBrowserName());
+
+    // ReSharper disable once ConvertToNullCoalescingCompoundAssignment
+    public static string Carrier => s_Carrier ?? (s_Carrier = CalcCarrier());
+
+    // ReSharper disable once ConvertToNullCoalescingCompoundAssignment
+    public static string LanguageISO6391 => s_LangISO6391 ?? (s_LangISO6391 = ToISO6391(Application.systemLanguage));
 
     public static string TimezoneUTCString
     {
       get
       {
         if (s_TimezoneUTCStr is null)
-          (s_TimezoneOffset, s_TimezoneUTCStr) = GetTimezoneUTCOffset();
+          (s_TimezoneOffset, s_TimezoneUTCStr) = CalcTimezoneUTCOffset();
         return s_TimezoneUTCStr;
       }
     }
@@ -71,7 +81,7 @@ namespace Ore
       get
       {
         if (s_TimezoneOffset is null)
-          (s_TimezoneOffset, s_TimezoneUTCStr) = GetTimezoneUTCOffset();
+          (s_TimezoneOffset, s_TimezoneUTCStr) = CalcTimezoneUTCOffset();
         return (float)s_TimezoneOffset;
       }
     }
@@ -133,9 +143,27 @@ namespace Ore
     }
 
 
+    public static int CurrentRAMUsageMiB()
+    {
+      #if UNITY_2020_1_OR_NEWER
+      return (int)(UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / 1048576L);
+      #else
+      return (int)(System.GC.GetTotalMemory(false) / 1048576L);
+      #endif
+    }
+
+    public static float CurrentRAMUsagePercent()
+    {
+      return (float)CurrentRAMUsageMiB() / SystemInfo.systemMemorySize;
+    }
+
+
     private static VersionID  s_OSVersion       = null;
     private static string     s_Brand           = null;
     private static string     s_Model           = null;
+    private static string     s_Browser         = null;
+    private static string     s_Carrier         = null;
+    private static string     s_LangISO6391     = null;
     private static string     s_TimezoneUTCStr  = null;
     private static float?     s_TimezoneOffset  = null;
     private static float?     s_DiagonalInches  = null;
@@ -145,7 +173,7 @@ namespace Ore
     private static ABIArch?   s_ABIArch         = null;
 
 
-    private static (string make, string model) GetMakeModel()
+    private static (string make, string model) CalcMakeModel()
     {
 #if UNITY_EDITOR
 
@@ -168,7 +196,137 @@ namespace Ore
 #endif
     }
 
-    private static (float off, string str) GetTimezoneUTCOffset()
+    private static string CalcBrowserName()
+    {
+      #if UNITY_ANDROID
+        return CalcAndroidBrowser();
+      #elif UNITY_IOS
+        return string.Empty;
+      #elif UNITY_WEBGL // TODO: doable, but requires javascript plugin
+        return string.Empty;
+      #else
+        return string.Empty;
+      #endif
+    }
+
+    private static string CalcCarrier()
+    {
+      #if UNITY_ANDROID
+        return CalcAndroidCarrier();
+      #elif UNITY_IOS
+        return string.Empty;
+      #elif UNITY_WEBGL
+        return string.Empty;
+      #else
+        return string.Empty;
+      #endif
+    }
+
+    private static string ToISO6391(SystemLanguage lang) // TODO refactor to new extension class
+    {
+      switch (lang)
+      {
+        case SystemLanguage.Afrikaans:
+          return "AF";
+        case SystemLanguage.Arabic:
+          return "AR";
+        case SystemLanguage.Basque:
+          return "EU";
+        case SystemLanguage.Belarusian:
+          return "BY";
+        case SystemLanguage.Bulgarian:
+          return "BG";
+        case SystemLanguage.Catalan:
+          return "CA";
+        case SystemLanguage.Chinese:
+          return "ZH";
+        case SystemLanguage.Czech:
+          return "CS";
+        case SystemLanguage.Danish:
+          return "DA";
+        case SystemLanguage.Dutch:
+          return "NL";
+        case SystemLanguage.English:
+          return "EN";
+        case SystemLanguage.Estonian:
+          return "ET";
+        case SystemLanguage.Faroese:
+          return "FO";
+        case SystemLanguage.Finnish:
+          #if UNITY_ANDROID
+            if (CalcAndroidISO6392() == "FIL")
+              return "TL"; // tagalog
+          #endif
+          return "FI";
+        case SystemLanguage.French:
+          return "FR";
+        case SystemLanguage.German:
+          return "DE";
+        case SystemLanguage.Greek:
+          return "EL";
+        case SystemLanguage.Hebrew:
+          return "HE";
+        case SystemLanguage.Hungarian:
+          return "HU";
+        case SystemLanguage.Icelandic:
+          return "IS";
+        case SystemLanguage.Indonesian:
+          return "ID";
+        case SystemLanguage.Italian:
+          return "IT";
+        case SystemLanguage.Japanese:
+          return "JA";
+        case SystemLanguage.Korean:
+          return "KO";
+        case SystemLanguage.Latvian:
+          return "LV";
+        case SystemLanguage.Lithuanian:
+          return "LT";
+        case SystemLanguage.Norwegian:
+          return "NB";
+        case SystemLanguage.Polish:
+          return "PL";
+        case SystemLanguage.Portuguese:
+          return "PT"; // TODO differentiate between PT-BR?
+        case SystemLanguage.Romanian:
+          return "RO";
+        case SystemLanguage.Russian:
+          return "RU";
+        case SystemLanguage.SerboCroatian:
+          return "SH";
+        case SystemLanguage.Slovak:
+          return "SK";
+        case SystemLanguage.Slovenian:
+          return "SL";
+        case SystemLanguage.Spanish:
+          return "ES";
+        case SystemLanguage.Swedish:
+          return "SV";
+        case SystemLanguage.Thai:
+          return "TH";
+        case SystemLanguage.Turkish:
+          return "TR";
+        case SystemLanguage.Ukrainian:
+          return "UK";
+        case SystemLanguage.Vietnamese:
+          return "VI";
+        case SystemLanguage.ChineseSimplified:
+          return "ZH-CN";
+        case SystemLanguage.ChineseTraditional:
+          return "ZH-TW";
+
+        case SystemLanguage.Unknown:
+        default:
+          // caller can decide what a good default value is if empty.
+          #if UNITY_ANDROID
+            return CalcAndroidISO6391();
+          #else // TODO other platforms
+            return string.Empty;
+          #endif
+      }
+    }
+
+    private static (float off, string str) CalcTimezoneUTCOffset()
     {
       var offset = System.TimeZoneInfo.Local.GetUtcOffset(System.DateTime.Now);
       return ((float)offset.TotalHours, $"{(offset.Hours <= 0 ? "" : "+")}{offset.Hours:00}{offset.Minutes:00}");
@@ -191,15 +349,15 @@ namespace Ore
 
     private static bool CalcIsTablet()
     {
-#if AD_MEDIATION_MAX
+    #if AD_MEDIATION_MAX
 
       return MaxSdkUtils.IsTablet();
 
-#else
+    #else
 
       return Model.Contains("iPad") || CalcIsTabletByScreenSize();
 
-#endif
+    #endif
     }
 
     private static bool CalcIsTabletByScreenSize()
@@ -236,13 +394,9 @@ namespace Ore
 
       // Android and Android-like devices are pretty standard here
       if (type.StartsWith("ARM64"))
-      {
         return ABIArch.ARM64;
-      }
       else if (type.StartsWith("ARMv7"))
-      {
         return ABIArch.ARM32;
-      }
 
       // Chrome OS (should be a rare case)
       if (System.Environment.Is64BitOperatingSystem)
@@ -250,6 +404,126 @@ namespace Ore
       else
         return ABIArch.x86;
     }
+
+    // TODO: CalcIsChromeOS() - https://docs.unity3d.com/ScriptReference/Android.AndroidDevice-hardwareType.html
+
+
+#region Native Platform Bindings
+
+  #if UNITY_ANDROID
+
+    private static string CalcAndroidBrowser()
+    {
+      #if UNITY_EDITOR
+      if (Application.isEditor)
+        return string.Empty;
+      #endif
+
+      const string DUMMY_URL          = "https://example.com";
+      const long   MATCH_DEFAULT_ONLY = 0x00010000; // https://developer.android.com/reference/android/content/pm/PackageManager#MATCH_DEFAULT_ONLY
+
+      AndroidJavaObject uri    = null,
+                        intent = null,
+                        flags  = null,
+                        resolv = null;
+      try
+      {
+        uri    = AndroidBridge.MakeUri(DUMMY_URL);
+        intent = AndroidBridge.MakeIntent("android.intent.action.VIEW", uri);
+        flags  = AndroidBridge.Classes.ResolveInfoFlags.CallStatic<AndroidJavaObject>("of", MATCH_DEFAULT_ONLY);
+        resolv = AndroidBridge.PackageManager.Call<AndroidJavaObject>("resolveActivity", intent, flags);
+        return resolv.Call<AndroidJavaObject>("loadLabel", AndroidBridge.PackageManager).ToString();
+      }
+      catch (AndroidJavaException aje)
+      {
+        Orator.NFE(aje);
+      }
+      finally
+      {
+        uri?.Dispose();
+        intent?.Dispose();
+        flags?.Dispose();
+        resolv?.Dispose();
+      }
+
+      return string.Empty; // no deferred calcing
+    }
+
+    private static string CalcAndroidISO6391() // 2-letter retval
+    {
+      #if UNITY_EDITOR
+      if (Application.isEditor)
+        return string.Empty;
+      #endif
+
+      try
+      {
+        return AndroidBridge.SystemLocale.Call<string>("getLanguage").ToUpperInvariant();
+      }
+      catch (AndroidJavaException aje)
+      {
+        Orator.NFE(aje);
+      }
+
+      return string.Empty;
+    }
+
+    private static string CalcAndroidISO6392() // 3-letter retval
+    {
+      #if UNITY_EDITOR
+      if (Application.isEditor)
+        return string.Empty;
+      #endif
+
+      try
+      {
+        return AndroidBridge.SystemLocale.Call<string>("getISO3Language").ToUpperInvariant();
+      }
+      catch (AndroidJavaException aje)
+      {
+        Orator.NFE(aje);
+      }
+
+      return string.Empty;
+    }
+
+    private static string CalcAndroidCarrier()
+    {
+      #if UNITY_EDITOR
+      if (Application.isEditor)
+        return string.Empty;
+      #endif
+
+      const string TELEPHONY_SERVICE = "phone"; // https://developer.android.com/reference/android/content/Context#TELEPHONY_SERVICE
+
+      AndroidJavaObject teleMan = null;
+      try
+      {
+        teleMan = AndroidBridge.Activity.Call<AndroidJavaObject>("getSystemService", TELEPHONY_SERVICE);
+        if (teleMan != null)
+        {
+          return teleMan.Call<string>("getNetworkOperatorName") ?? string.Empty;
+        }
+      }
+      catch (AndroidJavaException aje)
+      {
+        Orator.NFE(aje);
+      }
+      finally
+      {
+        teleMan?.Dispose();
+      }
+
+      return string.Empty;
+    }
+
+  #elif UNITY_IOS
+
+  #elif UNITY_WEBGL
+
+  #endif
+
+#endregion (Native Platform Bindings)
 
   } // end class DeviceSpy
 
