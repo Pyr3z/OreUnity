@@ -87,6 +87,13 @@ namespace Ore
     private static AndroidJavaObject s_PackageManager;
     private static AndroidJavaObject s_SystemLocal;
 
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+    static void OnAppLaunch()
+    {
+      Application.lowMemory += Dispose;
+    }
+
     internal static void Dispose()
     {
       if (s_UnityPlayer != null)
@@ -119,6 +126,13 @@ namespace Ore
         s_ResolveInfoFlags = null;
       }
 
+      if (s_Locale != null)
+      {
+        s_Locale.Dispose();
+        s_Locale = null;
+      }
+
+
       if (s_Activity != null)
       {
         s_Activity.Dispose();
@@ -129,6 +143,12 @@ namespace Ore
       {
         s_PackageManager.Dispose();
         s_PackageManager = null;
+      }
+
+      if (s_SystemLocal != null)
+      {
+        s_SystemLocal.Dispose();
+        s_SystemLocal = null;
       }
     }
 
