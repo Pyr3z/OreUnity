@@ -17,6 +17,16 @@ namespace Ore
   public static class EditorBridge
   {
 
+    // constant value like these are REQUIRED in certain contexts,
+    // e.g. default parameter values
+    public const bool IS_EDITOR = true;
+    #if DEBUG
+    public const bool IS_DEBUG = true;
+    #else
+    public const bool IS_DEBUG = false;
+    #endif
+
+
     public static bool IsMainAsset(Object asset)
     {
       return asset && AssetDatabase.IsMainAsset(asset.GetInstanceID());
@@ -27,29 +37,17 @@ namespace Ore
       if (!IsMainAsset(asset))
         return false;
 
-      var   buffer  = new List<Object>(PlayerSettings.GetPreloadedAssets());
-      bool  changed = set;
+      var buffer = new List<Object>(PlayerSettings.GetPreloadedAssets());
 
-      if (set)
+      int changed = buffer.RemoveAll(obj => !obj || (!set && obj == asset));
+
+      if (set && !buffer.Contains(asset))
       {
-        if (buffer.Contains(asset))
-          return true;
         buffer.Add(asset);
-      }
-      else
-      {
-        int i = buffer.Count;
-        while (i --> 0)
-        {
-          if (buffer[i] != asset)
-            continue;
-          buffer.RemoveAt(i);
-          changed = true;
-          // intentionally no break; should remove duplicates too!
-        }
+        ++ changed;
       }
 
-      if (buffer.RemoveAll(obj => !obj) > 0 || changed)
+      if (changed > 0)
       {
         PlayerSettings.SetPreloadedAssets(buffer.ToArray());
       }
@@ -64,6 +62,16 @@ namespace Ore
   public static class EditorBridge
   {
 
+    // constant value like these are REQUIRED in certain contexts,
+    // e.g. default parameter values
+    public const bool IS_EDITOR = true;
+    #if DEBUG
+    public const bool IS_DEBUG = true;
+    #else
+    public const bool IS_DEBUG = false;
+    #endif
+
+
     public static bool IsMainAsset(Object asset)
     {
       return asset;
@@ -74,7 +82,7 @@ namespace Ore
       return true;
     }
 
-  } // end class EditorBridge
+  } // end static class EditorBridge
 
 #endif // UNITY_EDITOR
 

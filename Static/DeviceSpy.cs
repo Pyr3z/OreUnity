@@ -103,7 +103,7 @@ namespace Ore
     }
 
 
-    public static string ToJSON(bool prettyPrint)
+    public static string ToJSON(bool prettyPrint = EditorBridge.IS_DEBUG)
     {
       var json = new JObject();
 
