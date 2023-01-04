@@ -11,10 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests: Invoke
 
 ## [2.11.0] - 2022-12-19
-- Added: DeviceSpy now reports system language, browser, network carrier, and RAM usage.
+- Added: `DeviceSpy` now reports system language, browser, network carrier, and RAM usage.
+- Added: `AndroidBridge` static API
 - Fixed: `Heap.Push()` and `Heap.Pop()` now have proper overloads to handle arrays.
-- Fixed: TimeIntervals not working correctly with DelayedRoutines when representing quantities of frames.
-- Tests: DelayedRoutine
+- Fixed: `TimeIntervals` not working correctly with DelayedRoutines when representing quantities of frames.
+- Tests: `DelayedRoutine` correctness tests
 
 ## [2.10.2] - 2022-12-15
 - Changed: package.json now properly accepts Unity 2019.4.
