@@ -1,39 +1,34 @@
-/*! @file       Objects/VersionID.cs
+/*! @file       Objects/SerialVersion.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2021-11-08
+ *
+ *  A faster, more forgiving, and Unity-serializable reimplementation of
+ *  C#'s System.Version.
 **/
 
-using System.Collections.Generic;
 using JetBrains.Annotations;
+
 using UnityEngine;
+
+using System.Collections.Generic;
 
 
 namespace Ore
 {
 
   [System.Serializable, PublicAPI]
-  public sealed class VersionID :
-    System.IComparable<VersionID>,
-    System.IEquatable<VersionID>,
+  public sealed class SerialVersion :
+    System.IComparable<SerialVersion>,
+    System.IEquatable<SerialVersion>,
     ISerializationCallbackReceiver
   {
-    public static bool FuzzyValidate(string str)
-    {
-      const float PCT_THRESHOLD = 0.5f;
 
-      if (str.IsEmpty())
-        return false;
+  #region Static section
 
-      int extra = str.IndexOfAny(TAG_DELIMS);
-      if (extra > 0)
-        str = str.Remove(extra);
+    public static readonly SerialVersion None = new SerialVersion();
 
-      float digs = Strings.CountDigits(str);
 
-      return digs / str.Length > PCT_THRESHOLD;
-    }
-
-    public static string ExtractOSVersion(string from)
+    public static SerialVersion ExtractOSVersion(string from)
     {
       string[] vers = from.Split(Strings.WHITESPACES, System.StringSplitOptions.RemoveEmptyEntries);
 
@@ -58,9 +53,24 @@ namespace Ore
     }
 
 
+    internal static bool FuzzyValidate(string str)
+    {
+      const float PCT_THRESHOLD = 0.5f;
 
-    public bool IsValid => !m_Vers.IsEmpty() && (m_OrderedHash & HASH_MASK_RESERVED) == 0x00;
+      int extra = str.IndexOfAny(TAG_DELIMS);
+      if (extra > 0)
+        str = str.Remove(extra);
 
+      float digs = Strings.CountDigits(str);
+
+      return digs / str.Length > PCT_THRESHOLD;
+    }
+
+  #endregion Static section
+
+
+    public bool IsValid => !m_Vers.IsEmpty() && (m_OrderedHash & HASH_MASK_RESERVED) == 0;
+    public bool IsNone => m_String.IsEmpty();
     public bool IsDeep => !(m_Vers is null) && m_Vers.Length > 3;
 
     public int Major => this[0];
@@ -99,9 +109,65 @@ namespace Ore
     private int m_OrderedHash;
 
 
-    public VersionID([CanBeNull] string ver)
+    public SerialVersion([CanBeNull] string ver)
     {
       Deserialize(ver);
+    }
+
+    public SerialVersion(params int[] versionParts)
+    {
+      if (versionParts.IsEmpty())
+      {
+        m_String      = string.Empty;
+        m_Vers        = System.Array.Empty<int>();
+        m_OrderedHash = 0;
+        return;
+      }
+
+      m_String  = string.Join(".", versionParts);
+      m_Vers    = versionParts;
+
+      CalcOrderedHash(int.MaxValue);
+    }
+
+    public SerialVersion([CanBeNull] System.Version runtimeVersion)
+    {
+      if (runtimeVersion is null || runtimeVersion.GetHashCode() == 0)
+      {
+        m_String      = string.Empty;
+        m_Vers        = System.Array.Empty<int>();
+        m_OrderedHash = 0;
+        return;
+      }
+
+      m_String = runtimeVersion.ToString();
+
+      var parts = new List<int>
+      {
+        runtimeVersion.Major,
+        runtimeVersion.Minor
+      };
+
+      if (runtimeVersion.Build >= 0)
+      {
+        parts.Add(runtimeVersion.Build);
+      }
+
+      if (runtimeVersion.MajorRevision >= 0)
+      {
+        parts.Add(runtimeVersion.MajorRevision);
+
+        if (runtimeVersion.MinorRevision >= 0)
+        {
+          parts.Add(runtimeVersion.MinorRevision);
+        }
+      }
+      else if (runtimeVersion.Revision >= 0)
+      {
+        parts.Add(runtimeVersion.Revision);
+      }
+
+      m_Vers = parts.ToArray();
     }
 
 
@@ -116,7 +182,7 @@ namespace Ore
       return m_OrderedHash;
     }
 
-    public int CompareTo([CanBeNull] VersionID other)
+    public int CompareTo([CanBeNull] SerialVersion other)
     {
       if (other is null)
         return 1;
@@ -132,7 +198,7 @@ namespace Ore
       return 0;
     }
 
-    public int DeepCompareTo([NotNull] VersionID other)
+    public int DeepCompareTo([NotNull] SerialVersion other)
     {
       for (int i = 0, ilen = Length.AtLeast(other.Length); i < ilen; ++i)
       {
@@ -152,12 +218,12 @@ namespace Ore
       if (other is null)
         return !IsValid;
 
-      if (other is VersionID vstr)
+      if (other is SerialVersion vstr)
         return Equals(vstr);
 
       return other.ToString() == m_String;
     }
-    public bool Equals([CanBeNull] VersionID other)
+    public bool Equals([CanBeNull] SerialVersion other)
     {
       if (other is null)
         return !IsValid;
@@ -168,7 +234,7 @@ namespace Ore
       return other.m_OrderedHash == m_OrderedHash;
     }
 
-    public bool DeepEquals([NotNull] VersionID other)
+    public bool DeepEquals([NotNull] SerialVersion other)
     {
       for (int i = 0, ilen = Length.AtLeast(other.Length); i < ilen; ++i)
       {
@@ -180,38 +246,38 @@ namespace Ore
     }
 
 
-    public static implicit operator string ([CanBeNull] VersionID vstr)
+    public static implicit operator string ([CanBeNull] SerialVersion vstr)
     {
       return vstr?.m_String ?? string.Empty;
     }
 
-    public static implicit operator VersionID ([CanBeNull] string ver)
+    public static implicit operator SerialVersion ([CanBeNull] string ver)
     {
-      return new VersionID(ver);
+      return new SerialVersion(ver);
     }
 
-    public static bool operator < ([CanBeNull] VersionID lhs, [CanBeNull] VersionID rhs)
+    public static bool operator < ([CanBeNull] SerialVersion lhs, [CanBeNull] SerialVersion rhs)
     {
       if (lhs is null)
         return !(rhs is null);
       return lhs.CompareTo(rhs) < 0;
     }
 
-    public static bool operator > ([CanBeNull] VersionID lhs, [CanBeNull] VersionID rhs)
+    public static bool operator > ([CanBeNull] SerialVersion lhs, [CanBeNull] SerialVersion rhs)
     {
       if (lhs is null)
         return false;
       return lhs.CompareTo(rhs) > 0;
     }
 
-    public static bool operator == ([CanBeNull] VersionID lhs, [CanBeNull] VersionID rhs)
+    public static bool operator == ([CanBeNull] SerialVersion lhs, [CanBeNull] SerialVersion rhs)
     {
       if (lhs is null)
         return rhs is null || !rhs.IsValid;
       return lhs.CompareTo(rhs) == 0;
     }
 
-    public static bool operator != ([CanBeNull] VersionID lhs, [CanBeNull] VersionID rhs)
+    public static bool operator != ([CanBeNull] SerialVersion lhs, [CanBeNull] SerialVersion rhs)
     {
       if (lhs is null)
         return !(rhs is null) && rhs.IsValid;
@@ -231,6 +297,8 @@ namespace Ore
 
     internal int SplitParts(/*out*/ List<(string str, int idx)> parts)
     {
+      // over-complexity warning
+
       parts.Clear();
 
       if (m_String.IsEmpty())
@@ -320,12 +388,12 @@ namespace Ore
       m_OrderedHash = CalcOrderedHash(end);
     }
 
-    // internal: these masks document succinctly the byte layout of VersionID ordered hashes.
-    internal const uint HASH_MASK_RESERVED = 0xF0000000;
-    internal const uint HASH_MASK_MAJOR    = 0x0FF00000;
-    internal const uint HASH_MASK_MINOR    = 0x000FF000;
-    internal const uint HASH_MASK_PATCH    = 0x00000FF0;
-    internal const uint HASH_MASK_EXTRA    = 0x0000000F;
+    // internal: these masks document succinctly the byte layout of SerialVersion ordered hashes.
+    private const uint HASH_MASK_RESERVED = 0xF0000000;
+    private const uint HASH_MASK_MAJOR    = 0x0FF00000;
+    private const uint HASH_MASK_MINOR    = 0x000FF000;
+    private const uint HASH_MASK_PATCH    = 0x00000FF0;
+    private const uint HASH_MASK_EXTRA    = 0x0000000F;
 
     private int CalcOrderedHash(int end)
     {
@@ -369,6 +437,6 @@ namespace Ore
       return hash;
     }
 
-  } // end class VersionID
+  } // end class SerialVersion
 
 }

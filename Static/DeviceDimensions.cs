@@ -25,7 +25,7 @@ namespace Ore
     PixelDensity  = (1 <<  5) | Continuous, // DPI
     ProcessorNum  = (1 <<  6) | Continuous, // logical, not physical processors; "hardware threads"
     ProcessorFreq = (1 <<  7) | Continuous, // MHz
-    Timezone      = (1 <<  8) | Continuous, // hour offset [-2359,+2359]
+    Timezone      = (1 <<  8) | Continuous, // hour offset [-23,+23]
     Processor     = (1 <<  9),
     Is64Bit       = (1 << 10),
     DeviceBrand   = (1 << 11),
@@ -55,7 +55,7 @@ namespace Ore
     public static object QueryValue(this DeviceDimension dim)
     {
       // success returns: float, string, bool
-      // failure returns: DeviceDimension, null
+      // failure returns: null
 
       switch (dim)
       {
@@ -72,10 +72,10 @@ namespace Ore
           return (float)(SystemInfo.systemMemorySize - APPROX_RAM_USED);
 
         case DeviceDimension.TotalDisk:
-          return dim; // TODO
+          return null; // TODO
 
         case DeviceDimension.AvailDisk:
-          return dim; // TODO
+          return null; // TODO
 
         case DeviceDimension.PixelDensity:
           return Screen.dpi;
@@ -87,7 +87,7 @@ namespace Ore
           return (float)SystemInfo.processorFrequency;
 
         case DeviceDimension.Timezone:
-          return DeviceSpy.TimezoneISOString;
+          return DeviceSpy.TimezoneOffset.TotalHours;
 
         /* end Continuous dimensions */
 
@@ -137,7 +137,7 @@ namespace Ore
 
       fallback = System.Convert.ToString(boxed, Strings.InvariantFormatter);
 
-      if (boxed.GetType() != typeof(DeviceDimension) && boxed is T casted)
+      if (boxed is T casted)
       {
         value = casted;
         return true;

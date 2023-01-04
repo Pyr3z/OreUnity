@@ -12,6 +12,8 @@ using UnityEngine;
 
 using TimeSpan = System.TimeSpan;
 
+using RegionInfo = System.Globalization.RegionInfo;
+
 using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
 using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
 
@@ -33,16 +35,17 @@ namespace Ore
       ARMv8   = ARM64,
     }
 
+  #region Public section
 
     // ReSharper disable ConvertToNullCoalescingCompoundAssignment
 
-    public static VersionID OSVersion
+    public static SerialVersion OSVersion
     {
       get
       {
         // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
         if (s_OSVersion is null)
-          s_OSVersion = VersionID.ExtractOSVersion(SystemInfo.operatingSystem);
+          s_OSVersion = SerialVersion.ExtractOSVersion(SystemInfo.operatingSystem);
         return s_OSVersion;
       }
     }
@@ -71,13 +74,13 @@ namespace Ore
 
     public static string Carrier => s_Carrier ?? (s_Carrier = CalcCarrier());
 
-    public static string LanguageISO6391 => s_LangISO6391 ?? (s_LangISO6391 = CalcISO6391());
+    public static string TimezoneISOString => Strings.MakeISOTimezone(TimezoneOffset);
+
+    public static string LanguageISOString => s_LangISO6391 ?? (s_LangISO6391 = CalcISO6391());
+
+    public static string RegionISOString => s_RegionISO3166a2 ?? (s_RegionISO3166a2 = CalcISO3166a2());
 
     public static TimeSpan TimezoneOffset => (TimeSpan)(s_TimezoneOffset ?? (s_TimezoneOffset = CalcTimezoneOffset()));
-
-    public static float TimezoneOffsetHours => (float)TimezoneOffset.TotalHours;
-
-    public static string TimezoneISOString => Strings.MakeISOTimezone(TimezoneOffset);
 
     public static float DiagonalInches => (float)(s_DiagonalInches ?? (s_DiagonalInches = CalcScreenDiagonalInches()));
 
@@ -89,7 +92,11 @@ namespace Ore
 
     public static bool Is64Bit => ABI == ABIArch.ARM64 || s_ABIArch == ABIArch.x86_64;
 
+    public static int ScreenRefreshHz => (int)(s_ScreenRefreshHz ?? (s_ScreenRefreshHz = Screen.currentResolution.refreshRate.AtLeast(30)));
+
     public static ABIArch ABI => (ABIArch)(s_ABIArch ?? (s_ABIArch = CalcABIArch()));
+
+    public static int OnboardRAM => SystemInfo.systemMemorySize; // MB, mainly to see this in the debug JSON
 
 
     public static int CalcRAMUsageMiB()
@@ -112,13 +119,17 @@ namespace Ore
         try
         {
           var value = property.GetValue(null);
-          if (value is TimeSpan span)
+          if (property.PropertyType.IsPrimitive)
           {
-            json[property.Name] = new JValue(span.Ticks);
+            json[property.Name] = new JValue(value);
+          }
+          else if (value is TimeSpan span)
+          {
+            json[property.Name] = new JValue(span);
           }
           else
           {
-            json[property.Name] = new JValue(value?.ToString());
+            json[property.Name] = value?.ToString();
           }
         }
         catch (System.Exception e)
@@ -128,65 +139,60 @@ namespace Ore
         }
       }
 
+      json["RAMUsageMiB"]     = CalcRAMUsageMiB();
+      json["RAMUsagePercent"] = CalcRAMUsagePercent();
+
       return json.ToString(prettyPrint ? Formatting.Indented : Formatting.None);
     }
 
-  #if UNITY_EDITOR
-
+    #if UNITY_EDITOR
     [UnityEditor.MenuItem("Ore/Log/DeviceSpy (JSON)")]
     private static void Menu_LogJSON()
     {
-      Orator.Log(ToJSON(prettyPrint: true));
+      Orator.Log($"\"{nameof(DeviceSpy)}\": {ToJSON(prettyPrint: true)}");
     }
+    #endif // UNITY_EDITOR
 
-  #endif // UNITY_EDITOR
+  #endregion Public section
 
 
-#region Private section
+  #region Private section
+
+    private static SerialVersion s_OSVersion       = null;
+    private static string        s_Brand           = null;
+    private static string        s_Model           = null;
+    private static string        s_Browser         = null;
+    private static string        s_Carrier         = null;
+    private static string        s_LangISO6391     = null;
+    private static string        s_RegionISO3166a2 = null;
+    private static TimeSpan?     s_TimezoneOffset  = null;
+    private static float?        s_DiagonalInches  = null;
+    private static float?        s_AspectRatio     = null;
+    private static bool?         s_IsTablet        = null;
+    private static bool?         s_IsBlueStacks    = null;
+    private static int?          s_ScreenRefreshHz = null;
+    private static ABIArch?      s_ABIArch         = null;
 
     private const long BYTES_PER_MIB = 1048576L; // = pow(2,20)
     private const long BYTES_PER_MB  = 1000000L;
-
-    private static VersionID  s_OSVersion       = null;
-    private static string     s_Brand           = null;
-    private static string     s_Model           = null;
-    private static string     s_Browser         = null;
-    private static string     s_Carrier         = null;
-    private static string     s_LangISO6391     = null;
-    private static TimeSpan?  s_TimezoneOffset  = null;
-    private static float?     s_DiagonalInches  = null;
-    private static float?     s_AspectRatio     = null;
-    private static bool?      s_IsTablet        = null;
-    private static bool?      s_IsBlueStacks    = null;
-    private static ABIArch?   s_ABIArch         = null;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static long CalcRAMUsageBytes()
     {
       #if UNITY_2020_1_OR_NEWER
-      return UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong();
+        return UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong();
       #else
-      return System.GC.GetTotalMemory(forceFullCollection: false);
+        return System.GC.GetTotalMemory(forceFullCollection: false);
       #endif
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static TimeSpan CalcTimezoneOffset()
-    {
-      // TODO there might be a better (100x faster) Java API to call for Android ~
-      return System.TimeZoneInfo.Local.GetUtcOffset(System.DateTime.Now);
     }
 
 
     private static (string make, string model) CalcMakeModel()
     {
       #if UNITY_IOS
-
         return ("Apple", SystemInfo.deviceModel);
-
       #else
-
         string makemodel = SystemInfo.deviceModel;
 
         int split = makemodel.IndexOfAny(new []{ ' ', '-' });
@@ -194,7 +200,6 @@ namespace Ore
           return (makemodel, makemodel);
 
         return (makemodel.Remove(split), makemodel.Substring(split + 1));
-
       #endif
     }
 
@@ -250,6 +255,20 @@ namespace Ore
       return iso6391;
     }
 
+    private static string CalcISO3166a2() // 2-letter region code
+    {
+      // TODO this is probably inaccurate or else slow to call on devices
+      return RegionInfo.CurrentRegion.TwoLetterISORegionName;
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static TimeSpan CalcTimezoneOffset()
+    {
+      // TODO there might be a better (100x faster) Java API to call for Android ~
+      return System.TimeZoneInfo.Local.GetUtcOffset(System.DateTime.Now);
+    }
+
 
     private static float CalcScreenDiagonalInches()
     {
@@ -268,15 +287,11 @@ namespace Ore
 
     private static bool CalcIsTablet()
     {
-    #if AD_MEDIATION_MAX
-
-      return MaxSdkUtils.IsTablet();
-
-    #else
-
-      return Model.Contains("iPad") || CalcIsTabletByScreenSize();
-
-    #endif
+      #if AD_MEDIATION_MAX
+        return MaxSdkUtils.IsTablet();
+      #else
+        return Model.Contains("iPad") || CalcIsTabletByScreenSize();
+      #endif
     }
 
     private static bool CalcIsTabletByScreenSize()
@@ -288,26 +303,26 @@ namespace Ore
 
     private static bool CalcIsBlueStacks()
     {
-#if !UNITY_EDITOR && UNITY_ANDROID
-      foreach (string dir in new string[]{  "/sdcard/windows/BstSharedFolder",
-                                            "/mnt/windows/BstSharedFolder" })
-      {
-        if (System.IO.Directory.Exists(dir))
-          return true;
-      }
-#endif
+      #if !UNITY_EDITOR && UNITY_ANDROID
+        foreach (string dir in new string[]{  "/sdcard/windows/BstSharedFolder",
+                                              "/mnt/windows/BstSharedFolder" })
+        {
+          if (System.IO.Directory.Exists(dir))
+            return true;
+        }
+      #endif
 
       return false;
     }
 
     private static ABIArch CalcABIArch()
     {
-#if !UNITY_EDITOR && UNITY_IOS // TODO iOS needs to be tested
-      if (System.Environment.Is64BitOperatingSystem)
-        return ABIArch.ARM64;
-      else
-        return ABIArch.ARM;
-#endif // UNITY_IOS
+      #if !UNITY_EDITOR && UNITY_IOS // TODO iOS needs to be tested
+        if (System.Environment.Is64BitOperatingSystem)
+          return ABIArch.ARM64;
+        else
+          return ABIArch.ARM;
+      #endif // UNITY_IOS
 
       string type = SystemInfo.processorType;
 
@@ -327,9 +342,9 @@ namespace Ore
     // TODO: CalcIsChromeOS() - https://docs.unity3d.com/ScriptReference/Android.AndroidDevice-hardwareType.html
 
 
-#region Native Platform Bindings
+  #region Native Platform Bindings
 
-  #if UNITY_ANDROID
+    #if UNITY_ANDROID
 
     private static string CalcAndroidBrowser()
     {
@@ -436,15 +451,15 @@ namespace Ore
       return string.Empty;
     }
 
-  #elif UNITY_IOS
+    #elif UNITY_IOS
 
-  #elif UNITY_WEBGL
+    #elif UNITY_WEBGL
 
-  #endif
+    #endif
 
-#endregion (Native Platform Bindings)
+  #endregion (Native Platform Bindings)
 
-#endregion Private section
+  #endregion Private section
 
   } // end class DeviceSpy
 

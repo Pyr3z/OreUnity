@@ -12,11 +12,11 @@ using UnityEditor;
 
 namespace Ore.Editor
 {
-  [CustomPropertyDrawer(typeof(VersionID))]
+  [CustomPropertyDrawer(typeof(SerialVersion))]
   public class VersionDrawer : PropertyDrawer
   {
-    private VersionID m_ScratchVer = new VersionID(null);
-    private List<(string str, int idx)> m_Parts = new List<(string str, int idx)>();
+    private readonly SerialVersion m_ScratchVer = new SerialVersion();
+    private readonly List<(string str, int idx)> m_Parts = new List<(string str, int idx)>();
 
     private const int MAX_SPLIT_COMPONENTS = 5;
 
@@ -84,7 +84,7 @@ namespace Ore.Editor
         {
           strb.Append(part);
           if (idx >= 0 && idx < ilen - 1)
-            strb.Append(VersionID.SEPARATOR);
+            strb.Append(SerialVersion.SEPARATOR);
         }
 
         m_ScratchVer.Deserialize(strb.ToString());
