@@ -146,17 +146,20 @@ namespace Ore
     public static int CurrentRAMUsageMiB()
     {
       #if UNITY_2020_1_OR_NEWER
-      return (int)(UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / 1048576L);
+      return (int)(UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / BYTES_PER_MIB);
       #else
-      return (int)(System.GC.GetTotalMemory(false) / 1048576L);
+      return (int)(System.GC.GetTotalMemory(false) / BYTES_PER_MIB);
       #endif
     }
 
     public static float CurrentRAMUsagePercent()
     {
-      return (float)CurrentRAMUsageMiB() / SystemInfo.systemMemorySize;
+      return (float)UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / BYTES_PER_MB / SystemInfo.systemMemorySize.AtLeast(1);
     }
 
+
+    private const long BYTES_PER_MIB = 1048576L; // = pow(2,20)
+    private const long BYTES_PER_MB  = 1000000L;
 
     private static VersionID  s_OSVersion       = null;
     private static string     s_Brand           = null;
