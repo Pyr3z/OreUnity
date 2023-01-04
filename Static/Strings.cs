@@ -9,7 +9,7 @@
 
 using System.Collections.Generic;
 using JetBrains.Annotations;
-
+using UnityEngine;
 using StringBuilder = System.Text.StringBuilder;
 using Encoding      = System.Text.Encoding;
 
@@ -105,6 +105,103 @@ namespace Ore
     {
       return $"{(offset.Ticks < 0 ? '-' : '+')}{offset:hhmm}";
     }
+
+    public static string MakeISO6391(SystemLanguage lang)
+    {
+switch (lang)
+      {
+        case SystemLanguage.Afrikaans:
+          return "AF";
+        case SystemLanguage.Arabic:
+          return "AR";
+        case SystemLanguage.Basque:
+          return "EU";
+        case SystemLanguage.Belarusian:
+          return "BY";
+        case SystemLanguage.Bulgarian:
+          return "BG";
+        case SystemLanguage.Catalan:
+          return "CA";
+        case SystemLanguage.Chinese:
+          return "ZH";
+        case SystemLanguage.Czech:
+          return "CS";
+        case SystemLanguage.Danish:
+          return "DA";
+        case SystemLanguage.Dutch:
+          return "NL";
+        case SystemLanguage.English:
+          return "EN";
+        case SystemLanguage.Estonian:
+          return "ET";
+        case SystemLanguage.Faroese:
+          return "FO";
+        case SystemLanguage.Finnish:
+          return "FI"; // WARNING: has a collision with tagalog ("TL")
+        case SystemLanguage.French:
+          return "FR";
+        case SystemLanguage.German:
+          return "DE";
+        case SystemLanguage.Greek:
+          return "EL";
+        case SystemLanguage.Hebrew:
+          return "HE";
+        case SystemLanguage.Hungarian:
+          return "HU";
+        case SystemLanguage.Icelandic:
+          return "IS";
+        case SystemLanguage.Indonesian:
+          return "ID";
+        case SystemLanguage.Italian:
+          return "IT";
+        case SystemLanguage.Japanese:
+          return "JA";
+        case SystemLanguage.Korean:
+          return "KO";
+        case SystemLanguage.Latvian:
+          return "LV";
+        case SystemLanguage.Lithuanian:
+          return "LT";
+        case SystemLanguage.Norwegian:
+          return "NB";
+        case SystemLanguage.Polish:
+          return "PL";
+        case SystemLanguage.Portuguese:
+          return "PT"; // TODO differentiate between PT-BR?
+        case SystemLanguage.Romanian:
+          return "RO";
+        case SystemLanguage.Russian:
+          return "RU";
+        case SystemLanguage.SerboCroatian:
+          return "SH";
+        case SystemLanguage.Slovak:
+          return "SK";
+        case SystemLanguage.Slovenian:
+          return "SL";
+        case SystemLanguage.Spanish:
+          return "ES";
+        case SystemLanguage.Swedish:
+          return "SV";
+        case SystemLanguage.Thai:
+          return "TH";
+        case SystemLanguage.Turkish:
+          return "TR";
+        case SystemLanguage.Ukrainian:
+          return "UK";
+        case SystemLanguage.Vietnamese:
+          return "VI";
+        case SystemLanguage.ChineseSimplified:
+          return "ZH-CN";
+        case SystemLanguage.ChineseTraditional:
+          return "ZH-TW";
+
+        case SystemLanguage.Unknown:
+        default:
+          // caller can decide what a good default value is if empty.
+          return string.Empty;
+      }
+    }
+
 
     public static string ExpandCamelCase([CanBeNull] this string str)
     {

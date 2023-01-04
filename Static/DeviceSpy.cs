@@ -71,7 +71,7 @@ namespace Ore
 
     public static string Carrier => s_Carrier ?? (s_Carrier = CalcCarrier());
 
-    public static string LanguageISO6391 => s_LangISO6391 ?? (s_LangISO6391 = ToISO6391(Application.systemLanguage));
+    public static string LanguageISO6391 => s_LangISO6391 ?? (s_LangISO6391 = CalcISO6391());
 
     public static TimeSpan TimezoneOffset => (TimeSpan)(s_TimezoneOffset ?? (s_TimezoneOffset = CalcTimezoneOffset()));
 
@@ -181,25 +181,21 @@ namespace Ore
 
     private static (string make, string model) CalcMakeModel()
     {
-#if UNITY_EDITOR
+      #if UNITY_IOS
 
-      return ("UNITY_EDITOR", SystemInfo.deviceModel);
+        return ("Apple", SystemInfo.deviceModel);
 
-#elif UNITY_IOS
+      #else
 
-      return ("Apple", SystemInfo.deviceModel);
+        string makemodel = SystemInfo.deviceModel;
 
-#else
+        int split = makemodel.IndexOfAny(new []{ ' ', '-' });
+        if (split < 0)
+          return (makemodel, makemodel);
 
-      string makemodel = SystemInfo.deviceModel;
+        return (makemodel.Remove(split), makemodel.Substring(split + 1));
 
-      int split = makemodel.IndexOfAny(new []{ ' ', '-' });
-      if (split < 0)
-        return (makemodel, makemodel);
-
-      return (makemodel.Remove(split), makemodel.Substring(split + 1));
-
-#endif
+      #endif
     }
 
     private static string CalcBrowserName()
@@ -228,108 +224,30 @@ namespace Ore
       #endif
     }
 
-    private static string ToISO6391(SystemLanguage lang) // TODO refactor to new extension class
+    private static string CalcISO6391() // TODO refactor to new extension class
     {
-      switch (lang)
-      {
-        case SystemLanguage.Afrikaans:
-          return "AF";
-        case SystemLanguage.Arabic:
-          return "AR";
-        case SystemLanguage.Basque:
-          return "EU";
-        case SystemLanguage.Belarusian:
-          return "BY";
-        case SystemLanguage.Bulgarian:
-          return "BG";
-        case SystemLanguage.Catalan:
-          return "CA";
-        case SystemLanguage.Chinese:
-          return "ZH";
-        case SystemLanguage.Czech:
-          return "CS";
-        case SystemLanguage.Danish:
-          return "DA";
-        case SystemLanguage.Dutch:
-          return "NL";
-        case SystemLanguage.English:
-          return "EN";
-        case SystemLanguage.Estonian:
-          return "ET";
-        case SystemLanguage.Faroese:
-          return "FO";
-        case SystemLanguage.Finnish:
-          #if UNITY_ANDROID
-            if (CalcAndroidISO6392() == "FIL")
-              return "TL"; // tagalog
-          #endif
-          return "FI";
-        case SystemLanguage.French:
-          return "FR";
-        case SystemLanguage.German:
-          return "DE";
-        case SystemLanguage.Greek:
-          return "EL";
-        case SystemLanguage.Hebrew:
-          return "HE";
-        case SystemLanguage.Hungarian:
-          return "HU";
-        case SystemLanguage.Icelandic:
-          return "IS";
-        case SystemLanguage.Indonesian:
-          return "ID";
-        case SystemLanguage.Italian:
-          return "IT";
-        case SystemLanguage.Japanese:
-          return "JA";
-        case SystemLanguage.Korean:
-          return "KO";
-        case SystemLanguage.Latvian:
-          return "LV";
-        case SystemLanguage.Lithuanian:
-          return "LT";
-        case SystemLanguage.Norwegian:
-          return "NB";
-        case SystemLanguage.Polish:
-          return "PL";
-        case SystemLanguage.Portuguese:
-          return "PT"; // TODO differentiate between PT-BR?
-        case SystemLanguage.Romanian:
-          return "RO";
-        case SystemLanguage.Russian:
-          return "RU";
-        case SystemLanguage.SerboCroatian:
-          return "SH";
-        case SystemLanguage.Slovak:
-          return "SK";
-        case SystemLanguage.Slovenian:
-          return "SL";
-        case SystemLanguage.Spanish:
-          return "ES";
-        case SystemLanguage.Swedish:
-          return "SV";
-        case SystemLanguage.Thai:
-          return "TH";
-        case SystemLanguage.Turkish:
-          return "TR";
-        case SystemLanguage.Ukrainian:
-          return "UK";
-        case SystemLanguage.Vietnamese:
-          return "VI";
-        case SystemLanguage.ChineseSimplified:
-          return "ZH-CN";
-        case SystemLanguage.ChineseTraditional:
-          return "ZH-TW";
+      string iso6391 = Strings.MakeISO6391(Application.systemLanguage);
 
-        case SystemLanguage.Unknown:
-        default:
-          // caller can decide what a good default value is if empty.
-          #if UNITY_ANDROID
-            return CalcAndroidISO6391();
-          #else // TODO other platforms
-            return string.Empty;
-          #endif
+      if (iso6391.IsEmpty())
+      {
+        #if UNITY_ANDROID
+          return CalcAndroidISO6391();
+        #else // TODO other platforms
+          return "";
+        #endif
       }
+
+      // handle Tagalog ("TL") collison with 2-letter ISO code for Finnish
+      if (iso6391 == "FI")
+      {
+        #if UNITY_ANDROID
+          if (CalcAndroidISO6392() == "FIL") // FIL for Filipino, sometimes aggregated as Tagalog
+            return "TL";
+        #else // TODO other platforms
+        #endif
+      }
+
+      return iso6391;
     }
 
 
