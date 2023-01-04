@@ -360,7 +360,7 @@ namespace Ore
     internal const string DEFAULT_ASSERT_MSG = "<b>Assertion failed!</b>";
     internal const LogOption DEFAULT_ASSERT_LOGOPT = LogOption.None;
 
-    internal const bool DEFAULT_ASSERT_EXCEPTIONS = false;
+    internal const bool DEFAULT_ASSERT_EXCEPTIONS = true;
     internal const bool DEFAULT_ASSERTIONS_IN_RELEASE = false;
 
     internal const int DEFAULT_LOGONCE_MEMORY_SIZE = 256;
