@@ -4,9 +4,11 @@
 **/
 
 using JetBrains.Annotations;
-using UnityEngine;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+using UnityEngine;
 
 using TimeSpan = System.TimeSpan;
 
@@ -71,11 +73,11 @@ namespace Ore
 
     public static string LanguageISO6391 => s_LangISO6391 ?? (s_LangISO6391 = ToISO6391(Application.systemLanguage));
 
-    public static TimeSpan TimezoneOffset => (TimeSpan)(s_TimezoneOffset ?? (s_TimezoneOffset = System.TimeZoneInfo.Local.GetUtcOffset(System.DateTime.Now)));
-
-    public static string TimezoneUTCString => TimezoneOffset.ToString(@"+hhmm", Strings.InvariantFormatter);
+    public static TimeSpan TimezoneOffset => (TimeSpan)(s_TimezoneOffset ?? (s_TimezoneOffset = CalcTimezoneOffset()));
 
     public static float TimezoneOffsetHours => (float)TimezoneOffset.TotalHours;
+
+    public static string TimezoneISOString => Strings.MakeISOTimezone(TimezoneOffset);
 
     public static float DiagonalInches => (float)(s_DiagonalInches ?? (s_DiagonalInches = CalcScreenDiagonalInches()));
 
@@ -90,27 +92,57 @@ namespace Ore
     public static ABIArch ABI => (ABIArch)(s_ABIArch ?? (s_ABIArch = CalcABIArch()));
 
 
-    public static int CurrentRAMUsageMiB()
+    public static int CalcRAMUsageMiB()
     {
       return (int)(CalcRAMUsageBytes() / BYTES_PER_MIB);
     }
 
-    public static float CurrentRAMUsagePercent()
+    public static float CalcRAMUsagePercent()
     {
       return (float)CalcRAMUsageBytes() / BYTES_PER_MB / SystemInfo.systemMemorySize.AtLeast(1);
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static long CalcRAMUsageBytes()
+    public static string ToJSON(bool prettyPrint)
     {
-      #if UNITY_2020_1_OR_NEWER
-      return UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong();
-      #else
-      return System.GC.GetTotalMemory(forceFullCollection: false);
-      #endif
+      var json = new JObject();
+
+      foreach (var property in typeof(DeviceSpy).GetProperties(TypeMembers.STATIC))
+      {
+        try
+        {
+          var value = property.GetValue(null);
+          if (value is TimeSpan span)
+          {
+            json[property.Name] = new JValue(span.Ticks);
+          }
+          else
+          {
+            json[property.Name] = new JValue(value?.ToString());
+          }
+        }
+        catch (System.Exception e)
+        {
+          Orator.NFE(e);
+          json[property.Name] = JValue.CreateNull();
+        }
+      }
+
+      return json.ToString(prettyPrint ? Formatting.Indented : Formatting.None);
     }
 
+  #if UNITY_EDITOR
+
+    [UnityEditor.MenuItem("Ore/Log/DeviceSpy (JSON)")]
+    private static void Menu_LogJSON()
+    {
+      Orator.Log(ToJSON(prettyPrint: true));
+    }
+
+  #endif // UNITY_EDITOR
+
+
+#region Private section
 
     private const long BYTES_PER_MIB = 1048576L; // = pow(2,20)
     private const long BYTES_PER_MB  = 1000000L;
@@ -127,6 +159,24 @@ namespace Ore
     private static bool?      s_IsTablet        = null;
     private static bool?      s_IsBlueStacks    = null;
     private static ABIArch?   s_ABIArch         = null;
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static long CalcRAMUsageBytes()
+    {
+      #if UNITY_2020_1_OR_NEWER
+      return UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong();
+      #else
+      return System.GC.GetTotalMemory(forceFullCollection: false);
+      #endif
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static TimeSpan CalcTimezoneOffset()
+    {
+      // TODO there might be a better (100x faster) Java API to call for Android ~
+      return System.TimeZoneInfo.Local.GetUtcOffset(System.DateTime.Now);
+    }
 
 
     private static (string make, string model) CalcMakeModel()
@@ -475,6 +525,8 @@ namespace Ore
   #endif
 
 #endregion (Native Platform Bindings)
+
+#endregion Private section
 
   } // end class DeviceSpy
 

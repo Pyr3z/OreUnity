@@ -12,9 +12,13 @@ using JetBrains.Annotations;
 
 using StringBuilder = System.Text.StringBuilder;
 using Encoding      = System.Text.Encoding;
+
 using Convert       = System.Convert;
 using IFormatter    = System.IFormatProvider;
 using IConvertible  = System.IConvertible;
+
+using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
+using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
 
 
 namespace Ore
@@ -34,6 +38,7 @@ namespace Ore
 
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsEmpty(this string str)
     {
       return str is null || str.Length == 0;
@@ -86,13 +91,19 @@ namespace Ore
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string MakeGUID()
     {
-#if UNITY_EDITOR
+      #if UNITY_EDITOR
       return UnityEditor.GUID.Generate().ToString();
-#else
+      #else
       return System.Guid.NewGuid().ToString("N");
-#endif
+      #endif
+    }
+
+    public static string MakeISOTimezone(System.TimeSpan offset)
+    {
+      return $"{(offset.Ticks < 0 ? '-' : '+')}{offset:hhmm}";
     }
 
     public static string ExpandCamelCase([CanBeNull] this string str)
@@ -107,8 +118,8 @@ namespace Ore
         // handles the forms "m_Variable", "s_StaticStuff" ...
         if (str.Length == 2)
           return str;
-        else
-          i = 2;
+
+        i = 2;
       }
       else if (char.IsLower(str[0]) && char.IsUpper(str[1]))
       {
@@ -132,7 +143,9 @@ namespace Ore
         c = str[i];
 
         if (char.IsLower(c) || char.IsDigit(c))
+        {
           in_word = true;
+        }
         else if (in_word && (char.IsUpper(c) || c == '_'))
         {
           bob.Append(' ');
@@ -140,7 +153,9 @@ namespace Ore
         }
 
         if (char.IsLetterOrDigit(c))
+        {
           bob.Append(c);
+        }
 
         ++i;
       }
@@ -184,9 +199,10 @@ namespace Ore
       foreach (char c in str)
       {
         if (char.IsDigit(c))
+        {
           ++count;
-        else if (c == '.') { } // no-op
-        else if (count > 0)
+        }
+        else if (c != '.' && count > 0)
         {
           if (max < count)
             max = count;
