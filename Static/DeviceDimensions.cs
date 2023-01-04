@@ -87,7 +87,7 @@ namespace Ore
           return (float)SystemInfo.processorFrequency;
 
         case DeviceDimension.Timezone:
-          return DeviceSpy.TimezoneOffset;
+          return DeviceSpy.TimezoneUTCString;
 
         /* end Continuous dimensions */
 

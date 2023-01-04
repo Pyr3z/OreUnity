@@ -6,6 +6,10 @@
 using JetBrains.Annotations;
 using UnityEngine;
 
+using Newtonsoft.Json;
+
+using TimeSpan = System.TimeSpan;
+
 using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
 using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
 
@@ -27,6 +31,8 @@ namespace Ore
       ARMv8   = ARM64,
     }
 
+
+    // ReSharper disable ConvertToNullCoalescingCompoundAssignment
 
     public static VersionID OSVersion
     {
@@ -59,90 +65,29 @@ namespace Ore
       }
     }
 
-    // ReSharper disable once ConvertToNullCoalescingCompoundAssignment
     public static string Browser => s_Browser ?? (s_Browser = CalcBrowserName());
 
-    // ReSharper disable once ConvertToNullCoalescingCompoundAssignment
     public static string Carrier => s_Carrier ?? (s_Carrier = CalcCarrier());
 
-    // ReSharper disable once ConvertToNullCoalescingCompoundAssignment
     public static string LanguageISO6391 => s_LangISO6391 ?? (s_LangISO6391 = ToISO6391(Application.systemLanguage));
 
-    public static string TimezoneUTCString
-    {
-      get
-      {
-        if (s_TimezoneUTCStr is null)
-          (s_TimezoneOffset, s_TimezoneUTCStr) = CalcTimezoneUTCOffset();
-        return s_TimezoneUTCStr;
-      }
-    }
+    public static TimeSpan TimezoneOffset => (TimeSpan)(s_TimezoneOffset ?? (s_TimezoneOffset = System.TimeZoneInfo.Local.GetUtcOffset(System.DateTime.Now)));
 
-    public static float TimezoneOffset
-    {
-      get
-      {
-        if (s_TimezoneOffset is null)
-          (s_TimezoneOffset, s_TimezoneUTCStr) = CalcTimezoneUTCOffset();
-        return (float)s_TimezoneOffset;
-      }
-    }
+    public static string TimezoneUTCString => TimezoneOffset.ToString(@"+hhmm", Strings.InvariantFormatter);
 
-    public static float DiagonalInches
-    {
-      get
-      {
-        // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
-        if (s_DiagonalInches is null)
-          s_DiagonalInches = CalcScreenDiagonalInches();
-        return (float)s_DiagonalInches;
-      }
-    }
+    public static float TimezoneOffsetHours => (float)TimezoneOffset.TotalHours;
 
-    public static float AspectRatio
-    {
-      get
-      {
-        // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
-        if (s_AspectRatio is null)
-          s_AspectRatio = CalcAspectRatio();
-        return (float)s_AspectRatio;
-      }
-    }
+    public static float DiagonalInches => (float)(s_DiagonalInches ?? (s_DiagonalInches = CalcScreenDiagonalInches()));
 
-    public static bool IsTablet
-    {
-      get
-      {
-        // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
-        if (s_IsTablet is null)
-          s_IsTablet = CalcIsTablet();
-        return (bool)s_IsTablet;
-      }
-    }
+    public static float AspectRatio => (float)(s_AspectRatio ?? (s_AspectRatio = CalcAspectRatio()));
 
-    public static bool IsBlueStacks
-    {
-      get
-      {
-        // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
-        if (s_IsBlueStacks is null)
-          s_IsBlueStacks = CalcIsBlueStacks();
-        return (bool)s_IsBlueStacks;
-      }
-    }
+    public static bool IsTablet => (bool)(s_IsTablet ?? (s_IsTablet = CalcIsTablet()));
+
+    public static bool IsBlueStacks => (bool)(s_IsBlueStacks ?? (s_IsBlueStacks = CalcIsBlueStacks()));
 
     public static bool Is64Bit => ABI == ABIArch.ARM64 || s_ABIArch == ABIArch.x86_64;
-    public static ABIArch ABI
-    {
-      get
-      {
-        // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
-        if (s_ABIArch is null)
-          s_ABIArch = CalcABIArch();
-        return (ABIArch)s_ABIArch;
-      }
-    }
+
+    public static ABIArch ABI => (ABIArch)(s_ABIArch ?? (s_ABIArch = CalcABIArch()));
 
 
     public static int CurrentRAMUsageMiB()
@@ -176,8 +121,7 @@ namespace Ore
     private static string     s_Browser         = null;
     private static string     s_Carrier         = null;
     private static string     s_LangISO6391     = null;
-    private static string     s_TimezoneUTCStr  = null;
-    private static float?     s_TimezoneOffset  = null;
+    private static TimeSpan?  s_TimezoneOffset  = null;
     private static float?     s_DiagonalInches  = null;
     private static float?     s_AspectRatio     = null;
     private static bool?      s_IsTablet        = null;
@@ -338,11 +282,6 @@ namespace Ore
       }
     }
 
-    private static (float off, string str) CalcTimezoneUTCOffset()
-    {
-      var offset = System.TimeZoneInfo.Local.GetUtcOffset(System.DateTime.Now);
-      return ((float)offset.TotalHours, $"{(offset.Hours <= 0 ? "" : "+")}{offset.Hours:00}{offset.Minutes:00}");
-    }
 
     private static float CalcScreenDiagonalInches()
     {
