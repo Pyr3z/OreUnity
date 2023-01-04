@@ -3,9 +3,11 @@
  *  @date     2022-01-20
 **/
 
-using System;
 using JetBrains.Annotations;
 using UnityEngine;
+
+using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
+using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
 
 
 namespace Ore
@@ -145,16 +147,23 @@ namespace Ore
 
     public static int CurrentRAMUsageMiB()
     {
-      #if UNITY_2020_1_OR_NEWER
-      return (int)(UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / BYTES_PER_MIB);
-      #else
-      return (int)(System.GC.GetTotalMemory(false) / BYTES_PER_MIB);
-      #endif
+      return (int)(CalcRAMUsageBytes() / BYTES_PER_MIB);
     }
 
     public static float CurrentRAMUsagePercent()
     {
-      return (float)UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / BYTES_PER_MB / SystemInfo.systemMemorySize.AtLeast(1);
+      return (float)CalcRAMUsageBytes() / BYTES_PER_MB / SystemInfo.systemMemorySize.AtLeast(1);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static long CalcRAMUsageBytes()
+    {
+      #if UNITY_2020_1_OR_NEWER
+      return UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong();
+      #else
+      return System.GC.GetTotalMemory(forceFullCollection: false);
+      #endif
     }
 
 
