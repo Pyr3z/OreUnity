@@ -9,8 +9,13 @@
 **/
 
 using JetBrains.Annotations;
-
+using UnityEngine;
 using IConvertible = System.IConvertible;
+
+using CultureInfo = System.Globalization.CultureInfo;
+
+using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
+using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
 
 
 namespace Ore
@@ -30,22 +35,65 @@ namespace Ore
     public const int MaxArray2DExtent = MaxArraySize / 2;
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CalcDigits(int self)
     {
       return self < 10 ? 1 : (int)System.Math.Log10(self - 1) + 1;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string MakeIndexPreformattedString(int size)
     {
       return $"[{{0,{CalcDigits(size)}}}]";
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int RandomIndex(int size)
+    {
+      // order of operations here is intentional.
+      return (int)(size * UnityEngine.Random.value - Floats.EPSILON);
+    }
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CalcExtent(int size)
+    {
+      return size < 0 ? CalcExtent(unchecked((uint)(-1 * size))) : CalcExtent((uint)size);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CalcExtent(uint size)
+    {
+      return size < 4u ? 1 : ((int)(size / 2)).AtMost(MaxArray2DExtent, warn: true);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int Compare(int lhs, int rhs)
+    {
+      // TODO test if inlining screws up use of this as a function object
+      return lhs - rhs;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ReverseCompare(int lhs, int rhs)
+    {
+      // TODO test if inlining screws up use of this as a function object
+      return rhs - lhs;
+    }
+
+
+  #region Extension methods
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static long Abs(this long self) // branchless!
     {
       long mask = self >> 63;
       return self + mask ^ mask;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Abs(this int self)
     {
       int mask = self >> 31;
@@ -53,26 +101,26 @@ namespace Ore
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Sign(this int self)
     {
-      if (self < 0)
-        return -1;
-      if (0 < self)
-        return +1;
-      return 0;
+      return self < 0 ? -1 : self > 0 ? +1 : 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int SignNoZero(this int self)
     {
       return self < 0 ? -1 : 1;
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int AtLeast(this int self, int min)
     {
       return self < min ? min : self;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int AtMost(this int self, int max)
     {
       return self > max ? max : self;
@@ -82,9 +130,9 @@ namespace Ore
     {
       if (self < min)
       {
-#if UNITY_ASSERTIONS
-        OAssert.False(warn, $"{self} < {min}");
-#endif
+        #if UNITY_ASSERTIONS
+          OAssert.False(warn, $"{self} < {min}");
+        #endif
         return min;
       }
 
@@ -95,9 +143,9 @@ namespace Ore
     {
       if (max < self)
       {
-#if UNITY_ASSERTIONS
-        OAssert.False(warn, $"{max} < {self}");
-#endif
+        #if UNITY_ASSERTIONS
+          OAssert.False(warn, $"{max} < {self}");
+        #endif
         return max;
       }
 
@@ -105,20 +153,20 @@ namespace Ore
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Clamp(this int self, int min, int max)
     {
       return self < min ? min : self > max ? max : self;
     }
 
 
-    public static int ClampIndex(this int idx, int size)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ClampIndex(this int idx, int sz)
     {
-      if (size == 0 || size <= idx)
-        return size - 1;
-
-      return idx;
+      return (sz == 0 || sz <= idx) ? sz - 1 : idx;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WrapIndex(this int i, int sz)
     {
       // the extra math here supports wrapping negative indices, so i = -1
@@ -127,213 +175,111 @@ namespace Ore
     }
 
 
-    public static int RandomIndex(int size)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsBetween(this long self, long minInclusive, long maxExclusive)
     {
-      // order of operations here is intentional.
-      return (int)(size * UnityEngine.Random.value - Floats.EPSILON);
+      return self >= minInclusive && self < maxExclusive;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsBetween(this int self, int minInclusive, int maxExclusive)
+    {
+      return self >= minInclusive && self < maxExclusive;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsBetween(this short self, short minInclusive, short maxExclusive)
+    {
+      return self >= minInclusive && self < maxExclusive;
     }
 
 
-    public static int CalcExtent(int size)
-    {
-      if (size < 0)
-        size *= -1;
-
-      if (size < 4)
-        return 1;
-      else
-        return (size / 2).AtMost(MaxArray2DExtent, warn: true);
-    }
-
-    public static int CalcExtent(uint size)
-    {
-      if (size < 4u)
-        return 1;
-      else
-        return ((int)(size / 2)).AtMost(MaxArray2DExtent, warn: true);
-    }
-
-
-    public static int Compare(int lhs, int rhs)
-    {
-      return lhs - rhs;
-    }
-
-    public static int FlipCompare(int lhs, int rhs)
-    {
-      return rhs - lhs;
-    }
-
-
-    public static bool HasFlag<TFlag>(this int self, TFlag flag)
-      where TFlag : unmanaged, IConvertible
-    {
-      // equivalent to Bitwise.HasAllBits()
-      int value = flag.ToInt32(null);
-      return (self & value) == value;
-    }
-
-
-    public static bool HasFlag<TFlag>(this long self, TFlag flag)
-      where TFlag : unmanaged, IConvertible
-    {
-      // equivalent to Bitwise.HasAllBits()
-      long value = flag.ToInt64(null);
-      return (self & value) == value;
-    }
-
-
-
-    public static long Mask<TFlag>(this long self, TFlag mask)
-      where TFlag : unmanaged, IConvertible
-    {
-      return self & mask.ToInt64(null);
-    }
-
-    public static int Mask<TFlag>(this int self, TFlag mask)
-      where TFlag : unmanaged, IConvertible
-    {
-      return self & mask.ToInt32(null);
-    }
-
-
-
-    public static void SetFlag<TFlag>(ref this long self, TFlag flag)
-      where TFlag : unmanaged, IConvertible
-    {
-      self |= flag.ToInt64(null);
-    }
-
-    public static void SetFlag<TFlag>(ref this int self, TFlag flag)
-      where TFlag : unmanaged, IConvertible
-    {
-      self |= flag.ToInt32(null);
-    }
-
-
-    public static void SetFlag<TFlag>(ref this long self, TFlag flag, bool set)
-      where TFlag : unmanaged, IConvertible
-    {
-      if (set)
-        self |= flag.ToInt64(null);
-      else
-        self &= ~flag.ToInt64(null);
-    }
-
-    public static void SetFlag<TFlag>(ref this int self, TFlag flag, bool set)
-      where TFlag : unmanaged, IConvertible
-    {
-      if (set)
-        self |= flag.ToInt32(null);
-      else
-        self &= ~flag.ToInt32(null);
-    }
-
-
-
-    public static void ClearFlag<TFlag>(ref this long self, TFlag flag)
-      where TFlag : unmanaged, IConvertible
-    {
-      self &= ~flag.ToInt64(null);
-    }
-
-    public static void ClearFlag<TFlag>(ref this int self, TFlag flag)
-      where TFlag : unmanaged, IConvertible
-    {
-      self &= ~flag.ToInt32(null);
-    }
-
-
-
-    public static void ToggleFlag<TFlag>(ref this long self, TFlag flag)
-      where TFlag : unmanaged, IConvertible
-    {
-      self ^= flag.ToInt64(null);
-    }
-
-    public static void ToggleFlag<TFlag>(ref this int self, TFlag flag)
-      where TFlag : unmanaged, IConvertible
-    {
-      self ^= flag.ToInt32(null);
-    }
-
-
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsEven(this long self)
     {
       return (0 < self) == ((self & 1) == 0);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsEven(this ulong self)
     {
       return (self & 1) == 0;
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsEven(this int self)
     {
       return (0 < self) == ((self & 1) == 0);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsEven(this uint self)
     {
       return (self & 1) == 0;
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsPrime(this int self)
+    {
+      return Primes.IsPrime(self);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsPrime(this uint self)
+    {
+      return Primes.IsPrime(self);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool ToBool(this int self)
     {
       return self != 0;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ToInt(this bool self)
     {
       return self ? 1 : 0;
     }
 
 
-    public static int ToBinary(this ulong self)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int Truncate(this ulong self)
     {
       return 0 < self ? 1 : 0;
     }
 
-    public static int ToBinary(this uint self)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int Truncate(this uint self)
     {
       return 0 < self ? 1 : 0;
     }
 
 
-    public static int ToBinary(this long self)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int Truncate(this long self)
     {
       return self == 0 ? 0 : 1;
     }
 
-    public static int ToBinary(this int self)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int Truncate(this int self)
     {
       return self == 0 ? 0 : 1;
     }
 
 
-
-    public static int NOT(this ulong self)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T Cast<T>(this IConvertible self)
+      where T : IConvertible
     {
-      return 0 < self ? 0 : 1;
+      return (T)self.ToType(typeof(T), CultureInfo.InvariantCulture);
     }
 
-    public static int NOT(this uint self)
-    {
-      return 0 < self ? 0 : 1;
-    }
-
-
-    public static int NOT(this long self)
-    {
-      return self == 0 ? 1 : 0;
-    }
-
-    public static int NOT(this int self)
-    {
-      return self == 0 ? 1 : 0;
-    }
+  #endregion Extension methods
 
   } // end static class Integers
 

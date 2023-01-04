@@ -45,26 +45,53 @@ public static class PrimesCorrectness
   [Test]
   public static void IsPrimeNoLookup([Values(200)] int n) // NoLookup should techically be axiomatic
   {
-    DoIsPrime(Primes.IsPrimeNoLookup, n);
+    DoIsPrime<int>(Primes.IsPrimeNoLookup, n);
   }
 
   [Test]
   public static void IsPrimeLookup([Values(200)] int n)
   {
-    DoIsPrime(Primes.IsPrimeLookup, n);
+    DoIsPrime<int>(Primes.IsPrimeLookup, n);
   }
 
-  private static void DoIsPrime(System.Func<int,bool> testFunc, int n)
+  [Test]
+  public static void IsLongPrime([Values(200)] int n)
   {
-    var knownprimes = Primes10K.GetTestValues(n, 0);
-    var knownnons   = Primes10K.GetTestValues(0, n);
+
+  }
+
+  private static void DoIsPrime<T>(System.Func<T,bool> testFunc, int n)
+    where T : System.IConvertible
+  {
+    var knownPrimes = Primes10K.GetTestValues(n, 0);
+    var nonPrimes   = Primes10K.GetTestValues(0, n);
 
     for (int i = 0; i < n; ++i)
     {
-      Assert.True(testFunc(knownprimes[i]), $"value={knownprimes[i]}");
-      Assert.False(testFunc(knownnons[i]),  $"value={knownnons[i]}");
+      Assert.True(testFunc(knownPrimes[i].Cast<T>()), $"value={knownPrimes[i]}");
+      Assert.False(testFunc(nonPrimes[i].Cast<T>()),  $"value={nonPrimes[i]}");
     }
   }
+
+  [Test]
+  public static void GetRandom([Values(200)] int n)
+  {
+    int i = n / 2;
+
+    while (i --> 0)
+    {
+      int rand = Primes.GetRandom();
+      Assert.True(Primes.IsPrime(rand));
+    }
+
+    i = n / 2;
+    while (i --> 0)
+    {
+      int rand = Primes.GetRandom(Random.Range(0, Primes.MaxValue), Random.Range(0, Primes.MaxValue));
+      Assert.True(Primes.IsPrime(rand));
+    }
+  }
+
 
   [Test]
   public static void Next()
@@ -116,6 +143,7 @@ public static class PrimesCorrectness
   {
     const float MAX_DIST_PER_DIGIT = 2.31f + 6.05f; // experimental avg+stdev calculated from Primes10K
 
+    Assert.AreEqual(2,     Primes.NearestTo(-1));
     Assert.AreEqual(7,     Primes.NearestTo(7));
     Assert.AreEqual(25229, Primes.NearestTo(25228));
     Assert.AreEqual(3617,  Primes.NearestTo(3615));
@@ -137,6 +165,13 @@ public static class PrimesCorrectness
 
       Assert.LessOrEqual(dist, threshold, $"distance between {value} and {prime}");
     }
+
+    int bigPrime = Primes.NearestTo(Primes.MaxSizePrime + 1);
+    Assert.True(Primes.IsPrime(bigPrime), "Primes.IsPrime(bigPrime)");
+    Assert.LessOrEqual(bigPrime, Primes.MaxValue, "bigPrime <= Primes.MaxValue");
+
+    bigPrime = Primes.NearestTo(Primes.MaxValue + 1);
+    Assert.AreEqual(Primes.MaxValue, bigPrime, "bigPrime == Primes.MaxValue");
   }
 
   [Test]
@@ -175,14 +210,10 @@ public static class PrimesCorrectness
     Debug.Log(bob.ToString());
   }
 
-  private static readonly int[] HASHPRIMES =
-  {
-    97, 193, 769
-  };
 
   [Test, Timeout(10000)]
   public static void FindGoodSizePrimes(
-    [ValueSource(nameof(HASHPRIMES))] int hashprime,
+    [Values(97, 193, 769)]       int   hashprime,
     [Values(1.1f, 1.15f, 1.19f)] float growFactor)
   {
     var bob = new System.Text.StringBuilder("static readonly int[] PRIMESIZES =\n{\n  ");
