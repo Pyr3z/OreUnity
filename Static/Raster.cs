@@ -131,7 +131,7 @@ namespace Ore
       private int xmin, xmax, ymin, ymax;
 
       private const float D  = 1f;
-      private const float D2 = Floats.SQRT2;
+      private const float D2 = Floats.Sqrt2;
 
 
       [PublicAPI]

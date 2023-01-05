@@ -9,10 +9,8 @@
 **/
 
 using JetBrains.Annotations;
-using UnityEngine;
-using IConvertible = System.IConvertible;
 
-using CultureInfo = System.Globalization.CultureInfo;
+using IConvertible = System.IConvertible;
 
 using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
 using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
@@ -51,7 +49,7 @@ namespace Ore
     public static int RandomIndex(int size)
     {
       // order of operations here is intentional.
-      return (int)(size * UnityEngine.Random.value - Floats.EPSILON);
+      return (int)(size * UnityEngine.Random.value - Floats.Epsilon);
     }
 
 
@@ -276,7 +274,7 @@ namespace Ore
     public static T Cast<T>(this IConvertible self)
       where T : IConvertible
     {
-      return (T)self.ToType(typeof(T), CultureInfo.InvariantCulture);
+      return (T)self.ToType(typeof(T), Strings.InvariantFormatter);
     }
 
   #endregion Extension methods

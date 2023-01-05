@@ -4,11 +4,17 @@
  *  @date   2022-06-01
 **/
 
-using System.Globalization;
+using JetBrains.Annotations;
+
 using UnityEngine;
 
-using TimeSpan = System.TimeSpan;
+using System.Globalization;
+
+using TimeSpan  = System.TimeSpan;
 using Predicate = System.Func<string, bool>;
+
+using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
+using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
 
 
 namespace Ore
@@ -16,6 +22,7 @@ namespace Ore
   /// <summary>
   /// Utilities for parsing strings into other data types.
   /// </summary>
+  [PublicAPI]
   public static class Parsing
   {
     public static readonly Color32 DefaultColor32 = Color.magenta;
@@ -27,11 +34,11 @@ namespace Ore
 
       if (where != null)
       {
-        foreach (var l in rawtext.Split(new char[] { '\n' }, System.StringSplitOptions.None))
+        foreach (var ln in rawtext.Split(new []{ '\n' }, System.StringSplitOptions.None))
         {
-          if (where(l))
+          if (where(ln))
           {
-            line = l;
+            line = ln;
             return true;
           }
         }
@@ -41,9 +48,16 @@ namespace Ore
     }
 
 
-    public static bool TryParseInt32(string str, out int n)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryParseFloat(string str, out float val)
     {
-      return int.TryParse(str, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out n);
+      return float.TryParse(str, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out val);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryParseInt32(string str, out int val)
+    {
+      return int.TryParse(str, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out val);
     }
 
 
@@ -52,11 +66,11 @@ namespace Ore
       idx = -1;
 
       int idx_start = str.IndexOf('[') + 1;
-      int idx_len = str.IndexOf(']', idx_start) - idx_start;
+      int idx_len   = str.IndexOf(']', idx_start) - idx_start;
 
       return idx_len > 0 &&
-              int.TryParse(str.Substring(idx_start, idx_len), out idx) &&
-              idx >= 0;
+             int.TryParse(str.Substring(idx_start, idx_len), out idx) &&
+             idx >= 0;
     }
 
 
@@ -90,7 +104,7 @@ namespace Ore
 
         if (char.IsDigit(c))
           break;
-        else if (negative)
+        if (negative)
           return false;
 
         if (c == '-')

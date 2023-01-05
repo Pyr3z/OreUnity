@@ -66,7 +66,7 @@ namespace Ore
     [PublicAPI]
     public void DestroySelf(float inSeconds = 0f)
     {
-      if (Application.isEditor && inSeconds.IsZero())
+      if (Application.isEditor && inSeconds.ApproximatelyZero())
         DestroyImmediate(this);
       else
         Destroy(this, inSeconds);
@@ -75,7 +75,7 @@ namespace Ore
     [PublicAPI]
     public void DestroyGameObject(float inSeconds = 0f)
     {
-      if (Application.isEditor && inSeconds.IsZero())
+      if (Application.isEditor && inSeconds.ApproximatelyZero())
         DestroyImmediate(gameObject);
       else
         Destroy(gameObject, inSeconds);
