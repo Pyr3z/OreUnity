@@ -2,7 +2,7 @@
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-06-01
  *
- *  @remark     Moved from Orator.Assert (which is backwards-maintained).
+ *  @remark     Moved from Orator.Assert, which was entirely removed in 2.12.
 **/
 
 using System.Collections.Generic;

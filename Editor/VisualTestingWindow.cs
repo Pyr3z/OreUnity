@@ -37,8 +37,12 @@ namespace Ore.Editor
       RasterLine,
       RasterCircle,
       ColorAnalysis,
-      HashMaps
+      HashMaps,
+      Hashing
     }
+
+
+    private static UnityEditor.Editor s_Editor;
 
 
     [SerializeField]
@@ -82,6 +86,10 @@ namespace Ore.Editor
     [SerializeField]
     private string[] m_StringValues;
 
+    [SerializeField]
+    private SerialVersion m_Version;
+
+
     [System.NonSerialized]
     private HashMap<object,string> m_HashMap = new HashMap<object,string>();
 
@@ -94,6 +102,12 @@ namespace Ore.Editor
       titleContent.text = "[Ore]";
       name              = "";
       minSize           = new Vector2(300f, 300f);
+
+      // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
+      if (s_Editor is null)
+      {
+        s_Editor = UnityEditor.Editor.CreateEditor(this);
+      }
     }
 
     private void OnEnable()
@@ -177,6 +191,7 @@ namespace Ore.Editor
         case Mode.RasterCircle:   RasterCircleInspector();  break;
         case Mode.ColorAnalysis:  ColorAnalysisInspector(); break;
         case Mode.HashMaps:       HashMapsInspector();      break;
+        case Mode.Hashing:        HashingInspector();      break;
 
         default:
           EGL.SelectableLabel("(there's nothing else here...)");
@@ -720,6 +735,20 @@ namespace Ore.Editor
       {
         // TODO draw jump graph
       }
+    }
+
+
+    private void HashingInspector()
+    {
+      // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
+      if (m_Version is null)
+      {
+        m_Version = DeviceSpy.OSVersion;
+      }
+
+      var verProp = s_Editor.serializedObject.FindProperty("m_Version");
+
+      EGL.PropertyField(verProp);
     }
 
   } // end class VisualTestingWindow

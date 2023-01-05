@@ -2,7 +2,7 @@
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2021-11-08
  *
- *  A faster, more forgiving, and Unity-serializable reimplementation of
+ *  A faster, more forgiving, and Unity-serializable reimplementation of vanilla
  *  C#'s System.Version.
 **/
 
@@ -69,44 +69,36 @@ namespace Ore
   #endregion Static section
 
 
-    public bool IsValid => !m_Vers.IsEmpty() && (m_OrderedHash & HASH_MASK_RESERVED) == 0;
-    public bool IsNone => m_String.IsEmpty();
-    public bool IsDeep => !(m_Vers is null) && m_Vers.Length > 3;
-
     public int Major => this[0];
     public int Minor => this[1];
     public int Patch => this[2];
-    public int TagNanoHash => m_OrderedHash & (int)HASH_MASK_EXTRA;
 
-    public int Length => m_Vers?.Length ?? 0;
-    public int this[int i]
-    {
-      get
-      {
-        int len = Length;
-        if (i == len)
-          return TagNanoHash;
-        if (len < i + 1)
-          return 0;
-        return m_Vers[i];
-      }
-    }
+    public bool IsValid => !m_String.IsEmpty() && !m_Vers.IsEmpty();
+    public bool IsNone  => m_String.IsEmpty();
+    public bool HasTag  => m_TagIndex > 0;
+
+    public string Tag => HasTag ? m_String.Substring(m_TagIndex) : string.Empty;
+
+    public int Length => m_Vers?.Length - HasTag.ToInt() ?? 0;
+      // if there is a tag, the final array element is its hash,
+      // which isn't treated as an official component of the version
+
+    public int this[int i] => m_Vers.IsEmpty() || !i.IsIndexTo(m_Vers) ? 0 : m_Vers[i];
 
 
-    internal const char SEPARATOR = '.';
+    internal const string SEPARATOR = ".";
     internal static readonly char[] TAG_DELIMS = { '-', '+', '/', 'f' };
     internal static readonly char[] TRIM_CHARS = { 'v', 'V', '(', ')', '-', '+' };
 
 
     [SerializeField, Delayed]
-    private string m_String;
-
+    private string m_String = string.Empty;
 
     [System.NonSerialized]
     private int[] m_Vers = System.Array.Empty<int>();
 
     [System.NonSerialized]
-    private int m_OrderedHash;
+    private int m_TagIndex = -1;
 
 
     public SerialVersion([CanBeNull] string ver)
@@ -117,57 +109,15 @@ namespace Ore
     public SerialVersion(params int[] versionParts)
     {
       if (versionParts.IsEmpty())
-      {
-        m_String      = string.Empty;
-        m_Vers        = System.Array.Empty<int>();
-        m_OrderedHash = 0;
         return;
-      }
 
-      m_String  = string.Join(".", versionParts);
-      m_Vers    = versionParts;
-
-      CalcOrderedHash(int.MaxValue);
+      m_String = string.Join(".", versionParts);
+      m_Vers   = versionParts;
     }
 
     public SerialVersion([CanBeNull] System.Version runtimeVersion)
     {
-      if (runtimeVersion is null || runtimeVersion.GetHashCode() == 0)
-      {
-        m_String      = string.Empty;
-        m_Vers        = System.Array.Empty<int>();
-        m_OrderedHash = 0;
-        return;
-      }
-
-      m_String = runtimeVersion.ToString();
-
-      var parts = new List<int>
-      {
-        runtimeVersion.Major,
-        runtimeVersion.Minor
-      };
-
-      if (runtimeVersion.Build >= 0)
-      {
-        parts.Add(runtimeVersion.Build);
-      }
-
-      if (runtimeVersion.MajorRevision >= 0)
-      {
-        parts.Add(runtimeVersion.MajorRevision);
-
-        if (runtimeVersion.MinorRevision >= 0)
-        {
-          parts.Add(runtimeVersion.MinorRevision);
-        }
-      }
-      else if (runtimeVersion.Revision >= 0)
-      {
-        parts.Add(runtimeVersion.Revision);
-      }
-
-      m_Vers = parts.ToArray();
+      SetFromSystemVersion(runtimeVersion);
     }
 
 
@@ -179,23 +129,25 @@ namespace Ore
 
     public override int GetHashCode()
     {
-      return m_OrderedHash;
+      int hihash = 0;
+
+      hihash |= (this[0] & 0xFF) << 24; // major, minor, and patch constitute an
+      hihash |= (this[1] & 0x0F) << 20; // ORDERED top 4 nybbles of the hash
+      hihash |= (this[2] & 0x0F) << 16;
+
+      // lower 4 nybbles = an unordered hash
+      int lohash = Hashing.DefaultHashPrime << 16; // init with high bits
+      for (int i = 3; i < (m_Vers?.Length ?? 0); ++i)
+      {
+        lohash = (int)Hashing.MixHashes(lohash, this[i]);
+      }
+
+      return hihash | (lohash & 0x0000FFFF);
     }
 
     public int CompareTo([CanBeNull] SerialVersion other)
     {
-      if (other is null)
-        return 1;
-
-      if (IsDeep || other.IsDeep)
-        return DeepCompareTo(other);
-
-      if (other.m_OrderedHash < m_OrderedHash)
-        return +1;
-      if (m_OrderedHash < other.m_OrderedHash)
-        return -1;
-
-      return 0;
+      return other is null ? +1 : DeepCompareTo(other);
     }
 
     public int DeepCompareTo([NotNull] SerialVersion other)
@@ -219,7 +171,7 @@ namespace Ore
         return !IsValid;
 
       if (other is SerialVersion vstr)
-        return Equals(vstr);
+        return DeepEquals(vstr);
 
       return other.ToString() == m_String;
     }
@@ -228,22 +180,9 @@ namespace Ore
       if (other is null)
         return !IsValid;
 
-      if (IsDeep || other.IsDeep)
-        return DeepEquals(other);
-
-      return other.m_OrderedHash == m_OrderedHash;
+      return DeepEquals(other);
     }
 
-    public bool DeepEquals([NotNull] SerialVersion other)
-    {
-      for (int i = 0, ilen = Length.AtLeast(other.Length); i < ilen; ++i)
-      {
-        if (this[i] != other[i])
-          return false;
-      }
-
-      return true;
-    }
 
 
     public static implicit operator string ([CanBeNull] SerialVersion vstr)
@@ -295,10 +234,9 @@ namespace Ore
     }
 
 
+    // ReSharper disable once CognitiveComplexity
     internal int SplitParts(/*out*/ List<(string str, int idx)> parts)
     {
-      // over-complexity warning
-
       parts.Clear();
 
       if (m_String.IsEmpty())
@@ -325,7 +263,7 @@ namespace Ore
       if (end < 0)
         end = m_String.Length;
 
-      var splits = m_String.Substring(start, end - start).Split(SEPARATOR);
+      var splits = m_String.Substring(start, end - start).Split(SEPARATOR[0]);
       for (int i = 0, ilen = splits.Length; i < ilen; ++i)
       {
         if (Parsing.TryParseInt32(splits[i], out _ ))
@@ -346,13 +284,54 @@ namespace Ore
       return parts.Count;
     }
 
+    internal void SetFromSystemVersion(System.Version sysVer)
+    {
+      m_TagIndex = -1;
+
+      if (sysVer is null || sysVer.GetHashCode() == 0)
+      {
+        m_String = string.Empty;
+        m_Vers = System.Array.Empty<int>();
+        return;
+      }
+
+      var parts = new List<int>
+      {
+        sysVer.Major,
+        sysVer.Minor
+      };
+
+      if (sysVer.Build >= 0)
+      {
+        parts.Add(sysVer.Build);
+      }
+
+      if (sysVer.MajorRevision >= 0)
+      {
+        parts.Add(sysVer.MajorRevision);
+
+        if (sysVer.MinorRevision >= 0)
+        {
+          parts.Add(sysVer.MinorRevision);
+        }
+      }
+      else if (sysVer.Revision >= 0)
+      {
+        parts.Add(sysVer.Revision);
+      }
+
+      m_String = string.Join(SEPARATOR, parts);
+      m_Vers   = parts.ToArray();
+    }
+
+    // ReSharper disable once CognitiveComplexity
     internal void Deserialize(string str)
     {
       if (str.IsEmpty() || (str = str.Trim(TRIM_CHARS)).IsEmpty())
       {
-        m_String = string.Empty;
-        m_Vers = System.Array.Empty<int>();
-        m_OrderedHash = 0;
+        m_String   = string.Empty;
+        m_Vers     = System.Array.Empty<int>();
+        m_TagIndex = -1;
         return;
       }
 
@@ -361,9 +340,9 @@ namespace Ore
       {
         if (++start == str.Length) // no numbers in this string
         {
-          m_String = str;
-          m_Vers = new []{ 1 };
-          m_OrderedHash = CalcOrderedHash(-1); // calcs a nanohash
+          m_String   = str;
+          m_Vers     = new []{ 1 };
+          m_TagIndex = -1;
           return;
         }
       }
@@ -371,70 +350,46 @@ namespace Ore
       m_String = str;
 
       int end = str.IndexOfAny(TAG_DELIMS, start);
-      if (end < 0)
+        // note: at this point the first char can't be a tag delim
+      if (end < 0 || end == str.Length-1)
+      {
+        m_TagIndex = -1;
         end = str.Length;
+      }
+      else
+      {
+        m_TagIndex = end + 1;
+      }
 
-      var splits = str.Substring(start, end - start).Split(SEPARATOR);
+      var splits = str.Substring(start, end - start).Split(SEPARATOR[0]);
+
       int len = splits.Length;
+      m_Vers = new int[len + (m_TagIndex > 0).ToInt()];
 
-      m_Vers = new int[len];
-
-      for (int i = 0; i < len; ++i)
+      int i = 0;
+      while (i < len)
       {
         if (!Parsing.TryParseInt32(splits[i], out m_Vers[i]))
           m_Vers[i] = -1;
+        ++ i;
       }
 
-      m_OrderedHash = CalcOrderedHash(end);
+      if (i == m_Vers.Length-1)
+      {
+        m_Vers[i] = str.Substring(m_TagIndex).GetHashCode();
+      }
     }
 
-    // internal: these masks document succinctly the byte layout of SerialVersion ordered hashes.
-    private const uint HASH_MASK_RESERVED = 0xF0000000;
-    private const uint HASH_MASK_MAJOR    = 0x0FF00000;
-    private const uint HASH_MASK_MINOR    = 0x000FF000;
-    private const uint HASH_MASK_PATCH    = 0x00000FF0;
-    private const uint HASH_MASK_EXTRA    = 0x0000000F;
 
-    private int CalcOrderedHash(int end)
+    private bool DeepEquals([NotNull] SerialVersion other)
     {
-      const int NYBBLE = 4;
-
-      int bitpos = 8 * sizeof(uint) - NYBBLE; // reserve top nybble
-      int len = m_Vers.Length;
-      int hash;
-
-      // use bottom 2 nybbles of major version as MSB
-      bitpos -= 2 * NYBBLE; // 20
-      hash = (m_Vers[0] & 0xFF) << bitpos;
-
-      // 2 nybbles for minor version
-      if (len > 1)
+      for (int i = 0, ilen = Length.AtLeast(other.Length); i < ilen; ++i)
       {
-        bitpos -= 2 * NYBBLE; // 12
-        hash |= (m_Vers[1] & 0xFF) << bitpos;
+        if (this[i] != other[i])
+          return false;
       }
 
-      // 2 nybbles for patch version
-      if (len > 2)
-      {
-        bitpos -= 2 * NYBBLE; // 4
-        hash |= (m_Vers[2] & 0xFF) << bitpos;
-      }
-
-      // one nybble for a nanohash of any tags
-      // (mainly only matters: 0 vs non-0)
-      if (end + 1 < m_String.Length)
-      {
-        int nano = m_String.Substring(end + 1).GetHashCode() & 0xFF;
-        hash |= nano ^ 0xFF;
-      }
-
-      if (len > 3)
-      {
-        hash |= (hash + len) & 0xFF;
-      }
-
-      return hash;
+      return true;
     }
 
   } // end class SerialVersion

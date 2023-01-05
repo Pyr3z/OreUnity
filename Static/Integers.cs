@@ -12,6 +12,8 @@ using JetBrains.Annotations;
 
 using IConvertible = System.IConvertible;
 
+using ICollection = System.Collections.ICollection;
+
 using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
 using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
 
@@ -31,6 +33,19 @@ namespace Ore
     // logical 2D arrays assume a square grid:
     public const int MaxArray2DSize   = 46329; // floor(sqrt(MaxArraySize))
     public const int MaxArray2DExtent = MaxArraySize / 2;
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string ToHexString(this int self, string prefix = "")
+    {
+      return $"{prefix}{self:X8}";
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string ToHexString(this long self, string prefix = "")
+    {
+      return $"{prefix}{self:X16}";
+    }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -189,6 +204,27 @@ namespace Ore
     public static bool IsBetween(this short self, short minInclusive, short maxExclusive)
     {
       return self >= minInclusive && self < maxExclusive;
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsIndexTo(this int self, int sz)
+    {
+      return self >= 0 && self < sz;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsIndexTo(this int self, [NotNull] string str)
+    {
+      // Q: faster than generic equivalent? does that avoid runtime dynamic casting?
+      return self >= 0 && self < str.Length;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsIndexTo(this int self, [NotNull] ICollection collection)
+    {
+      // Q: faster than generic equivalent? does that avoid runtime dynamic casting?
+      return self >= 0 && self < collection.Count;
     }
 
 

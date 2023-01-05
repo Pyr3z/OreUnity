@@ -100,10 +100,11 @@ namespace Ore.Editor
 
         pos = new Rect(total)
         {
-          yMin = total.yMax - OGUI.STD_LINE_HEIGHT
+          y = total.yMax - OGUI.STD_LINE_HEIGHT - OGUI.STD_LINE_ADVANCE,
+          height = OGUI.STD_LINE_HEIGHT
         };
 
-        label.text = "(raw version string)";
+        label.text = "Raw string:";
 
         EditorGUI.BeginChangeCheck();
         str = EditorGUI.DelayedTextField(pos, label, m_ScratchVer);
@@ -112,14 +113,21 @@ namespace Ore.Editor
           str_prop.stringValue = str;
         }
 
+        pos.y += OGUI.STD_LINE_ADVANCE;
+        label.text = "Hash:";
+
+        pos = EditorGUI.PrefixLabel(pos, label);
+
         OGUI.IndentLevel.Pop(fixLabelWidth: false);
+
+        EditorGUI.SelectableLabel(pos, m_ScratchVer.GetHashCode().ToHexString("0x"));
       }
     }
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
       if (property.isExpanded)
-        return OGUI.STD_LINE_HEIGHT + OGUI.STD_LINE_ADVANCE;
+        return OGUI.STD_LINE_HEIGHT + OGUI.STD_LINE_ADVANCE * 2;
       return OGUI.STD_LINE_HEIGHT;
     }
   } // end class VersionDrawer
