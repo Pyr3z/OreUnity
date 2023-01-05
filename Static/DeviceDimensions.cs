@@ -42,10 +42,6 @@ namespace Ore
   public static class DeviceDimensions
   {
 
-    // ROUGH approximation of RAM used on average (Megabytes). TODO do better
-    public const int APPROX_RAM_USED = 400;
-
-
     public static bool IsContinuous(this DeviceDimension dim)
     {
       return (dim & DeviceDimension.Continuous) == DeviceDimension.Continuous;
@@ -54,7 +50,7 @@ namespace Ore
 
     public static object QueryValue(this DeviceDimension dim)
     {
-      // success returns: float, string, bool
+      // success returns: float, string, bool (integers are boxed as floats)
       // failure returns: null
 
       switch (dim)
@@ -68,8 +64,7 @@ namespace Ore
           return (float)SystemInfo.systemMemorySize;
 
         case DeviceDimension.AvailRAM:
-          // TODO lazy calculation should have better alternative
-          return (float)(SystemInfo.systemMemorySize - APPROX_RAM_USED);
+          return (float)(DeviceSpy.LowRAMThreshold - DeviceSpy.CalcRAMUsageMB()); // done this way, value can be negative
 
         case DeviceDimension.TotalDisk:
           return null; // TODO

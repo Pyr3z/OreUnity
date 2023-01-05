@@ -96,17 +96,26 @@ namespace Ore
 
     public static ABIArch ABI => (ABIArch)(s_ABIArch ?? (s_ABIArch = CalcABIArch()));
 
-    public static int OnboardRAM => SystemInfo.systemMemorySize; // MB, mainly to see this in the debug JSON
+    // TODO fetch LowRAMThreshold from platform
+    // e.g. https://developer.android.com/reference/android/app/ActivityManager.MemoryInfo#threshold
+    public static int LowRAMThreshold => (int)(SystemInfo.systemMemorySize * 0.9f).AtLeast(256);
 
+
+    public static int CalcRAMUsageMB()
+    {
+      return (int)(CalcRAMUsageBytes() / BYTES_PER_MB);
+    }
 
     public static int CalcRAMUsageMiB()
     {
+      // it's important to know there's a difference between MB and MiB
       return (int)(CalcRAMUsageBytes() / BYTES_PER_MIB);
     }
 
     public static float CalcRAMUsagePercent()
     {
-      return (float)CalcRAMUsageBytes() / BYTES_PER_MB / SystemInfo.systemMemorySize.AtLeast(1);
+      // SystemInfo gives sizes in MB
+      return ((float)CalcRAMUsageBytes() / BYTES_PER_MB / SystemInfo.systemMemorySize.AtLeast(1)).Clamp01();
     }
 
 
@@ -139,7 +148,7 @@ namespace Ore
         }
       }
 
-      json["RAMUsageMiB"]     = CalcRAMUsageMiB();
+      json["RAMUsageMB"]      = CalcRAMUsageMB();
       json["RAMUsagePercent"] = CalcRAMUsagePercent();
 
       return json.ToString(prettyPrint ? Formatting.Indented : Formatting.None);
@@ -158,20 +167,20 @@ namespace Ore
 
   #region Private section
 
-    private static SerialVersion s_OSVersion       = null;
-    private static string        s_Brand           = null;
-    private static string        s_Model           = null;
-    private static string        s_Browser         = null;
-    private static string        s_Carrier         = null;
-    private static string        s_LangISO6391     = null;
-    private static string        s_RegionISO3166a2 = null;
-    private static TimeSpan?     s_TimezoneOffset  = null;
-    private static float?        s_DiagonalInches  = null;
-    private static float?        s_AspectRatio     = null;
-    private static bool?         s_IsTablet        = null;
-    private static bool?         s_IsBlueStacks    = null;
-    private static int?          s_ScreenRefreshHz = null;
-    private static ABIArch?      s_ABIArch         = null;
+    private static SerialVersion s_OSVersion;
+    private static string        s_Brand;
+    private static string        s_Model;
+    private static string        s_Browser;
+    private static string        s_Carrier;
+    private static string        s_LangISO6391;
+    private static string        s_RegionISO3166a2;
+    private static TimeSpan?     s_TimezoneOffset;
+    private static float?        s_DiagonalInches;
+    private static float?        s_AspectRatio;
+    private static bool?         s_IsTablet;
+    private static bool?         s_IsBlueStacks;
+    private static int?          s_ScreenRefreshHz;
+    private static ABIArch?      s_ABIArch;
 
     private const long BYTES_PER_MIB = 1048576L; // = pow(2,20)
     private const long BYTES_PER_MB  = 1000000L;
@@ -180,6 +189,8 @@ namespace Ore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static long CalcRAMUsageBytes()
     {
+      // NOTE: This is where Ore's internal definition for reported RAM resides
+
       #if UNITY_2020_1_OR_NEWER
         return UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong();
       #else
@@ -229,7 +240,7 @@ namespace Ore
       #endif
     }
 
-    private static string CalcISO6391() // TODO refactor to new extension class
+    private static string CalcISO6391()
     {
       string iso6391 = Strings.MakeISO6391(Application.systemLanguage);
 
