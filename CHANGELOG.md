@@ -10,6 +10,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests: ActiveScene
 - Tests: Invoke
 
+## [2.12.0] - 2023-01-05
+- Changed: renamed VersionID -> SerialVersion; also simplified the implementation and added ctor from System.Version.
+- Changed: The following classes now participate in a trialing of C#'s [MethodImpl(MethodImplOptions.AggressiveInlining)]:
+    - Bitwise
+    - DeviceSpy
+    - Floats
+    - Hashing
+    - Integers
+    - Lists
+    - Parsing
+    - Strings
+- Changed: DeviceSpy timezone information API exposes underling TimeSpan offset.
+- Changed: DeviceSpy RAM reporting is in MB by default (was MiB).
+- Added: DeviceSpy API to report device region (ISO 3166-2).
+- Added: DeviceSpy.ToJSON() - returns a JSON object containing all the public properties in DeviceSpy. Useful for debugging.
+- Added: Primitive utility classes have received an API revamp + some optimizations and small additions. (Floats, Integers, Bitwise)
+- Fixed: The 64-bit integer overloads of Primes.IsPrime() and Primes.Next() now work correctly (and pass tests).
+
 ## [2.11.0] - 2022-12-19
 - Added: `DeviceSpy` now reports system language, browser, network carrier, and RAM usage.
 - Added: `AndroidBridge` static API
