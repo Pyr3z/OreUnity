@@ -5,10 +5,8 @@
  *  @remark     Moved from Orator.Assert (which is backwards-maintained).
 **/
 
-// ReSharper disable All
-
 using System.Collections.Generic;
-
+using JetBrains.Annotations;
 using UnityEngine;
 
 using Conditional  = System.Diagnostics.ConditionalAttribute;
@@ -18,48 +16,18 @@ using AssException = UnityEngine.Assertions.AssertionException;
 
 namespace Ore
 {
-  public /* static */ class OAssert
+  [PublicAPI]
+  public static class OAssert
   {
     private static Orator Orator => Orator.Instance;
-    private const string DEF_UNITY_ASSERTIONS = "UNITY_ASSERTIONS";
-    private const string MSG_NO_KONSOLE = "(note: " + nameof(Ore.Orator) + " not available)";
 
-    private static readonly string NL = System.Environment.NewLine;
+    private const string DEF_UNITY_ASSERTIONS = "UNITY_ASSERTIONS";
+    private const string MSG_NO_KONSOLE       = "(note: " + nameof(Ore.Orator) + " not available)";
+
+    private static readonly string NL             = System.Environment.NewLine;
     private static readonly string FMT_NO_KONSOLE = "[OAssert] {0} {1}" + NL + "{2}";
 
-
-#if UNITY_EDITOR
-    [UnityEditor.MenuItem("Ore/Orator/Assertion Exception (No Orator)")]
-    private static void Menu_TestAssertException()
-    {
-      throw new AssException("message", "userMessage");
-    }
-
-    [UnityEditor.MenuItem("Ore/Orator/Assertion Log (No Orator)")]
-    private static void Menu_TestAssertLog()
-    {
-      LogNoOrator($"{Orator}");
-    }
-
-    [UnityEditor.MenuItem("Ore/Orator/Assertion Log")]
-    private static void Menu_TestAssertLogOrator()
-    {
-      True(false, ctx: null);
-    }
-
-    [UnityEditor.MenuItem("Ore/Orator/Assertion Fails Null Checks")]
-    private static void Menu_TestAssertNulls()
-    {
-      _ = FailsNullChecks(new object(), null, new object());
-    }
-#endif // UNITY_EDITOR
-
-
-    private static void LogNoOrator(string msg)
-    {
-      Debug.LogAssertionFormat(FMT_NO_KONSOLE, Orator.DEFAULT_ASSERT_MSG, msg, MSG_NO_KONSOLE);
-    }
-
+  #region Public API
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void True(bool value, Object ctx = null)
@@ -70,11 +38,13 @@ namespace Ore
       if (Orator)
         Orator.assertionFailed(BoolFailMessage(expected: true), ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+      #pragma warning disable CS0162
+        // ReSharper disable once HeuristicUnreachableCode
         throw new AssException(MSG_NO_KONSOLE, BoolFailMessage(expected: true, ctx));
-#pragma warning restore CS0162
       else
+        // ReSharper disable once HeuristicUnreachableCode
         LogNoOrator(BoolFailMessage(expected: true, ctx));
+      #pragma warning restore CS0162
     }
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
@@ -86,11 +56,13 @@ namespace Ore
       if (Orator)
         Orator.assertionFailed(msg, ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+      #pragma warning disable CS0162
+        // ReSharper disable once HeuristicUnreachableCode
         throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
-#pragma warning restore CS0162
       else
+        // ReSharper disable once HeuristicUnreachableCode
         LogNoOrator(MessageContext(msg, ctx));
+      #pragma warning restore CS0162
     }
 
 
@@ -111,11 +83,13 @@ namespace Ore
         if (Orator)
           Orator.assertionFailed($"# {i + 1}/{ilen}: {BoolFailMessage(expected: true)}", ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+        #pragma warning disable CS0162
+          // ReSharper disable once HeuristicUnreachableCode
           throw new AssException(MSG_NO_KONSOLE, $"{BoolFailMessage(expected: true, ctx)}{NL}(parameter: {i + 1}/{ilen})");
-#pragma warning restore CS0162
         else
+          // ReSharper disable once HeuristicUnreachableCode
           Debug.LogAssertion($"{BoolFailMessage(expected: true, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
+        #pragma warning restore CS0162
 
         return;
       }
@@ -131,11 +105,13 @@ namespace Ore
       if (Orator)
         Orator.assertionFailed(BoolFailMessage(expected: false), ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+      #pragma warning disable CS0162
+        // ReSharper disable once HeuristicUnreachableCode
         throw new AssException(MSG_NO_KONSOLE, BoolFailMessage(expected: false, ctx));
-#pragma warning restore CS0162
       else
+        // ReSharper disable once HeuristicUnreachableCode
         LogNoOrator(BoolFailMessage(expected: false, ctx));
+      #pragma warning restore CS0162
     }
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
@@ -147,11 +123,13 @@ namespace Ore
       if (Orator)
         Orator.assertionFailed(msg, ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+      #pragma warning disable CS0162
+        // ReSharper disable once HeuristicUnreachableCode
         throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
-#pragma warning restore CS0162
       else
+        // ReSharper disable once HeuristicUnreachableCode
         LogNoOrator(MessageContext(msg, ctx));
+      #pragma warning restore CS0162
     }
 
 
@@ -172,11 +150,13 @@ namespace Ore
         if (Orator)
           Orator.assertionFailed($"# {i + 1}/{ilen}: {BoolFailMessage(expected: false)}", ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+        #pragma warning disable CS0162
+          // ReSharper disable once HeuristicUnreachableCode
           throw new AssException(MSG_NO_KONSOLE, $"{BoolFailMessage(expected: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
-#pragma warning restore CS0162
         else
+          // ReSharper disable once HeuristicUnreachableCode
           Debug.LogAssertion($"{BoolFailMessage(expected: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
+        #pragma warning restore CS0162
 
         return;
       }
@@ -192,11 +172,13 @@ namespace Ore
       if (Orator)
         Orator.assertionFailed(NullFailMessage(expected_null: false), ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+      #pragma warning disable CS0162
+        // ReSharper disable once HeuristicUnreachableCode
         throw new AssException(MSG_NO_KONSOLE, NullFailMessage(expected_null: false, ctx));
-#pragma warning restore CS0162
       else
+        // ReSharper disable once HeuristicUnreachableCode
         Debug.LogAssertion(NullFailMessage(expected_null: false, ctx), ctx);
+      #pragma warning restore CS0162
     }
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
@@ -208,11 +190,13 @@ namespace Ore
       if (Orator)
         Orator.assertionFailed(msg, ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+      #pragma warning disable CS0162
+        // ReSharper disable once HeuristicUnreachableCode
         throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
-#pragma warning restore CS0162
       else
+        // ReSharper disable once HeuristicUnreachableCode
         Debug.LogAssertion(MessageContext(msg, ctx), ctx);
+      #pragma warning restore CS0162
     }
 
 
@@ -233,11 +217,13 @@ namespace Ore
         if (Orator)
           Orator.assertionFailed($"# {i + 1}/{ilen}: {NullFailMessage(expected_null: false)}", ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+        #pragma warning disable CS0162
+          // ReSharper disable once HeuristicUnreachableCode
           throw new AssException(MSG_NO_KONSOLE, $"{NullFailMessage(expected_null: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
-#pragma warning restore CS0162
         else
+          // ReSharper disable once HeuristicUnreachableCode
           Debug.LogAssertion($"{NullFailMessage(expected_null: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
+        #pragma warning restore CS0162
 
         return;
       }
@@ -253,11 +239,13 @@ namespace Ore
       if (Orator)
         Orator.assertionFailed(NullFailMessage(expected_null: false), ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+      #pragma warning disable CS0162
+        // ReSharper disable once HeuristicUnreachableCode
         throw new AssException(MSG_NO_KONSOLE, NullFailMessage(expected_null: false, ctx));
-#pragma warning restore CS0162
       else
+        // ReSharper disable once HeuristicUnreachableCode
         Debug.LogAssertion(NullFailMessage(expected_null: false, ctx), ctx);
+      #pragma warning restore CS0162
     }
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
@@ -269,11 +257,13 @@ namespace Ore
       if (Orator)
         Orator.assertionFailed(msg, ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+      #pragma warning disable CS0162
+        // ReSharper disable once HeuristicUnreachableCode
         throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
-#pragma warning restore CS0162
       else
+        // ReSharper disable once HeuristicUnreachableCode
         Debug.LogAssertion(MessageContext(msg, ctx), ctx);
+      #pragma warning restore CS0162
     }
 
     public static void AllExist(params Object[] objs)
@@ -286,11 +276,13 @@ namespace Ore
         if (Orator)
           Orator.assertionFailed($"# {i + 1}/{ilen}: {NullFailMessage(expected_null: false)}");
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+        #pragma warning disable CS0162
+          // ReSharper disable once HeuristicUnreachableCode
           throw new AssException(MSG_NO_KONSOLE, $"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
-#pragma warning restore CS0162
         else
+          // ReSharper disable once HeuristicUnreachableCode
           Debug.LogAssertion($"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
+        #pragma warning restore CS0162
 
         return;
       }
@@ -306,11 +298,13 @@ namespace Ore
       if (Orator)
         Orator.assertionFailed(CollectionEmptyMessage(expected_empty: false), ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+      #pragma warning disable CS0162
+        // ReSharper disable once HeuristicUnreachableCode
         throw new AssException(MSG_NO_KONSOLE, CollectionEmptyMessage(expected_empty: false, ctx));
-#pragma warning restore CS0162
       else
+        // ReSharper disable once HeuristicUnreachableCode
         Debug.LogAssertion(CollectionEmptyMessage(expected_empty: false, ctx), ctx);
+      #pragma warning restore CS0162
     }
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
@@ -322,11 +316,13 @@ namespace Ore
       if (Orator)
         Orator.assertionFailed(msg, ctx);
       else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+      #pragma warning disable CS0162
+        // ReSharper disable once HeuristicUnreachableCode
         throw new AssException(MSG_NO_KONSOLE, MessageContext(msg, ctx));
-#pragma warning restore CS0162
       else
+        // ReSharper disable once HeuristicUnreachableCode
         Debug.LogAssertion(MessageContext(msg, ctx), ctx);
+      #pragma warning restore CS0162
     }
 
     [Conditional(DEF_UNITY_ASSERTIONS)]
@@ -346,104 +342,149 @@ namespace Ore
         if (Orator)
           Orator.assertionFailed($"# {i + 1}/{ilen}: {CollectionEmptyMessage(expected_empty: false)}", ctx);
         else if (Orator.DEFAULT_ASSERT_EXCEPTIONS)
-#pragma warning disable CS0162
+        #pragma warning disable CS0162
+          // ReSharper disable once HeuristicUnreachableCode
           throw new AssException(MSG_NO_KONSOLE, $"{CollectionEmptyMessage(expected_empty: false, ctx)}{NL}(parameter: {i + 1}/{ilen})");
-#pragma warning restore CS0162
         else
+          // ReSharper disable once HeuristicUnreachableCode
           Debug.LogAssertion($"{CollectionEmptyMessage(expected_empty: false, ctx)}{NL}(parameter: {i + 1}/{ilen})", ctx);
+        #pragma warning restore CS0162
 
         return;
       }
     }
 
+  #endregion Public API
 
-#if UNITY_ASSERTIONS
-// This section shouldn't be compiled out, because their bool return values have logical meaning.
-// It also shouldn't throw exceptions, even if Orator has "Assertions Throw Exceptions" turned on.
+  #region Boolean return value API
 
-    public static bool Fails(bool assertion, Object ctx = null)
-    {
-      if (assertion)
-        return false;
+    #if UNITY_ASSERTIONS
+    // This section shouldn't be compiled out, because their bool return values have logical meaning.
+    // It also shouldn't throw exceptions, even if Orator has "Assertions Throw Exceptions" turned on.
 
-      if (Orator)
-        Orator.assertionFailedNoThrow(BoolFailMessage(expected: true), ctx);
-      else
-        Debug.LogAssertion(BoolFailMessage(expected: true, ctx), ctx);
-
-      return true;
-    }
-
-    public static bool Fails(bool assertion, string msg, Object ctx = null)
-    {
-      if (assertion)
-        return false;
-
-      if (Orator)
-        Orator.assertionFailedNoThrow(msg, ctx);
-      else
-        Debug.LogAssertion($"{Orator.DEFAULT_ASSERT_MSG} {msg}", ctx);
-
-      return true;
-    }
-
-
-    public static bool FailsNullCheck(object obj, Object ctx = null)
-    {
-      if (!(obj is null))
-        return false;
-
-      if (Orator)
-        Orator.assertionFailedNoThrow(NullFailMessage(expected_null: false), ctx);
-      else
-        Debug.LogAssertion(NullFailMessage(expected_null: false, ctx), ctx);
-
-      return true;
-    }
-
-    public static bool FailsNullCheck(object obj, string msg, Object ctx = null)
-    {
-      if (!(obj is null))
-        return false;
-
-      if (Orator)
-        Orator.assertionFailedNoThrow(msg, ctx);
-      else
-        Debug.LogAssertion($"{Orator.DEFAULT_ASSERT_MSG} {msg}", ctx);
-
-      return true;
-    }
-
-    public static bool FailsNullChecks(params object[] objs)
-    {
-      for (int i = 0, ilen = objs?.Length ?? 0; i < ilen; ++i)
+      public static bool Fails(bool assertion, Object ctx = null)
       {
-        if (!(objs[i] is null))
-          continue;
+        if (assertion)
+          return false;
 
         if (Orator)
-          Orator.assertionFailedNoThrow($"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
+          Orator.assertionFailedNoThrow(BoolFailMessage(expected: true), ctx);
         else
-          Debug.LogAssertion($"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
+          Debug.LogAssertion(BoolFailMessage(expected: true, ctx), ctx);
 
         return true;
       }
 
-      return false;
+      public static bool Fails(bool assertion, string msg, Object ctx = null)
+      {
+        if (assertion)
+          return false;
+
+        if (Orator)
+          Orator.assertionFailedNoThrow(msg, ctx);
+        else
+          Debug.LogAssertion($"{Orator.DEFAULT_ASSERT_MSG} {msg}", ctx);
+
+        return true;
+      }
+
+
+      public static bool FailsNullCheck(object obj, Object ctx = null)
+      {
+        if (!(obj is null))
+          return false;
+
+        if (Orator)
+          Orator.assertionFailedNoThrow(NullFailMessage(expected_null: false), ctx);
+        else
+          Debug.LogAssertion(NullFailMessage(expected_null: false, ctx), ctx);
+
+        return true;
+      }
+
+      public static bool FailsNullCheck(object obj, string msg, Object ctx = null)
+      {
+        if (!(obj is null))
+          return false;
+
+        if (Orator)
+          Orator.assertionFailedNoThrow(msg, ctx);
+        else
+          Debug.LogAssertion($"{Orator.DEFAULT_ASSERT_MSG} {msg}", ctx);
+
+        return true;
+      }
+
+      public static bool FailsNullChecks(params object[] objs)
+      {
+        for (int i = 0, ilen = objs?.Length ?? 0; i < ilen; ++i)
+        {
+          if (!(objs[i] is null))
+            continue;
+
+          if (Orator)
+            Orator.assertionFailedNoThrow($"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
+          else
+            Debug.LogAssertion($"{NullFailMessage(expected_null: false)}{NL}(parameter: {i + 1}/{ilen})");
+
+          return true;
+        }
+
+        return false;
+      }
+
+    #else // !UNITY_ASSERTIONS
+
+      #pragma warning disable IDE0060
+
+      public static bool Fails(bool assertion, Object ctx = null) => false;
+      public static bool Fails(bool assertion, string msg, Object ctx = null) => false;
+      public static bool FailsNullCheck(object obj, Object ctx = null) => false;
+      public static bool FailsNullCheck(object obj, string msg, Object ctx = null) => false;
+      public static bool FailsNullChecks(params object[] objs) => false;
+
+      #pragma warning restore IDE0060
+
+    #endif // UNITY_ASSERTIONS
+
+  #endregion Boolean return value API
+
+
+  #region Private section
+
+    #if UNITY_EDITOR
+
+      [UnityEditor.MenuItem("Ore/Orator/Assertion Exception (No Orator)")]
+      private static void Menu_TestAssertException()
+      {
+        throw new AssException("message", "userMessage");
+      }
+
+      [UnityEditor.MenuItem("Ore/Orator/Assertion Log (No Orator)")]
+      private static void Menu_TestAssertLog()
+      {
+        LogNoOrator($"{Orator}");
+      }
+
+      [UnityEditor.MenuItem("Ore/Orator/Assertion Log")]
+      private static void Menu_TestAssertLogOrator()
+      {
+        True(false, ctx: null);
+      }
+
+      [UnityEditor.MenuItem("Ore/Orator/Assertion Fails Null Checks")]
+      private static void Menu_TestAssertNulls()
+      {
+        _ = FailsNullChecks(new object(), null, new object());
+      }
+
+    #endif // UNITY_EDITOR
+
+
+    private static void LogNoOrator(string msg)
+    {
+      Debug.LogAssertionFormat(FMT_NO_KONSOLE, Orator.DEFAULT_ASSERT_MSG, msg, MSG_NO_KONSOLE);
     }
-
-#else // !UNITY_ASSERTIONS
-
-#pragma warning disable IDE0060
-    public static bool Fails(bool assertion, Object ctx = null) => false;
-    public static bool Fails(bool assertion, string msg, Object ctx = null) => false;
-    public static bool FailsNullCheck(object obj, Object ctx = null) => false;
-    public static bool FailsNullCheck(object obj, string msg, Object ctx = null) => false;
-    public static bool FailsNullChecks(params object[] objs) => false;
-#pragma warning restore IDE0060
-
-#endif // UNITY_ASSERTIONS
-
 
     private static string BoolFailMessage(bool expected, Object ctx = null)
     {
@@ -506,6 +547,8 @@ namespace Ore
       else
         return $"[{nameof(OAssert)}] {msg}";
     }
+
+  #endregion Private section
 
   } // end static class OAssert
 

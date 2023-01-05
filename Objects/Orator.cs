@@ -21,7 +21,7 @@
 
 using System.ComponentModel;
 using System.Collections.Generic;
-
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Diagnostics;
 
@@ -36,23 +36,8 @@ namespace Ore
   [AssetPath("Resources/Orator.asset")]
   public sealed class Orator : OAssetSingleton<Orator>
   {
-    [System.Serializable]
-    private struct LogFormatDef
-    {
-      [SerializeField]
-      public LogType LogType;
-      [SerializeField]
-      public LogOption LogOption;
-      [SerializeField, Delayed]
-      public string BaseMessage;
 
-      [SerializeField]
-      public Color32 RichTextColor;
-      // rich text etc... (TODO)
-    } // end struct LogFormatDef
-
-
-    #region PUBLIC STATIC METHODS
+  #region Static public API
 
     public static string Prefix
     {
@@ -164,33 +149,49 @@ namespace Ore
     }
 
 
-    public static void Panic(string msg, Object ctx = null)
+    [PublicAPI]
+    public static void Panic(string msg)
     {
-      Error(msg, ctx);
-
-    #if UNITY_EDITOR
-      UnityEditor.EditorApplication.Beep();
-      UnityEditor.EditorApplication.Beep();
-      UnityEditor.EditorApplication.Beep();
-
-      if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
-      {
-        UnityEditor.EditorApplication.ExitPlaymode();
-      }
-
-      if (ctx)
-      {
-        UnityEditor.EditorGUIUtility.PingObject(ctx);
-      }
-    #else
-      Utils.ForceCrash(ForcedCrashCategory.Abort);
-    #endif // UNITY_EDITOR
+      Panic(msg, Instance);
     }
 
-    #endregion PUBLIC STATIC METHODS
+    [PublicAPI]
+    public static void Panic(Object ctx)
+    {
+      Panic(string.Empty, ctx);
+    }
 
+    [PublicAPI]
+    public static void Panic(string msg, Object ctx)
+    {
+      Error($"PANIC! {msg}", ctx);
 
-    #region "Log Once" API
+      #if UNITY_EDITOR
+
+        UnityEditor.EditorApplication.Beep();
+        UnityEditor.EditorApplication.Beep();
+        UnityEditor.EditorApplication.Beep();
+
+        if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+        {
+          UnityEditor.EditorApplication.ExitPlaymode();
+        }
+
+        if (ctx)
+        {
+          UnityEditor.EditorGUIUtility.PingObject(ctx);
+        }
+
+      #else
+
+        Utils.ForceCrash(ForcedCrashCategory.Abort);
+
+      #endif // UNITY_EDITOR
+    }
+
+  #endregion Static public API
+
+  #region Static "Log Once" API
 
     public static void ReachedOnce(Object ctx)
     {
@@ -233,26 +234,27 @@ namespace Ore
 
       #if UNITY_EDITOR
 
-      var stage = UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
-      #if UNITY_2020_3_OR_NEWER
-      if (stage)
-      {
-        hash = Hashing.MakeHash(msg, stage.assetPath);
-      }
-      #else
-      if (stage != null && stage.prefabContentsRoot)
-      {
-        hash = Hashing.MakeHash(msg, stage.prefabAssetPath);
-      }
-      #endif
-      else
-      {
-        hash = Hashing.MakeHash(msg, ctx);
-      }
+        var stage = UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+
+        #if UNITY_2020_3_OR_NEWER
+        if (stage)
+        {
+          hash = Hashing.MakeHash(msg, stage.assetPath);
+        }
+        #else
+        if (stage != null && stage.prefabContentsRoot)
+        {
+          hash = Hashing.MakeHash(msg, stage.prefabAssetPath);
+        }
+        #endif
+        else
+        {
+          hash = Hashing.MakeHash(msg, ctx);
+        }
 
       #else // if !UNITY_EDITOR
 
-      hash = Hashing.MakeHash(msg, ctx);
+        hash = Hashing.MakeHash(msg, ctx);
 
       #endif // UNITY_EDITOR
 
@@ -326,94 +328,12 @@ namespace Ore
 
     #endif
 
-    #endregion "Log Once" API
+  #endregion Static "Log Once" API
 
-
-    #region STATIC ASSERTION API
-
-    public /* static */ abstract class Assert : OAssert
-    {
-
-      // implementation now in `Static/OAssert.cs`.
-      // You can still use this interface via `Orator.Assert.X()`, but `OAssert.X()` is shorter.
-
-    } // end static class Assert
-
-    #endregion STATIC ASSERTION API
-
-
-    #region instance fields
-
-    // compile-time default values:
-
-    internal const EditorBrowsableState INSTANCE_BROWSABLE_POLICY = EditorBrowsableState.Never;
-
-    internal const string DEFAULT_KONSOLE_PREFIX = "<color=\"orange\">[" + nameof(Orator) + "]</color>";
-    internal const LogOption DEFAULT_LOG_LOGOPT = LogOption.NoStacktrace;
-    internal const bool DEFAULT_INCLUDE_CONTEXT = true;
-
-    internal const string DEFAULT_REACHED_MSG = "<b>Reached!</b>";
-    internal const LogType DEFAULT_REACHED_LOGTYPE = LogType.Warning;
-    internal const LogOption DEFAULT_REACHED_LOGOPT = LogOption.None;
-
-    internal const LogType DEFAULT_ASSERT_LOGTYPE = LogType.Assert;
-    internal const string DEFAULT_ASSERT_MSG = "<b>Assertion failed!</b>";
-    internal const LogOption DEFAULT_ASSERT_LOGOPT = LogOption.None;
-
-    internal const bool DEFAULT_ASSERT_EXCEPTIONS = true;
-    internal const bool DEFAULT_ASSERTIONS_IN_RELEASE = false;
-
-    internal const int DEFAULT_LOGONCE_MEMORY_SIZE = 256;
-
-
-    [Header("Orator Properties")]
-
-    [SerializeField]
-    private string m_OratorPrefix = DEFAULT_KONSOLE_PREFIX;
-
-    [SerializeField]
-    private bool m_IncludeContextInMessages = DEFAULT_INCLUDE_CONTEXT;
-
-    [SerializeField]
-    private LogOption m_LogStackTracePolicy = DEFAULT_LOG_LOGOPT;
-
-    [SerializeField]
-    private bool m_AssertionsRaiseExceptions = DEFAULT_ASSERT_EXCEPTIONS;     // TODO
-    [SerializeField]
-    private bool m_ForceAssertionsInRelease = DEFAULT_ASSERTIONS_IN_RELEASE;  // TODO
-
-    [Space]
-
-    [SerializeField]
-    private LogFormatDef m_ReachedFormat = new LogFormatDef
-    {
-      LogType = DEFAULT_REACHED_LOGTYPE,
-      LogOption = DEFAULT_REACHED_LOGOPT,
-      BaseMessage = DEFAULT_REACHED_MSG
-    };
-
-    [Space]
-
-    [SerializeField]
-    private LogFormatDef m_AssertionFailedFormat = new LogFormatDef
-    {
-      LogType = DEFAULT_ASSERT_LOGTYPE,
-      LogOption = DEFAULT_ASSERT_LOGOPT,
-      BaseMessage = DEFAULT_ASSERT_MSG
-    };
-
-    [Space]
-
-    [SerializeField, Tooltip("or, the maximum number of log signatures to keep in RAM to prevent duplicate logging.")]
-    private int m_LogOnceMemorySize = DEFAULT_LOGONCE_MEMORY_SIZE;
-
-    #endregion instance fields
-
-
-    #region instance methods
+  #region Instance public API
 
     /* IDE1006 => public member name does not match style guide */
-#pragma warning disable IDE1006
+    #pragma warning disable IDE1006
     // lowercase function names = convention for instance versions of static methods
 
 
@@ -531,10 +451,94 @@ namespace Ore
       Debug.LogFormat(LogType.Error, LogOption.None, ctx, "{0} {1}", m_OratorPrefix, msg);
     }
 
-#pragma warning restore IDE1006
+
+    #pragma warning restore IDE1006
+
+  #endregion Instance public API
+
+  #region Instance fields
+
+    [System.Serializable]
+    private struct LogFormatDef
+    {
+      [SerializeField]
+      public LogType LogType;
+      [SerializeField]
+      public LogOption LogOption;
+      [SerializeField, Delayed]
+      public string BaseMessage;
+
+      [SerializeField]
+      public Color32 RichTextColor;
+      // TODO: rich text etc...
+    } // end struct LogFormatDef
+
+    // compile-time default values:
+
+    internal const EditorBrowsableState INSTANCE_BROWSABLE_POLICY = EditorBrowsableState.Never;
+
+    internal const string DEFAULT_KONSOLE_PREFIX = "<color=\"orange\">[" + nameof(Orator) + "]</color>";
+    internal const LogOption DEFAULT_LOG_LOGOPT = LogOption.NoStacktrace;
+    internal const bool DEFAULT_INCLUDE_CONTEXT = true;
+
+    internal const string DEFAULT_REACHED_MSG = "<b>Reached!</b>";
+    internal const LogType DEFAULT_REACHED_LOGTYPE = LogType.Warning;
+    internal const LogOption DEFAULT_REACHED_LOGOPT = LogOption.None;
+
+    internal const LogType DEFAULT_ASSERT_LOGTYPE = LogType.Assert;
+    internal const string DEFAULT_ASSERT_MSG = "<b>Assertion failed!</b>";
+    internal const LogOption DEFAULT_ASSERT_LOGOPT = LogOption.None;
+
+    internal const bool DEFAULT_ASSERT_EXCEPTIONS = true;
+    internal const bool DEFAULT_ASSERTIONS_IN_RELEASE = false;
+
+    internal const int DEFAULT_LOGONCE_MEMORY_SIZE = 256;
 
 
-    #endregion
+    [Header("Orator Properties")]
+
+    [SerializeField]
+    private string m_OratorPrefix = DEFAULT_KONSOLE_PREFIX;
+
+    [SerializeField]
+    private bool m_IncludeContextInMessages = DEFAULT_INCLUDE_CONTEXT;
+
+    [SerializeField]
+    private LogOption m_LogStackTracePolicy = DEFAULT_LOG_LOGOPT;
+
+    [SerializeField]
+    private bool m_AssertionsRaiseExceptions = DEFAULT_ASSERT_EXCEPTIONS;     // TODO
+    [SerializeField]
+    private bool m_ForceAssertionsInRelease = DEFAULT_ASSERTIONS_IN_RELEASE;  // TODO
+
+    [Space]
+
+    [SerializeField]
+    private LogFormatDef m_ReachedFormat = new LogFormatDef
+    {
+      LogType = DEFAULT_REACHED_LOGTYPE,
+      LogOption = DEFAULT_REACHED_LOGOPT,
+      BaseMessage = DEFAULT_REACHED_MSG
+    };
+
+    [Space]
+
+    [SerializeField]
+    private LogFormatDef m_AssertionFailedFormat = new LogFormatDef
+    {
+      LogType = DEFAULT_ASSERT_LOGTYPE,
+      LogOption = DEFAULT_ASSERT_LOGOPT,
+      BaseMessage = DEFAULT_ASSERT_MSG
+    };
+
+    [Space]
+
+    [SerializeField, Tooltip("or, the maximum number of log signatures to keep in RAM to prevent duplicate logging.")]
+    private int m_LogOnceMemorySize = DEFAULT_LOGONCE_MEMORY_SIZE;
+
+  #endregion Instance fields
+
+  #region Internal section
 
     #if !UNITY_EDITOR // Remove rich text tags from strings in builds!
     private void Awake()
@@ -545,7 +549,6 @@ namespace Ore
     }
     #endif
 
-    #region (private section)
 
     private string ReachedMessage
     {
@@ -616,7 +619,8 @@ namespace Ore
       }
     }
 
-#if UNITY_EDITOR
+    #if UNITY_EDITOR
+
     [UnityEditor.MenuItem("Ore/Orator/Test All Log Types")]
     private static void Menu_TestLogs()
     {
@@ -645,9 +649,10 @@ namespace Ore
       _ = Filesystem.TryDeletePath(CACHE_PATH);
       s_LoggedOnceHashes.Clear();
     }
-#endif // UNITY_EDITOR
 
-    #endregion (private section)
+    #endif // UNITY_EDITOR
+
+  #endregion Internal section
 
   } // end class Orator
 
