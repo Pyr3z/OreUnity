@@ -26,6 +26,9 @@ namespace Ore
     public const int MaxValue     = 2146435069; // largest prime that can also be an array size
     public const int MaxSizePrime = 12633961;   // last value of the precomputed HashtableSizes list
 
+    public const long  MaxLongValue         = (1L  << 62) - 57; // https://primes.utm.edu/lists/2small/0bit.html
+    public const ulong MaxUnsignedLongValue = (1UL << 63) - 25;
+
 
     [PublicAPI]
     public static bool IsPrime(int value)
@@ -126,6 +129,11 @@ namespace Ore
       return NextNoLookup(current, hashprime);
     }
 
+    [PublicAPI]
+    public static long Next(long current)
+    {
+      return NextLongNoLookup(current);
+    }
 
   #region Internal section
 
@@ -194,11 +202,9 @@ namespace Ore
 
     private static bool IsLongPrimeNoLookup(long value, long sqrt)
     {
-      // assumes value is > Primes.MaxValue
+      // minor TODO: this is a pretty long walk... is there nothing better?
 
-      const long START = 46329L; // sqrt(Primes.MaxValue)
-
-      for (long i = START; i <= sqrt; i += 2L)
+      for (long i = 3; i <= sqrt; i += 2L)
       {
         if (value % i == 0)
           return false;
@@ -225,15 +231,44 @@ namespace Ore
 
         current += 2;
 
-        ++sqrt;
+        ++ sqrt;
 
         if (current < sqrt * sqrt)
         {
-          --sqrt;
+          -- sqrt;
         }
       }
 
       return MaxValue;
+    }
+
+    internal static long NextLongNoLookup(long current)
+    {
+      if (current < MinValue)
+        return MinValue;
+      if (current > MaxLongValue)
+        return MaxLongValue;
+
+      current = (current | 1) + 2;
+
+      long sqrt = (long)Math.Sqrt(current);
+
+      while (current < long.MaxValue - 1)
+      {
+        if (IsLongPrimeNoLookup(current, sqrt))
+          return current;
+
+        current += 2;
+
+        ++ sqrt;
+
+        if (current < sqrt * sqrt)
+        {
+          -- sqrt;
+        }
+      }
+
+      return MaxLongValue;
     }
 
   #endregion Internal section

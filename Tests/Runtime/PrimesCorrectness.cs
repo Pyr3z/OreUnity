@@ -55,9 +55,21 @@ public static class PrimesCorrectness
   }
 
   [Test]
-  public static void IsLongPrime([Values(200)] int n)
+  public static void IsLongPrimeNoLookup([Values(100)] int n)
   {
+    Assert.True(Primes.IsLongPrimeNoLookup((1L << 62) -  57), "IsPrime(2^62 -  57)");
+    Assert.True(Primes.IsLongPrimeNoLookup((1L << 62) -  87), "IsPrime(2^62 -  87)");
+    // leaving a few commented out since this is so slow
+ // Assert.True(Primes.IsLongPrimeNoLookup((1L << 62) - 117), "IsPrime(2^62 - 117)");
+ // Assert.True(Primes.IsLongPrimeNoLookup((1L << 62) - 143), "IsPrime(2^62 - 143)");
+ // Assert.True(Primes.IsLongPrimeNoLookup((1L << 62) - 153), "IsPrime(2^62 - 153)");
+ // Assert.True(Primes.IsLongPrimeNoLookup((1L << 62) - 167), "IsPrime(2^62 - 167)");
+ // Assert.True(Primes.IsLongPrimeNoLookup((1L << 62) - 171), "IsPrime(2^62 - 171)");
+ // Assert.True(Primes.IsLongPrimeNoLookup((1L << 62) - 195), "IsPrime(2^62 - 195)");
+    Assert.True(Primes.IsLongPrimeNoLookup((1L << 62) - 203), "IsPrime(2^62 - 203)");
+    Assert.True(Primes.IsLongPrimeNoLookup((1L << 62) - 273), "IsPrime(2^62 - 273)");
 
+    DoIsPrime<long>(Primes.IsLongPrimeNoLookup, n);
   }
 
   private static void DoIsPrime<T>(System.Func<T,bool> testFunc, int n)
