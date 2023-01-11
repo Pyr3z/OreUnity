@@ -3,17 +3,24 @@
  *  @date       2022-02-28
 **/
 
+//#undef UNITY_EDITOR // periodically test me by flipping with "//"
+
 // ReSharper disable MemberCanBePrivate.Global
 
-using System.Collections.Generic;
+using JetBrains.Annotations;
 
 using UnityEngine;
+
+#if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEditor;
+#endif // UNITY_EDITOR
 
 
 namespace Ore
 {
-#if UNITY_EDITOR // periodically test me by flipping with '!'
+#if UNITY_EDITOR
+  [PublicAPI]
   public static class EditorBridge
   {
 
@@ -59,12 +66,13 @@ namespace Ore
 
 #else // if !UNITY_EDITOR
 
+  [PublicAPI]
   public static class EditorBridge
   {
 
     // constant value like these are REQUIRED in certain contexts,
     // e.g. default parameter values
-    public const bool IS_EDITOR = true;
+    public const bool IS_EDITOR = false;
     #if DEBUG
     public const bool IS_DEBUG = true;
     #else
