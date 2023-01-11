@@ -119,6 +119,7 @@ namespace Ore
 
     protected virtual void OnValidate()
     {
+      // placeholder
     }
 
 
@@ -141,9 +142,16 @@ namespace Ore
       s_Current = self;
 
       if (m_DontDestroyOnLoad)
+      {
         DontDestroyOnLoad(gameObject);
+      }
 
-      return m_IsSingletonInitialized || (m_IsSingletonInitialized = m_OnFirstInitialized.TryInvoke());
+      if (m_IsSingletonInitialized || !m_OnFirstInitialized.IsEnabled)
+      {
+        return true;
+      }
+
+      return m_IsSingletonInitialized = m_OnFirstInitialized.TryInvoke();
     }
 
 

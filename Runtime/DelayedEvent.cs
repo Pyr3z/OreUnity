@@ -77,7 +77,7 @@ namespace Ore
     public override bool TryInvoke()
     {
       if (!m_IsEnabled)
-        return true;
+        return false;
 
       if (m_RunInGlobalContext || m_Context is ScriptableObject)
       {
@@ -99,7 +99,7 @@ namespace Ore
     public bool TryInvokeOn(MonoBehaviour component)
     {
       if (!m_IsEnabled)
-        return true;
+        return false;
 
       if (m_DelaySeconds < MIN_DELAY_SECONDS_ASYNC)
       {
