@@ -43,10 +43,28 @@ namespace Ore
     private VoidEvent m_Action = new VoidEvent();
 
 
+    [System.NonSerialized]
+    private TimeInterval m_Clock;
+
+
     public Timer(TimeInterval interval, int cycles = 1)
     {
       m_Interval = interval;
       m_Cycles   = cycles;
+    }
+
+
+    public void Tick(TimeInterval dt)
+    {
+      if (m_Cycles < 0 | m_Interval.Ticks < 0)
+        return;
+
+      m_Clock += dt;
+
+      if (m_Clock >= m_Interval)
+      {
+
+      }
     }
 
   } // end class Timer

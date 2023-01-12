@@ -78,6 +78,12 @@ namespace Ore
       return expected == 0f ? Abs(actual) : Abs((actual - expected) / expected);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float ErrorPercent(double actual, double expected)
+    {
+      return (float)(expected == 0.0 ? Math.Abs(actual) : Math.Abs((actual - expected) / expected));
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float MakeFinite(float val, float finite)

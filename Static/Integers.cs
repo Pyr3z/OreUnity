@@ -189,6 +189,19 @@ namespace Ore
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsRelatively(this int self, int other, float errorPct = Floats.DefaultPValue)
+    {
+      return Floats.ErrorPercent(self, other) <= errorPct;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsRelatively(this long self, long other, float errorPct = Floats.DefaultPValue)
+    {
+      return Floats.ErrorPercent((double)self, other) <= errorPct;
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsBetween(this long self, long minInclusive, long maxExclusive)
     {
       return self >= minInclusive && self < maxExclusive;

@@ -26,9 +26,9 @@ namespace Ore
     public static readonly TimeInterval MaxValue  = new TimeInterval(long.MaxValue);
 
     public static readonly TimeInterval One       = new TimeInterval(1L);
-    public static readonly TimeInterval Epsilon   = new TimeInterval(TICKS_ARE_FRAMES_THRESH);
+    public static readonly TimeInterval Epsilon   = new TimeInterval(1000L);
 
-    public static readonly TimeInterval Frame     = new TimeInterval(1L); // special value
+    public static readonly TimeInterval Frame     = new TimeInterval(1L, areFrames: true);
     public static readonly TimeInterval Second    = new TimeInterval(10000000L);
 
 
@@ -39,10 +39,7 @@ namespace Ore
     public const double TICKS2DAY = TICKS2HR  / 24;
 
     // using constant now since Application.targetFrameRate cannot be called in all contexts...
-    public const long TICKS_PER_FRAME_60FPS = (long)(1.0 / 60 / TICKS2SEC);
-
-    // when ticks are < threshold, they are treated as a frame count instead of clock ticks.
-    public const int TICKS_ARE_FRAMES_THRESH = 999;
+    private const long TICKS_PER_FRAME_60FPS = (long)(1.0 / 60 / TICKS2SEC);
 
 
     public double Millis
@@ -107,39 +104,24 @@ namespace Ore
 
     public int Frames
     {
-      get
-      {
-        if (Ticks >= -TICKS_ARE_FRAMES_THRESH && Ticks <= TICKS_ARE_FRAMES_THRESH)
-        {
-          return (int)Ticks;
-        }
-        else
-        {
-          return (int)(Ticks / TICKS_PER_FRAME_60FPS);
-        }
-      }
-      set
-      {
-        if (value >= -TICKS_ARE_FRAMES_THRESH && value <= TICKS_ARE_FRAMES_THRESH)
-        {
-          Ticks = value;
-        }
-        else
-        {
-          Ticks = value * TICKS_PER_FRAME_60FPS;
-        }
-      }
+      get => (int)(AsFrames ? Ticks : Ticks / TICKS_PER_FRAME_60FPS);
+      set => Ticks = AsFrames ? value : value * TICKS_PER_FRAME_60FPS;
     }
 
 
     [SerializeField]
     public long Ticks;
+    [SerializeField]
+    public bool AsFrames; // I've matured away from using bitflags for this sort of thing.
+                          // ... perhaps only for today ...
 
 
-    public TimeInterval(long ticks)
+    public TimeInterval(long ticks, bool areFrames = false)
     {
-      Ticks = ticks;
+      Ticks    = ticks;
+      AsFrames = areFrames;
     }
+
 
     public static TimeInterval OfMillis(double ms)
     {
@@ -168,14 +150,7 @@ namespace Ore
 
     public static TimeInterval OfFrames(int nFrames)
     {
-      if (nFrames >= -TICKS_ARE_FRAMES_THRESH && nFrames <= TICKS_ARE_FRAMES_THRESH)
-      {
-        return new TimeInterval(nFrames);
-      }
-      else
-      {
-        return new TimeInterval(TICKS_PER_FRAME_60FPS * nFrames);
-      }
+      return new TimeInterval(nFrames, areFrames: true);
     }
 
     public static TimeInterval OfFrames(double qFrames)
@@ -184,44 +159,61 @@ namespace Ore
     }
 
 
-    public void AddSeconds(double s)
+    public TimeInterval WithFineQuanta()
     {
-      Ticks += (long)(s / TICKS2SEC + 0.5);
+      if (!AsFrames)
+        return this;
+
+      if (Time.frameCount < 1)
+        return new TimeInterval(Ticks * TICKS_PER_FRAME_60FPS, areFrames: false);
+      else
+        return new TimeInterval((long)(Ticks / Time.smoothDeltaTime / TICKS2SEC), areFrames: false);
     }
 
-    public void AddSeconds(float s)
+    public TimeInterval WithFrameQuanta()
     {
-      Ticks += (long)(s / TICKS2SEC + 0.5f);
-    }
+      if (AsFrames)
+        return this;
 
-    public void SubtractSeconds(double s)
-    {
-      Ticks -= (long)(s / TICKS2SEC + 0.5);
-    }
-
-    public void SubtractSeconds(float s)
-    {
-      Ticks -= (long)(s / TICKS2SEC + 0.5f);
+      if (Time.frameCount < 1)
+        return new TimeInterval(Ticks / TICKS_PER_FRAME_60FPS, areFrames: true);
+      else
+        return new TimeInterval((long)(Seconds * Time.smoothDeltaTime), areFrames: true);
     }
 
 
     public int CompareTo(TimeInterval other)
     {
+      if (AsFrames != other.AsFrames)
+      {
+        return (int)(WithFineQuanta().Ticks - other.WithFineQuanta().Ticks);
+      }
+
       return (int)(Ticks - other.Ticks);
     }
 
     int IComparable<TimeSpan>.CompareTo(TimeSpan other)
     {
+      if (AsFrames)
+      {
+        return (int)(WithFineQuanta().Ticks - other.Ticks);
+      }
+
       return (int)(Ticks - other.Ticks);
     }
 
     public bool Equals(TimeInterval other)
     {
-      return Ticks == other.Ticks;
+      return Ticks == other.Ticks && AsFrames == other.AsFrames;
     }
 
     bool IEquatable<TimeSpan>.Equals(TimeSpan other)
     {
+      if (AsFrames)
+      {
+        return WithFineQuanta().Ticks.IsRelatively(other.Ticks, errorPct: 0.01f);
+      }
+
       return Ticks == other.Ticks;
     }
 
@@ -232,7 +224,7 @@ namespace Ore
 
     public override int GetHashCode()
     {
-      return (int)Ticks ^ (int)(Ticks >> 32);
+      return (int)Hashing.MixHashes(AsFrames.ToInt(), (int)Ticks, (int)(Ticks >> 32));
     }
 
     public override string ToString()
@@ -265,69 +257,116 @@ namespace Ore
 
     public static TimeInterval operator * (TimeInterval lhs, int rhs)
     {
-      return new TimeInterval(lhs.Ticks * rhs);
+      lhs.Ticks *= rhs;
+      return lhs;
     }
 
     public static TimeInterval operator / (TimeInterval lhs, int rhs)
     {
-      return new TimeInterval(lhs.Ticks / rhs);
+      if (rhs == 0)
+        return MaxValue;
+
+      lhs.Ticks /= rhs;
+      return lhs;
     }
 
     public static TimeInterval operator * (TimeInterval lhs, double rhs)
     {
-      return new TimeInterval((long)Math.Round(lhs.Ticks * rhs));
+      lhs.Ticks = (long)(lhs.Ticks * rhs);
+      return lhs;
     }
 
     public static TimeInterval operator / (TimeInterval lhs, double rhs)
     {
-      return new TimeInterval((long)Math.Round(lhs.Ticks / rhs));
+      if (rhs == 0.0)
+        return MaxValue;
+
+      lhs.Ticks = (long)(lhs.Ticks / rhs);
+      return lhs;
     }
 
     public static TimeInterval operator + (TimeInterval lhs, TimeInterval rhs)
     {
-      return new TimeInterval(lhs.Ticks + rhs.Ticks);
+      if (lhs.AsFrames != rhs.AsFrames)
+      {
+        // policy = always promote to system tick quanta
+        lhs = lhs.WithFineQuanta();
+        rhs = rhs.WithFineQuanta();
+      }
+
+      lhs.Ticks += rhs.Ticks;
+      return lhs;
     }
 
     public static TimeInterval operator - (TimeInterval lhs, TimeInterval rhs)
     {
-      return new TimeInterval(lhs.Ticks - rhs.Ticks);
+      if (lhs.AsFrames != rhs.AsFrames)
+      {
+        // policy = always promote to system tick quanta
+        lhs = lhs.WithFineQuanta();
+        rhs = rhs.WithFineQuanta();
+      }
+
+      lhs.Ticks -= rhs.Ticks;
+      return lhs;
     }
 
 
     public static TimeInterval operator - (TimeInterval self)
     {
-      return new TimeInterval(self.Ticks * -1);
+      self.Ticks *= -1;
+      return self;
     }
 
 
     public static bool operator < (TimeInterval lhs, TimeInterval rhs)
     {
+      if (lhs.AsFrames != rhs.AsFrames)
+      {
+        return lhs.WithFineQuanta().Ticks < rhs.WithFineQuanta().Ticks;
+      }
+
       return lhs.Ticks < rhs.Ticks;
     }
 
     public static bool operator > (TimeInterval lhs, TimeInterval rhs)
     {
+      if (lhs.AsFrames != rhs.AsFrames)
+      {
+        return rhs.WithFineQuanta().Ticks < lhs.WithFineQuanta().Ticks;
+      }
+
       return rhs.Ticks < lhs.Ticks;
     }
 
     public static bool operator <= (TimeInterval lhs, TimeInterval rhs)
     {
+      if (lhs.AsFrames != rhs.AsFrames)
+      {
+        return lhs.WithFineQuanta().Ticks <= rhs.WithFineQuanta().Ticks;
+      }
+
       return lhs.Ticks <= rhs.Ticks;
     }
 
     public static bool operator >= (TimeInterval lhs, TimeInterval rhs)
     {
+      if (lhs.AsFrames != rhs.AsFrames)
+      {
+        return rhs.WithFineQuanta().Ticks <= lhs.WithFineQuanta().Ticks;
+      }
+
       return rhs.Ticks <= lhs.Ticks;
     }
 
     public static bool operator == (TimeInterval lhs, TimeInterval rhs)
     {
-      return lhs.Ticks == rhs.Ticks;
+      return lhs.Ticks == rhs.Ticks && lhs.AsFrames == rhs.AsFrames;
     }
 
     public static bool operator != (TimeInterval lhs, TimeInterval rhs)
     {
-      return lhs.Ticks != rhs.Ticks;
+      return lhs.Ticks != rhs.Ticks || lhs.AsFrames != rhs.AsFrames;
     }
 
   }
