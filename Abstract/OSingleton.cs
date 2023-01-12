@@ -25,28 +25,24 @@ namespace Ore
   ///   Successor should pass its own type (CRTP).
   /// </typeparam>
   [DisallowMultipleComponent]
+  [PublicAPI]
   public abstract class OSingleton<TSelf> : OComponent
     where TSelf : OSingleton<TSelf>
   {
-    [PublicAPI]
-    public static TSelf Current => s_Current;
-    [PublicAPI]
+    public static TSelf Current  => s_Current;
     public static TSelf Instance => s_Current; // compatibility API
-    [PublicAPI]
+
     public static bool IsActive => s_Current && s_Current.isActiveAndEnabled;
-    [PublicAPI]
-    public static bool IsReplaceable => !s_Current || s_Current.m_IsReplaceable;
-    [PublicAPI]
     public static bool IsDontDestroyOnLoad => s_Current && s_Current.m_DontDestroyOnLoad;
+    public static bool IsReplaceable => !s_Current || s_Current.m_IsReplaceable;
+    public static bool IsValidWhileDisabled => s_Current && s_Current.m_IsValidWhileDisabled;
 
 
-    [PublicAPI]
     public static bool TryGuarantee(out TSelf instance)
     {
       return (instance = s_Current) || TryCreate(out instance);
     }
 
-    [PublicAPI]
     public static bool TryCreate(out TSelf instance, bool force = false)
     {
       if (s_Current)
@@ -66,7 +62,6 @@ namespace Ore
       return instance && instance.m_IsSingletonInitialized;
     }
 
-    [PublicAPI]
     public static bool TryGetScene(out Scene scene)
     {
       if (IsActive)
@@ -85,9 +80,11 @@ namespace Ore
 
   [Header("Scene Singleton")]
     [SerializeField]
+    protected bool m_DontDestroyOnLoad;
+    [SerializeField]
     protected bool m_IsReplaceable;
     [SerializeField]
-    protected bool m_DontDestroyOnLoad;
+    protected bool m_IsValidWhileDisabled;
     [SerializeField]
     protected DelayedEvent m_OnFirstInitialized = DelayedEvent.WithApproximateFrameDelay(1);
 
@@ -100,7 +97,9 @@ namespace Ore
     public void ValidateInitialization() // good to call as a listener to "On First Initialized"
     {
       // ReSharper disable once HeapView.ObjectAllocation
-      OAssert.AllTrue(this, s_Current == this, m_IsSingletonInitialized, isActiveAndEnabled);
+      OAssert.AllTrue(this, s_Current == this,
+                               m_IsSingletonInitialized || !m_OnFirstInitialized.IsEnabled,
+                               isActiveAndEnabled);
       Orator.Log($"Singleton registration validated.", this);
     }
 
@@ -113,8 +112,18 @@ namespace Ore
 
     protected virtual void OnDisable()
     {
-      if (s_Current == this)
+      if (!m_IsValidWhileDisabled && s_Current == this)
+      {
         s_Current = null;
+      }
+    }
+
+    protected virtual void OnDestroy()
+    {
+      if (s_Current == this)
+      {
+        s_Current = null;
+      }
     }
 
     protected virtual void OnValidate()
