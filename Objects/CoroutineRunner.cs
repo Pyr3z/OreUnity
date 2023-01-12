@@ -56,7 +56,7 @@ namespace Ore
     [System.NonSerialized]
     private readonly HashMap<object, CoroutineList> m_ActiveMap = new HashMap<object, CoroutineList>()
     {
-      KeyComparator = new ObjectSavvyComparator()
+      KeyComparator = new UnitySavvyComparator()
     };
 
     [System.NonSerialized]
