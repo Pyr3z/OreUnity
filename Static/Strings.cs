@@ -45,16 +45,19 @@ namespace Ore
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToInvariant([NotNull] this IConvertible self)
     {
       return self.ToString(InvariantFormatter);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToInvariantLower([NotNull] this IConvertible self)
     {
       return self.ToString(InvariantFormatter).ToLowerInvariant();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToInvariantUpper([NotNull] this IConvertible self)
     {
       return self.ToString(InvariantFormatter).ToUpperInvariant();
@@ -80,11 +83,13 @@ namespace Ore
     }
 
 
-    public static string ToBase64(this string str, Encoding encoding = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string ToBse64(this string str, Encoding encoding = null)
     {
       return Convert.ToBase64String(str.ToBytes(encoding));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ParseBase64(this string str, Encoding encoding = null)
     {
       return FromBytes(Convert.FromBase64String(str), encoding);
@@ -101,6 +106,7 @@ namespace Ore
       #endif
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string MakeISOTimezone(System.TimeSpan offset)
     {
       return $"{(offset.Ticks < 0 ? '-' : '+')}{offset:hhmm}";
@@ -108,7 +114,7 @@ namespace Ore
 
     public static string MakeISO6391(SystemLanguage lang)
     {
-switch (lang)
+      switch (lang)
       {
         case SystemLanguage.Afrikaans:
           return "AF";
