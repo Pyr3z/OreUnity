@@ -167,7 +167,7 @@ namespace Ore
       throw new UnanticipatedException($"HashMap.TryInsert: Too many consecutive collisions! hash31={hash31}, jumps={jumps}, key={key}");
     }
 
-    private int FindBucket(in K key)
+    private int FindBucket([CanBeNull] in K key)
     {
       if (m_Count == 0 || m_KeyComparator.IsNone(key))
       {

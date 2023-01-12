@@ -42,10 +42,11 @@
 
 using System.Collections;
 using System.Collections.Generic;
+
 using JetBrains.Annotations;
 
 using Array = System.Array;
-using Type = System.Type;
+using Type  = System.Type;
 
 
 namespace Ore
@@ -82,7 +83,7 @@ namespace Ore
 
     public int Version => m_Version;
 
-    public V this[K key]
+    public V this[[CanBeNull] K key]
     {
       get
       {
@@ -178,7 +179,7 @@ namespace Ore
     /// false  if it doesn't.
     /// </returns>
     [Pure]
-    public bool ContainsKey([NotNull] K key)
+    public bool ContainsKey([CanBeNull] K key)
     {
       return FindBucket(in key) >= 0;
     }
@@ -199,7 +200,7 @@ namespace Ore
     /// false  if no value was found.
     /// </returns>
     [Pure]
-    public bool Find([NotNull] in K key, out V value)
+    public bool Find([CanBeNull] in K key, [CanBeNull] out V value)
     {
       int i = FindBucket(in key);
       if (i > -1)
