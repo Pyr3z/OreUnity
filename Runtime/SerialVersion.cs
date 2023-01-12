@@ -127,6 +127,15 @@ namespace Ore
       return m_String ?? string.Empty;
     }
 
+    [NotNull]
+    public string ToString(bool stripExtras)
+    {
+      if (m_Vers.IsEmpty())
+        return string.Empty;
+
+      return stripExtras ? string.Join(SEPARATOR, m_Vers) : (m_String ?? string.Empty);
+    }
+
     public override int GetHashCode()
     {
       int hihash = 0;
