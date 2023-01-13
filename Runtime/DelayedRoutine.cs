@@ -125,6 +125,13 @@ namespace Ore
           m_Payload.Invoke();
         }
       }
+      catch (System.Exception e)
+      {
+        // apparently this catch block is required for finally block to work
+        // in the case of exceptions thrown in payload
+        Orator.NFE(e);
+        throw;
+      }
       finally
       {
         m_Payload = null;
