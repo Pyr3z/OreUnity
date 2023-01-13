@@ -339,6 +339,16 @@ namespace Ore
       return OfSeconds(seconds);
     }
 
+    public static implicit operator long (TimeInterval t)
+    {
+      return t.WithSystemTicks().Ticks;
+    }
+
+    public static implicit operator double (TimeInterval t)
+    {
+      return t.WithSystemTicks().Seconds;
+    }
+
 
     public static TimeInterval operator * (TimeInterval lhs, int rhs)
     {

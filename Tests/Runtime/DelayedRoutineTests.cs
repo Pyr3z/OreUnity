@@ -19,13 +19,13 @@ public static class DelayedRoutineTests
 {
 
   [UnityTest]
-  public static IEnumerator DelayByFrame([Values(1, 10, 100, 180)] int frames)
+  public static IEnumerator DelayByFrame([Values(0, 1, 10, 100, 333, 1234)] int frames)
   {
     int start = Time.frameCount;
 
     void action()
     {
-      Assert.AreEqual(start + frames, Time.frameCount, $"frame # after delay of {frames}");
+      Assert.AreEqual(1 + start + frames, Time.frameCount, $"frame # after delay of {frames}");
     }
 
     var delay = TimeInterval.OfFrames(frames);
@@ -36,11 +36,11 @@ public static class DelayedRoutineTests
   [UnityTest]
   public static IEnumerator DelayBySeconds([Values(0f, 1f, 3.14f, 5f)] float seconds)
   {
-    float start = Time.unscaledTime;
+    float start = Time.realtimeSinceStartup;
 
     void action()
     {
-      Assert.AreEqual(start + seconds, Time.realtimeSinceStartup, 0.05, $"time after delay of {seconds}");
+      Assert.AreEqual(start + seconds, Time.realtimeSinceStartup, TimeInterval.LastFrame, $"time after delay of {seconds}");
     }
 
     var delay = TimeInterval.OfSeconds(seconds);
