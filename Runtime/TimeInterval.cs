@@ -37,16 +37,22 @@ namespace Ore
     public static readonly TimeInterval Second    = new TimeInterval(10000000L);
 
 
-    public static double TicksLastFrame
+    public static double SmoothTicksLastFrame
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get => ActiveScene.IsPlaying ? Time.smoothDeltaTime / TICKS2SEC : TICKS_PER_FRAME_60FPS;
     }
 
+    public static double TicksLastFrame
+    {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => ActiveScene.IsPlaying ? Time.unscaledDeltaTime / TICKS2SEC : TICKS_PER_FRAME_60FPS;
+    }
+
     public static TimeInterval LastFrame
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => new TimeInterval(TicksLastFrame);
+      get => new TimeInterval(SmoothTicksLastFrame);
     }
 
     public static TimeInterval ThisSession
@@ -154,9 +160,9 @@ namespace Ore
     public int Frames
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => (int)(m_AsFrames ? Ticks : Ticks / TicksLastFrame);
+      get => (int)(m_AsFrames ? Ticks : Ticks / SmoothTicksLastFrame);
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      set => Ticks = m_AsFrames ? value : (int)(value * TicksLastFrame);
+      set => Ticks = m_AsFrames ? value : (int)(value * SmoothTicksLastFrame);
     }
 
 
@@ -218,36 +224,43 @@ namespace Ore
       return new TimeInterval(nFrames, areFrames: true);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TimeInterval OfFrames(double qFrames)
+    public static TimeInterval OfFrames(float qFrames)
     {
-      return new TimeInterval((long)(TICKS_PER_FRAME_60FPS * qFrames));
+      int rounded = qFrames.Rounded();
+      if (qFrames.Approximately(rounded))
+      {
+        return new TimeInterval(rounded, areFrames: true);
+      }
+      else
+      {
+        return new TimeInterval((long)(SmoothTicksLastFrame * qFrames));
+      }
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public TimeInterval WithSystemTicks()
     {
-      return !m_AsFrames ? this : new TimeInterval((long)(Ticks * TicksLastFrame), areFrames: false);
+      return !m_AsFrames ? this : new TimeInterval((long)(Ticks * SmoothTicksLastFrame), areFrames: false);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public TimeInterval WithFrameTicks()
     {
-      return m_AsFrames ? this : new TimeInterval((long)(Ticks / TicksLastFrame), areFrames: true);
+      return m_AsFrames ? this : new TimeInterval((long)(Ticks / SmoothTicksLastFrame), areFrames: true);
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void IncrementFrame(int n = 1)
     {
-      Ticks += m_AsFrames ? n : (long)(n * TicksLastFrame);
+      Ticks += m_AsFrames ? n : (long)(n * (n * n == 1 ? TicksLastFrame : SmoothTicksLastFrame));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DecrementFrame(int n = 1)
     {
-      Ticks -= m_AsFrames ? n : (long)(n * TicksLastFrame);
+      IncrementFrame(-1 * n);
     }
 
 

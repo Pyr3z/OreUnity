@@ -292,6 +292,11 @@ namespace Ore.Editor
       EGL.LabelField("Platform:", target.ToInvariant());
 
       EGL.EndBuildTargetSelectionGrouping();
+
+      EGL.LabelField("Is this playing?", Application.IsPlaying(this).ToString());
+
+      // EGL.LabelField("Can null play?", Application.IsPlaying(null).ToString());
+      // no.
     }
 
 

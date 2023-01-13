@@ -4,10 +4,15 @@
 **/
 
 using JetBrains.Annotations;
+
 using UnityEngine;
+
 using IEnumerator = System.Collections.IEnumerator;
 using Action      = System.Action;
 using Condition   = System.Func<bool>;
+
+using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
+using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
 
 
 namespace Ore
@@ -15,12 +20,14 @@ namespace Ore
 
   public struct DelayedRoutine : IEnumerator
   {
-    public object Current => null;
+    public object Current => null; // = re-enter routine every frame
 
-    Action             m_Payload;
-    readonly int       m_DoneFrame;
-    readonly float     m_DoneTime;
+
+    Action       m_Payload;
+    TimeInterval m_Countdown;
+
     readonly Condition m_Condition;
+
 
     /// <summary>
     /// Without a delay specified, invokes the payload next frame (when run
@@ -65,11 +72,9 @@ namespace Ore
                                       TimeInterval delay,
                           [CanBeNull] Condition    condition = null)
     {
-      const long TICKS_ARE_FRAMES = TimeInterval.TICKS_ARE_FRAMES_THRESH;
       m_Payload   = payload;
       m_Condition = condition;
-      m_DoneFrame = Time.frameCount + delay.Frames;
-      m_DoneTime  = (delay.Ticks > TICKS_ARE_FRAMES) ? Time.unscaledTime + delay.FSeconds : -1f;
+      m_Countdown = delay;
     }
 
     /// <summary>
@@ -97,8 +102,7 @@ namespace Ore
     {
       m_Payload   = payload;
       m_Condition = condition;
-      m_DoneFrame = Time.frameCount + frameDelay;
-      m_DoneTime  = -1f;
+      m_Countdown = TimeInterval.OfFrames(frameDelay);
     }
 
     public bool MoveNext()
@@ -108,8 +112,9 @@ namespace Ore
         return false;
       }
 
-      if (m_DoneFrame > Time.frameCount || m_DoneTime > Time.unscaledTime)
+      if (m_Countdown.Ticks > 0)
       {
+        m_Countdown.DecrementFrame();
         return true;
       }
 

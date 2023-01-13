@@ -244,6 +244,19 @@ namespace Ore
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int Rounded(this float val)
+    {
+      return (int)(val + (val < 0 ? -1 : 1) * 0.5f);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static long Rounded(this double val)
+    {
+      return (long)(val + (val < 0 ? -1 : 1) * 0.5);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Clamp(this float val, float min, float max)
     {
       if (max < min)
