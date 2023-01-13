@@ -84,7 +84,7 @@ namespace Ore
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string ToBse64(this string str, Encoding encoding = null)
+    public static string ToBase64(this string str, Encoding encoding = null)
     {
       return Convert.ToBase64String(str.ToBytes(encoding));
     }
