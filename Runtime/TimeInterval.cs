@@ -8,9 +8,14 @@
  *      (2) a new type was needed for direct Unity serializability.
 **/
 
-using System;
 using JetBrains.Annotations;
+
 using UnityEngine;
+
+using System;
+
+using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
+using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
 
 
 namespace Ore
@@ -32,6 +37,25 @@ namespace Ore
     public static readonly TimeInterval Second    = new TimeInterval(10000000L);
 
 
+    public static double TicksLastFrame
+    {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => ActiveScene.IsPlaying ? Time.smoothDeltaTime / TICKS2SEC : TICKS_PER_FRAME_60FPS;
+    }
+
+    public static TimeInterval LastFrame
+    {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => new TimeInterval(TicksLastFrame);
+    }
+
+    public static TimeInterval ThisSession
+    {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => !ActiveScene.IsPlaying ? Zero : new TimeInterval(Time.realtimeSinceStartupAsDouble);
+    }
+
+
     public const double TICKS2MS  = 1e-4;
     public const double TICKS2SEC = TICKS2MS  / 1000;
     public const double TICKS2MIN = TICKS2SEC / 60;
@@ -42,151 +66,198 @@ namespace Ore
     private const long TICKS_PER_FRAME_60FPS = (long)(1.0 / 60 / TICKS2SEC);
 
 
+    //
+    // TODO none of the following properties (up until `Frames`) work when m_AsFrames=true
+    //
+
     public double Millis
     {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get => Ticks * TICKS2MS;
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2MS + (value >= 0 ? 0.5 : -0.5));
     }
 
     public float FMillis
     {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get => (float)(Ticks * TICKS2MS);
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2MS + (value >= 0f ? 0.5f : -0.5f));
     }
 
     public double Seconds
     {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get => Ticks * TICKS2SEC;
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2SEC + (value >= 0 ? 0.5 : -0.5));
     }
 
     public float FSeconds
     {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get => (float)(Ticks * TICKS2SEC);
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2SEC + (value >= 0f ? 0.5f : -0.5f));
     }
 
     public double Minutes
     {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get => Ticks * TICKS2MIN;
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2MIN + (value >= 0 ? 0.5 : -0.5));
     }
 
     public float FMinutes
     {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get => (float)(Ticks * TICKS2MIN);
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2MIN + (value >= 0f ? 0.5f : -0.5f));
     }
 
     public double Hours
     {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get => Ticks * TICKS2HR;
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2HR + (value >= 0 ? 0.5 : -0.5));
     }
 
     public float FHours
     {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get => (float)(Ticks * TICKS2HR);
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2HR + (value >= 0f ? 0.5f : -0.5f));
     }
 
     public double Days
     {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get => Ticks * TICKS2DAY;
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2DAY + (value >= 0 ? 0.5 : -0.5));
     }
 
     public float FDays
     {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get => (float)(Ticks * TICKS2DAY);
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2DAY + (value >= 0f ? 0.5f : -0.5f));
     }
 
+
     public int Frames
     {
-      get => (int)(AsFrames ? Ticks : Ticks / TICKS_PER_FRAME_60FPS);
-      set => Ticks = AsFrames ? value : value * TICKS_PER_FRAME_60FPS;
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => (int)(m_AsFrames ? Ticks : Ticks / TicksLastFrame);
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      set => Ticks = m_AsFrames ? value : (int)(value * TicksLastFrame);
     }
 
 
     [SerializeField]
     public long Ticks;
+
     [SerializeField]
-    public bool AsFrames; // I've matured away from using bitflags for this sort of thing.
-                          // ... perhaps only for today ...
+    private bool m_AsFrames;
+      // I've matured away from using bitflags for this sort of thing.
+      // ... perhaps only for today ...
 
 
     public TimeInterval(long ticks, bool areFrames = false)
     {
-      Ticks    = ticks;
-      AsFrames = areFrames;
+      Ticks      = ticks;
+      m_AsFrames = areFrames;
+    }
+
+    public TimeInterval(double seconds)
+    {
+      Ticks      = (long)(seconds / TICKS2SEC);
+      m_AsFrames = false;
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TimeInterval OfMillis(double ms)
     {
       return new TimeInterval((long)(ms / TICKS2MS + (ms >= 0 ? 0.5 : -0.5)));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TimeInterval OfSeconds(double s)
     {
       return new TimeInterval((long)(s / TICKS2SEC + (s >= 0 ? 0.5 : -0.5)));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TimeInterval OfMinutes(double m)
     {
       return new TimeInterval((long)(m / TICKS2MIN + (m >= 0 ? 0.5 : -0.5)));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TimeInterval OfHours(double h)
     {
       return new TimeInterval((long)(h / TICKS2HR + (h >= 0 ? 0.5 : -0.5)));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TimeInterval OfDays(double d)
     {
       return new TimeInterval((long)(d / TICKS2DAY + (d >= 0 ? 0.5 : -0.5)));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TimeInterval OfFrames(int nFrames)
     {
       return new TimeInterval(nFrames, areFrames: true);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TimeInterval OfFrames(double qFrames)
     {
       return new TimeInterval((long)(TICKS_PER_FRAME_60FPS * qFrames));
     }
 
 
-    public TimeInterval WithFineQuanta()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TimeInterval WithSystemTicks()
     {
-      if (!AsFrames)
-        return this;
-
-      if (Time.frameCount < 1)
-        return new TimeInterval(Ticks * TICKS_PER_FRAME_60FPS, areFrames: false);
-      else
-        return new TimeInterval((long)(Ticks / Time.smoothDeltaTime / TICKS2SEC), areFrames: false);
+      return !m_AsFrames ? this : new TimeInterval((long)(Ticks * TicksLastFrame), areFrames: false);
     }
 
-    public TimeInterval WithFrameQuanta()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TimeInterval WithFrameTicks()
     {
-      if (AsFrames)
-        return this;
-
-      if (Time.frameCount < 1)
-        return new TimeInterval(Ticks / TICKS_PER_FRAME_60FPS, areFrames: true);
-      else
-        return new TimeInterval((long)(Seconds * Time.smoothDeltaTime), areFrames: true);
+      return m_AsFrames ? this : new TimeInterval((long)(Ticks / TicksLastFrame), areFrames: true);
     }
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void IncrementFrame(int n = 1)
+    {
+      Ticks += m_AsFrames ? n : (long)(n * TicksLastFrame);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DecrementFrame(int n = 1)
+    {
+      Ticks -= m_AsFrames ? n : (long)(n * TicksLastFrame);
+    }
+
+
+    // implement interfaces
 
     public int CompareTo(TimeInterval other)
     {
-      if (AsFrames != other.AsFrames)
+      if (m_AsFrames != other.m_AsFrames)
       {
-        return (int)(WithFineQuanta().Ticks - other.WithFineQuanta().Ticks);
+        return (int)(WithSystemTicks().Ticks - other.WithSystemTicks().Ticks);
       }
 
       return (int)(Ticks - other.Ticks);
@@ -194,9 +265,9 @@ namespace Ore
 
     int IComparable<TimeSpan>.CompareTo(TimeSpan other)
     {
-      if (AsFrames)
+      if (m_AsFrames)
       {
-        return (int)(WithFineQuanta().Ticks - other.Ticks);
+        return (int)(WithSystemTicks().Ticks - other.Ticks);
       }
 
       return (int)(Ticks - other.Ticks);
@@ -204,14 +275,14 @@ namespace Ore
 
     public bool Equals(TimeInterval other)
     {
-      return Ticks == other.Ticks && AsFrames == other.AsFrames;
+      return Ticks == other.Ticks && m_AsFrames == other.m_AsFrames;
     }
 
     bool IEquatable<TimeSpan>.Equals(TimeSpan other)
     {
-      if (AsFrames)
+      if (m_AsFrames)
       {
-        return WithFineQuanta().Ticks.IsRelatively(other.Ticks, errorPct: 0.01f);
+        return WithSystemTicks().Ticks.IsRelatively(other.Ticks, errorPct: 0.01f);
       }
 
       return Ticks == other.Ticks;
@@ -224,7 +295,7 @@ namespace Ore
 
     public override int GetHashCode()
     {
-      return (int)Hashing.MixHashes(AsFrames.ToInt(), (int)Ticks, (int)(Ticks >> 32));
+      return (int)Hashing.MixHashes(m_AsFrames.ToInt(), (int)Ticks, (int)(Ticks >> 32));
     }
 
     public override string ToString()
@@ -233,6 +304,7 @@ namespace Ore
     }
 
 
+    // operators
 
     public static implicit operator TimeSpan (TimeInterval t)
     {
@@ -287,11 +359,11 @@ namespace Ore
 
     public static TimeInterval operator + (TimeInterval lhs, TimeInterval rhs)
     {
-      if (lhs.AsFrames != rhs.AsFrames)
+      if (lhs.m_AsFrames != rhs.m_AsFrames)
       {
         // policy = always promote to system tick quanta
-        lhs = lhs.WithFineQuanta();
-        rhs = rhs.WithFineQuanta();
+        lhs = lhs.WithSystemTicks();
+        rhs = rhs.WithSystemTicks();
       }
 
       lhs.Ticks += rhs.Ticks;
@@ -300,11 +372,11 @@ namespace Ore
 
     public static TimeInterval operator - (TimeInterval lhs, TimeInterval rhs)
     {
-      if (lhs.AsFrames != rhs.AsFrames)
+      if (lhs.m_AsFrames != rhs.m_AsFrames)
       {
         // policy = always promote to system tick quanta
-        lhs = lhs.WithFineQuanta();
-        rhs = rhs.WithFineQuanta();
+        lhs = lhs.WithSystemTicks();
+        rhs = rhs.WithSystemTicks();
       }
 
       lhs.Ticks -= rhs.Ticks;
@@ -321,9 +393,9 @@ namespace Ore
 
     public static bool operator < (TimeInterval lhs, TimeInterval rhs)
     {
-      if (lhs.AsFrames != rhs.AsFrames)
+      if (lhs.m_AsFrames != rhs.m_AsFrames)
       {
-        return lhs.WithFineQuanta().Ticks < rhs.WithFineQuanta().Ticks;
+        return lhs.WithSystemTicks().Ticks < rhs.WithSystemTicks().Ticks;
       }
 
       return lhs.Ticks < rhs.Ticks;
@@ -331,9 +403,9 @@ namespace Ore
 
     public static bool operator > (TimeInterval lhs, TimeInterval rhs)
     {
-      if (lhs.AsFrames != rhs.AsFrames)
+      if (lhs.m_AsFrames != rhs.m_AsFrames)
       {
-        return rhs.WithFineQuanta().Ticks < lhs.WithFineQuanta().Ticks;
+        return rhs.WithSystemTicks().Ticks < lhs.WithSystemTicks().Ticks;
       }
 
       return rhs.Ticks < lhs.Ticks;
@@ -341,9 +413,9 @@ namespace Ore
 
     public static bool operator <= (TimeInterval lhs, TimeInterval rhs)
     {
-      if (lhs.AsFrames != rhs.AsFrames)
+      if (lhs.m_AsFrames != rhs.m_AsFrames)
       {
-        return lhs.WithFineQuanta().Ticks <= rhs.WithFineQuanta().Ticks;
+        return lhs.WithSystemTicks().Ticks <= rhs.WithSystemTicks().Ticks;
       }
 
       return lhs.Ticks <= rhs.Ticks;
@@ -351,9 +423,9 @@ namespace Ore
 
     public static bool operator >= (TimeInterval lhs, TimeInterval rhs)
     {
-      if (lhs.AsFrames != rhs.AsFrames)
+      if (lhs.m_AsFrames != rhs.m_AsFrames)
       {
-        return rhs.WithFineQuanta().Ticks <= lhs.WithFineQuanta().Ticks;
+        return rhs.WithSystemTicks().Ticks <= lhs.WithSystemTicks().Ticks;
       }
 
       return rhs.Ticks <= lhs.Ticks;
@@ -361,12 +433,12 @@ namespace Ore
 
     public static bool operator == (TimeInterval lhs, TimeInterval rhs)
     {
-      return lhs.Ticks == rhs.Ticks && lhs.AsFrames == rhs.AsFrames;
+      return lhs.Ticks == rhs.Ticks && lhs.m_AsFrames == rhs.m_AsFrames;
     }
 
     public static bool operator != (TimeInterval lhs, TimeInterval rhs)
     {
-      return lhs.Ticks != rhs.Ticks || lhs.AsFrames != rhs.AsFrames;
+      return lhs.Ticks != rhs.Ticks || lhs.m_AsFrames != rhs.m_AsFrames;
     }
 
   }
