@@ -23,14 +23,15 @@ namespace Ore
 
   [DefaultExecutionOrder(-500)] // rationale: Many things might depend on this class early-on.
   [DisallowMultipleComponent]
+  [PublicAPI]
   public class ActiveScene : OSingleton<ActiveScene>
   {
-    [PublicAPI]
     public static Scene Scene => s_ActiveScene;
 
     // ReSharper disable once ConvertToNullCoalescingCompoundAssignment
-    [PublicAPI]
     public static ICoroutineRunner Coroutines => s_Coroutiner ?? (s_Coroutiner = new CoroutineRunnerBuffer());
+
+    public static bool IsPlaying => Instance && Application.IsPlaying(Instance);
 
 
   [Header("[ActiveScene]"), Space]
