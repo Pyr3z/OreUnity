@@ -130,7 +130,6 @@ namespace Ore
         // apparently this catch block is required for finally block to work
         // in the case of exceptions thrown in payload
         Orator.NFE(e);
-        throw;
       }
       finally
       {

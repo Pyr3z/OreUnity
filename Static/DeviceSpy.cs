@@ -121,6 +121,7 @@ namespace Ore
 
     public static string ToJSON(bool prettyPrint = EditorBridge.IS_DEBUG)
     {
+      // TODO this is cool code -- perhaps it can be more generalized and made into a utility?
       var json = new JObject();
 
       foreach (var property in typeof(DeviceSpy).GetProperties(TypeMembers.STATIC))
