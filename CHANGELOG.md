@@ -10,6 +10,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests: ActiveScene
 - Tests: Invoke
 
+## [3.0.0] - 2023-01-13
+- Note: I acknowledge that the major version should have increased much earlier, due to non-backwards-compatible API changes. From here on out, this will be done better; whether by fewer API changes or by incrementing the major version more frequently, we shall see.
+- Fixed: `EditorBridge.IS_EDITOR` now has proper value.
+- Changed: `IEvent.TryInvoke()` implementors should now return false if IsEnabled is false.
+- Added: Static extension class `SceneObjects` - for extension methods to GameObject and Component instances. Currently defines `IsInPrefabAsset()` extensions.
+- Changed: HashMap API nullability contracts (method parameters).
+- Changed: More aggressive inlining for: Strings, TimeInterval
+- Changed: TimeInterval's internal implementation for representing "system ticks" vs "frame ticks".
+- Fixed: Exceptions thrown in DelayedRoutine's payload causing the routine to go rogue.
+- Added: new public utilities in `Integers` & `Floats`.
+- Removed: Stub scripts ReferencePaletteWindow, OConfig
+- Removed: `Coalescer` data structure, for being no more useful (nor performant) than simple LINQ equivalent.
+- Added: `OSingleton.IsValidWhileDisabled` (for edge case scenario found by Ayrton).
+
 ## [2.12.0] - 2023-01-05
 - Changed: renamed VersionID -> SerialVersion; also simplified the implementation and added ctor from System.Version.
 - Changed: The following classes now participate in a trialing of C#'s [MethodImpl(MethodImplOptions.AggressiveInlining)]:
