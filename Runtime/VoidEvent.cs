@@ -34,9 +34,10 @@ namespace Ore
 
     public virtual bool TryInvoke()
     {
-      if (m_IsEnabled)
-        base.Invoke();
+      if (!m_IsEnabled)
+        return false;
 
+      base.Invoke();
       return true;
     }
 
