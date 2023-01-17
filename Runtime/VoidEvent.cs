@@ -24,12 +24,7 @@ namespace Ore
 
     public new void Invoke()
     {
-      #if UNITY_ASSERTIONS
-      bool ok = TryInvoke();
-      OAssert.True(ok, nameof(TryInvoke));
-      #else
       _ = TryInvoke();
-      #endif
     }
 
     public virtual bool TryInvoke()
