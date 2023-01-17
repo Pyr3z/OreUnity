@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests: ActiveScene
 - Tests: Invoke
 
+## [3.0.1] - 2023-01-17
+- Fixed: VoidEvent.Invoke() no longer triggers a failed assertion when it is disabled.
+
 ## [3.0.0] - 2023-01-13
 - Note: I acknowledge that the major version should have increased much earlier, due to non-backwards-compatible API changes. From here on out, this will be done better; whether by fewer API changes or by incrementing the major version more frequently, we shall see.
 - Fixed: `EditorBridge.IS_EDITOR` now has proper value.
