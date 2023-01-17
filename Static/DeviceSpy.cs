@@ -5,10 +5,12 @@
 
 using JetBrains.Annotations;
 
+using UnityEngine;
+
+#if NEWTONSOFT_JSON
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
-using UnityEngine;
+#endif
 
 using TimeSpan = System.TimeSpan;
 
@@ -121,38 +123,42 @@ namespace Ore
 
     public static string ToJSON(bool prettyPrint = EditorBridge.IS_DEBUG)
     {
-      // TODO this is cool code -- perhaps it can be more generalized and made into a utility?
-      var json = new JObject();
+      #if !NEWTONSOFT_JSON
+        return "\"Newtonsoft.Json not available.\"";
+      #else
+        // TODO this is cool code -- perhaps it can be more generalized and made into a utility?
+        var json = new JObject();
 
-      foreach (var property in typeof(DeviceSpy).GetProperties(TypeMembers.STATIC))
-      {
-        try
+        foreach (var property in typeof(DeviceSpy).GetProperties(TypeMembers.STATIC))
         {
-          var value = property.GetValue(null);
-          if (property.PropertyType.IsPrimitive)
+          try
           {
-            json[property.Name] = new JValue(value);
+            var value = property.GetValue(null);
+            if (property.PropertyType.IsPrimitive)
+            {
+              json[property.Name] = new JValue(value);
+            }
+            else if (value is TimeSpan span)
+            {
+              json[property.Name] = new JValue(span);
+            }
+            else
+            {
+              json[property.Name] = value?.ToString();
+            }
           }
-          else if (value is TimeSpan span)
+          catch (System.Exception e)
           {
-            json[property.Name] = new JValue(span);
-          }
-          else
-          {
-            json[property.Name] = value?.ToString();
+            Orator.NFE(e);
+            json[property.Name] = JValue.CreateNull();
           }
         }
-        catch (System.Exception e)
-        {
-          Orator.NFE(e);
-          json[property.Name] = JValue.CreateNull();
-        }
-      }
 
-      json["RAMUsageMB"]      = CalcRAMUsageMB();
-      json["RAMUsagePercent"] = CalcRAMUsagePercent();
+        json["RAMUsageMB"]      = CalcRAMUsageMB();
+        json["RAMUsagePercent"] = CalcRAMUsagePercent();
 
-      return json.ToString(prettyPrint ? Formatting.Indented : Formatting.None);
+        return json.ToString(prettyPrint ? Formatting.Indented : Formatting.None);
+      #endif // NEWTONSOFT_JSON
     }
 
     #if UNITY_EDITOR
