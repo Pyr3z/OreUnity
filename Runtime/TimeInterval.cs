@@ -195,6 +195,12 @@ namespace Ore
       m_AsFrames = false;
     }
 
+    public TimeInterval(TimeSpan timeSpan)
+    {
+      Ticks      = timeSpan.Ticks;
+      m_AsFrames = false;
+    }
+
     public TimeInterval(DateTime dateTime)
     {
       Ticks      = dateTime.Ticks;
@@ -252,9 +258,10 @@ namespace Ore
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public long ToUnixTime()
     {
-      return (long)(this - Epoch).Millis;
+      return this >= Epoch ? (this - Epoch).Millis.Rounded() : Millis.Rounded();
     }
 
 
@@ -341,7 +348,7 @@ namespace Ore
 
     public static implicit operator TimeSpan (TimeInterval t)
     {
-      return new TimeSpan(t.Ticks);
+      return new TimeSpan(t.WithSystemTicks().Ticks);
     }
 
     public static implicit operator TimeInterval (TimeSpan tspan)
