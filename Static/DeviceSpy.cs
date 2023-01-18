@@ -12,6 +12,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 #endif
 
+#if UNITY_IOS
+using Device = UnityEngine.iOS.Device;
+#endif
+
 using TimeSpan = System.TimeSpan;
 
 using RegionInfo = System.Globalization.RegionInfo;
@@ -40,6 +44,19 @@ namespace Ore
   #region Public section
 
     // ReSharper disable ConvertToNullCoalescingCompoundAssignment
+
+    #if UNITY_IOS
+    public static string IDFV => Device.vendorIdentifier;
+    public static string IDFA => Device.advertisingIdentifier;
+    #elif UNITY_ANDROID
+    public static string IDFV => s_IDFV ?? (s_IDFV = CalcAndroidIDFV());
+    public static string IDFA => s_IDFA ?? (s_IDFA = CalcAndroidIDFA());
+    #else
+    public static string IDFV => SystemInfo.deviceUniqueIdentifier;
+    public static string IDFA => SystemInfo.deviceUniqueIdentifier;
+    #endif
+
+    public static bool IsTrackingLimited => s_IsAdTrackingLimited;
 
     public static SerialVersion OSVersion
     {
@@ -174,6 +191,9 @@ namespace Ore
 
   #region Private section
 
+    private static string        s_IDFV;
+    private static string        s_IDFA;
+    private static bool          s_IsAdTrackingLimited;
     private static SerialVersion s_OSVersion;
     private static string        s_Brand;
     private static string        s_Model;
@@ -363,6 +383,30 @@ namespace Ore
   #region Native Platform Bindings
 
     #if UNITY_ANDROID
+
+    private static string CalcAndroidIDFV()
+    {
+      var resolver = AndroidBridge.Activity.Call<AndroidJavaObject>("getContentResolver");
+      var secure = new AndroidJavaClass("android.provider.Settings$Secure");
+
+      string id = secure.CallStatic<string>("getString", resolver, "android_id");
+
+      return id.IsEmpty() ? SystemInfo.deviceUniqueIdentifier : id;
+    }
+
+    private static string CalcAndroidIDFA()
+    {
+      var adidClient = new AndroidJavaClass("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+      var adidInfo = adidClient.CallStatic<AndroidJavaObject>("getAdvertisingIdInfo", AndroidBridge.Activity);
+
+      s_IsAdTrackingLimited = adidInfo.Call<bool>("isLimitAdTrackingEnabled");
+      if (!s_IsAdTrackingLimited)
+        return SystemInfo.unsupportedIdentifier;
+
+      string id = adidInfo.Call<string>("getId");
+
+      return id.IsEmpty() ? SystemInfo.unsupportedIdentifier : id;
+    }
 
     private static string CalcAndroidBrowser()
     {

@@ -36,6 +36,8 @@ namespace Ore
     public static readonly TimeInterval Frame     = new TimeInterval(1L, areFrames: true);
     public static readonly TimeInterval Second    = new TimeInterval(10000000L);
 
+    public static readonly TimeInterval Epoch     = new TimeInterval(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+
 
     public static double SmoothTicksLastFrame
     {
@@ -59,6 +61,12 @@ namespace Ore
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get => !ActiveScene.IsPlaying ? Zero : new TimeInterval(Time.realtimeSinceStartupAsDouble);
+    }
+
+    public static TimeInterval UtcNow
+    {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => new TimeInterval(DateTime.UtcNow);
     }
 
 
@@ -187,6 +195,12 @@ namespace Ore
       m_AsFrames = false;
     }
 
+    public TimeInterval(DateTime dateTime)
+    {
+      Ticks      = dateTime.Ticks;
+      m_AsFrames = false;
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TimeInterval OfMillis(double ms)
@@ -235,6 +249,12 @@ namespace Ore
       {
         return new TimeInterval((long)(SmoothTicksLastFrame * qFrames));
       }
+    }
+
+
+    public long ToUnixTime()
+    {
+      return (long)(this - Epoch).Millis;
     }
 
 
