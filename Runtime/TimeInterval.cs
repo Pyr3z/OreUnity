@@ -261,7 +261,7 @@ namespace Ore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public long ToUnixTime()
     {
-      return (long)(this - Epoch).Millis;
+      return this >= Epoch ? (this - Epoch).Millis.Rounded() : Millis.Rounded();
     }
 
 
