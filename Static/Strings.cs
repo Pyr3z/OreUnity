@@ -29,7 +29,7 @@ namespace Ore
   [PublicAPI]
   public static class Strings
   {
-    public static Encoding DefaultEncoding { get; set; } = Encoding.Unicode;
+    public static Encoding DefaultEncoding { get; set; } = Encoding.UTF8;
 
     public static IFormatter InvariantFormatter { get; set; } = System.Globalization.CultureInfo.InvariantCulture;
 

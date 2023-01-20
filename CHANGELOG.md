@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests: ActiveScene
 - Tests: Invoke
 
+## [3.1.1] - 2023-01-19
+- Fixed: `Strings` / `Filesystem` text writers were using Unicode (UTF16-LE) by default--it *was* tweakable by package users, but here at Ore we believe in The Best Defaults. Therefore, we've made the new default encoding **UTF8** (with BOM).
+
 ## [3.1.0] - 2023-01-18
 - Fixed: VoidEvent.Invoke() no longer triggers a failed assertion when it is disabled.
 - Added: Official dependency on Newtonsoft.Json (com.unity.nuget.newtonsoft-json 3.0.2).
