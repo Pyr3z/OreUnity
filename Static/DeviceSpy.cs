@@ -45,22 +45,44 @@ namespace Ore
 
     // ReSharper disable ConvertToNullCoalescingCompoundAssignment
 
-    #if UNITY_IOS
-    public static string IDFV => s_IDFV ?? (s_IDFV = Device.vendorIdentifier);
-    public static string IDFA => s_IDFA = Device.advertisingIdentifier; // TODO
-    #elif UNITY_ANDROID
-    public static string IDFV => s_IDFV ?? (s_IDFV = CalcAndroidIDFV());
-    public static string IDFA => s_IDFA ?? (s_IDFA = CalcAndroidIDFA());
-    #else
-    public static string IDFV => SystemInfo.deviceUniqueIdentifier;
-    public static string IDFA => SystemInfo.deviceUniqueIdentifier;
-    #endif
+    public static string IDFV
+    {
+      get
+      {
+        #if UNITY_EDITOR
+          return SystemInfo.deviceUniqueIdentifier;
+        #elif UNITY_ANDROID
+          return s_IDFV ?? (s_IDFV = CalcAndroidIDFV());
+        #elif UNITY_IOS
+          return s_IDFV ?? (s_IDFV = Device.vendorIdentifier);
+        #else
+          return SystemInfo.deviceUniqueIdentifier;
+        #endif
+      }
+    }
+    public static string IDFA
+    {
+      get
+      {
+        #if UNITY_EDITOR
+          return SystemInfo.deviceUniqueIdentifier;
+        #elif UNITY_ANDROID
+          return s_IDFA ?? (s_IDFA = CalcAndroidIDFA());
+        #elif UNITY_IOS
+          return s_IDFA = Device.advertisingIdentifier; // TODO
+        #else
+          return SystemInfo.deviceUniqueIdentifier;
+        #endif
+      }
+    }
 
     public static bool IsTrackingLimited
     {
       get
       {
-        #if UNITY_ANDROID
+        #if UNITY_EDITOR
+          return s_IsAdTrackingLimited = false;
+        #elif UNITY_ANDROID
           if (s_IDFA is null)
             s_IDFA = CalcAndroidIDFA(); // TODO somehow reset cached value so it can update?
           return s_IsAdTrackingLimited;
