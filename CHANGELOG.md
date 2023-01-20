@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests: ActiveScene
 - Tests: Invoke
 
+## [3.1.2] - 2023-01-20
+- Fixed: DeviceSpy IDFA/IDFV/IsTrackingLimited should work more completely for Android + iOS.
+- Changed: DeviceSpy.RegionISOString was deceptive, as it returned an ISO 3166-2 **country** code, not region code. Renamed to DeviceSpy.CountryISOString.
+
 ## [3.1.1] - 2023-01-19
 - Fixed: `Strings` / `Filesystem` text writers were using Unicode (UTF16-LE) by default--it *was* tweakable by package users, but here at Ore we believe in The Best Defaults. Therefore, we've made the new default encoding **UTF8** (with BOM).
 

@@ -46,8 +46,8 @@ namespace Ore
     // ReSharper disable ConvertToNullCoalescingCompoundAssignment
 
     #if UNITY_IOS
-    public static string IDFV => Device.vendorIdentifier;
-    public static string IDFA => Device.advertisingIdentifier;
+    public static string IDFV => s_IDFV ?? (s_IDFV = Device.vendorIdentifier);
+    public static string IDFA => s_IDFA = Device.advertisingIdentifier; // TODO
     #elif UNITY_ANDROID
     public static string IDFV => s_IDFV ?? (s_IDFV = CalcAndroidIDFV());
     public static string IDFA => s_IDFA ?? (s_IDFA = CalcAndroidIDFA());
@@ -56,7 +56,21 @@ namespace Ore
     public static string IDFA => SystemInfo.deviceUniqueIdentifier;
     #endif
 
-    public static bool IsTrackingLimited => s_IsAdTrackingLimited;
+    public static bool IsTrackingLimited
+    {
+      get
+      {
+        #if UNITY_ANDROID
+          if (s_IDFA is null)
+            s_IDFA = CalcAndroidIDFA(); // TODO somehow reset cached value so it can update?
+          return s_IsAdTrackingLimited;
+        #elif UNITY_IOS
+          return s_IsAdTrackingLimited = Device.advertisingTrackingEnabled;
+        #else
+          return s_IsAdTrackingLimited = false;
+        #endif
+      }
+    }
 
     public static SerialVersion OSVersion
     {
@@ -97,7 +111,7 @@ namespace Ore
 
     public static string LanguageISOString => s_LangISO6391 ?? (s_LangISO6391 = CalcISO6391());
 
-    public static string RegionISOString => s_RegionISO3166a2 ?? (s_RegionISO3166a2 = CalcISO3166a2());
+    public static string CountryISOString => s_CountryISO3166a2 ?? (s_CountryISO3166a2 = CalcISO3166a2());
 
     public static TimeSpan TimezoneOffset => (TimeSpan)(s_TimezoneOffset ?? (s_TimezoneOffset = CalcTimezoneOffset()));
 
@@ -200,7 +214,7 @@ namespace Ore
     private static string        s_Browser;
     private static string        s_Carrier;
     private static string        s_LangISO6391;
-    private static string        s_RegionISO3166a2;
+    private static string        s_CountryISO3166a2;
     private static TimeSpan?     s_TimezoneOffset;
     private static float?        s_DiagonalInches;
     private static float?        s_AspectRatio;
@@ -400,7 +414,7 @@ namespace Ore
       var adidInfo = adidClient.CallStatic<AndroidJavaObject>("getAdvertisingIdInfo", AndroidBridge.Activity);
 
       s_IsAdTrackingLimited = adidInfo.Call<bool>("isLimitAdTrackingEnabled");
-      if (!s_IsAdTrackingLimited)
+      if (s_IsAdTrackingLimited == false)
         return SystemInfo.unsupportedIdentifier;
 
       string id = adidInfo.Call<string>("getId");
