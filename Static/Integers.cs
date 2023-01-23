@@ -134,9 +134,9 @@ namespace Ore
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int AtMost(this int self, int max)
+    public static long AtLeast(this long self, long min)
     {
-      return self > max ? max : self;
+      return self < min ? min : self;
     }
 
     public static int AtLeast(this int self, int min, bool warn)
@@ -144,12 +144,25 @@ namespace Ore
       if (self < min)
       {
         #if UNITY_ASSERTIONS
-          OAssert.False(warn, $"{self} < {min}");
+        OAssert.False(warn, $"{self} < {min}");
         #endif
         return min;
       }
 
       return self;
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int AtMost(this int self, int max)
+    {
+      return self > max ? max : self;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static long AtMost(this long self, long max)
+    {
+      return self > max ? max : self;
     }
 
     public static int AtMost(this int self, int max, bool warn)
