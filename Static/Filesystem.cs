@@ -16,9 +16,8 @@ using Exception             = System.Exception;
 using UnauthorizedException = System.UnauthorizedAccessException;
 using ArgumentException     = System.ArgumentException;
 
-using DateTime    = System.DateTime;
-using Encoding    = System.Text.Encoding;
-using CultureInfo = System.Globalization.CultureInfo;
+using DateTime = System.DateTime;
+using Encoding = System.Text.Encoding;
 
 
 namespace Ore
@@ -68,7 +67,7 @@ namespace Ore
 
         File.WriteAllBytes(filepath, json.ToBytes(encoding ?? s_DefaultEncoding));
 
-        s_LastWrittenPath = filepath;
+        s_LastModifiedPath = filepath;
         LastException = null;
         return true;
       }
@@ -108,6 +107,8 @@ namespace Ore
 
         objectOrArray.WriteTo(writer);
 
+        s_LastModifiedPath = filepath;
+        LastException = null;
         return true;
       }
       catch (JsonException jex)
@@ -148,7 +149,7 @@ namespace Ore
 
         File.WriteAllBytes(filepath, data);
 
-        s_LastWrittenPath = filepath;
+        s_LastModifiedPath = filepath;
         LastException = null;
         return true;
       }
@@ -253,6 +254,9 @@ namespace Ore
         reader = JsonAuthority.MakeTextReader(stream);
 
         json = JToken.ReadFrom(reader, JsonAuthority.LoadStrict);
+
+        LastException = null;
+        s_LastReadPath = filepath;
       }
       catch (JsonException jex)
       {
@@ -324,6 +328,7 @@ namespace Ore
       {
         data = File.ReadAllBytes(filepath);
         LastException = null;
+        s_LastReadPath = filepath;
         return true;
       }
       catch (IOException iox)
@@ -392,23 +397,27 @@ namespace Ore
       try
       {
         #if UNITY_EDITOR
+          if (!PathExists(path) || UnityEditor.FileUtil.DeleteFileOrDirectory(path))
+          {
+            LastException = null;
+            s_LastModifiedPath = path;
+            return true;
+          }
+        #else
+          if (File.Exists(path))
+          {
+            File.Delete(path);
+            s_LastModifiedPath = path;
+          }
+          else if (Directory.Exists(path))
+          {
+            Directory.Delete(path, recursive: true);
+            s_LastModifiedPath = path;
+          }
 
-        return !PathExists(path) || UnityEditor.FileUtil.DeleteFileOrDirectory(path);
-
-        #else // if !UNITY_EDITOR
-
-        if (File.Exists(path))
-        {
-          File.Delete(path);
-        }
-        else if (Directory.Exists(path))
-        {
-          Directory.Delete(path, recursive: true);
-        }
-
-        return true;
-
-        #endif // UNITY_EDITOR
+          LastException = null;
+          return true;
+        #endif
       }
       catch (IOException iox)
       {
@@ -442,6 +451,7 @@ namespace Ore
         }
 
         LastException = null;
+        s_LastModifiedPath = filepath;
         return true;
       }
       catch (IOException iox)
@@ -465,7 +475,13 @@ namespace Ore
 
   #region INFO & DEBUGGING
 
-    public static string LastWrittenPath => s_LastWrittenPath ?? string.Empty;
+    public static string LastReadPath => s_LastReadPath ?? string.Empty;
+
+    public static string LastModifiedPath => s_LastModifiedPath ?? string.Empty;
+
+    [System.Obsolete("LastWrittenPath is deprecated. Use LastModifiedPath instead.")]
+    public static string LastWrittenPath => LastModifiedPath;
+
 
     public static IOResult GetLastIOResult()
     {
@@ -559,9 +575,10 @@ namespace Ore
 
   #region PRIVATE
 
-    private static Encoding s_DefaultEncoding;
+    private static Encoding s_DefaultEncoding = Encoding.UTF8;
 
-    private static string s_LastWrittenPath;
+    private static string s_LastModifiedPath;
+    private static string s_LastReadPath;
 
     private const int EXCEPTION_RING_SZ = 4;
     private static readonly Exception[] s_ExceptionRingBuf = new Exception[EXCEPTION_RING_SZ];

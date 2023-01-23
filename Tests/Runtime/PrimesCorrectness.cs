@@ -260,7 +260,7 @@ public static class PrimesCorrectness
 
     if (Filesystem.TryWriteText($"Temp/PrimeSizes_{growFactor:F2}f_{hashprime}.cs", bob.ToString()))
     {
-      Debug.Log($"Wrote C# to \"./{Filesystem.LastWrittenPath}\".");
+      Debug.Log($"Wrote C# to \"./{Filesystem.LastModifiedPath}\".");
     }
     else
     {
