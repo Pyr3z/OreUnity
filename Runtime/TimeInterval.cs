@@ -264,6 +264,12 @@ namespace Ore
       return this >= Epoch ? (this - Epoch).Millis.Rounded() : Millis.Rounded();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public DateTime ToDateTime()
+    {
+      return new DateTime(WithSystemTicks());
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public TimeInterval WithSystemTicks()
