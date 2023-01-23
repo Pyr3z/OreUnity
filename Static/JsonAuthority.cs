@@ -30,7 +30,7 @@ namespace Ore
     public static readonly DateTimeZoneHandling DateTimezoneHandling = DateTimeZoneHandling.Utc;
 
 
-    public static readonly JsonLoadSettings LoadSettings = new JsonLoadSettings
+    public static readonly JsonLoadSettings LoadStrict = new JsonLoadSettings
     {
       // klients may feel free to alter at runtime
       #if DEBUG
@@ -44,10 +44,17 @@ namespace Ore
       #endif
     };
 
-    public static readonly JsonMergeSettings MergeSettings = new JsonMergeSettings
+    public static readonly JsonMergeSettings MergeReplace = new JsonMergeSettings
     {
       PropertyNameComparison = StringComparison.InvariantCultureIgnoreCase,
       MergeArrayHandling     = MergeArrayHandling.Replace,
+      MergeNullValueHandling = MergeNullValueHandling.Ignore
+    };
+
+    public static readonly JsonMergeSettings MergeConcat = new JsonMergeSettings
+    {
+      PropertyNameComparison = StringComparison.InvariantCultureIgnoreCase,
+      MergeArrayHandling     = MergeArrayHandling.Concat,
       MergeNullValueHandling = MergeNullValueHandling.Ignore
     };
 

@@ -197,7 +197,7 @@ namespace Ore
 
       try
       {
-        objectOrArray.Merge(token, JsonAuthority.MergeSettings);
+        objectOrArray.Merge(token, JsonAuthority.MergeReplace);
         return true;
       }
       catch (JsonException jex)
@@ -252,7 +252,7 @@ namespace Ore
         stream = new StreamReader(filepath, encoding ?? s_DefaultEncoding);
         reader = JsonAuthority.MakeTextReader(stream);
 
-        json = JToken.ReadFrom(reader, JsonAuthority.LoadSettings);
+        json = JToken.ReadFrom(reader, JsonAuthority.LoadStrict);
       }
       catch (JsonException jex)
       {
