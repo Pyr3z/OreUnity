@@ -21,6 +21,23 @@ namespace Ore
     public static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
 
+    public static long ToUnixMillis(this DateTime timepoint)
+    {
+      if (timepoint == default || timepoint < Epoch)
+        return 0L;
+
+      return (timepoint.ToUniversalTime() - Epoch).TotalMilliseconds.Rounded();
+    }
+
+    public static int ToUnixSeconds(this DateTime timepoint)
+    {
+      if (timepoint == default || timepoint < Epoch)
+        return 0;
+
+      return (int)(timepoint.ToUniversalTime() - Epoch).TotalSeconds.Rounded();
+    }
+
+
     public static void SetPlayerPref(this DateTime value, [NotNull] string key)
     {
       PlayerPrefs.SetString(key, value.ToBinary().ToHexString());
