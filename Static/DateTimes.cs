@@ -26,16 +26,30 @@ namespace Ore
       PlayerPrefs.SetString(key, value.ToBinary().ToHexString());
     }
 
+    public static bool TryGetPlayerPref([NotNull] string key, out DateTime value)
+    {
+      string str = PlayerPrefs.GetString(key, string.Empty);
+
+      if (!str.IsEmpty() && Parsing.TryParseHex(str, out long raw))
+      {
+        value = DateTime.FromBinary(raw);
+        return true;
+      }
+
+      value = default;
+      return false;
+    }
+
     public static DateTime GetPlayerPref([NotNull] string key)
     {
       string str = PlayerPrefs.GetString(key, string.Empty);
 
-      if (Parsing.TryParseHex(str, out long raw))
+      if (!str.IsEmpty() && Parsing.TryParseHex(str, out long raw))
       {
         return DateTime.FromBinary(raw);
       }
 
-      return DateTime.MinValue;
+      return default;
     }
 
   } // end class DateTimes
