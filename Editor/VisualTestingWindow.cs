@@ -3,7 +3,8 @@
  *  @date       2022-10-18
 **/
 
-using System.Collections.Generic;
+// ReSharper disable CognitiveComplexity
+
 using UnityEngine;
 using UnityEditor;
 
@@ -293,10 +294,21 @@ namespace Ore.Editor
 
       EGL.EndBuildTargetSelectionGrouping();
 
-      EGL.LabelField("Is this playing?", Application.IsPlaying(this).ToString());
-
       // EGL.LabelField("Can null play?", Application.IsPlaying(null).ToString());
-      // no.
+      // A: no.
+
+      EGL.BeginFoldoutHeaderGroup(true, "DateTimes!");
+      EGL.LabelField("default:",          default(System.DateTime).ToISO8601());
+      EGL.LabelField("MinValue:",         System.DateTime.MinValue.ToISO8601());
+      EGL.LabelField("MaxValue:",         System.DateTime.MaxValue.ToISO8601());
+      EGL.LabelField("Epoch:",            DateTimes.Epoch.ToISO8601());
+      EGL.LabelField("SpreadsheetEpoch:", DateTimes.SpreadsheetEpoch.ToISO8601());
+      var nowXls = DateTimes.NowSpreadsheetDays();
+      if (GUILayout.Button(nowXls.ToInvariant()))
+      {
+        GUIUtility.systemCopyBuffer = nowXls.ToInvariant();
+      }
+      EGL.EndFoldoutHeaderGroup();
     }
 
 
