@@ -28,37 +28,47 @@ namespace Ore
   {
 
     public static void NextFrame([NotNull]   Action    action,
-                                 [CanBeNull] Object    ifAlive = null,
+                                 [CanBeNull] Condition ifTrue = null)
+    {
+      ActiveScene.Coroutines.Run(new DelayedRoutine(action, ifTrue));
+    }
+
+    public static void NextFrame([NotNull]   Action    action,
+                                 [CanBeNull] Object    ifAlive,
                                  [CanBeNull] Condition ifTrue  = null)
     {
-      var routine = new DelayedRoutine(action, ifTrue);
+      if (!ifAlive)
+        return;
 
-      if (ifAlive is null)
-      {
-        ActiveScene.Coroutines.Run(routine);
-      }
-      else
-      {
-        ActiveScene.Coroutines.Run(routine, ifAlive);
-      }
+      ActiveScene.Coroutines.Run(new DelayedRoutine(action, ifTrue), ifAlive);
     }
 
 
     public static void AfterDelay([NotNull]   Action       action,
                                               TimeInterval delay,
-                                  [CanBeNull] Object       ifAlive = null,
                                   [CanBeNull] Condition    ifTrue  = null)
     {
       if (delay.Ticks > 0L)
       {
-        if (ifAlive is null)
-        {
-          ActiveScene.Coroutines.Run(new DelayedRoutine(action, delay, ifTrue));
-        }
-        else
-        {
-          ActiveScene.Coroutines.Run(new DelayedRoutine(action, delay, ifTrue), ifAlive);
-        }
+        ActiveScene.Coroutines.Run(new DelayedRoutine(action, delay, ifTrue));
+      }
+      else
+      {
+        action.Invoke();
+      }
+    }
+
+    public static void AfterDelay([NotNull]   Action       action,
+                                              TimeInterval delay,
+                                  [NotNull]   Object       ifAlive,
+                                  [CanBeNull] Condition    ifTrue  = null)
+    {
+      if (!ifAlive)
+        return;
+
+      if (delay.Ticks > 0L)
+      {
+        ActiveScene.Coroutines.Run(new DelayedRoutine(action, delay, ifTrue), ifAlive);
       }
       else if ((ifTrue is null || ifTrue.Invoke()) && (ifAlive is null || ifAlive))
       {

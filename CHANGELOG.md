@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added: `DateTimes` static utility, for when using Ore.TimeInterval proxies just don't make sense.
     - Includes standardized method for (de)serializing DateTimes to/from PlayerPrefs.
 - Added: Methods in `Parsing` to parse hexadecimal more specifically.
+- Changed: Split `Invoke` APIs into overloads, mostly so that "ifAlive" objects are more clearly distinguished.
 
 ## [3.1.2] - 2023-01-20
 - Fixed: DeviceSpy IDFA/IDFV/IsTrackingLimited should work more completely for Android + iOS.
