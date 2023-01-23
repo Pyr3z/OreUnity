@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests: ActiveScene
 - Tests: Invoke
 
+## [3.2.0] - 2023-01-22
+- Added: `DateTimes` static utility, for when using Ore.TimeInterval proxies just don't make sense.
+    - Includes standardized method for (de)serializing DateTimes to/from PlayerPrefs.
+- Added: Methods in `Parsing` to parse hexadecimal more specifically.
+
 ## [3.1.2] - 2023-01-20
 - Fixed: DeviceSpy IDFA/IDFV/IsTrackingLimited should work more completely for Android + iOS.
 - Changed: DeviceSpy.RegionISOString was deceptive, as it returned an ISO 3166-2 **country** code, not region code. Renamed to DeviceSpy.CountryISOString.
