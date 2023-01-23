@@ -3,9 +3,10 @@
  *  @date       2022-06-03
 **/
 
-using System.IO;
 using JetBrains.Annotations;
 using UnityEngine;
+
+using System.IO;
 
 using Encoding              = System.Text.Encoding;
 using Exception             = System.Exception;
@@ -21,18 +22,26 @@ namespace Ore
   public static class Filesystem
   {
 
+    public static Encoding DefaultEncoding
+    {
+      [NotNull]
+      get => s_DefaultEncoding;
+      set => s_DefaultEncoding = value ?? Encoding.UTF8;
+    }
+
+
   #region FUNDAMENTAL FILE I/O
 
-    public static bool TryWriteObject([NotNull] string filepath, [CanBeNull] object obj)
+    public static bool TryWriteObject([NotNull] string filepath, [CanBeNull] object obj, Encoding encoding = null)
     {
       #if DEBUG // default value for "pretty print JSON" relies on debug build status
-      return TryWriteObject(filepath, obj, pretty: true);
+      return TryWriteObject(filepath, obj, pretty: true, encoding);
       #else
-      return TryWriteObject(filepath, obj, pretty: false);
+      return TryWriteObject(filepath, obj, pretty: false, encoding);
       #endif
     }
 
-    public static bool TryWriteObject([NotNull] string filepath, [CanBeNull] object obj, bool pretty)
+    public static bool TryWriteObject([NotNull] string filepath, [CanBeNull] object obj, bool pretty, Encoding encoding = null)
     {
       try
       {
@@ -54,7 +63,7 @@ namespace Ore
           json = "{}";
         }
 
-        File.WriteAllBytes(filepath, json.ToBytes(Encoding.Unicode));
+        File.WriteAllBytes(filepath, json.ToBytes(encoding ?? s_DefaultEncoding));
 
         s_LastWrittenPath = filepath;
         LastException = null;
@@ -78,7 +87,7 @@ namespace Ore
 
     public static bool TryWriteText([NotNull] string filepath, [CanBeNull] string text, Encoding encoding = null)
     {
-      return TryWriteBinary(filepath, text.ToBytes(encoding));
+      return TryWriteBinary(filepath, text.ToBytes(encoding ?? s_DefaultEncoding));
     }
 
     public static bool TryWriteBinary([NotNull] string filepath, [NotNull] byte[] data)
@@ -429,6 +438,8 @@ namespace Ore
 
 
   #region PRIVATE
+
+    private static Encoding s_DefaultEncoding;
 
     private static string s_LastWrittenPath;
 

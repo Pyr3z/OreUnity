@@ -29,7 +29,12 @@ namespace Ore
   [PublicAPI]
   public static class Strings
   {
-    public static Encoding DefaultEncoding { get; set; } = Encoding.UTF8;
+    [System.Obsolete("Strings.DefaultEncoding is obsolete. Use Filesystem.DefaultEncoding instead.")]
+    public static Encoding DefaultEncoding
+    {
+      get => Filesystem.DefaultEncoding;
+      set => Filesystem.DefaultEncoding = value;
+    }
 
     public static IFormatter InvariantFormatter { get; set; } = System.Globalization.CultureInfo.InvariantCulture;
 
@@ -64,35 +69,70 @@ namespace Ore
     }
 
 
-    public static byte[] ToBytes(this string str, Encoding encoding = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static byte[] ToBytes([CanBeNull] this string str)
     {
-      if (IsEmpty(str))
+      return ToBytes(str, Filesystem.DefaultEncoding);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static byte[] ToBytes([CanBeNull] this string str, [NotNull] Encoding encoding)
+    {
+      if (str is null || str.Length == 0)
         return System.Array.Empty<byte>();
 
-      return (encoding ?? DefaultEncoding).GetBytes(str);
+      return encoding.GetBytes(str);
     }
 
 
-    public static string FromBytes([CanBeNull] byte[] bytes, [CanBeNull] Encoding encoding = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string FromBytes([CanBeNull] byte[] bytes)
+    {
+      // TODO it is possible to detect encoding from the bytes' features; should consider doing that!
+      //      (however, it can be a lot of superfluous code to run... maybe offer a separate utility?)
+      return FromBytes(bytes, Filesystem.DefaultEncoding);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string FromBytes([CanBeNull] byte[] bytes, [NotNull] Encoding encoding)
     {
       if (bytes is null || bytes.Length == 0)
         return string.Empty;
 
-      return (encoding ?? DefaultEncoding).GetString(bytes);
+      return encoding.GetString(bytes);
         // can throw ArgumentException if the bytes violate the encoding provided
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string ToBase64(this string str, Encoding encoding = null)
+    public static string ToBase64([CanBeNull] this string str)
     {
-      return Convert.ToBase64String(str.ToBytes(encoding));
+      return ToBase64(str, Filesystem.DefaultEncoding);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string ParseBase64(this string str, Encoding encoding = null)
+    public static string ToBase64([CanBeNull] this string str, [NotNull] Encoding encoding)
     {
-      return FromBytes(Convert.FromBase64String(str), encoding);
+      if (str is null || str.Length == 0)
+        return string.Empty;
+
+      return Convert.ToBase64String(encoding.GetBytes(str));
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string FromBase64([CanBeNull] string str)
+    {
+      return FromBase64(str, Filesystem.DefaultEncoding);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string FromBase64([CanBeNull] string str, [NotNull] Encoding encoding)
+    {
+      if (str is null || str.Length == 0)
+        return string.Empty;
+
+      return encoding.GetString(Convert.FromBase64String(str));
     }
 
 
