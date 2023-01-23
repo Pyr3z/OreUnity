@@ -78,6 +78,7 @@ namespace Ore
     }
 
 
+    // ReSharper disable once CognitiveComplexity
     protected bool TryInitialize(TSelf self)
     {
       OAssert.True(this == self, "Proper usage: this.TryInitialize(this)", this);

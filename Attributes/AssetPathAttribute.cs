@@ -9,10 +9,12 @@ using JetBrains.Annotations;
 namespace Ore
 {
   /// <summary>
-  /// Apply me to OAssetSingletons to supply them with a custom path to be created in.
-  /// Note: 'Assets/' is already implied in the relative path.
-  /// Note: Please use forward slashes like a good lad.
+  ///   Apply me to ScriptableObjects to supply them with a custom path to be created in.
   /// </summary>
+  /// <remarks>
+  ///   (1) 'Assets/' is already implied in the relative path.<br/>
+  ///   (2) Please use forward slashes like a good lad.
+  /// </remarks>
   [System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
   public class AssetPathAttribute : System.Attribute
   {

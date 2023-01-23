@@ -23,7 +23,7 @@ namespace Ore.Editor
     }
 
 
-    [MenuItem("Ore/Validate/Type Attributes")]
+    [MenuItem("Ore/Validate/Asset Type Attributes")]
     internal static void ValidateTypeAttributes()
     {
       var silencers = new []
@@ -39,6 +39,15 @@ namespace Ore.Editor
         if (!tasset.IsSubclassOf(typeof(ScriptableObject)))
         {
           Orator.Error($"[{nameof(AssetPathAttribute)}] is only intended for ScriptableObject types! (t:{tasset.Name})");
+          continue;
+        }
+
+        var basetype = tasset.BaseType;
+        if ((basetype?.IsGenericType ?? false)                              &&
+            basetype.GetGenericTypeDefinition() == typeof(OAssetSingleton<>) &&
+            !AssetDatabase.FindAssets($"t:{tasset.Name}").IsEmpty())
+        {
+          // already exists, just has been moved to a different path
           continue;
         }
 
