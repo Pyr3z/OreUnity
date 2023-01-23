@@ -60,6 +60,24 @@ namespace Ore
       return int.TryParse(str, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out val);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryParseInt64(string str, out long val)
+    {
+      return long.TryParse(str, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out val);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryParseHex(string str, out int val)
+    {
+      return int.TryParse(str, NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out val);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryParseHex(string str, out long val)
+    {
+      return long.TryParse(str, NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out val);
+    }
+
 
     public static bool TryParseNextIndex(string str, out int idx)
     {

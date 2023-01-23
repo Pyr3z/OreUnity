@@ -36,7 +36,7 @@ namespace Ore
     public static readonly TimeInterval Frame     = new TimeInterval(1L, areFrames: true);
     public static readonly TimeInterval Second    = new TimeInterval(10000000L);
 
-    public static readonly TimeInterval Epoch     = new TimeInterval(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+    public static readonly TimeInterval Epoch     = new TimeInterval(DateTimes.Epoch);
 
 
     public static double SmoothTicksLastFrame
