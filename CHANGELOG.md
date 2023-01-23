@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.2.0] - 2023-01-22
 - Added: `DateTimes` static utility, for when using Ore.TimeInterval proxies just don't make sense.
     - Includes standardized method for (de)serializing DateTimes to/from PlayerPrefs.
+- Added: `JsonAuthority` static utility, for standardizing how we serialize JSON objects (currently, thru Newtonsoft.Json).
 - Added: Methods in `Parsing` to parse hexadecimal more specifically.
 - Changed: Split `Invoke` APIs into overloads, mostly so that "ifAlive" objects are more clearly distinguished.
 - Fixed: The failed assertion (Editor-only) when changing the path in [AssetPath("path")] attributes for an OAssetSingleton after an instance has already been created.

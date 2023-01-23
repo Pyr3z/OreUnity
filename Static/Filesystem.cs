@@ -4,15 +4,21 @@
 **/
 
 using JetBrains.Annotations;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 using UnityEngine;
 
 using System.IO;
 
-using Encoding              = System.Text.Encoding;
 using Exception             = System.Exception;
 using UnauthorizedException = System.UnauthorizedAccessException;
 using ArgumentException     = System.ArgumentException;
-using DateTime              = System.DateTime;
+
+using DateTime    = System.DateTime;
+using Encoding    = System.Text.Encoding;
+using CultureInfo = System.Globalization.CultureInfo;
 
 
 namespace Ore
@@ -32,23 +38,24 @@ namespace Ore
 
   #region FUNDAMENTAL FILE I/O
 
-    public static bool TryWriteObject([NotNull] string filepath, [CanBeNull] object obj, Encoding encoding = null)
-    {
-      #if DEBUG // default value for "pretty print JSON" relies on debug build status
-      return TryWriteObject(filepath, obj, pretty: true, encoding);
-      #else
-      return TryWriteObject(filepath, obj, pretty: false, encoding);
-      #endif
-    }
-
-    public static bool TryWriteObject([NotNull] string filepath, [CanBeNull] object obj, bool pretty, Encoding encoding = null)
+    public static bool TryWriteObject([NotNull] string filepath, [CanBeNull] object obj,
+                                      bool     pretty   = EditorBridge.IS_DEBUG,
+                                      Encoding encoding = null)
     {
       try
       {
         MakePathTo(filepath);
 
         string json;
-        if (!(obj is null))
+        if (obj is null)
+        {
+          json = "{}";
+        }
+        else if (obj is JToken jtok)
+        {
+          json = jtok.ToString(pretty ? Formatting.Indented : Formatting.None);
+        }
+        else
         {
           json = JsonUtility.ToJson(obj, pretty);
 
@@ -58,16 +65,16 @@ namespace Ore
             return false;
           }
         }
-        else
-        {
-          json = "{}";
-        }
 
         File.WriteAllBytes(filepath, json.ToBytes(encoding ?? s_DefaultEncoding));
 
         s_LastWrittenPath = filepath;
         LastException = null;
         return true;
+      }
+      catch (JsonException jex)
+      {
+        LastException = jex;
       }
       catch (IOException iox)
       {
@@ -80,6 +87,49 @@ namespace Ore
       catch (Exception ex)
       {
         LastException = new UnanticipatedException(ex);
+      }
+
+      return false;
+    }
+
+    public static bool TryWriteJson([NotNull] string     filepath,
+                                    [NotNull] JContainer objectOrArray,
+                                              bool       pretty   = EditorBridge.IS_DEBUG,
+                                              Encoding   encoding = null)
+    {
+      StreamWriter   stream = null;
+      JsonTextWriter writer = null;
+      try
+      {
+        MakePathTo(filepath);
+
+        stream = new StreamWriter(filepath, append: false, encoding ?? s_DefaultEncoding);
+        writer = JsonAuthority.MakeTextWriter(stream, pretty);
+
+        objectOrArray.WriteTo(writer);
+
+        return true;
+      }
+      catch (JsonException jex)
+      {
+        LastException = jex;
+      }
+      catch (IOException iox)
+      {
+        LastException = iox;
+      }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
+      }
+      finally
+      {
+        stream?.Close();
+        writer?.Close();
       }
 
       return false;
@@ -118,6 +168,7 @@ namespace Ore
       return false;
     }
 
+
     public static bool TryUpdateObject([NotNull] string filepath, [NotNull] object obj, Encoding encoding = null)
     {
       if (!TryReadText(filepath, out string json, encoding))
@@ -131,11 +182,36 @@ namespace Ore
       }
       catch (Exception e)
       {
-        LastException = new UnanticipatedException(e);
+        CurrentException = new UnanticipatedException(e);
       }
 
       return false;
     }
+
+    public static bool TryUpdateJson([NotNull] string filepath, [NotNull] JContainer objectOrArray, Encoding encoding = null)
+    {
+      if (!TryReadJson(filepath, out JToken token, encoding))
+      {
+        return false;
+      }
+
+      try
+      {
+        objectOrArray.Merge(token, JsonAuthority.MergeSettings);
+        return true;
+      }
+      catch (JsonException jex)
+      {
+        CurrentException = jex;
+      }
+      catch (Exception e)
+      {
+        CurrentException = new UnanticipatedException(e);
+      }
+
+      return false;
+    }
+
 
     public static bool TryReadObject<T>([NotNull] string filepath, [CanBeNull] out T obj, Encoding encoding = null)
     {
@@ -159,13 +235,57 @@ namespace Ore
       return false;
     }
 
+    public static bool TryReadJson([NotNull] string filepath, [NotNull] out JToken json, Encoding encoding = null)
+    {
+      json = JValue.CreateUndefined();
+
+      if (!Paths.IsValidPath(filepath))
+      {
+        LastException = new ArgumentException($"filepath: \"{filepath}\"");
+        return false;
+      }
+
+      StreamReader   stream = null;
+      JsonTextReader reader = null;
+      try
+      {
+        stream = new StreamReader(filepath, encoding ?? s_DefaultEncoding);
+        reader = JsonAuthority.MakeTextReader(stream);
+
+        json = JToken.ReadFrom(reader, JsonAuthority.LoadSettings);
+      }
+      catch (JsonException jex)
+      {
+        LastException = jex;
+      }
+      catch (IOException iox)
+      {
+        LastException = iox;
+      }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (Exception e)
+      {
+        LastException = new UnanticipatedException(e);
+      }
+      finally
+      {
+        stream?.Close();
+        reader?.Close();
+      }
+
+      return json.Type != JTokenType.Undefined;
+    }
+
     public static bool TryReadText([NotNull] string filepath, [NotNull] out string text, Encoding encoding = null)
     {
       if (TryReadBinary(filepath, out byte[] data))
       {
         try
         {
-          text = Strings.FromBytes(data, encoding);
+          text = Strings.FromBytes(data, encoding ?? s_DefaultEncoding);
           return true;
         }
         catch (ArgumentException ex)
@@ -195,7 +315,7 @@ namespace Ore
     {
       if (!Paths.IsValidPath(filepath))
       {
-        LastException = new ArgumentException("filepath");
+        LastException = new ArgumentException($"filepath: \"{filepath}\"");
         data = System.Array.Empty<byte>();
         return false;
       }
@@ -258,7 +378,7 @@ namespace Ore
       }
       else
       {
-        throw new ArgumentException($"Invalid path string \"{filepath}\".", "filepath");
+        throw new ArgumentException($"Invalid path string \"{filepath}\".", nameof(filepath));
       }
     }
 
