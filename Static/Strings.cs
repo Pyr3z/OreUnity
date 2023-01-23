@@ -36,7 +36,12 @@ namespace Ore
       set => Filesystem.DefaultEncoding = value;
     }
 
-    public static IFormatter InvariantFormatter { get; set; } = System.Globalization.CultureInfo.InvariantCulture;
+    public static IFormatter InvariantFormatter
+    {
+      [NotNull]
+      get => s_InvariantFormatter;
+      set => s_InvariantFormatter = value ?? System.Globalization.CultureInfo.InvariantCulture;
+    }
 
 
     public static readonly char[] WHITESPACES = { ' ', '\t', '\n', '\r', '\v' };
@@ -431,6 +436,11 @@ namespace Ore
 
       return bob.ToString();
     }
+
+
+    // private section
+
+    private static IFormatter s_InvariantFormatter = System.Globalization.CultureInfo.InvariantCulture;
 
   } // end static class Strings
 
