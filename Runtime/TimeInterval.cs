@@ -265,9 +265,9 @@ namespace Ore
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DateTime ToDateTime()
+    public DateTime ToDateTime(bool utc = true)
     {
-      return new DateTime(WithSystemTicks());
+      return new DateTime(WithSystemTicks(), utc ? DateTimeKind.Utc : DateTimeKind.Local);
     }
 
 
