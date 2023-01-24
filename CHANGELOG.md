@@ -6,9 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [UNRELEASED] - 2022-
+## [UNRELEASED] / TODO
 - Tests: ActiveScene
 - Tests: Invoke
+
+## [3.2.2] - 2023-01-23
+- Fixed: Filesystem.DefaultEncoding is no longer null by default. (How embarrassing...)
+- Fixed: Filesystem records LastModifiedPath correctly in all modification cases.
+- Fixed: Filesystem anticipates `System.Security.SecurityException`, which maps to `IOResult.NotPermitted`.
+- Added: Filesystem.TryGetLastModified(out file).
+- Added: Filesystem.LastReadPath 
 
 ## [3.2.0] - 2023-01-22
 - Added: `DateTimes` static utility, for when using Ore.TimeInterval proxies just don't make sense.

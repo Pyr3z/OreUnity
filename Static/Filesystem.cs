@@ -414,11 +414,12 @@ namespace Ore
       try
       {
         #if UNITY_EDITOR
-          if (!PathExists(path) || UnityEditor.FileUtil.DeleteFileOrDirectory(path))
+          if (!PathExists(path))
           {
-            LastException = null;
+          }
+          else if (UnityEditor.FileUtil.DeleteFileOrDirectory(path))
+          {
             s_LastModifiedPath = path;
-            return true;
           }
         #else
           if (File.Exists(path))
@@ -431,10 +432,10 @@ namespace Ore
             Directory.Delete(path, recursive: true);
             s_LastModifiedPath = path;
           }
-
-          LastException = null;
-          return true;
         #endif
+
+        LastException = null;
+        return true;
       }
       catch (IOException iox)
       {
