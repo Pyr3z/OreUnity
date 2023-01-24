@@ -69,25 +69,10 @@ namespace Ore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CTZ(ulong bits)
     {
-    #if BITWISE_CTZ_NOJUMP // (NOJUMP sucks don't use it)
-
-      int ctz  = 0;
-      int last = 0;
-
-      ctz += ((bits & 0xFFFFFFFF).Not() << 5); bits >>= (ctz - last); last = ctz;
-      ctz += ((bits & 0x0000FFFF).Not() << 4); bits >>= (ctz - last); last = ctz;
-      ctz += ((bits & 0x000000FF).Not() << 3); bits >>= (ctz - last); last = ctz;
-      ctz += ((bits & 0x0000000F).Not() << 2); bits >>= (ctz - last); last = ctz;
-      ctz += ((bits & 0x00000003).Not() << 1); bits >>= (ctz - last); last = ctz;
-      ctz += ((bits & 0x00000001).Not()     );
-
-      return ctz + ((bits >> (ctz - last)) & 1).Not();
-    #else // A lookup with a pre-computed DeBruijn sequence is fastest:
       if (bits == 0)
         return 64;
 
       return s_CTZLookup64[ ( LSB(bits) * c_DeBruijnKey64 ) >> 58 ];
-    #endif
     }
 
     /// <summary>
@@ -107,24 +92,10 @@ namespace Ore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CTZ(uint bits)
     {
-    #if BITWISE_CTZ_NOJUMP
-
-      int ctz = 0;
-      int last = 0;
-
-      ctz += ((bits & 0xFFFF).Not() << 4); bits >>= (ctz - last); last = ctz;
-      ctz += ((bits & 0x00FF).Not() << 3); bits >>= (ctz - last); last = ctz;
-      ctz += ((bits & 0x000F).Not() << 2); bits >>= (ctz - last); last = ctz;
-      ctz += ((bits & 0x0003).Not() << 1); bits >>= (ctz - last); last = ctz;
-      ctz += ((bits & 0x0001).Not()     );
-
-      return ctz + ((bits >> (ctz - last)) & 1).Not();
-    #else
       if (bits == 0)
         return 32;
 
       return s_CTZLookup32[ ( LSB(bits) * c_DeBruijnKey32 ) >> 27 ];
-    #endif
     }
 
     /// <summary>
@@ -144,23 +115,10 @@ namespace Ore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CTZ(ushort bits)
     {
-    #if BITWISE_CTZ_NOJUMP
-
-      int ctz = 0;
-      int last = 0;
-
-      ctz += ((bits & 0xFF).Not() << 3); bits >>= (ctz - last); last = ctz;
-      ctz += ((bits & 0x0F).Not() << 2); bits >>= (ctz - last); last = ctz;
-      ctz += ((bits & 0x03).Not() << 1); bits >>= (ctz - last); last = ctz;
-      ctz += ((bits & 0x01).Not()     );
-
-      return ctz + ((bits >> (ctz - last)) & 1).Not();
-    #else
       if (bits == 0)
         return 16;
 
       return s_CTZLookup16[ (ushort)( LSB(bits) * c_DeBruijnKey16 ) >> 12 ];
-    #endif
     }
 
     /// <summary>
@@ -180,22 +138,10 @@ namespace Ore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CTZ(byte bits)
     {
-    #if BITWISE_CTZ_NOJUMP
-
-      int ctz = 0;
-      int last = 0;
-
-      ctz += ((bits & 0xF).Not() << 2); bits >>= (ctz - last); last = ctz;
-      ctz += ((bits & 0x3).Not() << 1); bits >>= (ctz - last); last = ctz;
-      ctz += ((bits & 0x1).Not()     );
-
-      return ctz + ((bits >> (ctz - last)) & 1).Not();
-    #else
       if (bits == 0)
         return 8;
 
       return s_CTZLookup8[ (byte)( LSB(bits) * c_DeBruijnKey8 ) >> 5 ];
-    #endif
     }
 
 
