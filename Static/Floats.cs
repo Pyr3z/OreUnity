@@ -40,6 +40,10 @@ namespace Ore
     public const float PiPi    = 2 * Pi;
     public const float InvPiPi = 1f / PiPi;
 
+
+    public const string RoundTripFormat       = "G9";
+    public const string DoubleRoundTripFormat = "G17";
+
   #endregion Handy constants
 
   #region Public methods
