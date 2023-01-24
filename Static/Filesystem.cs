@@ -15,6 +15,7 @@ using System.IO;
 using Exception             = System.Exception;
 using UnauthorizedException = System.UnauthorizedAccessException;
 using ArgumentException     = System.ArgumentException;
+using SecurityException     = System.Security.SecurityException;
 
 using DateTime = System.DateTime;
 using Encoding = System.Text.Encoding;
@@ -161,6 +162,10 @@ namespace Ore
       {
         LastException = auth;
       }
+      catch (SecurityException sec)
+      {
+        LastException = sec;
+      }
       catch (Exception ex)
       {
         LastException = new UnanticipatedException(ex);
@@ -270,6 +275,10 @@ namespace Ore
       {
         LastException = auth;
       }
+      catch (SecurityException sec)
+      {
+        LastException = sec;
+      }
       catch (Exception e)
       {
         LastException = new UnanticipatedException(e);
@@ -339,6 +348,10 @@ namespace Ore
       {
         LastException = auth;
       }
+      catch (SecurityException sec)
+      {
+        LastException = sec;
+      }
       catch (Exception ex)
       {
         LastException = new UnanticipatedException(ex);
@@ -364,6 +377,10 @@ namespace Ore
       catch (UnauthorizedException auth)
       {
         LastException = auth;
+      }
+      catch (SecurityException sec)
+      {
+        LastException = sec;
       }
       catch (Exception ex)
       {
@@ -427,6 +444,10 @@ namespace Ore
       {
         LastException = auth;
       }
+      catch (SecurityException sec)
+      {
+        LastException = sec;
+      }
       catch (Exception ex)
       {
         LastException = new UnanticipatedException(ex);
@@ -462,6 +483,10 @@ namespace Ore
       {
         LastException = auth;
       }
+      catch (SecurityException sec)
+      {
+        LastException = sec;
+      }
       catch (Exception ex)
       {
         LastException = new UnanticipatedException(ex);
@@ -482,6 +507,18 @@ namespace Ore
     [System.Obsolete("LastWrittenPath is deprecated. Use LastModifiedPath instead.")]
     public static string LastWrittenPath => LastModifiedPath;
 
+
+    public static bool TryGetLastModified(out FileInfo file)
+    {
+      if (File.Exists(s_LastModifiedPath))
+      {
+        file = new FileInfo(s_LastModifiedPath);
+        return true;
+      }
+
+      file = null;
+      return false;
+    }
 
     public static IOResult GetLastIOResult()
     {
@@ -525,6 +562,7 @@ namespace Ore
         }
 
         case UnauthorizedException _:
+        case SecurityException _:
           return IOResult.NotPermitted;
 
         case UnanticipatedException unant:
