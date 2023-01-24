@@ -277,9 +277,9 @@ namespace Ore
     }
 
 
-    public static string ToHex(this Color32 c)
+    public static string ToHex(this Color32 c, string prefix = "")
     {
-      return $"{c.r:X2}{c.g:X2}{c.b:X2}{c.a:X2}";
+      return $"{prefix}{c.r:X2}{c.g:X2}{c.b:X2}{c.a:X2}";
     }
 
     public static Color32 FromHex(string hex)

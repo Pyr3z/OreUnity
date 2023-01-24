@@ -49,7 +49,7 @@ namespace Ore.Editor
           GUIUtility.systemCopyBuffer = prop.enumNames[prop.enumValueIndex];
           break;
         case SerializedPropertyType.Color:
-          GUIUtility.systemCopyBuffer = prop.colorValue.ToString();
+          GUIUtility.systemCopyBuffer = Colors.ToHex(prop.colorValue, prefix: "");
           break;
         case SerializedPropertyType.Vector2:
           GUIUtility.systemCopyBuffer = prop.vector2Value.ToString(FP_VALUE_FORMAT);
