@@ -7,6 +7,7 @@
 namespace Ore
 {
 
+  [System.Diagnostics.Conditional("UNITY_EDITOR")]
   public sealed class ReadOnlyAttribute : UnityEngine.PropertyAttribute
   {
     // editor code in Editor/ReadOnlyDrawer.cs (it's super simple)

@@ -16,6 +16,7 @@ namespace Ore
   ///   (2) Please use forward slashes like a good lad.
   /// </remarks>
   [System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+  [System.Diagnostics.Conditional("UNITY_EDITOR")]
   public class AssetPathAttribute : System.Attribute
   {
     public readonly string Path;
