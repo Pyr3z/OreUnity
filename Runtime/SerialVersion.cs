@@ -25,7 +25,7 @@ namespace Ore
 
   #region Static section
 
-    public static readonly SerialVersion None = new SerialVersion();
+    public static readonly SerialVersion None = new SerialVersion(0);
 
 
     public static SerialVersion ExtractOSVersion(string from)
@@ -74,7 +74,7 @@ namespace Ore
     public int Patch => this[2];
 
     public bool IsValid => !m_String.IsEmpty() && !m_Vers.IsEmpty();
-    public bool IsNone  => m_String.IsEmpty();
+    public bool IsNone  => m_String.IsEmpty() || m_String == "0";
     public bool HasTag  => m_TagIndex > 0;
 
     public string Tag => HasTag ? m_String.Substring(m_TagIndex) : string.Empty;
