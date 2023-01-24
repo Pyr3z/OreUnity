@@ -7,6 +7,7 @@
 namespace Ore
 {
 
+  [System.AttributeUsage(System.AttributeTargets.Field)]
   [System.Diagnostics.Conditional("UNITY_EDITOR")]
   public sealed class ReadOnlyAttribute : UnityEngine.PropertyAttribute
   {
