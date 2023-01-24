@@ -136,6 +136,19 @@ namespace Ore
       return stripExtras ? string.Join(SEPARATOR, m_Vers) : (m_String ?? string.Empty);
     }
 
+    [NotNull]
+    public string ToSemverString(bool stripExtras = false)
+    {
+      // https://semver.org
+
+      if (stripExtras || !HasTag)
+      {
+        return $"{this[0]}.{this[1]}.{this[2]}";
+      }
+
+      return $"{this[0]}.{this[1]}.{this[2]}{m_String.Substring(m_TagIndex-1)}";
+    }
+
     public override int GetHashCode()
     {
       int hihash = 0;
