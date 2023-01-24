@@ -12,15 +12,31 @@
  *    implementation will swap to using a shittier algorithm! :D
 **/
 
+using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
+using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
+
 
 namespace Ore
 {
   public static partial class Bitwise
   {
+    /// <summary>
+    ///   CTZ = Count Trailing Zeroes
+    /// </summary>
+    ///
+    /// <returns>
+    ///   The number of trailing zeroes in the binary representation,
+    ///   i.e. <c>CTZ(0b0100)</c> returns 2. Specifically:
+    ///     <li>if <c>bits</c> is non-zero, the 0-based index of the first set bit <c>[0,63]</c>.</li>
+    ///     <li>if <c>bits</c> is zero, returns its bit width <c>[64]</c>.</li>
+    /// </returns>
+    /// 
+    /// <remarks>
+    ///   See also: <a href="https://en.wikipedia.org/wiki/Find_first_set">Find First Set (FFS)</a>
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CTZ(ulong bits)
     {
-      /* Valid return range: [0,63] */
-      /* Returns bits.GetBitWidth() (64 in this case) when passed 0. */
     #if BITWISE_CTZ_NOJUMP // (NOJUMP sucks don't use it)
 
       int ctz  = 0;
@@ -42,10 +58,23 @@ namespace Ore
     #endif
     }
 
+    /// <summary>
+    ///   CTZ = Count Trailing Zeroes
+    /// </summary>
+    ///
+    /// <returns>
+    ///   The number of trailing zeroes in the binary representation,
+    ///   i.e. <c>CTZ(0b0100)</c> returns 2. Specifically:
+    ///     <li>if <c>bits</c> is non-zero, the 0-based index of the first set bit <c>[0,31]</c>.</li>
+    ///     <li>if <c>bits</c> is zero, returns its bit width <c>[32]</c>.</li>
+    /// </returns>
+    /// 
+    /// <remarks>
+    ///   See also: <a href="https://en.wikipedia.org/wiki/Find_first_set">Find First Set (FFS)</a>
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CTZ(uint bits)
     {
-      /* Valid return range: [0,31] */
-      /* Returns bits.GetBitWidth() (32 in this case) when passed 0. */
     #if BITWISE_CTZ_NOJUMP
 
       int ctz = 0;
@@ -66,10 +95,23 @@ namespace Ore
     #endif
     }
 
+    /// <summary>
+    ///   CTZ = Count Trailing Zeroes
+    /// </summary>
+    ///
+    /// <returns>
+    ///   The number of trailing zeroes in the binary representation,
+    ///   i.e. <c>CTZ(0b0100)</c> returns 2. Specifically:
+    ///     <li>if <c>bits</c> is non-zero, the 0-based index of the first set bit <c>[0,15]</c>.</li>
+    ///     <li>if <c>bits</c> is zero, returns its bit width <c>[16]</c>.</li>
+    /// </returns>
+    /// 
+    /// <remarks>
+    ///   See also: <a href="https://en.wikipedia.org/wiki/Find_first_set">Find First Set (FFS)</a>
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CTZ(ushort bits)
     {
-      /* Valid return range: [0,15] */
-      /* Returns bits.GetBitWidth() (16 in this case) when passed 0. */
     #if BITWISE_CTZ_NOJUMP
 
       int ctz = 0;
@@ -89,10 +131,23 @@ namespace Ore
     #endif
     }
 
+    /// <summary>
+    ///   CTZ = Count Trailing Zeroes
+    /// </summary>
+    ///
+    /// <returns>
+    ///   The number of trailing zeroes in the binary representation,
+    ///   i.e. <c>CTZ(0b0100)</c> returns 2. <br/> Specifically:
+    ///     <li>if <c>bits</c> is non-zero, the 0-based index of the first set bit <c>[0,7]</c>.</li>
+    ///     <li>if <c>bits</c> is zero, returns its bit width <c>[8]</c>.</li>
+    /// </returns>
+    /// 
+    /// <remarks>
+    ///   See also: <a href="https://en.wikipedia.org/wiki/Find_first_set">Find First Set (FFS)</a>
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CTZ(byte bits)
     {
-      /* Valid return range: [0,7] */
-      /* Returns bits.GetBitWidth() (8 in this case) when passed 0. */
     #if BITWISE_CTZ_NOJUMP
 
       int ctz = 0;
@@ -113,30 +168,41 @@ namespace Ore
 
 
     // The signed variants simply cast and call the unsigned versions:
+
+    /// <inheritdoc cref="Bitwise.CTZ(ulong)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CTZ(long bits)
     {
       return CTZ((ulong)bits);
     }
 
+    /// <inheritdoc cref="Bitwise.CTZ(uint)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CTZ(int bits)
     {
       return CTZ((uint)bits);
     }
 
+    /// <inheritdoc cref="Bitwise.CTZ(ushort)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CTZ(short bits)
     {
       return CTZ((ushort)bits);
     }
 
+    /// <inheritdoc cref="Bitwise.CTZ(byte)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CTZ(sbyte bits)
     {
       return CTZ((byte)bits);
     }
 
 
-    #region Private data section
-    /* The following lookups were custom generated with    */
-    /* a DeBruijn sequence tool I wrote in C (circa 2020): */
+  #region Private data section
+
+    // The following lookups were custom generated with a DeBruijn sequencer
+    // that I (LP) wrote in C (https://github.com/Pyr3z/hurry-c-lookupgen):
+
     private static readonly int[] s_CTZLookup8  = { 0, 1, 2, 4, 7, 3, 6, 5 };
 
     private static readonly int[] s_CTZLookup16 = { 0,  1, 2, 5,  3,  9, 6,  11,
@@ -157,7 +223,8 @@ namespace Ore
     private const ushort  c_DeBruijnKey16 = 0x9AF;              /* B(2,4) */
     private const uint    c_DeBruijnKey32 = 0x4653ADF;          /* B(2,5) */
     private const ulong   c_DeBruijnKey64 = 0x218A392CD3D5DBF;  /* B(2,6) */
-    #endregion Private data section
+
+  #endregion Private data section
 
   } // end static partial class Bitwise (CTZ)
 
