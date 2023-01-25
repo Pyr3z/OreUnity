@@ -92,41 +92,44 @@ namespace Ore
       return false;
     }
 
-    public static bool TryWriteJson([NotNull] string filepath, [NotNull] JContainer objectOrArray, bool pretty,
-                                    Encoding encoding = null, JsonSerializerSettings overrides = null)
+    public static bool TryWriteJson([NotNull] string filepath, [NotNull] JContainer token, bool pretty,
+                                    Encoding encoding = null, JsonSerializer serializer = null)
     {
       if (pretty != (JsonAuthority.SerializerSettings.Formatting == Formatting.Indented))
       {
-        if (overrides is null)
+        if (serializer is null)
         {
-          overrides = new JsonSerializerSettings();
+          serializer = JsonSerializer.CreateDefault();
         }
 
-        overrides.Formatting = pretty ? Formatting.Indented : Formatting.None;
+        serializer.Formatting = pretty ? Formatting.Indented : Formatting.None;
       }
 
-      return TryWriteJson(filepath, objectOrArray, encoding, overrides);
+      return TryWriteJson(filepath, token, encoding, serializer);
     }
 
-    public static bool TryWriteJson([NotNull] string filepath, [NotNull] JContainer objectOrArray,
-                                    Encoding encoding = null, JsonSerializerSettings overrides = null)
+    public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object obj,
+                                    Encoding encoding = null, JsonSerializer serializer = null)
     {
+      if (obj is null)
+      {
+        obj = JValue.CreateNull();
+      }
+
       StreamWriter   stream = null;
       JsonTextWriter writer = null;
       try
       {
         MakePathTo(filepath);
         stream = new StreamWriter(filepath, append: false, encoding ?? s_DefaultEncoding);
-        writer = JsonAuthority.MakeWriter(stream, out JsonConverter[] converters, overrides);
+        writer = new JsonTextWriter(stream);
 
-        objectOrArray.WriteTo(writer, converters);
+        if (serializer is null)
+        {
+          serializer = JsonSerializer.CreateDefault();
+        }
 
-        // var serializer = JsonSerializer.CreateDefault(overrides);
-        //   // --> if overrides is not null, only properties that have been
-        //   //     explicitly set by you will override the default settings
-        //   //     (which are defined by JsonAuthority.SerializerSettings).
-        //
-        // serializer.Serialize(writer, objectOrArray);
+        serializer.Serialize(writer, obj);
 
         s_LastModifiedPath = filepath;
         LastException = null;
@@ -215,10 +218,19 @@ namespace Ore
     }
 
     public static bool TryUpdateJson([NotNull] string filepath, [NotNull] JContainer objectOrArray,
-                                     Encoding encoding = null, JsonSerializerSettings overrides = null)
+                                     Encoding encoding = null, JsonSerializer serializer = null)
     {
-      if (!TryReadJson(filepath, out JToken token, encoding, overrides))
+      if (!TryReadJson(filepath, out JToken token, encoding, serializer))
       {
+        return false;
+      }
+
+      if (token.Type != objectOrArray.Type)
+      {
+        CurrentException = new ArgumentException(
+          $"Cannot update object representation from JSON: Container type mismatch.\nprevious={objectOrArray.Type}, read={token.Type}",
+          nameof(objectOrArray)
+        );
         return false;
       }
 
@@ -263,7 +275,7 @@ namespace Ore
     }
 
     public static bool TryReadJson([NotNull] string filepath, [NotNull] out JToken token,
-                                   Encoding encoding = null, JsonSerializerSettings overrides = null)
+                                   Encoding encoding = null, JsonSerializer serializer = null)
     {
       token = JValue.CreateUndefined();
 
@@ -280,12 +292,12 @@ namespace Ore
         stream = new StreamReader(filepath, encoding ?? s_DefaultEncoding);
         reader = new JsonTextReader(stream);
 
-        var deserializer = JsonSerializer.CreateDefault(overrides);
-          // --> if overrides is not null, only properties that have been
-          //     explicitly set by you will override the default settings
-          //     (which are defined by JsonAuthority.SerializerSettings).
+        if (serializer is null)
+        {
+          serializer = JsonSerializer.CreateDefault();
+        }
         
-        var maybeNull = deserializer.Deserialize<JToken>(reader);
+        var maybeNull = serializer.Deserialize<JToken>(reader);
         
         if (maybeNull != null)
         {
