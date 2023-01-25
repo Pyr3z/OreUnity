@@ -79,6 +79,8 @@ namespace Ore
     // using constant now since Application.targetFrameRate cannot be called in all contexts...
     private const long TICKS_PER_FRAME_60FPS = (long)(1.0 / 60 / TICKS2SEC);
 
+    private const DateTimeKind ASSUME_DATETIME_KIND = DateTimeKind.Utc;
+
 
     //
     // TODO none of the following properties (up until `Frames`) work when m_AsFrames=true
@@ -203,6 +205,21 @@ namespace Ore
 
     public TimeInterval(DateTime dateTime)
     {
+      if (dateTime.Kind != ASSUME_DATETIME_KIND)
+      {
+        #pragma warning disable CS0162
+        switch (ASSUME_DATETIME_KIND)
+        {
+          case DateTimeKind.Utc:
+            dateTime = dateTime.ToUniversalTime();
+            break;
+          case DateTimeKind.Local:
+            dateTime = dateTime.ToLocalTime();
+            break;
+        }
+        #pragma warning restore CS0162
+      }
+
       Ticks      = dateTime.Ticks;
       m_AsFrames = false;
     }
@@ -265,9 +282,9 @@ namespace Ore
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DateTime ToDateTime(bool utc = true)
+    public DateTime ToDateTime(DateTimeKind kind = ASSUME_DATETIME_KIND)
     {
-      return new DateTime(WithSystemTicks(), utc ? DateTimeKind.Utc : DateTimeKind.Local);
+      return new DateTime(WithSystemTicks(), kind);
     }
 
 
@@ -352,10 +369,23 @@ namespace Ore
 
     // operators
 
-    public static implicit operator TimeSpan (TimeInterval t)
+    // explicit casts = assume the caller knows what t represents
+
+    public static explicit operator TimeSpan (TimeInterval t)
     {
-      return new TimeSpan(t.WithSystemTicks().Ticks);
+      return new TimeSpan(t.Ticks);
     }
+
+    public static explicit operator DateTime (TimeInterval t)
+    {
+      return new DateTime(t.Ticks, ASSUME_DATETIME_KIND);
+    }
+
+    public static explicit operator TimeInterval (DateTime timepoint)
+    {
+      return new TimeInterval(timepoint);
+    }
+
 
     public static implicit operator TimeInterval (TimeSpan tspan)
     {
