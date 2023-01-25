@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests: ActiveScene
 - Tests: Invoke
 
+## [3.3.1] - 2023-01-25 (API hotfix)
+- Changed: `Filesystem.Try*Json()` - instead of a JsonSerializerSettings object, caller should pass in a custom JsonSerializer to override the defaults set in `JsonAuthority`.
+    - Reasoning: It is better if caller could decide if they want to reuse a customized serializer, and potentially keep it cached, rather than reconstruct one every time the Filesystem utility is invoked.
+
 ## [3.3.0] - 2023-01-24
 - Added: `JsonAuthority.SerializerSettings` - default settings automatically used globally.
     - Can be modified in-place to be automatically applied in subsequent Json.NET reads/writes.
