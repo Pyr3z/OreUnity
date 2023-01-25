@@ -36,7 +36,7 @@ namespace Ore
 
     public static long ToUnixTicks(this DateTime timepoint)
     {
-      if (timepoint == default || timepoint < Epoch)
+      if (timepoint == default)
         return 0;
 
       return (timepoint.ToUniversalTime() - Epoch).Ticks;
@@ -44,7 +44,7 @@ namespace Ore
 
     public static double ToUnixMillis(this DateTime timepoint)
     {
-      if (timepoint == default || timepoint < Epoch)
+      if (timepoint == default)
         return 0;
 
       return (timepoint.ToUniversalTime() - Epoch).TotalMilliseconds;
@@ -52,7 +52,7 @@ namespace Ore
 
     public static double ToUnixSeconds(this DateTime timepoint)
     {
-      if (timepoint == default || timepoint < Epoch)
+      if (timepoint == default)
         return 0;
 
       return (timepoint.ToUniversalTime() - Epoch).TotalSeconds;
@@ -60,7 +60,7 @@ namespace Ore
 
     public static double ToUnixDays(this DateTime timepoint)
     {
-      if (timepoint == default || timepoint < Epoch)
+      if (timepoint == default)
         return 0;
 
       return (timepoint.ToUniversalTime() - Epoch).TotalDays;
