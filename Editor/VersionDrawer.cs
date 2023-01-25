@@ -3,10 +3,11 @@
  *  @date       2022-09-12
 **/
 
+// ReSharper disable CognitiveComplexity
+
 using System.Collections.Generic;
 
 using UnityEngine;
-
 using UnityEditor;
 
 
@@ -25,6 +26,16 @@ namespace Ore.Editor
       var str_prop = prop.FindPropertyRelative("m_String");
 
       string str = str_prop.stringValue;
+
+      if (!GUI.enabled)
+      {
+        GUI.enabled = true;
+        total = EditorGUI.PrefixLabel(total, label);
+        EditorGUI.SelectableLabel(total, str);
+        GUI.enabled = false;
+        return;
+      }
+
       m_ScratchVer.Deserialize(str);
 
       int ilen = m_ScratchVer.Length;
@@ -126,7 +137,7 @@ namespace Ore.Editor
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
-      if (property.isExpanded)
+      if (GUI.enabled && property.isExpanded)
         return OGUI.STD_LINE_HEIGHT + OGUI.STD_LINE_ADVANCE * 2;
       return OGUI.STD_LINE_HEIGHT;
     }
