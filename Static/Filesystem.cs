@@ -278,7 +278,7 @@ namespace Ore
       try
       {
         stream = new StreamReader(filepath, encoding ?? s_DefaultEncoding);
-        reader = JsonAuthority.MakeReader(stream, out JsonConverter[] converters, overrides);
+        reader = new JsonTextReader(stream);
 
         var deserializer = JsonSerializer.CreateDefault(overrides);
           // --> if overrides is not null, only properties that have been
