@@ -175,12 +175,18 @@ namespace Ore
       set => Ticks = m_AsFrames ? value : (int)(value * SmoothTicksLastFrame);
     }
 
+    public bool TicksAreFrames
+    {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => m_AsFrames;
+    }
+
 
     [SerializeField]
     public long Ticks;
 
     [SerializeField]
-    private bool m_AsFrames;
+    private /* readonly */ bool m_AsFrames;
       // I've matured away from using bitflags for this sort of thing.
       // ... perhaps only for today ...
 
