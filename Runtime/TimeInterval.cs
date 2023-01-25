@@ -77,7 +77,7 @@ namespace Ore
     public const double TICKS2DAY = TICKS2HR  / 24;
 
     // using constant now since Application.targetFrameRate cannot be called in all contexts...
-    private const long TICKS_PER_FRAME_60FPS = (long)(1.0 / 60 / TICKS2SEC);
+    private const double TICKS_PER_FRAME_60FPS = 1.0 / 60 / TICKS2SEC;
 
     private const DateTimeKind ASSUME_DATETIME_KIND = DateTimeKind.Utc;
 
@@ -297,13 +297,13 @@ namespace Ore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public TimeInterval WithSystemTicks()
     {
-      return !m_AsFrames ? this : new TimeInterval((long)(Ticks * SmoothTicksLastFrame), areFrames: false);
+      return !m_AsFrames ? this : new TimeInterval((Ticks * SmoothTicksLastFrame).Rounded(), areFrames: false);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public TimeInterval WithFrameTicks()
     {
-      return m_AsFrames ? this : new TimeInterval((long)(Ticks / SmoothTicksLastFrame), areFrames: true);
+      return m_AsFrames ? this : new TimeInterval((Ticks / SmoothTicksLastFrame).Rounded(), areFrames: true);
     }
 
 
