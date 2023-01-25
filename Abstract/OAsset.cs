@@ -44,10 +44,11 @@ namespace Ore
       where T : ScriptableObject
     {
       #if UNITY_EDITOR
-        if (OAssert.Fails(!Filesystem.PathExists(path), "OAsset.Create assumes asset path does not already exist."))
+        if (Filesystem.PathExists(path))
         {
-          instance = null;
-          return false;
+          instance = UnityEditor.AssetDatabase.LoadAssetAtPath(path, type) as T;
+          Orator.Log($"SKIPPED creating Asset of type <{type.Name}> - file already exists at \"{path}\".", instance);
+          return instance;
         }
       #endif
 
