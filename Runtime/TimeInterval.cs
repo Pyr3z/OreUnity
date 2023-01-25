@@ -469,6 +469,16 @@ namespace Ore
       return lhs;
     }
 
+    public static DateTime operator + (DateTime lhs, TimeInterval rhs)
+    {
+      return lhs.AddTicks(rhs.WithSystemTicks().Ticks);
+    }
+
+    public static DateTime operator - (DateTime lhs, TimeInterval rhs)
+    {
+      return lhs.AddTicks(rhs.WithSystemTicks().Ticks * -1);
+    }
+
 
     public static TimeInterval operator - (TimeInterval self)
     {

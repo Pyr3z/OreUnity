@@ -1,3 +1,9 @@
+# TODO (incomplete)
+- Unit tests for:
+    - ActiveScene
+    - Ore.Invoke
+    - JsonAuthority / Filesystem.Try*Json
+
 # Changelog
 All notable changes to this project will be documented in this file.
 
@@ -6,9 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [UNRELEASED] / TODO
-- Tests: ActiveScene
-- Tests: Invoke
+## [3.4.0] - UNRELEASED
+- Added: TimeInterval operators on System.DateTimes.
+- Added: TimeInterval explicit cast to System.DateTime.
+    - Note: TI representations of DateTimes always convert to/from UTC time.
+- Changed: TimeInterval implicit cast to TimeSpan is now an **explicit** cast.
 
 ## [3.3.1] - 2023-01-25 (API hotfix)
 - Changed: `Filesystem.Try*Json()` - instead of a JsonSerializerSettings object, caller should pass in a custom JsonSerializer to override the defaults set in `JsonAuthority`.
