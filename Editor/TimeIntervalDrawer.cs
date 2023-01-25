@@ -20,15 +20,28 @@ namespace Ore.Editor
       "Minutes",
       "Hours",
       "Days",
+      "Frames",
     };
 
-    // class field will be shared in arrays of TimeIntervals (fine to keep for now)
-    private int m_Units = 2;
+    private const int DEFAULT_UNITS = 2; // "Seconds"
+
+    // TODO class field will be shared in arrays of TimeIntervals (probs fine for now)
+    private int m_Units = DEFAULT_UNITS;
 
 
     public override void OnGUI(Rect total, SerializedProperty prop, GUIContent label)
     {
-      prop = prop.FindPropertyRelative(nameof(TimeInterval.Ticks));
+      var propTicks = prop.FindPropertyRelative(nameof(TimeInterval.Ticks));
+      var propAsFrames = prop.FindPropertyRelative("m_AsFrames");
+
+      if (propAsFrames.boolValue)
+      {
+        m_Units = 6; // "Frames"
+      }
+      else if (m_Units == 6)
+      {
+        m_Units = DEFAULT_UNITS;
+      }
 
       var pos = EditorGUI.PrefixLabel(total, label);
 
@@ -36,43 +49,59 @@ namespace Ore.Editor
 
       pos.width = (pos.width - 2f) / 2f;
 
-      long edit;
+      long edit = 0L;
       double d;
 
       EditorGUI.BeginChangeCheck();
       switch (m_Units)
       {
-        default: // Ticks
-          edit = EditorGUI.LongField(pos, prop.longValue);
+        case 0:  // Ticks
+        case 6:  // Frames
+          edit = EditorGUI.LongField(pos, propTicks.longValue);
           break;
         case 1:  // Milliseconds
-          d    = EditorGUI.DoubleField(pos, prop.longValue * TimeInterval.TICKS2MS);
+          d    = EditorGUI.DoubleField(pos, propTicks.longValue * TimeInterval.TICKS2MS);
           edit = (long)(d / TimeInterval.TICKS2MS + (d >= 0 ? 0.5 : -0.5));
           break;
         case 2:  // Seconds
-          d    = EditorGUI.DoubleField(pos, prop.longValue * TimeInterval.TICKS2SEC);
+          d    = EditorGUI.DoubleField(pos, propTicks.longValue * TimeInterval.TICKS2SEC);
           edit = (long)(d / TimeInterval.TICKS2SEC + (d >= 0 ? 0.5 : -0.5));
           break;
         case 3:  // Minutes
-          d    = EditorGUI.DoubleField(pos, prop.longValue * TimeInterval.TICKS2MIN);
+          d    = EditorGUI.DoubleField(pos, propTicks.longValue * TimeInterval.TICKS2MIN);
           edit = (long)(d / TimeInterval.TICKS2MIN + (d >= 0 ? 0.5 : -0.5));
           break;
-        case 4: // Hours
-          d    = EditorGUI.DoubleField(pos, prop.longValue * TimeInterval.TICKS2HR);
+        case 4:  // Hours
+          d    = EditorGUI.DoubleField(pos, propTicks.longValue * TimeInterval.TICKS2HR);
           edit = (long)(d / TimeInterval.TICKS2HR + (d >= 0 ? 0.5 : -0.5));
           break;
-        case 5: // Days
-          d    = EditorGUI.DoubleField(pos, prop.longValue * TimeInterval.TICKS2DAY);
+        case 5:  // Days
+          d    = EditorGUI.DoubleField(pos, propTicks.longValue * TimeInterval.TICKS2DAY);
           edit = (long)(d / TimeInterval.TICKS2DAY + (d >= 0 ? 0.5 : -0.5));
           break;
       }
       if (EditorGUI.EndChangeCheck())
       {
-        prop.longValue = edit;
+        propTicks.longValue = edit;
       }
 
       pos.x += pos.width + 2f;
+
+      int prevUnit = m_Units;
       m_Units = EditorGUI.Popup(pos, m_Units, s_Units);
+      if (prevUnit != m_Units)
+      {
+        if (prevUnit == 6) // was "Frames"
+        {
+          propTicks.longValue = (propTicks.longValue * TimeInterval.SmoothTicksLastFrame).Rounded();
+          propAsFrames.boolValue = false;
+        }
+        else if (m_Units == 6) // has become "Frames"
+        {
+          propTicks.longValue = (propTicks.longValue / TimeInterval.SmoothTicksLastFrame).Rounded();
+          propAsFrames.boolValue = true;
+        }
+      }
 
       OGUI.IndentLevel.Pop();
     }
