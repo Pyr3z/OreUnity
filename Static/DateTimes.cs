@@ -34,6 +34,14 @@ namespace Ore
     }
 
 
+    public static long ToUnixTicks(this DateTime timepoint)
+    {
+      if (timepoint == default || timepoint < Epoch)
+        return 0;
+
+      return (timepoint.ToUniversalTime() - Epoch).Ticks;
+    }
+
     public static double ToUnixMillis(this DateTime timepoint)
     {
       if (timepoint == default || timepoint < Epoch)
