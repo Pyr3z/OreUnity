@@ -92,21 +92,41 @@ namespace Ore
       return false;
     }
 
-    public static bool TryWriteJson([NotNull] string     filepath,
-                                    [NotNull] JContainer objectOrArray,
-                                              bool       pretty   = EditorBridge.IS_DEBUG,
-                                              Encoding   encoding = null)
+    public static bool TryWriteJson([NotNull] string filepath, [NotNull] JContainer objectOrArray, bool pretty,
+                                    Encoding encoding = null, JsonSerializerSettings overrides = null)
+    {
+      if (pretty != (JsonAuthority.SerializerSettings.Formatting == Formatting.Indented))
+      {
+        if (overrides is null)
+        {
+          overrides = new JsonSerializerSettings();
+        }
+
+        overrides.Formatting = pretty ? Formatting.Indented : Formatting.None;
+      }
+
+      return TryWriteJson(filepath, objectOrArray, encoding, overrides);
+    }
+
+    public static bool TryWriteJson([NotNull] string filepath, [NotNull] JContainer objectOrArray,
+                                    Encoding encoding = null, JsonSerializerSettings overrides = null)
     {
       StreamWriter   stream = null;
       JsonTextWriter writer = null;
       try
       {
         MakePathTo(filepath);
-
         stream = new StreamWriter(filepath, append: false, encoding ?? s_DefaultEncoding);
-        writer = JsonAuthority.MakeTextWriter(stream, pretty);
+        writer = JsonAuthority.MakeWriter(stream, out JsonConverter[] converters, overrides);
 
-        objectOrArray.WriteTo(writer);
+        objectOrArray.WriteTo(writer, converters);
+
+        // var serializer = JsonSerializer.CreateDefault(overrides);
+        //   // --> if overrides is not null, only properties that have been
+        //   //     explicitly set by you will override the default settings
+        //   //     (which are defined by JsonAuthority.SerializerSettings).
+        //
+        // serializer.Serialize(writer, objectOrArray);
 
         s_LastModifiedPath = filepath;
         LastException = null;
@@ -194,9 +214,10 @@ namespace Ore
       return false;
     }
 
-    public static bool TryUpdateJson([NotNull] string filepath, [NotNull] JContainer objectOrArray, Encoding encoding = null)
+    public static bool TryUpdateJson([NotNull] string filepath, [NotNull] JContainer objectOrArray,
+                                     Encoding encoding = null, JsonSerializerSettings overrides = null)
     {
-      if (!TryReadJson(filepath, out JToken token, encoding))
+      if (!TryReadJson(filepath, out JToken token, encoding, overrides))
       {
         return false;
       }
@@ -241,9 +262,10 @@ namespace Ore
       return false;
     }
 
-    public static bool TryReadJson([NotNull] string filepath, [NotNull] out JToken json, Encoding encoding = null)
+    public static bool TryReadJson([NotNull] string filepath, [NotNull] out JToken token,
+                                   Encoding encoding = null, JsonSerializerSettings overrides = null)
     {
-      json = JValue.CreateUndefined();
+      token = JValue.CreateUndefined();
 
       if (!Paths.IsValidPath(filepath))
       {
@@ -256,9 +278,19 @@ namespace Ore
       try
       {
         stream = new StreamReader(filepath, encoding ?? s_DefaultEncoding);
-        reader = JsonAuthority.MakeTextReader(stream);
+        reader = JsonAuthority.MakeReader(stream, out JsonConverter[] converters, overrides);
 
-        json = JToken.ReadFrom(reader, JsonAuthority.LoadStrict);
+        var deserializer = JsonSerializer.CreateDefault(overrides);
+          // --> if overrides is not null, only properties that have been
+          //     explicitly set by you will override the default settings
+          //     (which are defined by JsonAuthority.SerializerSettings).
+        
+        var maybeNull = deserializer.Deserialize<JToken>(reader);
+        
+        if (maybeNull != null)
+        {
+          token = maybeNull;
+        }
 
         LastException = null;
         s_LastReadPath = filepath;
@@ -289,7 +321,7 @@ namespace Ore
         reader?.Close();
       }
 
-      return json.Type != JTokenType.Undefined;
+      return token.Type != JTokenType.Undefined;
     }
 
     public static bool TryReadText([NotNull] string filepath, [NotNull] out string text, Encoding encoding = null)

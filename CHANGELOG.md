@@ -10,6 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests: ActiveScene
 - Tests: Invoke
 
+## [3.3.0] - 2023-01-24
+- Added: `JsonAuthority.SerializerSettings` - default settings automatically used globally.
+    - Can be modified in-place to be automatically applied in subsequent Json.NET reads/writes.
+- Added: `Filesystem.Try*Json()` now takes an optional `JsonSerializerSettings` parameter to override the JsonAuthority defaults.
+    - You can provide custom `JsonConverter` objects by inserting them in the settings object's `Converters` property. This resolves issue #25.
+- Added: [CopyableField] attribute for serialized fields - adds a "Copy" button next to most basic inspector value types.
+- Added: Format string consts for roundtrip (accurate) stringification of floats / doubles (Floats.cs).
+- Added: Aggressive inlining + doc comments for `Bitwise`: `LSB(...)`, `LSBye(...)`, `CTZ(...)`.
+- Added: `SerialVersion.ToSemverString(stripExtras)` - much like the ToString override, except guarantees the resulting string adheres to the Semantic Versioning standard.
+- Changed: `SerialVersion.None` now represents a non-empty value of "0", as this makes sense to interpret as a "non-version version".
+- Fixed: `JsonAuthority.MakeReader()` / `MakeWriter()` - now constructed each as if a global JsonSerializer might *not* be the consumer of the reader/writer. (Still works the same either way.)
+- Removed: Hidden compiler flag `BITWISE_CTZ_NOJUMP` and accompanying implementation. It was useful to nobody, and just made for messier-looking code.
+
 ## [3.2.2] - 2023-01-23
 - Fixed: Filesystem.DefaultEncoding is no longer null by default. (How embarrassing...)
 - Fixed: Filesystem records LastModifiedPath correctly in all modification cases.
