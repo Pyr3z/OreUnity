@@ -44,20 +44,32 @@ namespace Ore
       where T : ScriptableObject
     {
       #if UNITY_EDITOR
-      if (OAssert.Fails(!Filesystem.PathExists(path), "OAsset.Create assumes asset path does not already exist."))
-      {
-        instance = null;
-        return false;
-      }
+        if (OAssert.Fails(!Filesystem.PathExists(path), "OAsset.Create assumes asset path does not already exist."))
+        {
+          instance = null;
+          return false;
+        }
       #endif
 
       instance = (T)CreateInstance(type);
+
       if (OAssert.Fails(instance, $"Object creation for {type.Name} returned null"))
         return false;
 
-      if (!path.IsEmpty())
+      if (path.IsEmpty())
       {
         #if UNITY_EDITOR
+          if (path is null && !Application.isPlaying)
+          {
+            Orator.Warn($"You are trying to create a runtime Asset of type <{type.Name}> at edit-time without specifying a path; this might be an oopsie.\n" +
+                          $"Pass `string.Empty` as the \"{nameof(path)}\" parameter to squelch this warning.");
+          }
+        #endif
+
+        return true;
+      }
+
+      #if UNITY_EDITOR
         if (Filesystem.TryMakePathTo(path))
         {
           UnityEditor.AssetDatabase.CreateAsset(instance, path);
@@ -70,10 +82,9 @@ namespace Ore
           Destroy(instance);
           return false;
         }
-        #else // if !UNITY_EDITOR
+      #else
         instance.name = path;
-        #endif // UNITY_EDITOR
-      }
+      #endif
 
       return true;
     }

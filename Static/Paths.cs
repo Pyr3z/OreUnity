@@ -4,6 +4,8 @@
  *  @date   2022-06-03
 **/
 
+using JetBrains.Annotations;
+
 using Path = System.IO.Path;
 using StringComparer = System.StringComparer;
 
@@ -13,6 +15,7 @@ namespace Ore
   /// <summary>
   /// Utilities for handling filesystem path strings.
   /// </summary>
+  [PublicAPI]
   public static class Paths
   {
     public const int MaxLength = 260;
