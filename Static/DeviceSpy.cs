@@ -29,17 +29,6 @@ namespace Ore
   [PublicAPI]
   public static class DeviceSpy
   {
-    public enum ABIArch
-    {
-      ARMv7   = 0,
-      ARM64   = 1,
-      x86     = 2, // x86* = ChromeOS
-      x86_64  = 3,
-
-      ARM     = ARMv7,
-      ARM32   = ARMv7,
-      ARMv8   = ARM64,
-    }
 
   #region Public section
 
