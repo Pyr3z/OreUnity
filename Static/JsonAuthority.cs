@@ -29,6 +29,8 @@ namespace Ore
     public static readonly Encoding Encoding     = Encoding.UTF8;
     public static readonly Encoding WideEncoding = Encoding.Unicode; // LE UTF16
 
+    public static Formatting Formatting => SerializerSettings.Formatting;
+
 
     public static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings
     {
