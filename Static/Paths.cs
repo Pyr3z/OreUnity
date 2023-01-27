@@ -35,19 +35,28 @@ namespace Ore
     public static readonly StringComparer Comparer = StringComparer.InvariantCulture;
 
 
-    public static bool IsValidPath(string path)
+    public static bool IsValidPath([CanBeNull] string path)
     {
       return !path.IsEmpty() && path.IndexOfAny(InvalidPathChars) < 0;
     }
 
-    public static bool IsValidFileName(string filename)
+    public static bool IsValidFileName([CanBeNull] string filename)
     {
       return ExtractBasePath(filename, out string name) &&
               name.IndexOfAny(InvalidFileNameChars) < 0;
     }
 
 
-    public static bool ExtractBasePath(string filepath, out string basepath)
+    public static bool AreEquivalent([NotNull] string path1, [NotNull] string path2)
+    {
+      if (path1 == path2)
+        return true;
+
+      return Path.GetFullPath(path1) == Path.GetFullPath(path2);
+    }
+
+
+    public static bool ExtractBasePath([CanBeNull] string filepath, out string basepath)
     {
       basepath = filepath;
       if (filepath.IsEmpty())
@@ -64,7 +73,7 @@ namespace Ore
       return basepath.Length > 0;
     }
 
-    public static bool ExtractDirectoryPath(string filepath, out string dirpath, bool trailing_slash = false)
+    public static bool ExtractDirectoryPath([CanBeNull] string filepath, out string dirpath, bool trailing_slash = false)
     {
       dirpath = filepath;
       if (filepath.IsEmpty())
@@ -81,7 +90,7 @@ namespace Ore
       return dirpath.Length > 0;
     }
 
-    public static bool Decompose(string filepath, out string dirpath, out string basepath, bool trailing_slash = true)
+    public static bool Decompose([CanBeNull] string filepath, out string dirpath, out string basepath, bool trailing_slash = true)
     {
       dirpath = basepath = filepath;
       if (filepath.IsEmpty())
