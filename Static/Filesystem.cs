@@ -553,7 +553,7 @@ namespace Ore
     public static string LastWrittenPath => LastModifiedPath;
 
 
-    public static bool TryGetLastModified(out FileInfo file)
+    public static bool TryGetLastModified([NotNull] out FileInfo file)
     {
       file = new FileInfo(s_LastModifiedPath ?? string.Empty);
       return file.Exists;
