@@ -555,14 +555,8 @@ namespace Ore
 
     public static bool TryGetLastModified(out FileInfo file)
     {
-      if (File.Exists(s_LastModifiedPath))
-      {
-        file = new FileInfo(s_LastModifiedPath);
-        return true;
-      }
-
-      file = null;
-      return false;
+      file = new FileInfo(s_LastModifiedPath ?? string.Empty);
+      return file.Exists;
     }
 
     public static IOResult GetLastIOResult()
