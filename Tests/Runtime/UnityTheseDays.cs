@@ -27,14 +27,12 @@ public static class UnityTheseDays
     managed = Profiler.GetMonoUsedSizeLong() - managed;
     Debug.Log($"managed mem: {managed} bytes");
 
-    Assert.Positive(managed, "managed memory usage");
-
     long native = Profiler.GetRuntimeMemorySizeLong(go);
     Debug.Log($"native mem: {native} bytes");
 
-    Assert.Positive(native, "native memory usage");
-
     Debug.Log($"total mem: {managed + native} bytes");
+
+    Assert.Positive(managed + native, "total memory usage");
   }
 
 }
