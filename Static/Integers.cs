@@ -240,17 +240,17 @@ namespace Ore
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsIndexTo(this int self, [NotNull] string str)
+    public static bool IsIndexTo(this int self, [CanBeNull] string str)
     {
       // Q: faster than generic equivalent? does that avoid runtime dynamic casting?
-      return self >= 0 && self < str.Length;
+      return self >= 0 && str != null && self < str.Length;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsIndexTo(this int self, [NotNull] ICollection collection)
+    public static bool IsIndexTo(this int self, [CanBeNull] ICollection collection)
     {
       // Q: faster than generic equivalent? does that avoid runtime dynamic casting?
-      return self >= 0 && self < collection.Count;
+      return self >= 0 && collection != null && self < collection.Count;
     }
 
 
