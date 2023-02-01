@@ -62,6 +62,13 @@ namespace Ore
       return true;
     }
 
+
+    [MenuItem("Ore/Browse to Persistent Data Path")]
+    public static void BrowseToPersistentDataPath()
+    {
+      EditorUtility.RevealInFinder(Application.persistentDataPath);
+    }
+
   } // end static class EditorBridge
 
 #else // if !UNITY_EDITOR
@@ -88,6 +95,10 @@ namespace Ore
     public static bool TrySetPreloadedAsset(Object asset, bool set)
     {
       return true;
+    }
+
+    public static void BrowseToPersistentDataPath()
+    {
     }
 
   } // end static class EditorBridge
