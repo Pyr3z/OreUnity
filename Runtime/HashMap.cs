@@ -364,6 +364,11 @@ namespace Ore
     }
 
 
+    public void TrimExcess()
+    {
+      ResetCapacity();
+    }
+
     public void ResetCapacity()
     {
       m_Params.ResetInitialSize();
