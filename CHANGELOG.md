@@ -1,14 +1,20 @@
-# TODO (incomplete)
+# TODOs (low/mid priority)
 - Unit tests for:
     - ActiveScene
     - Ore.Invoke
-    - JsonAuthority / Filesystem.Try*Json
+    - JsonAuthority / Filesystem.Try\*Json
 
 # Changelog
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [v3.5.0][] - 2023-02-09
+- Added: `OnEnableRunner` component - allows you to set up events on a specific GameObject's enable/disable, with optional delays.
+- Added: HashMap.TrimExcess() - functionality already existed, but now the API matches System collections one more step.
+- Added: (EditorBridge) New global menu item "Ore/Browse to Persistent Data Path".
+- Changed: Integers.IsIndexOf() - null is now allowed in argument
 
 ## [v3.4.0][] - 2023-01-27
 - Note: This CHANGELOG got some love. Markdown is better and now links to tags in KooLab!
