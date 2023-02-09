@@ -1,6 +1,6 @@
-/*! @file     Static/DeviceSpy.cs
- *  @author   Levi Perez (levi\@leviperez.dev)
- *  @date     2022-01-20
+/*! @file       Static/DeviceSpy.cs
+ *  @author     Levi Perez (levi\@leviperez.dev)
+ *  @date       2022-01-20
 **/
 
 using JetBrains.Annotations;

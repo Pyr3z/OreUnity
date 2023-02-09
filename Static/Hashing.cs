@@ -1,6 +1,6 @@
-/*! @file   Static/Hashing.cs
- *  @author levi\@leviperez.dev
- *  @date   2020-06-06
+/*! @file       Static/Hashing.cs
+ *  @author     levi\@leviperez.dev
+ *  @date       2020-06-06
 **/
 
 using System.Collections.Generic;

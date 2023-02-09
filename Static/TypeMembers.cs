@@ -1,7 +1,7 @@
-/*! @file   Static/TypeMembers.cs
- *  @author levianperez\@gmail.com
- *  @author levi\@leviperez.dev
- *  @date   2022-06-20
+/*! @file       Static/TypeMembers.cs
+ *  @author     levianperez\@gmail.com
+ *  @author     levi\@leviperez.dev
+ *  @date       2022-06-20
 **/
 
 // ReSharper disable MemberCanBePrivate.Global

@@ -1,7 +1,7 @@
-/*! @file   Static/Strings.cs
- *  @author levianperez\@gmail.com
- *  @author levi\@leviperez.dev
- *  @date   2020-06-06
+/*! @file       Static/Strings.cs
+ *  @author     levianperez\@gmail.com
+ *  @author     levi\@leviperez.dev
+ *  @date       2020-06-06
  *
  *  @brief
  *    Utilities for C# string manipulation & querying.

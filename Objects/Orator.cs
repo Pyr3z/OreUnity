@@ -1,7 +1,7 @@
-/*! @file   Objects/Orator.cs
-    @author levianperez\@gmail.com
-    @author levi\@leviperez.dev
-    @date   2022-01-01
+/*! @file       Objects/Orator.cs
+    @author     levianperez\@gmail.com
+    @author     levi\@leviperez.dev
+    @date       2022-01-01
 
     @brief  Debug logging API that simultaneously provides static interfaces as well as
             UnityEngine.Object-based INSTANCE equivalents.

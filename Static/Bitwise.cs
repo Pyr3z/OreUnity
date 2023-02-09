@@ -1,7 +1,7 @@
-/*! @file   Static/Bitwise.cs
- *  @author levianperez\@gmail.com
- *  @author levi\@leviperez.dev
- *  @date   2020-06-06
+/*! @file       Static/Bitwise.cs
+ *  @author     levianperez\@gmail.com
+ *  @author     levi\@leviperez.dev
+ *  @date       2020-06-06
  *
  *  @brief
  *    Fast bitwise utilities and syntax sugars for it.

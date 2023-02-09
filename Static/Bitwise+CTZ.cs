@@ -1,8 +1,8 @@
-/*! @file   Static/Bitwise+CTZ.cs
- *  @author levianperez\@gmail.com
- *  @author levi\@leviperez.dev
- *  @date   2020-06-06
- *  @date   2023-01-24 (removed alt implementation; added XML docs)
+/*! @file       Static/Bitwise+CTZ.cs
+ *  @author     levianperez\@gmail.com
+ *  @author     levi\@leviperez.dev
+ *  @date       2020-06-06
+ *  @date       2023-01-24 (removed alt implementation; added XML docs)
  *
  *  @brief
  *    Implements Count Trailing Zeroes, a slight variation of the

@@ -1,6 +1,6 @@
-/*! @file     Static/DeviceDimensions.cs
- *  @author   Levi Perez (levi\@leviperez.dev)
- *  @date     2022-05-09
+/*! @file       Static/DeviceDimensions.cs
+ *  @author     Levi Perez (levi\@leviperez.dev)
+ *  @date       2022-05-09
 **/
 
 using JetBrains.Annotations;

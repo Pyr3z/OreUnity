@@ -1,7 +1,7 @@
-/*! @file   Static/Integers.cs
- *  @author levianperez\@gmail.com
- *  @author levi\@leviperez.dev
- *  @date   2020-06-06
+/*! @file       Static/Integers.cs
+ *  @author     levianperez\@gmail.com
+ *  @author     levi\@leviperez.dev
+ *  @date       2020-06-06
  *
  *  @brief
  *    Provides utilities for native integral primitives and other types that
