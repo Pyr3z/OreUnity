@@ -234,7 +234,11 @@ namespace Ore
 
       #if UNITY_EDITOR
 
+        #if UNITY_2021_1_OR_NEWER
+        var stage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+        #else
         var stage = UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+        #endif
 
         #if UNITY_2020_3_OR_NEWER
         if (stage)
