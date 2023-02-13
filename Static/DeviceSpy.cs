@@ -70,7 +70,7 @@ namespace Ore
       get
       {
         #if UNITY_EDITOR
-          return s_IsAdTrackingLimited = false;
+          return false;
         #elif UNITY_ANDROID
           if (s_IDFA is null)
             s_IDFA = CalcAndroidIDFA(); // TODO somehow reset cached value so it can update?
