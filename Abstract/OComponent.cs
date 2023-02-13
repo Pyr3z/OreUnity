@@ -84,19 +84,19 @@ namespace Ore
 
   #region DEPRECATIONS
 
-    [System.Obsolete("Construct a DelayedRoutine(*) directly, or use the new Invoke.NextFrame(*) API instead.", false)]
+    [System.Obsolete("Construct a DelayedRoutine(*) directly, or use the new OInvoke.NextFrame(*) API instead.", false)]
     protected static DelayedRoutine InvokeNextFrame(Action action)
     {
       return new DelayedRoutine(action);
     }
 
-    [System.Obsolete("Construct a DelayedRoutine(*) directly, or use the new Invoke.NextFrame(*) API instead.", false)]
+    [System.Obsolete("Construct a DelayedRoutine(*) directly, or use the new OInvoke.NextFrame(*) API instead.", false)]
     protected static DelayedRoutine InvokeNextFrameIf(Action action, Condition condition)
     {
       return new DelayedRoutine(action, condition);
     }
 
-    [System.Obsolete("Construct a DelayedRoutine(*) directly, or use the new Invoke.AfterDelay(*) API instead.", false)]
+    [System.Obsolete("Construct a DelayedRoutine(*) directly, or use the new OInvoke.AfterDelay(*) API instead.", false)]
     protected static DelayedRoutine DelayInvoke(Action action, TimeInterval t)
     {
       return new DelayedRoutine(action, t);

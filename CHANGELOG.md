@@ -1,7 +1,7 @@
 # TODOs (low/mid priority)
 - Unit tests for:
     - ActiveScene
-    - Ore.Invoke
+    - OInvoke
     - JsonAuthority / Filesystem.Try\*Json
 
 # Changelog
@@ -10,8 +10,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v3.6.0][] - UNRELEASE
+## [v4.0.0][] - UNRELEASE
 - Added: `SceneLord.AddActiveScene(buildIndex)`
+- Changed: SceneLord API names are shorter without sacrificing descriptiveness.
+- Changed: Renamed `Invoke` -> `OInvoke` (so you don't have to call like `Ore.Invoke.*` anymore).
 
 ## [v3.5.1][] - 2023-02-13
 - Fixed: Orator uses an experimental PrefabStage API - now uses the proper API in Unity 2021+.
@@ -260,6 +262,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- Hyperlink Refs -->
 <!-- - auto-generate with `git tag | awk -- '{print "["$1"]: ../../tags/"$1}' | sort -rV` -->
 
+[v4.0.0]: ../../tags/v4.0.0
+[v3.5.0]: ../../tags/v3.5.0
 [v3.4.0]: ../../tags/v3.4.0
 [v3.3.1]: ../../tags/v3.3.1
 [v3.3.0]: ../../tags/v3.3.0
