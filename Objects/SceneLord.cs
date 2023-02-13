@@ -26,14 +26,51 @@ namespace Ore
     }
 
     [PublicAPI]
-    public static void LoadSceneAdditiveAsync(int index)
+    public static void AddScene(int index)
     {
       var load = SceneManager.LoadSceneAsync(index, LoadSceneMode.Additive);
       load.allowSceneActivation = true;
     }
 
     [PublicAPI]
-    public static void LoadSceneAsync(int index)
+    public static void AddActiveScene(int index)
+    {
+      if (s_CurrentLoadAsync == index)
+        return;
+
+      if (-1 < s_CurrentLoadAsync)
+      {
+        Orator.WarnOnce($"Already loading scene #{s_CurrentLoadAsync}, can't queue another one!", Current);
+        return;
+      }
+
+      var scene = SceneManager.GetSceneByBuildIndex(index);
+
+      if (!scene.IsValid())
+      {
+        Orator.WarnOnce($"No Scene at build index #{index}.");
+        return;
+      }
+
+      if (scene.isLoaded)
+      {
+        SceneManager.SetActiveScene(scene);
+        return;
+      }
+
+      s_CurrentLoadAsync = index;
+      var load = SceneManager.LoadSceneAsync(s_CurrentLoadAsync, LoadSceneMode.Additive);
+      load.allowSceneActivation = true;
+      load.completed += _ =>
+      {
+        s_CurrentLoadAsync = -1;
+        OAssert.True(scene.isLoaded, "scene.isLoaded");
+        SceneManager.SetActiveScene(scene);
+      };
+    }
+
+    [PublicAPI]
+    public static void LoadScene(int index)
     {
       if (s_CurrentLoadAsync == index)
         return;
@@ -50,6 +87,8 @@ namespace Ore
 
       var load = SceneManager.LoadSceneAsync(s_CurrentLoadAsync, LoadSceneMode.Additive);
 
+      load.allowSceneActivation = true;
+
       load.completed += _ =>
       {
         s_CurrentLoadAsync = -1;
@@ -64,8 +103,6 @@ namespace Ore
             SceneManager.UnloadSceneAsync(curr, UnloadSceneOptions.None);
         }
       };
-
-      load.allowSceneActivation = true;
     }
 
   } // end class SceneLord
