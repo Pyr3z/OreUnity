@@ -329,7 +329,7 @@ namespace Ore
     private static TimeSpan CalcTimezoneOffset()
     {
       // TODO there might be a better (100x faster) Java API to call for Android ~
-      return System.TimeZoneInfo.Local.GetUtcOffset(System.DateTime.Now);
+      return System.TimeZoneInfo.Local.BaseUtcOffset;
     }
 
 
