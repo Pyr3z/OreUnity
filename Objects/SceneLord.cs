@@ -44,28 +44,17 @@ namespace Ore
         return;
       }
 
-      var scene = SceneManager.GetSceneByBuildIndex(index);
-
-      if (!scene.IsValid())
-      {
-        Orator.WarnOnce($"No Scene at build index #{index}.");
-        return;
-      }
-
-      if (scene.isLoaded)
-      {
-        SceneManager.SetActiveScene(scene);
-        return;
-      }
-
       s_CurrentLoadAsync = index;
-      var load = SceneManager.LoadSceneAsync(s_CurrentLoadAsync, LoadSceneMode.Additive);
+      var load = SceneManager.LoadSceneAsync(index, LoadSceneMode.Additive);
       load.allowSceneActivation = true;
       load.completed += _ =>
       {
         s_CurrentLoadAsync = -1;
-        OAssert.True(scene.isLoaded, "scene.isLoaded");
-        SceneManager.SetActiveScene(scene);
+        var scene = SceneManager.GetSceneByBuildIndex(index);
+        if (scene.isLoaded)
+        {
+          SceneManager.SetActiveScene(scene);
+        }
       };
     }
 
@@ -83,9 +72,7 @@ namespace Ore
 
       s_CurrentLoadAsync = index;
 
-      index = SceneManager.sceneCount; // now this is runtime index, not build index
-
-      var load = SceneManager.LoadSceneAsync(s_CurrentLoadAsync, LoadSceneMode.Additive);
+      var load = SceneManager.LoadSceneAsync(index, LoadSceneMode.Additive);
 
       load.allowSceneActivation = true;
 
@@ -93,7 +80,7 @@ namespace Ore
       {
         s_CurrentLoadAsync = -1;
         var curr = SceneManager.GetActiveScene();
-        var next = SceneManager.GetSceneAt(index);
+        var next = SceneManager.GetSceneByBuildIndex(index);
         if (curr != next)
         {
           SceneManager.SetActiveScene(next);
