@@ -10,9 +10,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.6.0][] - UNRELEASE
+- Added: `SceneLord.AddActiveScene(buildIndex)`
+
 ## [v3.5.1][] - 2023-02-13
 - Fixed: Orator uses an experimental PrefabStage API - now uses the proper API in Unity 2021+.
-- Added: Unlicense declaration
 
 ## [v3.5.0][] - 2023-02-09
 - Added: `OnEnableRunner` component - allows you to set up events on a specific GameObject's enable/disable, with optional delays.
