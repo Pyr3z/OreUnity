@@ -1,18 +1,20 @@
-/*! @file       Tests/Editor/FilesystemCorrectness.cs
+/*! @file       Tests/Editor/FilesystemInEditor.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-08-16
 **/
 
 using NUnit.Framework;
+
 using UnityEngine;
+
 using UnityEditor;
 
 using Ore;
 
 
-internal static class FilesystemCorrectness
+internal static class FilesystemInEditor
 {
-  const string TMPDIR = "./Temp/TestFilesystem/";
+  const string TMPDIR = "./Temp/" + nameof(FilesystemInEditor) + "/";
 
   static readonly (string path, string text)[] TEXTS =
   {
@@ -22,8 +24,8 @@ internal static class FilesystemCorrectness
   };
 
   static readonly (string path, byte[] data)[] BYTES =
-  {                                                                   // TODO this ties the test to KooBox
-    ("koobox.png",           AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/bore~.png").EncodeToPNG()),
+  {
+    ("UnityLogo.png",        ((Texture2D)EditorGUIUtility.IconContent("UnityLogo").image).EncodeToPNG()),
     ($"{TEXTS[1].path}.bin", TEXTS[1].text.ToBase64().ToBytes()),
   };
 
@@ -88,4 +90,4 @@ internal static class FilesystemCorrectness
     }
   }
 
-} // end static class FilesystemCorrectness
+} // end static class FilesystemInEditor
