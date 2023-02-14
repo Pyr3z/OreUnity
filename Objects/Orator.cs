@@ -19,19 +19,22 @@
 
 // ReSharper disable MemberCanBePrivate.Global
 
+using JetBrains.Annotations;
+
 using System.ComponentModel;
 using System.Collections.Generic;
-using JetBrains.Annotations;
-using UnityEngine;
-using UnityEngine.Diagnostics;
 
-using Debug         = UnityEngine.Debug;
-using AssException  = UnityEngine.Assertions.AssertionException;
-using Object = UnityEngine.Object;
+using UnityEngine;
+
+using Debug        = UnityEngine.Debug;
+using AssException = UnityEngine.Assertions.AssertionException;
 
 
 namespace Ore
 {
+  #if !DEBUG_KONSOLE
+  [System.Diagnostics.DebuggerStepThrough]
+  #endif
   [DefaultExecutionOrder(-1337)]
   [AssetPath("Resources/Orator.asset")]
   public sealed class Orator : OAssetSingleton<Orator>
