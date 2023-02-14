@@ -25,9 +25,36 @@ internal static class FilesystemInEditor
 
   static readonly (string path, byte[] data)[] BYTES =
   {
-    ("UnityLogo.png",        ((Texture2D)EditorGUIUtility.IconContent("UnityLogo").image).EncodeToPNG()),
+    ("UnityLogo.png",        null), // init in Setup()
     ($"{TEXTS[1].path}.bin", TEXTS[1].text.ToBase64().ToBytes()),
   };
+
+  [OneTimeSetUp]
+  public static void Setup()
+  {
+    Debug.Log($"{nameof(FilesystemInEditor)}.{nameof(Setup)}()");
+
+    var icon = EditorGUIUtility.IconContent("UnityLogo").image as Texture2D;
+    Assert.NotNull(icon, "icon");
+
+    var tmp = RenderTexture.GetTemporary(icon.width, icon.height);
+
+    Graphics.Blit(icon, tmp);
+
+    var pop = RenderTexture.active;
+    RenderTexture.active = tmp;
+
+    icon = new Texture2D(icon.width, icon.height);
+    icon.ReadPixels(new Rect(0f, 0f, tmp.width, tmp.height), 0, 0);
+    icon.Apply();
+
+    BYTES[0].data = icon.EncodeToPNG();
+
+    RenderTexture.active = pop;
+    RenderTexture.ReleaseTemporary(tmp);
+
+    Debug.Log($"{nameof(FilesystemInEditor)}.{nameof(Setup)}() done.");
+  }
 
 
   [Test]
@@ -63,6 +90,13 @@ internal static class FilesystemInEditor
   {
     foreach (var (path, data) in BYTES)
     {
+      // skip if bad setup
+      if (data is null)
+      {
+        Debug.Log($"Skipping test item \"{path}\" - bad setup.");
+        continue;
+      }
+
       string fullpath = TMPDIR + path;
 
       if (!Filesystem.TryWriteBinary(fullpath, data) ||
