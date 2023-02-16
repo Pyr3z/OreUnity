@@ -5,10 +5,11 @@
 
 using JetBrains.Annotations;
 
+#if NEWTONSOFT_JSON
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+#endif
 
-using System.Collections.Generic;
 using System.Linq;
 
 using Encoding         = System.Text.Encoding;
@@ -28,6 +29,9 @@ namespace Ore
 
     public static readonly Encoding Encoding     = Encoding.UTF8;
     public static readonly Encoding WideEncoding = Encoding.Unicode; // LE UTF16
+
+
+    #if NEWTONSOFT_JSON
 
     public static Formatting Formatting => SerializerSettings.Formatting;
 
@@ -205,6 +209,8 @@ namespace Ore
         // makes the settings defined here in JsonAuthority apply to any default
         // Json.NET serializers created from now on
     }
+
+    #endif // NEWTONSOFT_JSON
 
   } // end class JsonAuthority
 }
