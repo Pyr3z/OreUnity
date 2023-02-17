@@ -56,14 +56,61 @@ namespace Ore
     }
 
 
-    public static string DetectAssetPathAssumption([CanBeNull] string path)
+    public static string DetectAssetPathAssumptions([CanBeNull] string path)
     {
-      if (path.IsEmpty() || path.StartsWith("Assets") || path.StartsWith("Packages"))
+      if (path.IsEmpty())
+      {
+        return path;
+      }
+
+      if (!ExtractExtension(path, out _ ))
+      {
+        path += ".asset";
+      }
+
+      if (path.StartsWith("Assets/") || path.StartsWith("Packages/"))
       {
         return path;
       }
 
       return "Assets/" + path;
+    }
+
+
+    public static bool ExtractExtension([CanBeNull] string filepath, [NotNull] out string extension, bool includeDot = true)
+    {
+      extension = string.Empty;
+
+      if (filepath.IsEmpty())
+        return false;
+
+      int slash = -1, dot = -1;
+      int i = filepath.Length;
+
+      while (i --> 0)
+      {
+        char c = filepath[i];
+
+        if (dot < 0 && c == '.')
+        {
+          dot = i;
+        }
+        else if (c == DirectorySeparator || c == LameDirectorySeparator)
+        {
+          slash = i;
+          break;
+        }
+      }
+
+      if (dot < 0 || dot < slash || dot == filepath.Length - 1)
+        return false;
+
+      if (!includeDot)
+        ++ dot;
+
+      extension = filepath.Substring(dot);
+
+      return true;
     }
 
 
@@ -73,9 +120,14 @@ namespace Ore
       if (filepath.IsEmpty())
         return false;
 
-      filepath = filepath.TrimEnd(DirectorySeparators);
-
+      TryAgain:
       int slash = 1 + filepath.LastIndexOfAny(DirectorySeparators);
+      if (slash == filepath.Length)
+      {
+        filepath = filepath.Remove(slash - 1);
+        goto TryAgain;
+      }
+
       if (slash < 1)
         basepath = filepath;
       else
