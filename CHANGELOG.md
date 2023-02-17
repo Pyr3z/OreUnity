@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v4.0.0][] - UNRELEASED
 - Added: Editor-only unit tests `DeviceSpyInEditor`.
+- Added: More helpers in Static/Paths.cs
 - Removed: Hard dependency on "com.unity.nuget.newtonsoft-json" v3.0.2 (package.json).
     - However, without it in the project, several APIs become unavailable or nonfunctional.
     - If you have a different Newtonsoft Json.NET provider in your project, you may try telling Ore to utilize it by adding `NEWTONSOFT_JSON` to your script compilation symbols (in <kbd>Project Settings</kbd> -> Player).
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed: Renamed editor test `FilesystemCorrectness` -> `FilesystemInEditor`.
     - Also: Fixed: Filesystem editor tests now works outside of KooBox. (was using a specific PNG under Assets/ before~)
 - Changed: OAsset.TryCreate(..., path) now warns and returns false if there was a problem loading an existing asset at the given path.
+    - Also: now detects assumptions about the given path if in editor, such as prepending "Assets/" or appending ".asset".
 - Fixed: (bandaid) Ore's [ReadOnly] attribute is now disabled if `ODIN_INSPECTOR` is defined.
     - Levi: Odin...
 

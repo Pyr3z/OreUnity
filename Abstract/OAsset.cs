@@ -44,6 +44,8 @@ namespace Ore
       where T : ScriptableObject
     {
       #if UNITY_EDITOR
+        path = Paths.DetectAssetPathAssumptions(path);
+
         if (!ActiveScene.IsPlaying && Filesystem.PathExists(path))
         {
           instance = UnityEditor.AssetDatabase.LoadAssetAtPath(path, type) as T;
