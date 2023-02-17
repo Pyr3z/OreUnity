@@ -6,7 +6,7 @@
 using JetBrains.Annotations;
 
 using System.Collections;
-using System.Diagnostics.CodeAnalysis;
+using System.Collections.Generic;
 
 using UnityEngine;
 
@@ -17,7 +17,6 @@ namespace Ore
 {
 
   [System.Serializable]
-  [SuppressMessage("ReSharper", "MemberInitializerValueIgnored")]
   public class DelayedEvent : VoidEvent
   {
     public TimeInterval Delay
@@ -78,13 +77,12 @@ namespace Ore
       {
         if (m_Context)
         {
-          ActiveScene.Coroutines.Run(DelayedInvokeCoroutine(), m_Context);
+          ActiveScene.Coroutines.Run(InvokeCoroutine(), m_Context);
           m_InvokeHandle = m_Context;
         }
         else
         {
-          Orator.Reached("unexpected null here.");
-          ActiveScene.Coroutines.Run(DelayedInvokeCoroutine(), out string guid);
+          ActiveScene.Coroutines.Run(InvokeCoroutine(), out string guid);
           m_InvokeHandle = guid;
         }
 
@@ -93,7 +91,7 @@ namespace Ore
 
       if (m_Context is MonoBehaviour component && component.isActiveAndEnabled)
       {
-        m_InvokeHandle = component.StartCoroutine(DelayedInvokeCoroutine());
+        m_InvokeHandle = component.StartCoroutine(InvokeCoroutine());
         return true;
       }
 
@@ -113,31 +111,96 @@ namespace Ore
 
       if (component && component.isActiveAndEnabled)
       {
-        m_InvokeHandle = component.StartCoroutine(DelayedInvokeCoroutine());
+        m_InvokeHandle = new KeyValuePair<MonoBehaviour,Coroutine>(component,
+                                                                   component.StartCoroutine(InvokeCoroutine()));
         return true;
       }
+
+      // don't fallback on ActiveScene - this method specifically wants to run on the given object.
 
       return false;
     }
 
-
-    private IEnumerator DelayedInvokeCoroutine()
+    public bool TryInvokeOnGlobalContext()
     {
-      if (m_Delay.TicksAreFrames)
+      if (!m_IsEnabled || m_InvokeHandle != null)
+        return false;
+
+      if (m_Delay < TimeInterval.Frame)
       {
-        int i = (int)m_Delay.Ticks;
-        while (i --> 0)
-          yield return null;
+        ((UnityEvent)this).Invoke();
+        return true;
       }
-      else if (m_ScaledTime)
+
+      if (m_Context)
       {
-        yield return new WaitForSeconds(m_Delay.FSeconds);
+        ActiveScene.Coroutines.Run(InvokeCoroutine(), m_Context);
+        m_InvokeHandle = m_Context;
       }
       else
       {
-        yield return new WaitForSecondsRealtime(m_Delay.FSeconds);
+        ActiveScene.Coroutines.Run(InvokeCoroutine(), out string guid);
+        m_InvokeHandle = guid;
       }
 
+      return true;
+    }
+
+    public bool TryCancelInvoke()
+    {
+      if (m_InvokeHandle == null)
+        return false;
+
+      if (m_InvokeHandle is Object contract)
+      {
+        m_InvokeHandle = null;
+
+        if (!contract)
+          return false;
+
+        ActiveScene.Coroutines.Halt(contract);
+        return true;
+      }
+
+      if (m_InvokeHandle is string guid)
+      {
+        m_InvokeHandle = null;
+        ActiveScene.Coroutines.Halt(guid);
+        return true;
+      }
+
+      if (m_InvokeHandle is KeyValuePair<MonoBehaviour,Coroutine> kvp)
+      {
+        m_InvokeHandle = null;
+
+        if (!kvp.Key || !kvp.Key.isActiveAndEnabled)
+          return false;
+
+        kvp.Key.StopCoroutine(kvp.Value);
+        return true;
+      }
+
+      throw new UnanticipatedException($"{nameof(m_InvokeHandle)} is not null, but is also ??? ~ type={m_InvokeHandle.GetType().FullName}");
+    }
+
+
+    private IEnumerator InvokeCoroutine()
+    {
+      return m_ScaledTime ? ScaledInvokeCoroutine(m_Delay.FSeconds) :
+                            new DelayedRoutine(InvokePayload, m_Delay);
+    }
+
+    private IEnumerator ScaledInvokeCoroutine(float seconds)
+    {
+      yield return new WaitForSeconds(seconds);
+
+      ((UnityEvent)this).Invoke();
+
+      m_InvokeHandle = null;
+    }
+
+    private void InvokePayload()
+    {
       ((UnityEvent)this).Invoke();
 
       m_InvokeHandle = null;

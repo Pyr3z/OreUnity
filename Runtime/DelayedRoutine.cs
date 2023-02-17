@@ -137,7 +137,6 @@ namespace Ore
       }
 
       return false;
-
     }
 
     void IEnumerator.Reset()
