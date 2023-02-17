@@ -120,12 +120,12 @@ namespace Ore
       if (filepath.IsEmpty())
         return false;
 
-      TryAgain:
       int slash = 1 + filepath.LastIndexOfAny(DirectorySeparators);
-      if (slash == filepath.Length)
+
+      while (slash == filepath.Length)
       {
         filepath = filepath.Remove(slash - 1);
-        goto TryAgain;
+        slash = 1 + filepath.LastIndexOfAny(DirectorySeparators);
       }
 
       if (slash < 1)
