@@ -3,6 +3,8 @@
  *  @date       2022-06-01
 **/
 
+using JetBrains.Annotations;
+
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 
@@ -18,117 +20,127 @@ namespace Ore
   [SuppressMessage("ReSharper", "MemberInitializerValueIgnored")]
   public class DelayedEvent : VoidEvent
   {
-    public float DelaySeconds
+    public TimeInterval Delay
     {
-      get => m_DelaySeconds.AtLeast(0f);
-      set => m_DelaySeconds = value;
+      get => m_Delay;
+      set => m_Delay = value;
     }
-    public int ApproximateFrameDelay
-    {
-      get => Mathf.RoundToInt(m_DelaySeconds.AtLeast(0f) * Application.targetFrameRate);
-      set => m_DelaySeconds = (float)value / Application.targetFrameRate;
-    }
+
     public bool IsScaledTime
     {
-      get => m_ScaledTime;
+      get => m_ScaledTime && !m_Delay.TicksAreFrames;
       set => m_ScaledTime = value;
     }
 
 
-    private const bool  DEFAULT_SCALED_TIME      = true;
-    private const float DEFAULT_DELAY_SECONDS    = -1f;
-    private const float DEFAULT_TARGET_FPS       = 60f;
-    private const float MIN_DELAY_SECONDS_ASYNC  = 1f / 90f;
+    private const bool DEFAULT_SCALED_TIME = false;
 
     [SerializeField, HideInInspector]
     protected Object m_Context; // auto-assigned in EventDrawer.cs
     [SerializeField, HideInInspector]
     protected bool m_RunInGlobalContext;
 
+
     [SerializeField]
     private bool m_ScaledTime = DEFAULT_SCALED_TIME;
 
-    [SerializeField] // TODO implement [ToggleFloat] custom drawer
-    private float m_DelaySeconds = DEFAULT_DELAY_SECONDS;
+    [SerializeField]
+    private TimeInterval m_Delay = TimeInterval.Frame;
 
 
     [System.NonSerialized]
-    private Coroutine m_Invocation;
+    private object m_InvokeHandle;
 
 
     public DelayedEvent()
-      : this(DEFAULT_DELAY_SECONDS)
     {
     }
 
-    public DelayedEvent(float seconds, bool is_scaled = DEFAULT_SCALED_TIME)
+    public DelayedEvent(TimeInterval delay, bool isScaled = DEFAULT_SCALED_TIME)
     {
-      m_DelaySeconds = seconds;
-      m_ScaledTime   = is_scaled;
-    }
-
-    public static DelayedEvent WithApproximateFrameDelay(int frames, float target_fps = DEFAULT_TARGET_FPS)
-    {
-      return new DelayedEvent(seconds: frames / target_fps,
-                              is_scaled: false);
+      m_ScaledTime = isScaled;
+      m_Delay = isScaled ? delay.WithSystemTicks() : delay;
     }
 
 
     public override bool TryInvoke()
     {
-      if (!m_IsEnabled)
+      if (!m_IsEnabled || m_InvokeHandle != null)
         return false;
+
+      if (m_Delay < TimeInterval.Frame)
+      {
+        ((UnityEvent)this).Invoke();
+        return true;
+      }
 
       if (m_RunInGlobalContext || m_Context is ScriptableObject)
       {
-        if (m_DelaySeconds < MIN_DELAY_SECONDS_ASYNC)
+        if (m_Context)
         {
-          ((UnityEvent)this).Invoke();
+          ActiveScene.Coroutines.Run(DelayedInvokeCoroutine(), m_Context);
+          m_InvokeHandle = m_Context;
         }
         else
         {
-          ActiveScene.Coroutines.Run(DelayedInvokeCoroutine(), m_Context);
+          Orator.Reached("unexpected null here.");
+          ActiveScene.Coroutines.Run(DelayedInvokeCoroutine(), out string guid);
+          m_InvokeHandle = guid;
         }
 
         return true;
       }
 
-      return TryInvokeOn(m_Context as MonoBehaviour);
+      if (m_Context is MonoBehaviour component && component.isActiveAndEnabled)
+      {
+        m_InvokeHandle = component.StartCoroutine(DelayedInvokeCoroutine());
+        return true;
+      }
+
+      return false;
     }
 
-    public bool TryInvokeOn(MonoBehaviour component)
+    public bool TryInvokeOn([CanBeNull] MonoBehaviour component)
     {
-      if (!m_IsEnabled)
+      if (!m_IsEnabled || m_InvokeHandle != null)
         return false;
 
-      if (m_DelaySeconds < MIN_DELAY_SECONDS_ASYNC)
+      if (m_Delay < TimeInterval.Frame)
       {
         ((UnityEvent)this).Invoke();
-      }
-      else if (m_Invocation == null && component && component.isActiveAndEnabled)
-      {
-        m_Invocation = component.StartCoroutine(DelayedInvokeCoroutine());
-      }
-      else
-      {
-        return false;
+        return true;
       }
 
-      return true;
+      if (component && component.isActiveAndEnabled)
+      {
+        m_InvokeHandle = component.StartCoroutine(DelayedInvokeCoroutine());
+        return true;
+      }
+
+      return false;
     }
 
 
     private IEnumerator DelayedInvokeCoroutine()
     {
-      if (m_ScaledTime)
-        yield return new WaitForSeconds(m_DelaySeconds);
-      else if (m_DelaySeconds < 1f / 30f)
-        yield return null;
+      if (m_Delay.TicksAreFrames)
+      {
+        int i = (int)m_Delay.Ticks;
+        while (i --> 0)
+          yield return null;
+      }
+      else if (m_ScaledTime)
+      {
+        yield return new WaitForSeconds(m_Delay.FSeconds);
+      }
       else
-        yield return new WaitForSecondsRealtime(m_DelaySeconds);
+      {
+        yield return new WaitForSecondsRealtime(m_Delay.FSeconds);
+      }
 
       ((UnityEvent)this).Invoke();
-      m_Invocation = null;
+
+      m_InvokeHandle = null;
     }
 
   }

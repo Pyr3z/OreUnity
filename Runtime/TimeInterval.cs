@@ -425,6 +425,12 @@ namespace Ore
       return lhs;
     }
 
+    public static TimeInterval operator * (int lhs, TimeInterval rhs)
+    {
+      rhs.Ticks *= lhs;
+      return rhs;
+    }
+
     public static TimeInterval operator / (TimeInterval lhs, int rhs)
     {
       if (rhs == 0)
@@ -438,6 +444,12 @@ namespace Ore
     {
       lhs.Ticks = (long)(lhs.Ticks * rhs);
       return lhs;
+    }
+
+    public static TimeInterval operator * (double lhs, TimeInterval rhs)
+    {
+      rhs.Ticks = (long)(rhs.Ticks * lhs);
+      return rhs;
     }
 
     public static TimeInterval operator / (TimeInterval lhs, double rhs)

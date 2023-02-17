@@ -86,7 +86,7 @@ namespace Ore
     [SerializeField]
     protected bool m_IsValidWhileDisabled;
     [SerializeField]
-    protected DelayedEvent m_OnFirstInitialized = DelayedEvent.WithApproximateFrameDelay(1);
+    protected DelayedEvent m_OnFirstInitialized = new DelayedEvent();
 
 
     [System.NonSerialized]
