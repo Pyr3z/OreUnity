@@ -56,6 +56,17 @@ namespace Ore
     }
 
 
+    public static string DetectAssetPathAssumption([CanBeNull] string path)
+    {
+      if (path.IsEmpty() || path.StartsWith("Assets") || path.StartsWith("Packages"))
+      {
+        return path;
+      }
+
+      return "Assets/" + path;
+    }
+
+
     public static bool ExtractBasePath([CanBeNull] string filepath, out string basepath)
     {
       basepath = filepath;
