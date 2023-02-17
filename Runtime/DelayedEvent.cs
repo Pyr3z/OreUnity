@@ -91,7 +91,8 @@ namespace Ore
 
       if (m_Context is MonoBehaviour component && component.isActiveAndEnabled)
       {
-        m_InvokeHandle = component.StartCoroutine(InvokeCoroutine());
+        m_InvokeHandle = new KeyValuePair<MonoBehaviour,Coroutine>(component,
+                                                                   component.StartCoroutine(InvokeCoroutine()));
         return true;
       }
 
