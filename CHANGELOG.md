@@ -5,18 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [v4.0.0][] - UNRELEASED
+- Added: Editor-only unit tests `DeviceSpyInEditor`.
 - Removed: Hard dependency on "com.unity.nuget.newtonsoft-json" v3.0.2 (package.json).
     - However, without it in the project, several APIs become unavailable or nonfunctional.
     - If you have a different Newtonsoft Json.NET provider in your project, you may try telling Ore to utilize it by adding `NEWTONSOFT_JSON` to your script compilation symbols (in <kbd>Project Settings</kbd> -> Player).
     - Please inform @levi.perez or [create an issue][] if you have any trouble with this.
-- Added: SceneLord.AddActiveScene(buildIndex)
-    - Also: Changed: SceneLord API names are shorter without sacrificing descriptiveness.
+- Changed: SceneLord API names are shorter without sacrificing descriptiveness.
+    - Also: Added: SceneLord.AddActiveScene(buildIndex)
 - Changed: DelayedEvent finally utilizes TimeIntervals and DelayedRoutines.
     - Also: now guards against additional invokes if the first invoke is still counting down its delay.
     - Also: Added: DelayedEvent.TryInvokeOnGlobalContext(), TryCancelInvoke()
 - Changed: Renamed `Invoke` -> `OInvoke` (so you don't have to call like `Ore.Invoke.*` anymore).
 - Changed: Renamed editor test `FilesystemCorrectness` -> `FilesystemInEditor`.
-- Fixed: Filesystem editor tests now works outside of KooBox. (was using a specific PNG under Assets/ before~)
+    - Also: Fixed: Filesystem editor tests now works outside of KooBox. (was using a specific PNG under Assets/ before~)
+- Fixed: (bandaid) Ore's [ReadOnly] attribute is now disabled if `ODIN_INSPECTOR` is defined.
+    - Levi: Odin...
 
 ## [v3.5.1][] - 2023-02-13
 - Fixed: Orator uses an experimental PrefabStage API - now uses the proper API in Unity 2021+.

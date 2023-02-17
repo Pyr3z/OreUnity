@@ -16,7 +16,9 @@ namespace Ore.Editor
   {
     public override void OnGUI(Rect pos)
     {
+      #if !ODIN_INSPECTOR && !ODIN_INSPECTOR_3 // :unamused:
       GUI.enabled = false;
+      #endif
     }
 
     public override float GetHeight()
