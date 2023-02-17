@@ -44,11 +44,17 @@ namespace Ore
       where T : ScriptableObject
     {
       #if UNITY_EDITOR
-        if (Filesystem.PathExists(path))
+        if (!ActiveScene.IsPlaying && Filesystem.PathExists(path))
         {
           instance = UnityEditor.AssetDatabase.LoadAssetAtPath(path, type) as T;
-          Orator.Log($"SKIPPED creating Asset of type <{type.Name}> - file already exists at \"{path}\".", instance);
-          return instance;
+          if (instance)
+          {
+            Orator.Log($"SKIPPED creating Asset of type <{type.Name}> - file already exists at \"{path}\".", instance);
+            return true;
+          }
+
+          Orator.Warn($"NOT creating Asset of type <{type.Name}> at path \"{path}\" - something already exists there and it isn't a <{type.Name}>.");
+          return false;
         }
       #endif
 
@@ -60,12 +66,14 @@ namespace Ore
       if (path.IsEmpty())
       {
         #if UNITY_EDITOR
-          if (path is null && !Application.isPlaying)
+          if (path is null && !ActiveScene.IsPlaying)
           {
             Orator.Warn($"You are trying to create a runtime Asset of type <{type.Name}> at edit-time without specifying a path; this might be an oopsie.\n" +
-                          $"Pass `string.Empty` as the \"{nameof(path)}\" parameter to squelch this warning.");
+                          $"Pass `string.Empty` for the {nameof(path)} parameter to squelch this warning.");
           }
         #endif
+
+        instance.name = type.Name;
 
         return true;
       }

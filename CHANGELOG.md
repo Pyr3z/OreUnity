@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed: Renamed `Invoke` -> `OInvoke` (so you don't have to call like `Ore.Invoke.*` anymore).
 - Changed: Renamed editor test `FilesystemCorrectness` -> `FilesystemInEditor`.
     - Also: Fixed: Filesystem editor tests now works outside of KooBox. (was using a specific PNG under Assets/ before~)
+- Changed: OAsset.TryCreate(..., path) now warns and returns false if there was a problem loading an existing asset at the given path.
 - Fixed: (bandaid) Ore's [ReadOnly] attribute is now disabled if `ODIN_INSPECTOR` is defined.
     - Levi: Odin...
 
