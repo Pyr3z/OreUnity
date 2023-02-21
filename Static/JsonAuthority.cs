@@ -12,6 +12,8 @@ using Newtonsoft.Json.Linq;
 
 using System.Linq;
 
+using UnityEngine;
+
 using Encoding         = System.Text.Encoding;
 using StringComparison = System.StringComparison;
 
@@ -203,7 +205,8 @@ namespace Ore
 
 
 
-    static JsonAuthority()
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+    static void OverrideDefaultSettings()
     {
       JsonConvert.DefaultSettings = () => SerializerSettings;
         // makes the settings defined here in JsonAuthority apply to any default
