@@ -6,10 +6,16 @@
 using NUnit.Framework;
 
 using UnityEngine;
-
 using UnityEditor;
 
+using System.Collections.Generic;
+
 using Ore;
+
+#if NEWTONSOFT_JSON
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+#endif
 
 
 internal static class FilesystemInEditor
@@ -123,5 +129,44 @@ internal static class FilesystemInEditor
       Assert.Zero(diffs, $"binary input and output differ. path=\"{path}\"");
     }
   }
+
+
+  #if NEWTONSOFT_JSON
+
+  [Test]
+  public static void TryJson()
+  {
+    var intList = new int[] { 1, 2, 3 };
+    var dict = new Dictionary<string,object>
+    {
+      ["fef"] = true,
+      ["bub"] = "bub",
+      ["123"] = intList
+    };
+
+    string path = TMPDIR + nameof(TryJson) + ".json";
+
+    if (!Filesystem.TryWriteJson(path, dict, pretty: true))
+    {
+      Assert.True(Filesystem.TryGetLastException(out var ex));
+      throw ex;
+    }
+
+    if (!Filesystem.TryReadJson(path, out JToken readToken))
+    {
+      Assert.True(Filesystem.TryGetLastException(out var ex));
+      throw ex;
+    }
+
+    Assert.AreEqual(dict["fef"], readToken.Value<bool>("fef"),   "fef == fef");
+    Assert.AreEqual(dict["bub"], readToken.Value<string>("bub"), "bub == bub");
+    var readList = readToken["123"] as JArray;
+    Assert.NotNull(readList, "readList");
+    Assert.AreEqual(intList[0], readList.Value<int>(0), "123 == 123");
+    Assert.AreEqual(intList[1], readList.Value<int>(1), "123 == 123");
+    Assert.AreEqual(intList[2], readList.Value<int>(2), "123 == 123");
+  }
+
+  #endif // NEWTONSOFT_JSON
 
 } // end static class FilesystemInEditor

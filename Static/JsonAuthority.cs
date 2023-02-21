@@ -206,6 +206,9 @@ namespace Ore
 
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+    #if UNITY_EDITOR
+    [UnityEditor.InitializeOnLoadMethod]
+    #endif
     static void OverrideDefaultSettings()
     {
       JsonConvert.DefaultSettings = () => SerializerSettings;
