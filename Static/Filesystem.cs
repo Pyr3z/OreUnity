@@ -101,30 +101,55 @@ namespace Ore
 
     #if NEWTONSOFT_JSON
 
-    public static bool TryWriteJson([NotNull] string filepath, [NotNull] JContainer token, bool pretty,
+    /// <param name="filepath">
+    ///   The valid path to the file to be written.
+    ///   The directories leading up to it do not need to exist.
+    /// </param>
+    /// <param name="data">
+    ///   An object representing your data. This is very softly-typed.
+    ///   Newtonsoft.Json.JContainers are valid, and so are generic IList or
+    ///   IDictionary objects.
+    /// </param>
+    /// <param name="pretty">
+    ///   Optionally override the default pretty-print settings (set in
+    ///   <see cref="JsonAuthority"/>.<see cref="JsonAuthority.SerializerSettings"/>)
+    ///   (this call only).
+    /// </param>
+    /// <param name="encoding">
+    ///   Optionally override <see cref="DefaultEncoding"/> with another encoder
+    ///   (this call only).
+    /// </param>
+    /// <param name="serializer">
+    ///   Optionally override the default serializer (defined by <see cref="JsonAuthority"/>)
+    ///   (this call only).
+    /// </param>
+    /// <returns>
+    ///   TRUE iff the data was written to a file at the given path successfully.
+    /// </returns>
+    public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object data, bool pretty,
                                     Encoding encoding = null, JsonSerializer serializer = null)
     {
-      if (pretty != (JsonAuthority.SerializerSettings.Formatting == Formatting.Indented))
+      if (serializer is null)
       {
-        if (serializer is null)
-        {
-          serializer = JsonSerializer.CreateDefault();
-        }
-
-        serializer.Formatting = pretty ? Formatting.Indented : Formatting.None;
+        serializer = JsonSerializer.CreateDefault();
       }
 
-      return TryWriteJson(filepath, token, encoding, serializer);
+      if (pretty && serializer.Formatting != Formatting.Indented)
+      {
+        serializer.Formatting = Formatting.Indented;
+      }
+      else if (!pretty && serializer.Formatting != Formatting.None)
+      {
+        serializer.Formatting = Formatting.None;
+      }
+
+      return TryWriteJson(filepath, data, encoding, serializer);
     }
 
-    public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object obj,
+    /// <inheritdoc cref="TryWriteJson(string,object,bool,Encoding,JsonSerializer)"/>
+    public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object data,
                                     Encoding encoding = null, JsonSerializer serializer = null)
     {
-      if (obj is null)
-      {
-        obj = JValue.CreateNull();
-      }
-
       StreamWriter   stream = null;
       JsonTextWriter writer = null;
       try
@@ -138,7 +163,7 @@ namespace Ore
           serializer = JsonSerializer.CreateDefault();
         }
 
-        serializer.Serialize(writer, obj);
+        serializer.Serialize(writer, data);
 
         s_LastModifiedPath = filepath;
         LastException = null;
