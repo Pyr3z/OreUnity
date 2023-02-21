@@ -320,6 +320,23 @@ namespace Ore
     }
 
 
+    [CanBeNull]
+    public CustomYieldInstruction Yield()
+    {
+      if (Ticks <= 1)
+      {
+        return null;
+      }
+
+      if (m_AsFrames)
+      {
+        return new WaitForFrames((int)Ticks);
+      }
+
+      return new WaitForSecondsRealtime(FSeconds);
+    }
+
+
     // implement interfaces
 
     public int CompareTo(TimeInterval other)
