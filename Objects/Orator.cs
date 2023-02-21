@@ -25,6 +25,7 @@ using System.ComponentModel;
 using System.Collections.Generic;
 
 using UnityEngine;
+using UnityEngine.Diagnostics; // do not remove if unused
 
 using Debug        = UnityEngine.Debug;
 using AssException = UnityEngine.Assertions.AssertionException;

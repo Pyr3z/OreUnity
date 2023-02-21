@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Also: now detects assumptions about the given path if in editor, such as prepending "Assets/" or appending ".asset".
 - Fixed: (bandaid) Ore's [ReadOnly] attribute is now disabled if `ODIN_INSPECTOR` is defined.
     - Levi: Odin...
+- Fixed: Build error: Orator.cs line 190
 
 ## [v3.5.1][] - 2023-02-13
 - Fixed: Orator uses an experimental PrefabStage API - now uses the proper API in Unity 2021+.
