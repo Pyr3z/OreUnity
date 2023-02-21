@@ -321,7 +321,7 @@ namespace Ore
 
 
     [CanBeNull]
-    public CustomYieldInstruction Yield()
+    public object Yield(bool scaledTime = false)
     {
       if (Ticks <= 1)
       {
@@ -331,6 +331,11 @@ namespace Ore
       if (m_AsFrames)
       {
         return new WaitForFrames((int)Ticks);
+      }
+
+      if (scaledTime)
+      {
+        return new WaitForSeconds(FSeconds);
       }
 
       return new WaitForSecondsRealtime(FSeconds);

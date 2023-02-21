@@ -3,20 +3,31 @@
  *  @date       2023-02-21
 **/
 
-using UnityEngine;
+using System.Collections;
 
 
 namespace Ore
 {
-  public sealed class WaitForFrames : CustomYieldInstruction
+  public sealed class WaitForFrames : IEnumerator
   {
-    public override bool keepWaiting => m_Remaining -- > 0;
-
     public WaitForFrames(int nFrames)
     {
+      m_Start = nFrames;
       m_Remaining = nFrames;
     }
 
-    private int m_Remaining;
+    public void Reset()
+    {
+      m_Remaining = m_Start;
+    }
+
+
+    object IEnumerator.Current => null;
+
+    bool IEnumerator.MoveNext() => m_Remaining --> 0;
+
+
+    private readonly int m_Start;
+    private          int m_Remaining;
   }
 }
