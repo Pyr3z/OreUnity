@@ -451,9 +451,9 @@ namespace Ore
         list.Clear();
       }
 
-      for (int i = 0; i < list.Count; ++i)
+      foreach (var token in jArray)
       {
-        switch (jArray[i])
+        switch (token)
         {
           case JValue jval:
             list.Add(jval.Value);
@@ -468,7 +468,7 @@ namespace Ore
             break;
 
           default:
-            Orator.Reached($"ping Levi? type={jArray[i].Type}");
+            Orator.Reached($"ping Levi? type={token.Type}");
             break;
         }
       }
