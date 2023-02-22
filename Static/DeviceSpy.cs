@@ -142,7 +142,7 @@ namespace Ore
 
     // TODO fetch LowRAMThreshold from platform
     // e.g. https://developer.android.com/reference/android/app/ActivityManager.MemoryInfo#threshold
-    public static int LowRAMThreshold => (int)(SystemInfo.systemMemorySize * 0.9f).AtLeast(256);
+    public static int LowRAMThreshold => (int)(SystemInfo.systemMemorySize * 0.1f).AtLeast(100);
 
 
     public static int CalcRAMUsageMB()
