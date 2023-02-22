@@ -21,9 +21,9 @@ namespace Ore
     public int Count => (m_ContinuousKeys?.length ?? 0) + (m_DiscreteKeys?.Count ?? 0);
 
 
-    private DeviceDimension           m_Dimension;
-    private AnimationCurve            m_ContinuousKeys = new AnimationCurve();
-    private Dictionary<string, float> m_DiscreteKeys   = new Dictionary<string, float>();
+    private readonly DeviceDimension       m_Dimension;
+    private readonly AnimationCurve        m_ContinuousKeys = new AnimationCurve();
+    private readonly HashMap<string,float> m_DiscreteKeys   = new HashMap<string,float>();
 
 
     public DeviceEvaluator(DeviceDimension dim)

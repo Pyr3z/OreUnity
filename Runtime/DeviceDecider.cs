@@ -60,13 +60,13 @@ namespace Ore
       set => m_Verbose = value;
     }
 
+    public const float MAX_THRESHOLD = float.MaxValue / 2f;
 
     private float m_Threshold = DEFAULT_THRESHOLD;
-    private const float DEFAULT_THRESHOLD   = 1f;
-    private const float ALWAYS_DECIDE_TRUE  = float.MinValue;
-    private const float ALWAYS_DECIDE_FALSE = float.MaxValue;
+    private const float DEFAULT_THRESHOLD = 1f;
 
-    private Dictionary<DeviceDimension, DeviceEvaluator> m_Factors = new Dictionary<DeviceDimension, DeviceEvaluator>();
+    private readonly HashMap<DeviceDimension,DeviceEvaluator> m_Factors
+      = new HashMap<DeviceDimension,DeviceEvaluator>();
 
     private bool m_Verbose = false;
 
@@ -96,7 +96,7 @@ namespace Ore
       foreach (var row in sdd.Rows)
       {
         TryParseRow(row.Dimension, row.Key, row.Weight);
-        ++count;
+        ++ count;
       }
 
       return count > 0;
@@ -141,13 +141,13 @@ namespace Ore
 
     public bool IsDisabled(out bool decision)
     {
-      decision = (m_Threshold == ALWAYS_DECIDE_TRUE);
-      return m_Threshold.IsExtreme();
+      decision = m_Threshold < MAX_THRESHOLD;
+      return m_Threshold < Floats.Epsilon || m_Threshold >= MAX_THRESHOLD;
     }
 
     public bool IsDisabled()
     {
-      return m_Threshold.IsExtreme();
+      return m_Threshold < Floats.Epsilon || m_Threshold >= MAX_THRESHOLD;
     }
 
 
@@ -239,19 +239,19 @@ namespace Ore
 
     public IEnumerable<DeviceEvaluator> GetContinuousFactors()
     {
-      foreach (var kvp in m_Factors)
+      foreach (var (key,val) in m_Factors)
       {
-        if (kvp.Value.IsContinuous)
-          yield return kvp.Value;
+        if (val.IsContinuous)
+          yield return val;
       }
     }
 
     public IEnumerable<DeviceEvaluator> GetDiscreteFactors()
     {
-      foreach (var kvp in m_Factors)
+      foreach (var (key,val) in m_Factors)
       {
-        if (kvp.Value.IsDiscrete)
-          yield return kvp.Value;
+        if (val.IsDiscrete)
+          yield return val;
       }
     }
 
