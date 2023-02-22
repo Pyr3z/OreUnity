@@ -11,7 +11,7 @@ using UnityEngine;
 namespace Ore
 {
 
-  public class DeviceEvaluator : IEvaluator
+  public class DeviceEvaluator
   {
     public DeviceDimension Dimension => m_Dimension;
 

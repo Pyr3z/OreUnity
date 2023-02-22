@@ -47,7 +47,7 @@ using UnityEngine;
 
 namespace Ore
 {
-  public class DeviceDecider : IDecider<DeviceEvaluator>
+  public class DeviceDecider
   {
     public float Threshold
     {
