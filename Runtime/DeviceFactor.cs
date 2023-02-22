@@ -49,8 +49,22 @@ namespace Ore
           Parsing.TryParseTimezoneOffset(key, out float offset))
       {
         m_ContinuousKeys.AddKey(offset, weight);
+        return this;
       }
-      else if (m_Dimension.IsContinuous() && float.TryParse(key, out float f))
+
+      if (m_Dimension == DeviceDimension.AspectRatio)
+      {
+        int colon = key.IndexOf(':');
+        if (colon > 0 && float.TryParse(key.Remove(colon),      out float w) &&
+                         float.TryParse(key.Substring(colon+1), out float h))
+        {
+          if (w < h) (w,h) = (h,w);
+          m_ContinuousKeys.AddKey(w / h, weight);
+          return this;
+        }
+      }
+
+      if (m_Dimension.IsContinuous() && float.TryParse(key, out float f))
       {
         m_ContinuousKeys.AddKey(f, weight);
       }
