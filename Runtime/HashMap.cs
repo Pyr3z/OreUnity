@@ -98,7 +98,7 @@ namespace Ore
 
 
     public HashMap()
-      : this(null)
+      : this(keyComparator: null)
     {
     }
 
