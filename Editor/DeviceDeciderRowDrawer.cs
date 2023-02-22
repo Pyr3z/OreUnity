@@ -12,9 +12,6 @@ namespace Ore.Editor
   [CustomPropertyDrawer(typeof(SerialDeviceDecider.Row))]
   public class DeviceDeciderRowDrawer : PropertyDrawer
   {
-    const bool USE_ENUM_DROPDOWN      = true;
-    const bool VALIDATE_WEIGHT_FLOATS = true;
-
     private bool ValidateDimension(System.Enum dim)
     {
       return (DeviceDimension)dim != DeviceDimension.Continuous;
@@ -28,23 +25,16 @@ namespace Ore.Editor
 
       pos.width = (pos.width - 4f) / 3f;
 
-      if (USE_ENUM_DROPDOWN)
+      if (!DeviceDimensions.TryParse(prop_dim.stringValue, out DeviceDimension dim))
       {
-        if (!DeviceDimensions.TryParse(prop_dim.stringValue, out DeviceDimension dim))
-        {
-          dim = DeviceDimension.None;
-        }
-
-        EditorGUI.BeginChangeCheck();
-        dim = (DeviceDimension)EditorGUI.EnumPopup(pos, GUIContent.none, dim, ValidateDimension);
-        if (EditorGUI.EndChangeCheck())
-        {
-          prop_dim.stringValue = dim.ToString();
-        }
+        dim = DeviceDimension.None;
       }
-      else
+
+      EditorGUI.BeginChangeCheck();
+      dim = (DeviceDimension)EditorGUI.EnumPopup(pos, GUIContent.none, dim, ValidateDimension);
+      if (EditorGUI.EndChangeCheck())
       {
-        EditorGUI.DelayedTextField(pos, prop_dim, GUIContent.none);
+        prop_dim.stringValue = dim.ToString();
       }
 
       pos.x += 2f + pos.width;
@@ -58,21 +48,14 @@ namespace Ore.Editor
 
       pos.x += 2f + pos.width;
 
-      if (VALIDATE_WEIGHT_FLOATS)
-      {
-        if (!float.TryParse(prop_wgt.stringValue, out float wgt))
-          wgt = -1f;
+      if (!float.TryParse(prop_wgt.stringValue, out float wgt))
+        wgt = -1f;
 
-        EditorGUI.BeginChangeCheck();
-        wgt = EditorGUI.DelayedFloatField(pos, GUIContent.none, wgt);
-        if (EditorGUI.EndChangeCheck())
-        {
-          prop_wgt.stringValue = wgt.ToInvariant();
-        }
-      }
-      else
+      EditorGUI.BeginChangeCheck();
+      wgt = EditorGUI.DelayedFloatField(pos, GUIContent.none, wgt);
+      if (EditorGUI.EndChangeCheck())
       {
-        EditorGUI.DelayedTextField(pos, prop_wgt, GUIContent.none);
+        prop_wgt.stringValue = wgt.ToInvariant();
       }
     }
   } // end class DeviceDeciderRowDrawer
