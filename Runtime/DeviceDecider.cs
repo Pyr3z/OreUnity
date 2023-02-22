@@ -60,6 +60,10 @@ namespace Ore
       set => m_Verbose = value;
     }
 
+
+    private static readonly char[] KEY_SEPARATORS = new char[] { '|' };
+
+
     public const float MAX_THRESHOLD = float.MaxValue / 2f;
 
     private float m_Threshold = DEFAULT_THRESHOLD;
@@ -113,7 +117,15 @@ namespace Ore
           m_Factors[dim] = evaluator;
         }
 
-        evaluator.Key(key, w);
+        var splits = key.Split(KEY_SEPARATORS, System.StringSplitOptions.RemoveEmptyEntries);
+
+        if (splits.IsEmpty())
+          return false;
+
+        foreach (var split in splits)
+        {
+          evaluator.Key(split.Trim(), w);
+        }
 
         return true;
       }
