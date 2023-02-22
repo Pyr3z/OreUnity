@@ -9,7 +9,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 using UnityEngine;
-
 using UnityEvent = UnityEngine.Events.UnityEvent;
 
 
@@ -195,16 +194,34 @@ namespace Ore
     {
       yield return new WaitForSeconds(seconds);
 
-      ((UnityEvent)this).Invoke();
-
-      m_InvokeHandle = null;
+      try
+      {
+        ((UnityEvent)this).Invoke();
+      }
+      catch (System.Exception ex)
+      {
+        Orator.NFE(ex, m_Context);
+      }
+      finally
+      {
+        m_InvokeHandle = null;
+      }
     }
 
     private void InvokePayload()
     {
-      ((UnityEvent)this).Invoke();
-
-      m_InvokeHandle = null;
+      try
+      {
+        ((UnityEvent)this).Invoke();
+      }
+      catch (System.Exception ex)
+      {
+        Orator.NFE(ex, m_Context);
+      }
+      finally
+      {
+        m_InvokeHandle = null;
+      }
     }
 
   }
