@@ -11,7 +11,7 @@ using UnityEngine;
 namespace Ore
 {
 
-  public class DeviceEvaluator
+  public class DeviceFactor
   {
     public DeviceDimension Dimension => m_Dimension;
 
@@ -26,13 +26,13 @@ namespace Ore
     private readonly HashMap<string,float> m_DiscreteKeys   = new HashMap<string,float>();
 
 
-    public DeviceEvaluator(DeviceDimension dim)
+    public DeviceFactor(DeviceDimension dim)
     {
       m_Dimension = dim;
     }
 
 
-    public DeviceEvaluator Key(float key, float weight) // continuous
+    public DeviceFactor Key(float key, float weight) // continuous
     {
       Debug.Assert(m_Dimension.IsContinuous());
 
@@ -41,7 +41,7 @@ namespace Ore
       return this;
     }
 
-    public DeviceEvaluator Key(string key, float weight) // discrete (unless Timezone or float key)
+    public DeviceFactor Key(string key, float weight) // discrete (unless Timezone or float key)
     {
       key ??= string.Empty;
 
@@ -62,7 +62,7 @@ namespace Ore
       return this;
     }
 
-    public DeviceEvaluator EaseCurve()
+    public DeviceFactor EaseCurve()
     {
       Debug.Assert(m_Dimension.IsContinuous());
 
@@ -77,7 +77,7 @@ namespace Ore
       return this;
     }
 
-    public DeviceEvaluator SmoothCurve(float weight = 1f)
+    public DeviceFactor SmoothCurve(float weight = 1f)
     {
       Debug.Assert(m_Dimension.IsContinuous());
 

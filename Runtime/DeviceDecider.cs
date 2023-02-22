@@ -69,8 +69,8 @@ namespace Ore
     private float m_Threshold = DEFAULT_THRESHOLD;
     private const float DEFAULT_THRESHOLD = 1f;
 
-    private readonly HashMap<DeviceDimension,DeviceEvaluator> m_Factors
-      = new HashMap<DeviceDimension,DeviceEvaluator>();
+    private readonly HashMap<DeviceDimension,DeviceFactor> m_Factors
+      = new HashMap<DeviceDimension,DeviceFactor>();
 
     private bool m_Verbose = false;
 
@@ -95,12 +95,19 @@ namespace Ore
       if (sdd.Rows == null)
         return false;
 
+      if (sdd.Rows.Length == 0)
+      {
+        return true; // s'gotta be empty on purpose, right?
+      }
+
       int count = 0;
 
       foreach (var row in sdd.Rows)
       {
-        TryParseRow(row.Dimension, row.Key, row.Weight);
-        ++ count;
+        if (TryParseRow(row.Dimension, row.Key, row.Weight))
+        {
+          ++ count;
+        }
       }
 
       return count > 0;
@@ -111,10 +118,10 @@ namespace Ore
       if (float.TryParse(weight, out float w) &&
           DeviceDimensions.TryParse(dimension, out DeviceDimension dim))
       {
-        if (!m_Factors.TryGetValue(dim, out DeviceEvaluator evaluator))
+        if (!m_Factors.TryGetValue(dim, out DeviceFactor factor))
         {
-          evaluator = new DeviceEvaluator(dim);
-          m_Factors[dim] = evaluator;
+          factor = new DeviceFactor(dim);
+          m_Factors[dim] = factor;
         }
 
         var splits = key.Split(KEY_SEPARATORS, System.StringSplitOptions.RemoveEmptyEntries);
@@ -124,7 +131,7 @@ namespace Ore
 
         foreach (var split in splits)
         {
-          evaluator.Key(split.Trim(), w);
+          _ = factor.Key(split.Trim(), w);
         }
 
         return true;
@@ -249,7 +256,7 @@ namespace Ore
     }
 
 
-    public IEnumerable<DeviceEvaluator> GetContinuousFactors()
+    public IEnumerable<DeviceFactor> GetContinuousFactors()
     {
       foreach (var (key,val) in m_Factors)
       {
@@ -258,7 +265,7 @@ namespace Ore
       }
     }
 
-    public IEnumerable<DeviceEvaluator> GetDiscreteFactors()
+    public IEnumerable<DeviceFactor> GetDiscreteFactors()
     {
       foreach (var (key,val) in m_Factors)
       {
