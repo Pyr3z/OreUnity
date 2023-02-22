@@ -126,8 +126,13 @@ namespace Ore
       #endif
     }
 
-    public HashMap([NotNull] IReadOnlyCollection<K> keys, [NotNull] IReadOnlyCollection<V> values)
+    public HashMap([NotNull] IReadOnlyCollection<K> keys, [CanBeNull] IReadOnlyCollection<V> values)
     {
+      if (values is null)
+      {
+        values = Array.Empty<V>();
+      }
+
       OAssert.False(keys.Count < values.Count);
 
       int size = m_Params.StoreLoadLimit(keys.Count);
@@ -154,6 +159,12 @@ namespace Ore
 
       keyiter.Dispose();
       valiter.Dispose();
+    }
+
+    public HashMap([NotNull] IDictionary<K,V> other)
+      : this((IReadOnlyCollection<K>)other.Keys,
+             (IReadOnlyCollection<V>)other.Values)
+    {
     }
 
 
