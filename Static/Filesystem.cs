@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 using System.IO;
+using System.Collections.Generic;
 
 using Exception             = System.Exception;
 using UnauthorizedException = System.UnauthorizedAccessException;
@@ -294,7 +295,7 @@ namespace Ore
     #endif // NEWTONSOFT_JSON
 
 
-    public static bool TryReadObject<T>([NotNull] string filepath, [CanBeNull] out T obj, Encoding encoding = null)
+    public static bool TryReadObject<T>([NotNull] string filepath, out T obj, Encoding encoding = null)
     {
       if (!TryReadText(filepath, out string json, encoding))
       {
@@ -319,10 +320,11 @@ namespace Ore
 
     #if NEWTONSOFT_JSON
 
-    public static bool TryReadJson([NotNull] string filepath, [NotNull] out JToken token,
-                                   Encoding encoding = null, JsonSerializer serializer = null)
+    public static bool TryReadJson<T>([NotNull] string filepath, out T token,
+                                      Encoding encoding = null, JsonSerializer serializer = null)
+      where T : class
     {
-      token = JValue.CreateUndefined();
+      token = null;
 
       if (!Paths.IsValidPath(filepath))
       {
@@ -342,15 +344,40 @@ namespace Ore
           serializer = JsonSerializer.CreateDefault();
         }
         
-        var maybeNull = serializer.Deserialize<JToken>(reader);
+        var maybeNull = serializer.Deserialize<T>(reader);
         
-        if (maybeNull != null)
-        {
-          token = maybeNull;
-        }
-
         LastException = null;
         s_LastReadPath = filepath;
+
+        switch (maybeNull)
+        {
+          case null:
+            break;
+
+          case IList<object> list:
+            token = JsonAuthority.FixupNestedContainers(list) as T;
+            break;
+
+          case HashMap<string,object> map:
+            token = JsonAuthority.FixupNestedContainers(map) as T;
+            break;
+
+          case Dictionary<string,object> dict:
+            token = JsonAuthority.FixupNestedContainers(dict) as T;
+            break;
+
+          default:
+            token = maybeNull;
+            return true;
+        }
+
+        if (token is null)
+        {
+          CurrentException = new System.InvalidCastException($"Failed to convert from <{maybeNull?.GetType().Name ?? "null"}> to <{typeof(T).Name}>.");
+          return false;
+        }
+
+        return true;
       }
       catch (JsonException jex)
       {
@@ -378,7 +405,7 @@ namespace Ore
         reader?.Close();
       }
 
-      return token.Type != JTokenType.Undefined;
+      return false;
     }
 
     #endif // NEWTONSOFT_JSON

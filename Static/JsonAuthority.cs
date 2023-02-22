@@ -6,10 +6,12 @@
 using JetBrains.Annotations;
 
 #if NEWTONSOFT_JSON
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 #endif
 
+using System.Collections;
 using System.Linq;
 
 using UnityEngine;
@@ -201,6 +203,167 @@ namespace Ore
       settings.TypeNameHandling = enable ? TypeNameHandling.Objects : TypeNameHandling.None;
 
       return settings;
+    }
+
+
+    [NotNull]
+    public static IList<object> FixupNestedContainers([NotNull] IList<object> list, int maxRecursionDepth = 3)
+    {
+      int ilen = list.Count;
+
+      if (maxRecursionDepth < 0)
+      {
+        Orator.Error($"{nameof(JsonAuthority)}.{nameof(FixupNestedContainers)}: Max recursion depth reached.");
+        return list;
+      }
+
+      for (int i = 0; i < ilen; ++i)
+      {
+        switch (list[i])
+        {
+          case JValue jval:
+            list[i] = jval.Value;
+            break;
+
+          case JObject jobj:
+            var newMap = new HashMap<string,object>(jobj.Count);
+
+            foreach (var property in jobj)
+            {
+              newMap.Add(property.Key, property.Value);
+            }
+
+            list[i] = FixupNestedContainers(newMap, maxRecursionDepth - 1); // fake recursion
+            break;
+
+          case JArray jarr:
+            var newArr = new object[jarr.Count];
+
+            for (int n = 0; n < newArr.Length; ++n)
+            {
+              newArr[n] = jarr[n];
+            }
+
+            list[i] = FixupNestedContainers(newArr, maxRecursionDepth - 1); // regrettable recursion
+            break;
+
+          case JToken jtok:
+            Orator.Reached($"ping Levi? type={jtok.Type}");
+            list[i] = jtok.ToString(Formatting.None);
+            break;
+        }
+      }
+
+      return list;
+    }
+
+    [NotNull]
+    public static Dictionary<string,object> FixupNestedContainers([NotNull] Dictionary<string,object> dict, int maxRecursionDepth = 3)
+    {
+      if (maxRecursionDepth < 0)
+      {
+        Orator.Error($"{nameof(JsonAuthority)}.{nameof(FixupNestedContainers)}: Max recursion depth reached.");
+        return dict;
+      }
+
+      var sneakySwap = new Dictionary<string,object>(dict.Count);
+
+      foreach (var pair in dict)
+      {
+        switch (pair.Value)
+        {
+          case JValue jval:
+            sneakySwap.Add(pair.Key, jval.Value);
+            break;
+
+          case JObject jobj:
+            var newMap = new HashMap<string,object>(jobj.Count);
+
+            foreach (var property in jobj)
+            {
+              newMap.Map(property.Key, property.Value);
+            }
+
+            sneakySwap.Add(pair.Key, FixupNestedContainers(newMap, maxRecursionDepth - 1));
+            break;
+
+          case JArray jarr:
+            var newArr = new object[jarr.Count];
+
+            for (int i = 0; i < newArr.Length; ++i)
+            {
+              newArr[i] = jarr[i];
+            }
+
+            sneakySwap.Add(pair.Key, FixupNestedContainers(newArr, maxRecursionDepth - 1));
+            break;
+
+          case JToken jtok:
+            Orator.Reached($"ping Levi? type={jtok.Type}");
+            sneakySwap.Add(pair.Key, jtok.ToString(Formatting.None));
+            break;
+
+          default:
+            sneakySwap.Add(pair.Key, pair.Value);
+            break;
+        }
+      }
+
+      return sneakySwap;
+    }
+
+    [NotNull]
+    public static HashMap<string,object> FixupNestedContainers([NotNull] HashMap<string,object> map, int maxRecursionDepth = 3)
+    {
+      if (maxRecursionDepth < 0)
+      {
+        Orator.Error($"{nameof(JsonAuthority)}.{nameof(FixupNestedContainers)}: Max recursion depth reached.");
+        return map;
+      }
+
+      // HashMap algo optimization <3
+
+      using (var it = map.GetEnumerator())
+      {
+        while (it.MoveNext())
+        {
+          switch (it.CurrentValue)
+          {
+            case JValue jval:
+              it.RemapCurrent(jval.Value);
+              break;
+
+            case JObject jobj:
+              var newMap = new HashMap<string,object>(jobj.Count);
+
+              foreach (var property in jobj)
+              {
+                newMap.Map(property.Key, property.Value);
+              }
+
+              it.RemapCurrent(FixupNestedContainers(newMap, maxRecursionDepth - 1)); // regrettable recursion
+              break;
+
+            case JArray jarr:
+              var newArr = new object[jarr.Count];
+
+              for (int j = 0; j < newArr.Length; ++j)
+              {
+                newArr[j] = jarr[j];
+              }
+
+              it.RemapCurrent(FixupNestedContainers(newArr, maxRecursionDepth - 1)); // fake recursion
+              break;
+
+            case JToken jtok:
+              Orator.Reached($"ping Levi? type={jtok.Type}");
+              it.RemapCurrent(jtok.ToString(Formatting.None));
+              break;
+          }
+        }
+      }
+
+      return map;
     }
 
 

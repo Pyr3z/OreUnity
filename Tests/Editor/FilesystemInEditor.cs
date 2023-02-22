@@ -8,12 +8,12 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEditor;
 
+using System.Collections;
 using System.Collections.Generic;
 
 using Ore;
 
 #if NEWTONSOFT_JSON
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 #endif
 
@@ -175,6 +175,47 @@ internal static class FilesystemInEditor
     Assert.NotNull(readDict, "readDict");
     Assert.AreEqual(subDict["name"], readDict.Value<string>("name"), "sub['name']");
     Assert.AreEqual(subDict["fef"], readDict.Value<bool>("fef"), "sub['fef']");
+
+    if (!Filesystem.TryReadJson(path, out HashMap<string,object> readMap))
+    {
+      Assert.True(Filesystem.TryGetLastException(out var ex));
+      throw ex;
+    }
+
+    Assert.NotNull(readMap, "readMap");
+
+    foreach (var (key,val) in readMap)
+    {
+      if (val is IList valList)
+      {
+        Assert.True(dict.TryGetValue(key, out object found));
+        var expected = found as IList;
+        Assert.NotNull(expected);
+        Assert.AreEqual(expected.Count, valList.Count, "expected.Count == subList.Count");
+
+        for (int i = 0; i < expected.Count; ++i)
+        {
+          Assert.AreEqual(expected[i], valList[i]);
+        }
+      }
+      else if (val is IDictionary<string,object> valDict)
+      {
+        Assert.True(dict.TryGetValue(key, out object found));
+        var expected = found as IDictionary<string,object>;
+        Assert.NotNull(expected);
+        Assert.AreEqual(expected.Count, valDict.Count, "expected.Count == subObj.Count");
+
+        foreach (var exp in expected)
+        {
+          Assert.AreEqual(exp.Value, valDict[exp.Key]);
+        }
+      }
+      else
+      {
+        Assert.True(dict.TryGetValue(key, out object expected));
+        Assert.AreEqual(expected, val);
+      }
+    }
   }
 
   #endif // NEWTONSOFT_JSON
