@@ -136,12 +136,18 @@ internal static class FilesystemInEditor
   [Test]
   public static void TryJson()
   {
-    var intList = new int[] { 1, 2, 3 };
+    var intList = new List<int> { 1, 2, 3 };
+    var subDict = new Dictionary<string,object>
+    {
+      ["name"] = "coolName",
+      ["fef"]  = false
+    };
     var dict = new Dictionary<string,object>
     {
       ["fef"] = true,
       ["bub"] = "bub",
-      ["123"] = intList
+      ["123"] = intList,
+      ["sub"] = subDict
     };
 
     string path = TMPDIR + nameof(TryJson) + ".json";
@@ -165,6 +171,10 @@ internal static class FilesystemInEditor
     Assert.AreEqual(intList[0], readList.Value<int>(0), "123 == 123");
     Assert.AreEqual(intList[1], readList.Value<int>(1), "123 == 123");
     Assert.AreEqual(intList[2], readList.Value<int>(2), "123 == 123");
+    var readDict = readToken["sub"] as JObject;
+    Assert.NotNull(readDict, "readDict");
+    Assert.AreEqual(subDict["name"], readDict.Value<string>("name"), "sub['name']");
+    Assert.AreEqual(subDict["fef"], readDict.Value<bool>("fef"), "sub['fef']");
   }
 
   #endif // NEWTONSOFT_JSON
