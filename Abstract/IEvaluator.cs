@@ -1,0 +1,13 @@
+/*! @file     Runtime/IEvaluator.cs
+ *  @author   Levi Perez (levi\@leviperez.dev)
+ *  @date     2022-05-09
+**/
+
+
+namespace Ore
+{
+  public interface IEvaluator
+  {
+    float Evaluate();
+  }
+}
