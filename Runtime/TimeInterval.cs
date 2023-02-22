@@ -35,6 +35,10 @@ namespace Ore
 
     public static readonly TimeInterval Frame     = new TimeInterval(1L, areFrames: true);
     public static readonly TimeInterval Second    = new TimeInterval(10000000L);
+    public static readonly TimeInterval Minute    = new TimeInterval(600000000L);
+    public static readonly TimeInterval Hour      = new TimeInterval(14400000000L);
+    public static readonly TimeInterval Day       = new TimeInterval(864000000000L);
+    public static readonly TimeInterval Week      = new TimeInterval(6048000000000L);
 
     public static readonly TimeInterval Epoch     = new TimeInterval(DateTimes.Epoch);
 
