@@ -367,6 +367,115 @@ namespace Ore
     }
 
 
+    [NotNull]
+    public static HashMap<string,object> Genericize([NotNull] JObject jObject, [CanBeNull] HashMap<string,object> map,
+                                                    System.Func<int, HashMap<string,object>> mapMaker = null,
+                                                    System.Func<int, IList<object>> listMaker = null)
+    {
+      static HashMap<string,object> defaultMapMaker(int cap) => new HashMap<string,object>(cap);
+
+      static IList<object> defaultListMaker(int cap) => new object[cap];
+
+      if (mapMaker is null)
+      {
+        mapMaker = defaultMapMaker;
+      }
+
+      if (listMaker is null)
+      {
+        listMaker = defaultListMaker;
+      }
+
+      if (map is null)
+      {
+        map = mapMaker(jObject.Count);
+      }
+      else
+      {
+        map.Clear();
+        map.EnsureCapacity(jObject.Count);
+      }
+
+      foreach (var property in jObject)
+      {
+        switch (property.Value)
+        {
+          case null:
+            continue;
+
+          case JValue jval:
+            map[property.Key] = jval.Value;
+            break;
+
+          case JObject jobj:
+            map[property.Key] = Genericize(jobj, null, mapMaker, listMaker);
+            break;
+
+          case JArray jarr:
+            map[property.Key] = Genericize(jarr, null, listMaker, mapMaker);
+            break;
+
+          default:
+            Orator.Reached($"ping Levi? type={property.Value.Type}");
+            break;
+        }
+      }
+
+      return map;
+    }
+
+    public static IList<object> Genericize([NotNull] JArray jArray, [CanBeNull] IList<object> list,
+                                           System.Func<int, IList<object>> listMaker = null,
+                                           System.Func<int, HashMap<string,object>> mapMaker = null)
+    {
+      static IList<object> defaultListMaker(int cap) => new object[cap];
+
+      static HashMap<string,object> defaultMapMaker(int cap) => new HashMap<string,object>(cap);
+
+      if (listMaker is null)
+      {
+        listMaker = defaultListMaker;
+      }
+
+      if (mapMaker is null)
+      {
+        mapMaker = defaultMapMaker;
+      }
+
+      if (list is null)
+      {
+        list = listMaker(jArray.Count);
+      }
+      else
+      {
+        list.Clear();
+      }
+
+      for (int i = 0; i < list.Count; ++i)
+      {
+        switch (jArray[i])
+        {
+          case JValue jval:
+            list.Add(jval.Value);
+            break;
+
+          case JObject jobj:
+            list.Add(Genericize(jobj, null, mapMaker, listMaker));
+            break;
+
+          case JArray jarr:
+            list.Add(Genericize(jarr, null, listMaker, mapMaker));
+            break;
+
+          default:
+            Orator.Reached($"ping Levi? type={jArray[i].Type}");
+            break;
+        }
+      }
+
+      return list;
+    }
+
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
     #if UNITY_EDITOR
