@@ -618,7 +618,28 @@ namespace Ore
   #endregion FUNDAMENTAL FILE I/O
 
 
-  #region INFO & DEBUGGING
+  #region FILESYSTEM QUERIES
+
+    public static IEnumerable<FileInfo> GetFiles([NotNull] string path)
+    {
+      var dir = new DirectoryInfo(path);
+
+      if (!dir.Exists)
+      {
+        var fileInfo = new FileInfo(path);
+        if (fileInfo.Exists)
+          return new FileInfo[] { fileInfo };
+
+        return System.Array.Empty<FileInfo>();
+      }
+
+      return dir.EnumerateFiles();
+    }
+
+  #endregion FILESYSTEM QUERIES
+
+
+  #region OPERATION INFO & DEBUGGING
 
     public static string LastReadPath => s_LastReadPath ?? string.Empty;
 
@@ -722,7 +743,7 @@ namespace Ore
         Orator.NFE(ex);
     }
 
-  #endregion INFO & DEBUGGING
+  #endregion OPERATION INFO & DEBUGGING
 
 
   #region PRIVATE
