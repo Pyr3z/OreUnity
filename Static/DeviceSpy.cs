@@ -34,7 +34,7 @@ namespace Ore
 
     // ReSharper disable ConvertToNullCoalescingCompoundAssignment
 
-    public static ABIArch ABI => (ABIArch)(s_ABIArch ?? (s_ABIArch = CalcABIArch()));
+    public static ABI ABI => (ABI)(s_ABI ?? (s_ABI = CalcABIArch()));
 
     public static float AspectRatio => (float)(s_AspectRatio ?? (s_AspectRatio = CalcAspectRatio()));
 
@@ -90,7 +90,7 @@ namespace Ore
 
     public static string UDID => s_UDID ?? (s_UDID = CalcVendorUDID());
 
-    public static bool Is64Bit => ABI == ABIArch.ARM64 || s_ABIArch == ABIArch.x86_64;
+    public static bool Is64Bit => ABI == ABI.ARM64 || s_ABI == ABI.x86_64;
 
     public static bool IsBlueStacks => (bool)(s_IsBlueStacks ?? (s_IsBlueStacks = CalcIsBlueStacks()));
 
@@ -248,7 +248,7 @@ namespace Ore
     private static bool?         s_IsTablet;
     private static bool?         s_IsBlueStacks;
     private static int?          s_ScreenRefreshHz;
-    private static ABIArch?      s_ABIArch;
+    private static ABI?          s_ABI;
 
     private const long BYTES_PER_MIB = 1048576L; // = pow(2,20)
     private const long BYTES_PER_MB  = 1000000L;
@@ -402,28 +402,28 @@ namespace Ore
       return false;
     }
 
-    private static ABIArch CalcABIArch()
+    private static ABI CalcABIArch()
     {
       #if !UNITY_EDITOR && UNITY_IOS // TODO iOS needs to be tested
         if (System.Environment.Is64BitOperatingSystem)
-          return ABIArch.ARM64;
+          return ABI.ARM64;
         else
-          return ABIArch.ARM;
+          return ABI.ARM;
       #endif // UNITY_IOS
 
       string type = SystemInfo.processorType;
 
       // Android and Android-like devices are pretty standard here
       if (type.StartsWith("ARM64"))
-        return ABIArch.ARM64;
+        return ABI.ARM64;
       else if (type.StartsWith("ARMv7"))
-        return ABIArch.ARM32;
+        return ABI.ARM32;
 
       // Chrome OS (should be a rare case)
       if (System.Environment.Is64BitOperatingSystem)
-        return ABIArch.x86_64;
+        return ABI.x86_64;
       else
-        return ABIArch.x86;
+        return ABI.x86;
     }
 
     // TODO: CalcIsChromeOS() - https://docs.unity3d.com/ScriptReference/Android.AndroidDevice-hardwareType.html

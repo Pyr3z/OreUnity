@@ -1,11 +1,11 @@
-/*! @file       Runtime/ABIArch.cs
+/*! @file       Runtime/ABI.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-01-20
 **/
 
 namespace Ore
 {
-  public enum ABIArch
+  public enum ABI
   {
     ARMv7  = 0,
     ARM64  = 1,
