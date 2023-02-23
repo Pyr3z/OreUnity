@@ -196,7 +196,106 @@ namespace Ore
     #endif // UNITY_EDITOR
 
 
+  #region Advanced API
+
+    /// <summary>
+    ///   Special API which allows you to globally override DeviceSpy's perception
+    ///   of the current device.
+    /// </summary>
+    /// <remarks>
+    ///   By design, nothing within this class is defensively validated. <br/>
+    ///   <i>Little birdies can lie.</i> <br/>
+    ///   <b>USE WITH CAUTION!</b>
+    /// </remarks>
+    [PublicAPI]
+    public static class LittleBirdie
+    {
+      // ReSharper disable MemberHidesStaticFromOuterClass
+
+      public static ABI ABI
+      {
+        get => DeviceSpy.ABI;
+        set => s_ABI = value;
+      }
+
+      public static string Brand
+      {
+        get => DeviceSpy.Brand;
+        set => s_Brand = value;
+      }
+
+      public static string Browser
+      {
+        get => DeviceSpy.Browser;
+        set => s_Browser = value;
+      }
+
+      public static string Carrier
+      {
+        get => DeviceSpy.Carrier;
+        set => s_Carrier = value;
+      }
+
+      public static string CountryISOString
+      {
+        get => DeviceSpy.CountryISOString;
+        set => s_CountryISO3166a2 = value;
+      }
+
+      public static string IDFA
+      {
+        get => DeviceSpy.IDFA;
+        set => s_IDFA = value;
+      }
+
+      public static string IDFV
+      {
+        get => DeviceSpy.IDFV;
+        set => s_IDFV = value;
+      }
+
+      public static bool IsBlueStacks
+      {
+        get => DeviceSpy.IsBlueStacks;
+        set => s_IsBlueStacks = value;
+      }
+
+      public static bool IsTablet
+      {
+        get => DeviceSpy.IsTablet;
+        set => s_IsTablet = value;
+      }
+
+      public static bool IsTrackingLimited
+      {
+        get => DeviceSpy.IsTrackingLimited;
+        set => s_IsAdTrackingLimited = value;
+      }
+
+      public static string LanguageISOString
+      {
+        get => DeviceSpy.LanguageISOString;
+        set => s_LangISO6391 = value;
+      }
+
+      public static int LowRAMThreshold
+      {
+        get => DeviceSpy.LowRAMThreshold;
+      }
+
+      public static string UDID
+      {
+        get => DeviceSpy.UDID;
+        set => s_UDID = value;
+      }
+
+      // ReSharper restore MemberHidesStaticFromOuterClass
+    } // end nested class LittleBirdie
+
+  #endregion Advanced API
+
   #endregion Public section
+
 
 
   #region Private section
