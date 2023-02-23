@@ -125,8 +125,7 @@ namespace Ore
           return SystemInfo.graphicsDeviceName;
 
         case DeviceDimension.ReportedGeo:
-          // TODO this will probably be better replaced by previous impls:
-          return System.Globalization.RegionInfo.CurrentRegion.TwoLetterISORegionName;
+          return DeviceSpy.CountryISOString;
 
         case DeviceDimension.IsBlueStacks:
           return DeviceSpy.IsBlueStacks;
