@@ -34,6 +34,44 @@ namespace Ore
 
     // ReSharper disable ConvertToNullCoalescingCompoundAssignment
 
+    public static ABIArch ABI => (ABIArch)(s_ABIArch ?? (s_ABIArch = CalcABIArch()));
+
+    public static float AspectRatio => (float)(s_AspectRatio ?? (s_AspectRatio = CalcAspectRatio()));
+
+    public static string Brand
+    {
+      get
+      {
+        if (s_Brand is null)
+          (s_Brand, s_Model) = CalcMakeModel();
+        return s_Brand;
+      }
+    }
+
+    public static string Browser => s_Browser ?? (s_Browser = CalcBrowserName());
+
+    public static string Carrier => s_Carrier ?? (s_Carrier = CalcCarrier());
+
+    public static string CountryISOString => s_CountryISO3166a2 ?? (s_CountryISO3166a2 = CalcISO3166a2());
+
+    public static float DiagonalInches => (float)(s_DiagonalInches ?? (s_DiagonalInches = CalcScreenDiagonalInches()));
+
+    public static string IDFA
+    {
+      get
+      {
+        #if UNITY_EDITOR
+        return SystemInfo.deviceUniqueIdentifier;
+        #elif UNITY_ANDROID
+          return s_IDFA ?? (s_IDFA = CalcAndroidIDFA());
+        #elif UNITY_IOS
+          return s_IDFA = Device.advertisingIdentifier; // TODO
+        #else
+          return UDID;
+        #endif
+      }
+    }
+
     public static string IDFV
     {
       get
@@ -50,24 +88,13 @@ namespace Ore
       }
     }
 
-    public static string IDFA
-    {
-      get
-      {
-        #if UNITY_EDITOR
-          return SystemInfo.deviceUniqueIdentifier;
-        #elif UNITY_ANDROID
-          return s_IDFA ?? (s_IDFA = CalcAndroidIDFA());
-        #elif UNITY_IOS
-          return s_IDFA = Device.advertisingIdentifier; // TODO
-        #else
-          return UDID;
-        #endif
-      }
-    }
-
     public static string UDID => s_UDID ?? (s_UDID = CalcVendorUDID());
 
+    public static bool Is64Bit => ABI == ABIArch.ARM64 || s_ABIArch == ABIArch.x86_64;
+
+    public static bool IsBlueStacks => (bool)(s_IsBlueStacks ?? (s_IsBlueStacks = CalcIsBlueStacks()));
+
+    public static bool IsTablet => (bool)(s_IsTablet ?? (s_IsTablet = CalcIsTablet()));
 
     public static bool IsTrackingLimited
     {
@@ -87,26 +114,11 @@ namespace Ore
       }
     }
 
-    public static SerialVersion OSVersion
-    {
-      get
-      {
-        // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
-        if (s_OSVersion is null)
-          s_OSVersion = SerialVersion.ExtractOSVersion(SystemInfo.operatingSystem);
-        return s_OSVersion;
-      }
-    }
+    public static string LanguageISOString => s_LangISO6391 ?? (s_LangISO6391 = CalcISO6391());
 
-    public static string Brand
-    {
-      get
-      {
-        if (s_Brand is null)
-          (s_Brand, s_Model) = CalcMakeModel();
-        return s_Brand;
-      }
-    }
+    // TODO fetch LowRAMThreshold from platform
+      // e.g. https://developer.android.com/reference/android/app/ActivityManager.MemoryInfo#threshold
+    public static int LowRAMThreshold => (int)(SystemInfo.systemMemorySize * 0.1f).AtLeast(100);
 
     public static string Model
     {
@@ -118,36 +130,34 @@ namespace Ore
       }
     }
 
-    public static string Browser => s_Browser ?? (s_Browser = CalcBrowserName());
-
-    public static string Carrier => s_Carrier ?? (s_Carrier = CalcCarrier());
-
-    public static string TimezoneISOString => Strings.MakeISOTimezone(TimezoneOffset);
-
-    public static string LanguageISOString => s_LangISO6391 ?? (s_LangISO6391 = CalcISO6391());
-
-    public static string CountryISOString => s_CountryISO3166a2 ?? (s_CountryISO3166a2 = CalcISO3166a2());
-
-    public static TimeSpan TimezoneOffset => (TimeSpan)(s_TimezoneOffset ?? (s_TimezoneOffset = CalcTimezoneOffset()));
-
-    public static float DiagonalInches => (float)(s_DiagonalInches ?? (s_DiagonalInches = CalcScreenDiagonalInches()));
-
-    public static float AspectRatio => (float)(s_AspectRatio ?? (s_AspectRatio = CalcAspectRatio()));
-
-    public static bool IsTablet => (bool)(s_IsTablet ?? (s_IsTablet = CalcIsTablet()));
-
-    public static bool IsBlueStacks => (bool)(s_IsBlueStacks ?? (s_IsBlueStacks = CalcIsBlueStacks()));
-
-    public static bool Is64Bit => ABI == ABIArch.ARM64 || s_ABIArch == ABIArch.x86_64;
+    public static SerialVersion OSVersion
+    {
+      get
+      {
+        // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
+        if (s_OSVersion is null)
+          s_OSVersion = SerialVersion.ExtractOSVersion(SystemInfo.operatingSystem);
+        return s_OSVersion;
+      }
+    }
 
     public static int ScreenRefreshHz => (int)(s_ScreenRefreshHz ?? (s_ScreenRefreshHz = Screen.currentResolution.refreshRate.AtLeast(30)));
 
-    public static ABIArch ABI => (ABIArch)(s_ABIArch ?? (s_ABIArch = CalcABIArch()));
+    public static string TimezoneISOString => Strings.MakeISOTimezone(TimezoneOffset);
 
-    // TODO fetch LowRAMThreshold from platform
-    // e.g. https://developer.android.com/reference/android/app/ActivityManager.MemoryInfo#threshold
-    public static int LowRAMThreshold => (int)(SystemInfo.systemMemorySize * 0.1f).AtLeast(100);
+    public static TimeSpan TimezoneOffset => (TimeSpan)(s_TimezoneOffset ?? (s_TimezoneOffset = CalcTimezoneOffset()));
 
+
+    public static long CalcRAMUsageBytes()
+    {
+      // NOTE: This is where Ore's internal definition for reported RAM resides
+
+      #if UNITY_2020_1_OR_NEWER
+        return UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong();
+      #else
+        return System.GC.GetTotalMemory(forceFullCollection: false);
+      #endif
+    }
 
     public static int CalcRAMUsageMB()
     {
@@ -207,13 +217,14 @@ namespace Ore
       #endif // NEWTONSOFT_JSON
     }
 
+
     #if UNITY_EDITOR
+
     [UnityEditor.MenuItem("Ore/Log/DeviceSpy (JSON)")]
-    private static void Menu_LogJSON()
-    {
-      Orator.Log($"\"{nameof(DeviceSpy)}\": {ToJSON(prettyPrint: true)}");
-    }
+    private static void Menu_LogJSON() => Orator.Log($"\"{nameof(DeviceSpy)}\": {ToJSON(prettyPrint: true)}");
+
     #endif // UNITY_EDITOR
+
 
   #endregion Public section
 
@@ -243,19 +254,6 @@ namespace Ore
     private const long BYTES_PER_MB  = 1000000L;
 
     private const string PREFKEY_UDID = "VENDOR_UDID";
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static long CalcRAMUsageBytes()
-    {
-      // NOTE: This is where Ore's internal definition for reported RAM resides
-
-      #if UNITY_2020_1_OR_NEWER
-        return UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong();
-      #else
-        return System.GC.GetTotalMemory(forceFullCollection: false);
-      #endif
-    }
 
 
     private static (string make, string model) CalcMakeModel()
