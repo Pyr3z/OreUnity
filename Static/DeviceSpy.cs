@@ -56,39 +56,9 @@ namespace Ore
 
     public static float DiagonalInches => (float)(s_DiagonalInches ?? (s_DiagonalInches = CalcScreenDiagonalInches()));
 
-    public static string IDFA
-    {
-      get
-      {
-        #if UNITY_EDITOR
-        return SystemInfo.deviceUniqueIdentifier;
-        #elif UNITY_ANDROID
-          return s_IDFA ?? (s_IDFA = CalcAndroidIDFA());
-        #elif UNITY_IOS
-          return s_IDFA = Device.advertisingIdentifier; // TODO
-        #else
-          return UDID;
-        #endif
-      }
-    }
+    public static string IDFA => s_IDFA ?? (s_IDFA = CalcIDFA());
 
-    public static string IDFV
-    {
-      get
-      {
-        #if UNITY_EDITOR
-          return SystemInfo.deviceUniqueIdentifier;
-        #elif UNITY_ANDROID
-          return s_IDFV ?? (s_IDFV = CalcAndroidIDFV());
-        #elif UNITY_IOS
-          return s_IDFV ?? (s_IDFV = Device.vendorIdentifier);
-        #else
-          return UDID;
-        #endif
-      }
-    }
-
-    public static string UDID => s_UDID ?? (s_UDID = CalcVendorUDID());
+    public static string IDFV => s_IDFV ?? (s_IDFV = CalcIDFV());
 
     public static bool Is64Bit => ABI == ABI.ARM64 || s_ABI == ABI.x86_64;
 
@@ -116,9 +86,7 @@ namespace Ore
 
     public static string LanguageISOString => s_LangISO6391 ?? (s_LangISO6391 = CalcISO6391());
 
-    // TODO fetch LowRAMThreshold from platform
-      // e.g. https://developer.android.com/reference/android/app/ActivityManager.MemoryInfo#threshold
-    public static int LowRAMThreshold => (int)(SystemInfo.systemMemorySize * 0.1f).AtLeast(100);
+    public static int LowRAMThreshold => (int)(s_LowRAMThresh ?? (s_LowRAMThresh = CalcLowRAMThreshold()));
 
     public static string Model
     {
@@ -146,6 +114,8 @@ namespace Ore
     public static string TimezoneISOString => Strings.MakeISOTimezone(TimezoneOffset);
 
     public static TimeSpan TimezoneOffset => (TimeSpan)(s_TimezoneOffset ?? (s_TimezoneOffset = CalcTimezoneOffset()));
+
+    public static string UDID => s_UDID ?? (s_UDID = CalcVendorUDID());
 
 
     public static long CalcRAMUsageBytes()
@@ -231,24 +201,25 @@ namespace Ore
 
   #region Private section
 
-    private static string        s_IDFV;
-    private static string        s_IDFA;
-    private static string        s_UDID;
-    private static bool          s_IsAdTrackingLimited;
-    private static SerialVersion s_OSVersion;
+    private static ABI?          s_ABI;
+    private static float?        s_AspectRatio;
     private static string        s_Brand;
-    private static string        s_Model;
     private static string        s_Browser;
     private static string        s_Carrier;
-    private static string        s_LangISO6391;
     private static string        s_CountryISO3166a2;
-    private static TimeSpan?     s_TimezoneOffset;
     private static float?        s_DiagonalInches;
-    private static float?        s_AspectRatio;
-    private static bool?         s_IsTablet;
+    private static string        s_IDFA;
+    private static string        s_IDFV;
+    private static bool          s_IsAdTrackingLimited;
     private static bool?         s_IsBlueStacks;
+    private static bool?         s_IsTablet;
+    private static string        s_LangISO6391;
+    private static int?          s_LowRAMThresh;
+    private static string        s_Model;
+    private static SerialVersion s_OSVersion;
     private static int?          s_ScreenRefreshHz;
-    private static ABI?          s_ABI;
+    private static TimeSpan?     s_TimezoneOffset;
+    private static string        s_UDID;
 
     private const long BYTES_PER_MIB = 1048576L; // = pow(2,20)
     private const long BYTES_PER_MB  = 1000000L;
@@ -342,12 +313,12 @@ namespace Ore
       return iso6391;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string CalcISO3166a2() // 2-letter region code
     {
       // TODO this is probably inaccurate or else slow to call on devices
       return RegionInfo.CurrentRegion.TwoLetterISORegionName;
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static TimeSpan CalcTimezoneOffset()
@@ -356,6 +327,34 @@ namespace Ore
       return System.TimeZoneInfo.Local.BaseUtcOffset;
     }
 
+    private static string CalcIDFA()
+    {
+      #if UNITY_ANDROID
+        return CalcAndroidIDFA();
+      #elif UNITY_IOS
+        return Device.advertisingIdentifier;
+      #else
+        return UDID;
+      #endif
+    }
+
+    private static string CalcIDFV()
+    {
+      #if UNITY_ANDROID
+        return CalcAndroidIDFV();
+      #elif UNITY_IOS
+        return Device.vendorIdentifier;
+      #else
+        return UDID;
+      #endif
+    }
+
+    private static int CalcLowRAMThreshold()
+    {
+      // TODO fetch LowRAMThreshold from platform
+      // e.g. Android: https://developer.android.com/reference/android/app/ActivityManager.MemoryInfo#threshold
+      return (int)(SystemInfo.systemMemorySize * 0.1f).AtLeast(64);
+    }
 
     private static float CalcScreenDiagonalInches()
     {
@@ -435,16 +434,24 @@ namespace Ore
 
     private static string CalcAndroidIDFV()
     {
+      #if UNITY_EDITOR
+        if (Application.isEditor) return UDID;
+      #endif
+
       var resolver = AndroidBridge.Activity.Call<AndroidJavaObject>("getContentResolver");
       var secure = new AndroidJavaClass("android.provider.Settings$Secure");
 
       string id = secure.CallStatic<string>("getString", resolver, "android_id");
 
-      return id.IsEmpty() ? SystemInfo.deviceUniqueIdentifier : id;
+      return id ?? string.Empty;
     }
 
     private static string CalcAndroidIDFA()
     {
+      #if UNITY_EDITOR
+        if (Application.isEditor) return string.Empty;
+      #endif
+
       var adidClient = new AndroidJavaClass("com.google.android.gms.ads.identifier.AdvertisingIdClient");
       var adidInfo = adidClient.CallStatic<AndroidJavaObject>("getAdvertisingIdInfo", AndroidBridge.Activity);
 
@@ -454,14 +461,13 @@ namespace Ore
 
       string id = adidInfo.Call<string>("getId");
 
-      return id.IsEmpty() ? SystemInfo.unsupportedIdentifier : id;
+      return id ?? string.Empty;
     }
 
     private static string CalcAndroidBrowser()
     {
       #if UNITY_EDITOR
-      if (Application.isEditor)
-        return string.Empty;
+        if (Application.isEditor) return string.Empty;
       #endif
 
       const string DUMMY_URL          = "https://example.com";
@@ -477,7 +483,7 @@ namespace Ore
         intent = AndroidBridge.MakeIntent("android.intent.action.VIEW", uri);
         flags  = AndroidBridge.Classes.ResolveInfoFlags.CallStatic<AndroidJavaObject>("of", MATCH_DEFAULT_ONLY);
         resolv = AndroidBridge.PackageManager.Call<AndroidJavaObject>("resolveActivity", intent, flags);
-        return resolv.Call<AndroidJavaObject>("loadLabel", AndroidBridge.PackageManager).ToString();
+        return $"{resolv.Call<AndroidJavaObject>("loadLabel", AndroidBridge.PackageManager)}";
       }
       catch (AndroidJavaException aje)
       {
@@ -497,13 +503,12 @@ namespace Ore
     private static string CalcAndroidISO6391() // 2-letter retval
     {
       #if UNITY_EDITOR
-      if (Application.isEditor)
-        return string.Empty;
+        if (Application.isEditor) return string.Empty;
       #endif
 
       try
       {
-        return AndroidBridge.SystemLocale.Call<string>("getLanguage").ToUpperInvariant();
+        return AndroidBridge.SystemLocale.Call<string>("getLanguage")?.ToUpperInvariant() ?? string.Empty;
       }
       catch (AndroidJavaException aje)
       {
@@ -516,13 +521,12 @@ namespace Ore
     private static string CalcAndroidISO6392() // 3-letter retval
     {
       #if UNITY_EDITOR
-      if (Application.isEditor)
-        return string.Empty;
+        if (Application.isEditor) return string.Empty;
       #endif
 
       try
       {
-        return AndroidBridge.SystemLocale.Call<string>("getISO3Language").ToUpperInvariant();
+        return AndroidBridge.SystemLocale.Call<string>("getISO3Language")?.ToUpperInvariant() ?? string.Empty;
       }
       catch (AndroidJavaException aje)
       {
@@ -535,8 +539,7 @@ namespace Ore
     private static string CalcAndroidCarrier()
     {
       #if UNITY_EDITOR
-      if (Application.isEditor)
-        return string.Empty;
+        if (Application.isEditor) return string.Empty;
       #endif
 
       const string TELEPHONY_SERVICE = "phone"; // https://developer.android.com/reference/android/content/Context#TELEPHONY_SERVICE
