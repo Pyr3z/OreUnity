@@ -47,6 +47,9 @@ using UnityEngine;
 
 namespace Ore
 {
+  /// <summary>
+  ///   A.K.A. DeviceDaddy
+  /// </summary>
   public class DeviceDecider
   {
     public float Threshold
@@ -61,16 +64,23 @@ namespace Ore
     }
 
 
+    internal int FactorCount => m_Factors.Count;
+
+    internal int ContinuousCount => m_ContinuousCount;
+
+
     private static readonly char[] KEY_SEPARATORS = new char[] { '|' };
 
+    private const float MAX_THRESHOLD = float.MaxValue / 2f;
 
-    public const float MAX_THRESHOLD = float.MaxValue / 2f;
 
     private float m_Threshold = DEFAULT_THRESHOLD;
     private const float DEFAULT_THRESHOLD = 1f;
 
     private readonly HashMap<DeviceDimension,DeviceFactor> m_Factors
       = new HashMap<DeviceDimension,DeviceFactor>();
+
+    private int m_ContinuousCount;
 
     private bool m_Verbose = false;
 
@@ -115,29 +125,36 @@ namespace Ore
 
     public bool TryParseRow(string dimension, string key, string weight)
     {
-      if (float.TryParse(weight, out float w) &&
-          DeviceDimensions.TryParse(dimension, out DeviceDimension dim))
+      if (!float.TryParse(weight, out float w) ||
+          !DeviceDimensions.TryParse(dimension, out DeviceDimension dim))
       {
-        if (!m_Factors.TryGetValue(dim, out DeviceFactor factor))
+        return false;
+      }
+
+      if (!m_Factors.TryGetValue(dim, out DeviceFactor factor) || factor is null)
+      {
+        m_Factors[dim] = factor = new DeviceFactor(dim);
+
+        if (dim.IsContinuous())
         {
-          factor = new DeviceFactor(dim);
-          m_Factors[dim] = factor;
+          ++ m_ContinuousCount;
         }
+      }
 
-        var splits = key.Split(KEY_SEPARATORS, System.StringSplitOptions.RemoveEmptyEntries);
+      var splits = key.Split(KEY_SEPARATORS, System.StringSplitOptions.RemoveEmptyEntries);
 
-        if (splits.IsEmpty())
-          return false;
+      if (splits.IsEmpty())
+        return false;
 
-        foreach (var split in splits)
+      foreach (var split in splits)
+      {
+        if (!split.IsEmpty())
         {
           _ = factor.Key(split.Trim(), w);
         }
-
-        return true;
       }
 
-      return false;
+      return true;
     }
 
 
@@ -155,6 +172,12 @@ namespace Ore
       {
         factor.SmoothCurve(weight);
       }
+    }
+
+
+    public void Disable(bool constantDecision)
+    {
+      m_Threshold = constantDecision ? 0f : MAX_THRESHOLD;
     }
 
 
@@ -258,19 +281,19 @@ namespace Ore
 
     public IEnumerable<DeviceFactor> GetContinuousFactors()
     {
-      foreach (var (key,val) in m_Factors)
+      foreach (var factor in m_Factors.Values)
       {
-        if (val.IsContinuous)
-          yield return val;
+        if (factor.IsContinuous)
+          yield return factor;
       }
     }
 
     public IEnumerable<DeviceFactor> GetDiscreteFactors()
     {
-      foreach (var (key,val) in m_Factors)
+      foreach (var factor in m_Factors.Values)
       {
-        if (val.IsDiscrete)
-          yield return val;
+        if (factor.IsDiscrete)
+          yield return factor;
       }
     }
 
