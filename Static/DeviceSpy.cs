@@ -45,10 +45,11 @@ namespace Ore
         #elif UNITY_IOS
           return s_IDFV ?? (s_IDFV = Device.vendorIdentifier);
         #else
-          return SystemInfo.deviceUniqueIdentifier;
+          return UDID;
         #endif
       }
     }
+
     public static string IDFA
     {
       get
@@ -60,10 +61,13 @@ namespace Ore
         #elif UNITY_IOS
           return s_IDFA = Device.advertisingIdentifier; // TODO
         #else
-          return SystemInfo.deviceUniqueIdentifier;
+          return UDID;
         #endif
       }
     }
+
+    public static string UDID => s_UDID ?? (s_UDID = CalcVendorUDID());
+
 
     public static bool IsTrackingLimited
     {
@@ -218,6 +222,7 @@ namespace Ore
 
     private static string        s_IDFV;
     private static string        s_IDFA;
+    private static string        s_UDID;
     private static bool          s_IsAdTrackingLimited;
     private static SerialVersion s_OSVersion;
     private static string        s_Brand;
@@ -236,6 +241,8 @@ namespace Ore
 
     private const long BYTES_PER_MIB = 1048576L; // = pow(2,20)
     private const long BYTES_PER_MB  = 1000000L;
+
+    private const string PREFKEY_UDID = "VENDOR_UDID";
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -264,6 +271,25 @@ namespace Ore
 
         return (makemodel.Remove(split), makemodel.Substring(split + 1));
       #endif
+    }
+
+    private static string CalcVendorUDID()
+    {
+      string udid = PlayerPrefs.GetString(PREFKEY_UDID); // don't tell Irontown
+      if (!udid.IsEmpty())
+        return udid;
+
+      udid = SystemInfo.deviceUniqueIdentifier;
+
+      if (udid.Equals(SystemInfo.unsupportedIdentifier))
+      {
+        udid = Strings.MakeGUID();
+      }
+
+      PlayerPrefs.SetString(PREFKEY_UDID, udid);
+      PlayerPrefs.Save(); // meh, should let someone else save?
+
+      return udid;
     }
 
     private static string CalcBrowserName()
@@ -540,7 +566,11 @@ namespace Ore
 
     #elif UNITY_IOS
 
+    // TODO
+
     #elif UNITY_WEBGL
+
+    // TODO
 
     #endif
 
