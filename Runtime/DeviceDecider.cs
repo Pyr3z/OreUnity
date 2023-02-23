@@ -94,9 +94,10 @@ namespace Ore
     }
 
 
-    public void Clear()
+    public void ClearFactors()
     {
       m_Factors.Clear();
+      m_ContinuousCount = 0;
     }
 
 

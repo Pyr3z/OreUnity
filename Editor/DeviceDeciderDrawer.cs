@@ -20,11 +20,9 @@ namespace Ore.Editor
     {
       var prop_rows = prop.FindPropertyRelative(nameof(SerialDeviceDecider.Rows));
 
-      prop_rows.isExpanded = true;
-
       var pos = new Rect(total)
       {
-        height = total.height - m_ScratchDad.ContinuousCount * OGUI.STD_LINE_ADVANCE
+        height = (total.height - 2f - m_ScratchDad.ContinuousCount * 20f).AtLeast(18f)
       };
 
       EditorGUI.BeginChangeCheck();
@@ -34,14 +32,19 @@ namespace Ore.Editor
         UpdateScratchDaddy(prop_rows);
       }
 
+      if (!prop_rows.isExpanded)
+      {
+        return;
+      }
+
       pos.y = pos.yMax + 2f;
-      pos.height = OGUI.STD_LINE_HEIGHT;
+      pos.height = 18f;
 
       foreach (var factor in m_ScratchDad.GetContinuousFactors())
       {
         label.text = factor.Dimension.ToString().ExpandCamelCase();
         _ = EditorGUI.CurveField(pos, label, factor.Curve);
-        pos.y += OGUI.STD_LINE_ADVANCE;
+        pos.y += 20f;
       }
     }
 
@@ -49,19 +52,24 @@ namespace Ore.Editor
     {
       var prop_rows = prop.FindPropertyRelative(nameof(SerialDeviceDecider.Rows));
 
+      if (!prop_rows.isExpanded)
+      {
+        return 20f;
+      }
+
       if (m_ScratchDad.FactorCount == 0)
       {
         UpdateScratchDaddy(prop_rows);
       }
 
       return EditorGUI.GetPropertyHeight(prop_rows) +
-             m_ScratchDad.ContinuousCount * OGUI.STD_LINE_ADVANCE;
+             m_ScratchDad.ContinuousCount * 20f;
     }
 
 
     private void UpdateScratchDaddy(SerializedProperty prop_rows)
     {
-      m_ScratchDad.Clear();
+      m_ScratchDad.ClearFactors();
 
       for (int i = 0, ilen = prop_rows.arraySize; i < ilen; ++i)
       {
