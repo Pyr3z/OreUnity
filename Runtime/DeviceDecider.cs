@@ -121,6 +121,19 @@ namespace Ore
         }
       }
 
+      foreach (var factor in GetContinuousFactors())
+      {
+        if (sdd.EaseCurves)
+        {
+          factor.EaseCurve();
+        }
+
+        if (!sdd.SmoothCurves.ApproximatelyZero())
+        {
+          factor.SmoothCurve(sdd.SmoothCurves);
+        }
+      }
+
       return count > 0;
     }
 

@@ -26,6 +26,10 @@ namespace Ore
 
     public Row[] Rows;
 
+    public bool EaseCurves;
+
+    public float SmoothCurves;
+
   } // end struct SerialDeviceDecider
 
 }

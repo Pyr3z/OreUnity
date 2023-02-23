@@ -18,27 +18,44 @@ namespace Ore.Editor
 
     public override void OnGUI(Rect total, SerializedProperty prop, GUIContent label)
     {
-      var prop_rows = prop.FindPropertyRelative(nameof(SerialDeviceDecider.Rows));
+      var propRows = prop.FindPropertyRelative(nameof(SerialDeviceDecider.Rows));
 
       var pos = new Rect(total)
       {
-        height = (total.height - 2f - m_ScratchDad.ContinuousCount * 20f).AtLeast(18f)
+        height = (total.height - 42f - m_ScratchDad.ContinuousCount * 20f).AtLeast(18f)
       };
 
       EditorGUI.BeginChangeCheck();
-      EditorGUI.PropertyField(pos, prop_rows, label);
+      EditorGUI.PropertyField(pos, propRows, label);
       if (EditorGUI.EndChangeCheck())
       {
-        UpdateScratchDaddy(prop_rows);
+        UpdateScratchDaddy(propRows);
       }
 
-      if (!prop_rows.isExpanded)
+      if (!propRows.isExpanded)
       {
         return;
       }
 
-      pos.y = pos.yMax + 2f;
+      var propConfigs = prop.FindPropertyRelative(nameof(SerialDeviceDecider.EaseCurves));
+
+      pos.y = pos.yMax;
       pos.height = 18f;
+
+      EditorGUI.BeginChangeCheck();
+      label.text = propConfigs.displayName;
+      propConfigs.boolValue = EditorGUI.Toggle(pos, label, propConfigs.boolValue);
+      pos.y += 20f;
+
+      propConfigs = prop.FindPropertyRelative(nameof(SerialDeviceDecider.SmoothCurves));
+
+      label.text = propConfigs.displayName;
+      propConfigs.floatValue = EditorGUI.DelayedFloatField(pos, label, propConfigs.floatValue);
+      pos.y += 20f;
+      if (EditorGUI.EndChangeCheck())
+      {
+        UpdateScratchDaddy(propRows);
+      }
 
       foreach (var factor in m_ScratchDad.GetContinuousFactors())
       {
@@ -46,34 +63,37 @@ namespace Ore.Editor
         _ = EditorGUI.CurveField(pos, label, factor.Curve);
         pos.y += 20f;
       }
+
+      prop.serializedObject.ApplyModifiedProperties();
     }
 
     public override float GetPropertyHeight(SerializedProperty prop, GUIContent label)
     {
-      var prop_rows = prop.FindPropertyRelative(nameof(SerialDeviceDecider.Rows));
+      var propRows = prop.FindPropertyRelative(nameof(SerialDeviceDecider.Rows));
 
-      if (!prop_rows.isExpanded)
+      if (!propRows.isExpanded)
       {
         return 20f;
       }
 
       if (m_ScratchDad.FactorCount == 0)
       {
-        UpdateScratchDaddy(prop_rows);
+        UpdateScratchDaddy(propRows);
       }
 
-      return EditorGUI.GetPropertyHeight(prop_rows) +
+      return EditorGUI.GetPropertyHeight(propRows) +
+             40f +
              m_ScratchDad.ContinuousCount * 20f;
     }
 
 
-    private void UpdateScratchDaddy(SerializedProperty prop_rows)
+    private void UpdateScratchDaddy(SerializedProperty propRows)
     {
       m_ScratchDad.ClearFactors();
 
-      for (int i = 0, ilen = prop_rows.arraySize; i < ilen; ++i)
+      for (int i = 0, ilen = propRows.arraySize; i < ilen; ++i)
       {
-        var row = prop_rows.GetArrayElementAtIndex(i);
+        var row = propRows.GetArrayElementAtIndex(i);
         _ = row.NextVisible(enterChildren: true);
 
         string dimension = row.stringValue;
@@ -86,8 +106,23 @@ namespace Ore.Editor
 
         if (!m_ScratchDad.TryParseRow(dimension, key, weight))
         {
-          Orator.ReachedOnce(prop_rows.serializedObject.targetObject);
+          Orator.ReachedOnce(propRows.serializedObject.targetObject);
         }
+      }
+
+      var it = propRows.Copy();
+
+      it.NextVisible(enterChildren: false);
+      bool easeCurves = it.boolValue;
+      it.NextVisible(enterChildren: false);
+      float smoothCurves = it.floatValue;
+
+      foreach (var factor in m_ScratchDad.GetContinuousFactors())
+      {
+        if (easeCurves)
+          factor.EaseCurve();
+        if (!smoothCurves.ApproximatelyZero())
+          factor.SmoothCurve(smoothCurves);
       }
     }
 
