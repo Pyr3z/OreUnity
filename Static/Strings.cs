@@ -54,6 +54,18 @@ namespace Ore
       return str is null || str.Length == 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string Coerce(this string str)
+    {
+      return str ?? string.Empty;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string NullCoerce(this string str)
+    {
+      return str == string.Empty ? null : str;
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToInvariant([NotNull] this IConvertible self)
@@ -141,13 +153,17 @@ namespace Ore
     }
 
 
+    /// <summary>
+    ///   Makes a new 16-byte GUID, represented as an un-hyphenated, lowercase,
+    ///   32-character hexadecimal string.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string MakeGUID()
     {
       #if UNITY_EDITOR
-      return UnityEditor.GUID.Generate().ToString();
+        return UnityEditor.GUID.Generate().ToString();
       #else
-      return System.Guid.NewGuid().ToString("N");
+        return System.Guid.NewGuid().ToString("N");
       #endif
     }
 
