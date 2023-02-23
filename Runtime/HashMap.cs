@@ -289,6 +289,27 @@ namespace Ore
       return null;
     }
 
+    /// <summary>
+    ///   Overrides the value at the given key, if and only if it already exists.
+    /// </summary>
+    /// <returns>
+    ///   True iff the value at the key was modified.
+    /// </returns>
+    public bool Override([NotNull] in K key, in V val)
+    {
+      int i = FindBucket(in key);
+      // if (i >= 0 && ( m_ValueComparator == null ||
+      //                !m_ValueComparator.Equals(m_Buckets[i].Value, val) ))
+      if (i >= 0)
+      {
+        m_Buckets[i].Value = val;
+        ++ m_Version;
+        return true;
+      }
+
+      return false;
+    }
+
 
     public bool Unmap([NotNull] in K key)
     {
@@ -372,6 +393,18 @@ namespace Ore
     public bool Clear()
     {
       return ClearNoAlloc(); // tests verify that NoAlloc is consistently faster
+    }
+
+
+    public void OverrideValues([NotNull] HashMap<K,V> other)
+    {
+      if (ReferenceEquals(other, this))
+        return;
+
+      foreach (var (key,val) in other)
+      {
+        _ = Override(key, val);
+      }
     }
 
 
