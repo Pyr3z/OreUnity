@@ -122,7 +122,8 @@ namespace Ore
 
       if (s_Coroutiner is CoroutineRunnerBuffer buffer)
       {
-        coroutiner.AdoptAndRun(buffer);
+        bool sane = coroutiner.AdoptAndRun(buffer);
+        OAssert.True(sane, this);
       }
 
       s_Coroutiner = coroutiner;

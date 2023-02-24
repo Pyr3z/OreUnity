@@ -12,7 +12,7 @@ using IEnumerator = System.Collections.IEnumerator;
 
 namespace Ore
 {
-  using CoroutineList = List<(Coroutine coru, int id)>;
+  using CoroutineList = List<(Coroutine coru, int id)>; // TODO: try a pooled LinkedList instead?
 
   [DisallowMultipleComponent]
   [AddComponentMenu("Ore//Coroutine Runner")] // though usually instantiated dynamically~
@@ -54,7 +54,7 @@ namespace Ore
     private int m_NextCoroutineID, m_ActiveCoroutineCount;
 
     [System.NonSerialized]
-    private readonly HashMap<object, CoroutineList> m_ActiveMap = new HashMap<object, CoroutineList>()
+    private readonly HashMap<object,CoroutineList> m_ActiveMap = new HashMap<object,CoroutineList>()
     {
       KeyComparator = new UnitySavvyComparator()
     };
@@ -156,10 +156,21 @@ namespace Ore
     }
 
 
-    public void AdoptAndRun([NotNull] CoroutineRunnerBuffer buffer)
+    public bool AdoptAndRun([NotNull] CoroutineRunnerBuffer buffer)
     {
       if (buffer.Count == 0)
-        return;
+        return true;
+
+      if (!isActiveAndEnabled)
+      {
+        if (m_QueueCoroutinesWhileDisabled)
+        {
+          m_BufferWhileDisabled.Adopt(buffer);
+          return true;
+        }
+
+        return false;
+      }
 
       foreach (var (routine,key) in buffer)
       {
@@ -170,6 +181,8 @@ namespace Ore
       }
 
       buffer.HaltAll();
+
+      return true;
     }
 
 
@@ -220,7 +233,8 @@ namespace Ore
 
     private void OnEnable()
     {
-      AdoptAndRun(m_BufferWhileDisabled);
+      bool sane = AdoptAndRun(m_BufferWhileDisabled);
+      OAssert.True(sane, this);
     }
 
     private void OnDisable()
@@ -280,8 +294,9 @@ namespace Ore
 
         -- m_Runner.m_ActiveCoroutineCount;
 
-        if (OAssert.Fails(m_Runner.m_ActiveMap.Pop(m_Key, out CoroutineList list), m_Runner))
+        if (!m_Runner.m_ActiveMap.Pop(m_Key, out CoroutineList list))
         {
+          Orator.Reached(m_Runner);
           return false;
         }
 

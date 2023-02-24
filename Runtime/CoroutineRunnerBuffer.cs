@@ -51,7 +51,7 @@ namespace Ore
       int i = m_Queue.Count;
       while (i --> 0)
       {
-        if (m_Queue[i].Item2 == key)
+        if (Equals(m_Queue[i].Item2, key))
         {
           m_Queue.RemoveAt(i);
         }
@@ -61,6 +61,22 @@ namespace Ore
     public void HaltAll()
     {
       m_Queue.Clear();
+    }
+
+
+    public void Adopt(CoroutineRunnerBuffer other)
+    {
+      if (ReferenceEquals(this, other))
+        return;
+
+      m_Queue.Capacity = m_Queue.Count + other.m_Queue.Count + 3;
+
+      foreach (var item in other.m_Queue)
+      {
+        m_Queue.Add(item);
+      }
+
+      other.m_Queue.Clear();
     }
 
   } // end class CoroutineRunnerBuffer
