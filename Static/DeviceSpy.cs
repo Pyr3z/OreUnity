@@ -319,6 +319,10 @@ namespace Ore
       #else
         string makemodel = SystemInfo.deviceModel;
 
+        // a la: https://docs.unity3d.com/ScriptReference/SystemInfo-deviceModel.html
+        if (makemodel == SystemInfo.unsupportedIdentifier)
+          return (string.Empty, string.Empty);
+
         int split = makemodel.IndexOfAny(new []{ ' ', '-' });
         if (split < 0)
           return (makemodel, makemodel);
@@ -329,7 +333,14 @@ namespace Ore
 
     private static SerialVersion CalcOSVersion()
     {
-      return SerialVersion.ExtractOSVersion(SystemInfo.operatingSystem);
+      switch (SystemInfo.operatingSystemFamily)
+      {
+        case OperatingSystemFamily.MacOSX:
+          return new SerialVersion(SystemInfo.operatingSystem);
+
+        default:
+          return SerialVersion.ExtractOSVersion(SystemInfo.operatingSystem);
+      }
     }
 
     private static string CalcVendorUDID()
