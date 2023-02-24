@@ -9,17 +9,15 @@
 // ReSharper disable HeapView.DelegateAllocation
 
 using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.SceneManagement;
 
 using JetBrains.Annotations;
 
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+
 namespace Ore
 {
-
-  using CoroutineList = List<(Coroutine coru, int id)>;
-
 
   [DefaultExecutionOrder(-500)] // rationale: Many things might depend on this class early-on.
   [DisallowMultipleComponent]
@@ -43,32 +41,32 @@ namespace Ore
 
     private static Scene s_ActiveScene; // only the size of an int, so why not?
 
-    private static readonly Dictionary<Scene, float> s_SceneBirthdays = new Dictionary<Scene, float>();
+    private static readonly HashMap<Scene,float> s_SceneBirthdays = new HashMap<Scene,float>();
 
     private static ICoroutineRunner s_Coroutiner;
 
 
-    [PublicAPI]
+    [Pure]
     public static float GetSceneAge()
     {
-      if (s_SceneBirthdays.TryGetValue(s_ActiveScene, out float birth))
+      if (s_SceneBirthdays.Find(s_ActiveScene, out float birth))
       {
         return Time.realtimeSinceStartup - birth;
       }
       return 0f;
     }
 
-    [PublicAPI]
+    [Pure]
     public static float GetSceneAge(Scene scene)
     {
-      if (s_SceneBirthdays.TryGetValue(scene, out float birth))
+      if (s_SceneBirthdays.Find(scene, out float birth))
       {
         return Time.realtimeSinceStartup - birth;
       }
       return 0f;
     }
 
-    [PublicAPI]
+    [Pure]
     public static float GetSceneAge(string scene_name)
     {
       return GetSceneAge(SceneManager.GetSceneByName(scene_name));
@@ -77,24 +75,24 @@ namespace Ore
 
   #region MonoBehaviour API mistake correction
 
-    [System.Obsolete("Do not use the base Unity APIs to start coroutines on the ActiveScene.")]
+    [System.Obsolete("Do not use the base Unity APIs to start coroutines on the ActiveScene.\nUse the `ActiveScene.Coroutines` API instead.")]
     public /**/ new /**/ Coroutine StartCoroutine(IEnumerator mistake)
     {
-      Orator.Error("Don't use the base Unity APIs to start coroutines on the ActiveScene.\nUse the static `EnqueueCoroutine` methods instead.");
+      Orator.Error("Do not use the base Unity APIs to start coroutines on the ActiveScene.\nUse the `ActiveScene.Coroutines` API instead.");
       return null;
     }
 
-    [System.Obsolete("SERIOUSLY don't use this overload =^(", true)]
+    [System.Obsolete("Do not use this overload ಠ▃ಠ\nUse the `ActiveScene.Coroutines` API instead.", true)]
     public /**/ new /**/ Coroutine StartCoroutine(string mistake)
     {
-      Orator.Error("SERIOUSLY don't use this overload =^(");
+      Orator.Error("Do not use this overload ಠ▃ಠ\nUse the `ActiveScene.Coroutines` API instead.");
       return null;
     }
 
-    [System.Obsolete("SERIOUSLY don't use this overload =^(", true)]
+    [System.Obsolete("Do not use this overload ಠ▃ಠ\nUse the `ActiveScene.Coroutines` API instead.", true)]
     public /**/ new /**/ Coroutine StartCoroutine(string mis, object take)
     {
-      Orator.Error("SERIOUSLY don't use this overload =^(");
+      Orator.Error("Do not use this overload ಠ▃ಠ\nUse the `ActiveScene.Coroutines` API instead.");
       return null;
     }
 
@@ -161,8 +159,6 @@ namespace Ore
 
     private static ActiveScene Instantiate()
     {
-      OAssert.True(!Current || Current.m_IsReplaceable);
-
       var obj = new GameObject($"[{nameof(ActiveScene)}]")
       {
         hideFlags = HideFlags.DontSave,
