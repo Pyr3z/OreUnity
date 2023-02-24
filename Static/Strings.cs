@@ -44,7 +44,7 @@ namespace Ore
     }
 
 
-    public static readonly char[] WHITESPACES = { ' ', '\t', '\n', '\r', '\v' };
+    public static readonly char[] WHITESPACES = { ' ', '\t', '\n' };
 
 
 
