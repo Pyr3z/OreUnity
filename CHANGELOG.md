@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v4.0.2][] - UNRELEASED
+- Changed: in `DeviceSpy`:
+    - Browser - on WebGL builds, now returns the browser name _and_ its version number. Space-separated, parsed well by SerialVersion.
+
+- Improved: in `ActiveScene`:
+    - Deprecation messages now point to the correct API to use (ActiveScene.Coroutines). No more wild goose chase!
+    - Also: Fixed edge case where CoroutineRunnerBuffers were only checking key equality by reference, whereas they should've been calling object.Equals(a,b).
+    - Related: `CoroutineRunner`.AdoptAndRun() now defends against the case where it's disabled in the hierarchy. (This is mainly important because it's technically in the public API.)
+
+- Fixed: in `SerialVersion`:
+    - ToString(true) - was including the tag hash in the reconstructed version.
+    - ExtractOSVersion(ver) - now works regardless of scripting defines, looking for patterns in the parameter to determine what platform it's for.
+    - Also: ExtractOSVersion now returns more standardized representations, which contain maximal extra info (such as platform prefixes).
+
+
 ## [v4.0.1][] - 2023-02-24
 - Added: New in `Strings`:
     - Constants: LOWERCASE, UPPERCASE, DIGITS, ALPHA, ALPHANUM, HEXADECIMAL
@@ -13,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Formerly returned "n/a".
 - Improved: SerialVersion.ExtractOSVersion() internal logic.
     - Note: should also now keep more of the original string in the underlying SerialVersion returned, if it can be preserved without breaking the existing deserialization code.
+
 
 ## [v4.0.0][] - 2023-02-23
 - Removed: Hard dependency on "com.unity.nuget.newtonsoft-json" v3.0.2 (package.json).
@@ -83,11 +99,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Also: Fixed: Orator uses an experimental PrefabStage API - now uses the proper API in Unity 2021+.
 - Fixed: Some code quality schmutz (thank you @Irontown!)
 
+
 ## [v3.5.0][] - 2023-02-09
 - Added: `OnEnableRunner` component - allows you to set up events on a specific GameObject's enable/disable, with optional delays.
 - Added: HashMap.TrimExcess() - functionality already existed, but now the API matches System collections one more step.
 - Added: (EditorBridge) New global menu item "Ore/Browse to Persistent Data Path".
 - Changed: Integers.IsIndexOf() - null is now allowed in argument
+
 
 ## [v3.4.0][] - 2023-01-27
 - Note: This CHANGELOG got some love. Markdown is better and now links to tags in KooLab!
@@ -103,9 +121,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed: DeviceSpy.ABIArch enum is no longer nested in the class (and has its own file).
 - Changed: OAsset.TryCreate() can now return true in editor if asset at given path already exists.
 
+
 ## [v3.3.1][] - 2023-01-25 (API hotfix)
 - Changed: `Filesystem.Try*Json()` - instead of a JsonSerializerSettings object, caller should pass in a custom JsonSerializer to override the defaults set in `JsonAuthority`.
     - Reasoning: It is better if caller could decide if they want to reuse a customized serializer, and potentially keep it cached, rather than reconstruct one every time the Filesystem utility is invoked.
+
 
 ## [v3.3.0][] - 2023-01-24
 - Added: `JsonAuthority.SerializerSettings` - default settings automatically used globally.
@@ -120,12 +140,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: `JsonAuthority.MakeReader()` / `MakeWriter()` - now constructed each as if a global JsonSerializer might *not* be the consumer of the reader/writer. (Still works the same either way.)
 - Removed: Hidden compiler flag `BITWISE_CTZ_NOJUMP` and accompanying implementation. It was useful to nobody, and just made for messier-looking code.
 
+
 ## [v3.2.2][] - 2023-01-23
 - Fixed: Filesystem.DefaultEncoding is no longer null by default. (How embarrassing...)
 - Fixed: Filesystem records LastModifiedPath correctly in all modification cases.
 - Fixed: Filesystem anticipates `System.Security.SecurityException`, which maps to `IOResult.NotPermitted`.
 - Added: Filesystem.TryGetLastModified(out file).
 - Added: Filesystem.LastReadPath 
+
 
 ## [v3.2.0][] - 2023-01-22
 - Added: `DateTimes` static utility, for when using Ore.TimeInterval proxies just don't make sense.
@@ -136,17 +158,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: The failed assertion (Editor-only) when changing the path in [AssetPath("path")] attributes for an OAssetSingleton after an instance has already been created.
     - Note: You will still need to handle any file renaming adjustments yourself, if that is your intent.
 
+
 ## [v3.1.2][] - 2023-01-20
 - Fixed: DeviceSpy IDFA/IDFV/IsTrackingLimited should work more completely for Android + iOS.
 - Changed: DeviceSpy.RegionISOString was deceptive, as it returned an ISO 3166-2 **country** code, not region code. Renamed to DeviceSpy.CountryISOString.
 
+
 ## [v3.1.1][] - 2023-01-19
 - Fixed: `Strings` / `Filesystem` text writers were using Unicode (UTF16-LE) by default--it *was* tweakable by package users, but here at Ore we believe in The Best Defaults. Therefore, we've made the new default encoding **UTF8** (with BOM).
+
 
 ## [v3.1.0][] - 2023-01-18
 - Fixed: VoidEvent.Invoke() no longer triggers a failed assertion when it is disabled.
 - Added: Official dependency on Newtonsoft.Json (com.unity.nuget.newtonsoft-json 3.0.2).
 - Added: More TimeInterval APIs for working with system time structs and UNIX time (the 1970 epoch).
+
 
 ## [v3.0.0][] - 2023-01-13
 - Note: I acknowledge that the major version should have increased much earlier, due to non-backwards-compatible API changes. From here on out, this will be done better; whether by fewer API changes or by incrementing the major version more frequently, we shall see.
@@ -161,6 +187,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed: Stub scripts ReferencePaletteWindow, OConfig
 - Removed: `Coalescer` data structure, for being no more useful (nor performant) than simple LINQ equivalent.
 - Added: `OSingleton.IsValidWhileDisabled` (for edge case scenario found by Ayrton).
+
 
 ## [v2.12.0][] - 2023-01-05
 - Changed: renamed VersionID -> SerialVersion; also simplified the implementation and added ctor from System.Version.
@@ -180,6 +207,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added: Primitive utility classes have received an API revamp + some optimizations and small additions. (Floats, Integers, Bitwise)
 - Fixed: The 64-bit integer overloads of Primes.IsPrime() and Primes.Next() now work correctly (and pass tests).
 
+
 ## [v2.11.0][] - 2022-12-19
 - Added: `DeviceSpy` now reports system language, browser, network carrier, and RAM usage.
 - Added: `AndroidBridge` static API
@@ -187,11 +215,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: `TimeIntervals` not working correctly with DelayedRoutines when representing quantities of frames.
 - Tests: `DelayedRoutine` correctness tests
 
+
 ## [v2.10.2][] - 2022-12-15
 - Changed: package.json now properly accepts Unity 2019.4.
 
+
 ## [v2.10.1][] - 2022-12-12
 - Fixed: C# syntaxes being used that were incompatible with Unity 2019.x.
+
 
 ## [v2.10.0][] - 2022-12-07
 - Added: struct `DelayedRoutine` optimizes trivial coroutine use cases.
@@ -206,6 +237,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deprecated: Coroutine-related helpers: `OComponent.{InvokeNextFrame,InvokeNextFrameIf,DelayInvoke}`. Using the new DeferringRoutine or static Invoke APIs is now the way.
     - Also will not be fully removed until at least Ore v3.
 
+
 ## [v2.9.4][] - 2022-12-05
 - Added: `HashMap.UnmapAllKeys(where)` + `HashMap.UnmapAllValues(where)`
   - Bonus: HashMap.Enumerator now allows for deletion while iterating.
@@ -214,12 +246,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added: `Filesystem.TryTouch(filepath)` - works like Unix `touch`.
 - Fixed: Missing constructors for SerialSet subclasses.
 
+
 ## [v2.9.1][] - 2022-11-18
 - Added: VoidEvent (like a DelayedEvent, but no delay).
 - Added: Flesh to the TimeInterval API, makes it easier to use.
 
+
 ## [v2.8.0][] - 2022-11-09
 - Added: TimeInterval struct + a custom drawer for it.
+
 
 ## [v2.7.0][] - 2022-10-31
 - Added: (Editor) New GUI drawing helpers in `OGUI` / new class `OGUI.Draw`.
@@ -236,6 +271,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: `Raster.CircleDrawer` now makes a more correct circle by default (thanks to the VTW!).
 - Added: Many new `Colors` utility APIs, such as `Colors.Random` (with `Dark` and `Light` variants), `Inverted`, `Grayscale`, (...)
 
+
 ## [v2.6.0][] - 2022-10-27
 - Added: Previously-unimplemented HashMap members (KeyCollection, ValueCollection) are now implemented.
 - Added: Better inline documentation for HashMap's specification + comparison to System alternatives.
@@ -243,23 +279,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: ActiveScene coroutines improperly cleaning up after they finish.
 - Changed: ActiveScene Coroutine API. In general backwards compatible, though the API has been revamped.
 
+
 ## [v2.5.6][] - 2022-10-17
 - Added: PrefValue<T> + PrefColor - helper classes for dealing with EditorPrefs.
 - Merged: HashMap/Primes optimizations
 
+
 ## [v2.4.0][] - 2022-10-14
 - Adopted: DeviceDimensions.cs (from Decisions package).
+
 
 ## [v2.3.3][] - 2022-10-10
 - HashMaps: Fixed: Rare linear probing issue causing large hashmaps (N>10,000) to map collisions incorrectly.
 - HashMaps: Optimized - tests are now within 1% of the speed of Dictionary/Hashtable
 
+
 ## [v2.3.2][] - 2022-10-06
 - Removed stubs for APIs that aren't functional from the release track (issue #1).
+
 
 ## [v2.3.1][] - 2022-10-05
 - Added: HashMap data structure !!!! (This is a _somewhat_ major feature addition)
 - Added: Unit tests for Filesystem + HashMap + competing System implementations.
+
 
 ## [v2.2.1][] - 2022-09-12
 - Fixed: SceneLord.LoadSceneAsync now has safety guards against spamming.
@@ -269,17 +311,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: More annoying OAssetSingleton warnings / failed asserts.
 - Fixed: My head.
 
+
 ## [v2.2.0][] - 2022-08-25
 - Removed: Automatic OAssetSingleton<> instantiations by default. You can still flag an OAssetSingleton for auto-creation at a specific path by using the [AssetPath(string)] type attribute.
 - Added: Public API for asset creation, work either at runtime or edit time: OAsset.Create(...)
 - Added: OAssetSingleton.TryGuarantee(out TSelf) - used to absolutely guarantee that you'll get an instance, even if one must be created. The only case where this fails is when the system is out of memory (in theory).
 - Added: SceneLord OAssetSingleton - it's a helper for calling SceneManager functions from with serialized Unity Events (etc).
 
+
 ## [v2.1.4][] - 2022-08-24
 - Fixed: Orator now only uses rich text in Editor, not in builds (i.e. Android Logcat).
 
+
 ## [v2.1.3][] - 2022-08-20
 - Fixed: DelayedEvent fields on ScriptableObjects work (more) properly.
+
 
 ## [v2.1.2][] - 2022-08-19
 - Fixed: DelayedEvent now uses ActiveScene properly to enqueue coroutines before scene load.
@@ -291,15 +337,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added: GreyLists, SerialSets
 - Fixed: DelayedEvent in ScriptableObjects
 
+
 ## [v2.0.2][] - 2022-08-15
 - Fixed: Defunct behaviour on Orator assets (and all other OAssetSingletons)
 - Added: Certain attributes disable automatic OAssetSingleton creation: [CreateAssetMenu], [Obsolete], [OptionalAsset].
 - Changed: All OAssetSingletons get auto-created in the root-level Resources folder.
 
+
 ## [v2.0.1][] - 2022-08-12
 - Fixed: OAssert preventing builds
 - Added: OAssert.Exists(), etc
 - Fixed: EditorBridge warning, something something about namespaces 
+
 
 ## [v2.0.0][] - 2022-07-25
 - BREAKING: Moved: ALL code from namespace `Bore` and to namespaces `Ore` and `Ore.Editor`.
@@ -330,6 +379,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- - auto-generate with `git tag | awk -- '{print "["$1"]: ../../tags/"$1}' | sort -rV` -->
 
+[v4.0.2]: ../../tags/v4.0.2
 [v4.0.1]: ../../tags/v4.0.1
 [v4.0.0]: ../../tags/v4.0.0
 [v3.5.0]: ../../tags/v3.5.0
