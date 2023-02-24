@@ -43,8 +43,17 @@ namespace Ore
       {
         string ver = vers[i];
 
-        if (ver.Length > MAX_EXPECTED_OSVER || ver.StartsWith("("))
+        if (ver.Length > MAX_EXPECTED_OSVER)
           continue;
+
+        if (ver.StartsWith("("))
+        {
+          #if UNITY_WINDOWS || UNITY_EDITOR_WIN
+            return new SerialVersion(ver);
+          #else
+            continue;
+          #endif
+        }
 
         #if UNITY_ANDROID || UNITY_EDITOR // might be called in editor concerning Android~
           if (ver.StartsWith("API-"))
@@ -55,10 +64,6 @@ namespace Ore
               return new SerialVersion(ver);
           }
         #endif
-
-        int tag = ver.IndexOfAny(TAG_DELIMS);
-        if (tag > 0)
-          ver = ver.Remove(tag);
 
         if (Strings.ContainsOnly(ver, BASIC_CHARSET))
           return new SerialVersion(ver);
