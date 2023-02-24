@@ -4,8 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v4.1.0][] - UNRELEASED
-- fef
+## [v4.0.1][] - 2023-02-24
+- Added: New in `Strings`:
+    - Constants: LOWERCASE, UPPERCASE, DIGITS, ALPHA, ALPHANUM, HEXADECIMAL
+    - Utility method: ContainsOnly(str, char[])
+    - Also: Trimmed the existing WHITESPACES array, and made sure all arrays are pre-sorted (ordinal order).
+- Changed: DeviceSpy.Brand + DeviceSpy.Model now return an empty string when the info is unavailable.
+    - Formerly returned "n/a".
+- Improved: SerialVersion.ExtractOSVersion() internal logic.
+    - Note: should also now keep more of the original string in the underlying SerialVersion returned, if it can be preserved without breaking the existing deserialization code.
 
 ## [v4.0.0][] - 2023-02-23
 - Removed: Hard dependency on "com.unity.nuget.newtonsoft-json" v3.0.2 (package.json).
@@ -323,6 +330,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- - auto-generate with `git tag | awk -- '{print "["$1"]: ../../tags/"$1}' | sort -rV` -->
 
+[v4.0.1]: ../../tags/v4.0.1
 [v4.0.0]: ../../tags/v4.0.0
 [v3.5.0]: ../../tags/v3.5.0
 [v3.4.0]: ../../tags/v3.4.0

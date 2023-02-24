@@ -142,7 +142,7 @@ namespace Ore
     public string ToString(bool stripExtras)
     {
       if (m_Vers.IsEmpty())
-        return string.Empty;
+        return m_String ?? string.Empty;
 
       return stripExtras ? string.Join(SEPARATOR, m_Vers) : (m_String ?? string.Empty);
     }
