@@ -49,6 +49,8 @@ namespace Ore.Editor
     [SerializeField]
     private bool m_Foldout = true;
 
+    private bool m_Foldout2lol = false;
+
     [SerializeField]
     private Mode m_Mode;
 
@@ -262,6 +264,8 @@ namespace Ore.Editor
       bool docked = true;
       #endif
 
+      m_ScrollViewPos = EGL.BeginScrollView(m_ScrollViewPos);
+
       EGL.LabelField("Docked?", docked.ToInvariant());
 
       EG.BeginDisabledGroup(docked);
@@ -297,18 +301,47 @@ namespace Ore.Editor
       // EGL.LabelField("Can null play?", Application.IsPlaying(null).ToString());
       // A: no.
 
-      EGL.BeginFoldoutHeaderGroup(true, "DateTimes!");
-      EGL.LabelField("default:",          default(System.DateTime).ToISO8601());
-      EGL.LabelField("MinValue:",         System.DateTime.MinValue.ToISO8601());
-      EGL.LabelField("MaxValue:",         System.DateTime.MaxValue.ToISO8601());
-      EGL.LabelField("Epoch:",            DateTimes.Epoch.ToISO8601());
-      EGL.LabelField("SpreadsheetEpoch:", DateTimes.SpreadsheetEpoch.ToISO8601());
-      var nowXls = DateTimes.NowSpreadsheetDays();
-      if (GUILayout.Button(nowXls.ToInvariant()))
+      m_Foldout2lol = EGL.BeginFoldoutHeaderGroup(m_Foldout2lol, "DateTimes!");
+      if (m_Foldout2lol)
       {
-        GUIUtility.systemCopyBuffer = nowXls.ToInvariant();
+        EGL.LabelField("default:",          default(System.DateTime).ToISO8601());
+        EGL.LabelField("MinValue:",         System.DateTime.MinValue.ToISO8601());
+        EGL.LabelField("MaxValue:",         System.DateTime.MaxValue.ToISO8601());
+        EGL.LabelField("Epoch:",            DateTimes.Epoch.ToISO8601());
+        EGL.LabelField("SpreadsheetEpoch:", DateTimes.SpreadsheetEpoch.ToISO8601());
+        // var nowXls = DateTimes.NowSpreadsheetDays();
+        // if (GUILayout.Button(nowXls.ToInvariant()))
+        // {
+        //   GUIUtility.systemCopyBuffer = nowXls.ToInvariant();
+        // }
+        EGL.EndFoldoutHeaderGroup();
       }
-      EGL.EndFoldoutHeaderGroup();
+
+      OGUI.Draw.Separator();
+
+      var osvers = new SerialVersion[]
+      {
+        new SerialVersion(SystemInfo.operatingSystem),
+        SerialVersion.ExtractOSVersion(SystemInfo.operatingSystem),
+        new SerialVersion("Mac OS X 10.14.6"),
+        SerialVersion.ExtractOSVersion("Mac OS X 10.14.6"),
+        new SerialVersion("MacOS 10.15.7"),
+        SerialVersion.ExtractOSVersion("MacOS 10.15.7"),
+        new SerialVersion("Android OS 9 / API-28 (HUAWEIJDN2-W09/9.1.0.216C431)"),
+        SerialVersion.ExtractOSVersion("Android OS 9 / API-28 (HUAWEIJDN2-W09/9.1.0.216C431)"),
+      };
+
+      foreach (var osver in osvers)
+      {
+        _ = EGL.BeginHorizontal();
+
+        EGL.SelectableLabel(osver.ToString(stripExtras: false));
+        EGL.SelectableLabel(osver.ToString(stripExtras: true));
+
+        EGL.EndHorizontal();
+      }
+
+      EGL.EndScrollView();
     }
 
 

@@ -11,6 +11,7 @@ using JetBrains.Annotations;
 using UnityEngine;
 
 using System.Collections.Generic;
+using System.Linq;
 
 
 namespace Ore
@@ -36,6 +37,14 @@ namespace Ore
 
       string[] vers = from.Split(Strings.WHITESPACES, System.StringSplitOptions.RemoveEmptyEntries);
 
+      OperatingSystemFamily osFam;
+      if (vers[0].StartsWith("Win"))
+        osFam = OperatingSystemFamily.Windows;
+      else if (vers[0].StartsWith("Mac"))
+        osFam = OperatingSystemFamily.MacOSX;
+      else
+        osFam = OperatingSystemFamily.Other;
+
       // walk back, looking for something useful
 
       int i = vers.Length;
@@ -48,25 +57,27 @@ namespace Ore
 
         if (ver.StartsWith("("))
         {
-          #if UNITY_WINDOWS || UNITY_EDITOR_WIN
-            return new SerialVersion(ver);
-          #else
+          if (osFam == OperatingSystemFamily.Windows)
+            return new SerialVersion($"Windows {ver.Substring(1, ver.Length - 2)}");
+          else
             continue;
-          #endif
         }
 
-        #if UNITY_ANDROID || UNITY_EDITOR // might be called in editor concerning Android~
-          if (ver.StartsWith("API-"))
-          {
-            if (i == vers.Length - 2) // include extra version info (should be in parens)
-              return new SerialVersion($"{ver} {vers[i +1]}");
-            else
-              return new SerialVersion(ver);
-          }
-        #endif
+        if (osFam == OperatingSystemFamily.Other && ver.StartsWith("API-"))
+        {
+          if (i == vers.Length - 2) // include extra version info (should be in parens)
+            return new SerialVersion($"Android {ver} {vers[i + 1]}");
+          else
+            return new SerialVersion(ver);
+        }
 
         if (Strings.ContainsOnly(ver, BASIC_CHARSET))
-          return new SerialVersion(ver);
+        {
+          if (osFam == OperatingSystemFamily.MacOSX)
+            return new SerialVersion($"MacOSX {ver}");
+          else
+            return new SerialVersion(ver);
+        }
       }
 
       return new SerialVersion(1);
@@ -90,7 +101,7 @@ namespace Ore
       // if there is a tag, the final array element is its hash,
       // which isn't treated as an official component of the version
 
-    public int this[int i] => m_Vers.IsEmpty() || !i.IsIndexTo(m_Vers) ? 0 : m_Vers[i];
+    public int this[int i] => ( m_Vers.IsEmpty() || !i.IsBetween(0, Length) ) ? 0 : m_Vers[i];
 
 
     internal const string SEPARATOR = ".";
@@ -144,7 +155,7 @@ namespace Ore
       if (m_Vers.IsEmpty())
         return m_String ?? string.Empty;
 
-      return stripExtras ? string.Join(SEPARATOR, m_Vers) : (m_String ?? string.Empty);
+      return stripExtras ? string.Join(SEPARATOR, m_Vers.Take(Length)) : (m_String ?? string.Empty);
     }
 
     [NotNull]
