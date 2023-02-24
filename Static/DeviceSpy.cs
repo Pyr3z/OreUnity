@@ -371,7 +371,7 @@ namespace Ore
       #elif UNITY_IOS
         return string.Empty; // TODO
       #elif UNITY_WEBGL
-        return Brand;
+        return SystemInfo.deviceModel;
       #else
         return string.Empty;
       #endif
