@@ -38,20 +38,20 @@ namespace Ore
 
       private HashMap<K,V> m_Parent;
 
-      private Bucket m_Bucket;
+      internal Bucket m_Bucket;
 
       private int m_Pos, m_Count, m_Version;
-      private int m_Removed;
+      private int m_Unmapped;
 
 
       public Enumerator([NotNull] HashMap<K,V> forMap)
       {
-        m_Parent  = forMap;
-        m_Bucket  = default;
-        m_Pos     = forMap.m_Buckets.Length;
-        m_Count   = forMap.m_Count;
-        m_Version = forMap.m_Version;
-        m_Removed = 0;
+        m_Parent   = forMap;
+        m_Bucket   = default;
+        m_Pos      = forMap.m_Buckets.Length;
+        m_Count    = forMap.m_Count;
+        m_Version  = forMap.m_Version;
+        m_Unmapped = 0;
       }
 
 
@@ -62,10 +62,7 @@ namespace Ore
           return false;
         }
 
-        if (m_Version != m_Parent.m_Version)
-        {
-          throw new System.InvalidOperationException("HashMap was modified while iterating through it.");
-        }
+        CheckModified();
 
         do
         {
@@ -83,7 +80,7 @@ namespace Ore
           throw new System.InvalidOperationException("HashMap.Enumerator.Reset() cannot be called after disposal.");
         }
 
-        ProcessUnmappedBuckets();
+        ProcessChangedBuckets();
 
         m_Pos     = m_Parent.m_Buckets.Length;
         m_Count   = m_Parent.m_Count;
@@ -93,7 +90,7 @@ namespace Ore
 
       public void Dispose()
       {
-        ProcessUnmappedBuckets();
+        ProcessChangedBuckets();
 
         m_Parent = null;
         m_Bucket = default;
@@ -107,28 +104,53 @@ namespace Ore
           return;
         }
 
+        CheckModified();
+
         m_Parent.m_Buckets[m_Pos].Smear();
 
-        ++ m_Removed;
+        m_Version = ++m_Parent.m_Version;
+
+        ++ m_Unmapped;
+      }
+
+      public void RemapCurrent(V value)
+      {
+        if (m_Count < 0 || m_Pos < 0 || m_Parent is null)
+        {
+          throw new System.InvalidOperationException("HashMap.Enumerator.RemapCurrent(V) cannot be called after disposal.");
+        }
+
+        CheckModified();
+
+        m_Parent.m_Buckets[m_Pos].Value = value;
+
+        m_Version = ++m_Parent.m_Version;
       }
 
 
-      private void ProcessUnmappedBuckets()
+      private void CheckModified()
+      {
+        if (m_Parent.m_Version != m_Version)
+        {
+          throw new System.InvalidOperationException("HashMap was modified elsewhere while iterating through it.");
+        }
+      }
+
+      private void ProcessChangedBuckets()
       {
         if (m_Parent is null)
           return;
 
-        if (m_Removed == m_Parent.m_Count)
+        if (m_Unmapped == m_Parent.m_Count)
         {
           m_Parent.Clear();
         }
-        else if (m_Removed > 0)
+        else if (m_Unmapped > 0)
         {
-          m_Parent.m_Count -= m_Removed;
-          ++ m_Parent.m_Version;
+          m_Parent.m_Count -= m_Unmapped;
         }
 
-        m_Removed = 0;
+        m_Unmapped = 0;
       }
 
     } // end struct Enumerator

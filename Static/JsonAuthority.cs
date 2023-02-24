@@ -5,11 +5,16 @@
 
 using JetBrains.Annotations;
 
+#if NEWTONSOFT_JSON
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+#endif
 
-using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
+
+using UnityEngine;
 
 using Encoding         = System.Text.Encoding;
 using StringComparison = System.StringComparison;
@@ -28,6 +33,9 @@ namespace Ore
 
     public static readonly Encoding Encoding     = Encoding.UTF8;
     public static readonly Encoding WideEncoding = Encoding.Unicode; // LE UTF16
+
+
+    #if NEWTONSOFT_JSON
 
     public static Formatting Formatting => SerializerSettings.Formatting;
 
@@ -198,13 +206,289 @@ namespace Ore
     }
 
 
+    [NotNull]
+    public static IList<object> FixupNestedContainers([NotNull] IList<object> list, int maxRecursionDepth = 3)
+    {
+      int ilen = list.Count;
 
-    static JsonAuthority()
+      if (maxRecursionDepth < 0)
+      {
+        Orator.Error($"{nameof(JsonAuthority)}.{nameof(FixupNestedContainers)}: Max recursion depth reached.");
+        return list;
+      }
+
+      for (int i = 0; i < ilen; ++i)
+      {
+        switch (list[i])
+        {
+          case JValue jval:
+            list[i] = jval.Value;
+            break;
+
+          case JObject jobj:
+            var newMap = new HashMap<string,object>(jobj.Count);
+
+            foreach (var property in jobj)
+            {
+              newMap.Add(property.Key, property.Value);
+            }
+
+            list[i] = FixupNestedContainers(newMap, maxRecursionDepth - 1); // fake recursion
+            break;
+
+          case JArray jarr:
+            var newArr = new object[jarr.Count];
+
+            for (int n = 0; n < newArr.Length; ++n)
+            {
+              newArr[n] = jarr[n];
+            }
+
+            list[i] = FixupNestedContainers(newArr, maxRecursionDepth - 1); // regrettable recursion
+            break;
+
+          case JToken jtok:
+            Orator.Reached($"ping Levi? type={jtok.Type}");
+            list[i] = jtok.ToString(Formatting.None);
+            break;
+        }
+      }
+
+      return list;
+    }
+
+    [NotNull]
+    public static Dictionary<string,object> FixupNestedContainers([NotNull] Dictionary<string,object> dict, int maxRecursionDepth = 3)
+    {
+      if (maxRecursionDepth < 0)
+      {
+        Orator.Error($"{nameof(JsonAuthority)}.{nameof(FixupNestedContainers)}: Max recursion depth reached.");
+        return dict;
+      }
+
+      var sneakySwap = new Dictionary<string,object>(dict.Count);
+
+      foreach (var pair in dict)
+      {
+        switch (pair.Value)
+        {
+          case JValue jval:
+            sneakySwap.Add(pair.Key, jval.Value);
+            break;
+
+          case JObject jobj:
+            var newMap = new HashMap<string,object>(jobj.Count);
+
+            foreach (var property in jobj)
+            {
+              newMap.Map(property.Key, property.Value);
+            }
+
+            sneakySwap.Add(pair.Key, FixupNestedContainers(newMap, maxRecursionDepth - 1));
+            break;
+
+          case JArray jarr:
+            var newArr = new object[jarr.Count];
+
+            for (int i = 0; i < newArr.Length; ++i)
+            {
+              newArr[i] = jarr[i];
+            }
+
+            sneakySwap.Add(pair.Key, FixupNestedContainers(newArr, maxRecursionDepth - 1));
+            break;
+
+          case JToken jtok:
+            Orator.Reached($"ping Levi? type={jtok.Type}");
+            sneakySwap.Add(pair.Key, jtok.ToString(Formatting.None));
+            break;
+
+          default:
+            sneakySwap.Add(pair.Key, pair.Value);
+            break;
+        }
+      }
+
+      return sneakySwap;
+    }
+
+    [NotNull]
+    public static HashMap<string,object> FixupNestedContainers([NotNull] HashMap<string,object> map, int maxRecursionDepth = 3)
+    {
+      if (maxRecursionDepth < 0)
+      {
+        Orator.Error($"{nameof(JsonAuthority)}.{nameof(FixupNestedContainers)}: Max recursion depth reached.");
+        return map;
+      }
+
+      // HashMap algo optimization <3
+
+      using (var it = map.GetEnumerator())
+      {
+        while (it.MoveNext())
+        {
+          switch (it.CurrentValue)
+          {
+            case JValue jval:
+              it.RemapCurrent(jval.Value);
+              break;
+
+            case JObject jobj:
+              var newMap = new HashMap<string,object>(jobj.Count);
+
+              foreach (var property in jobj)
+              {
+                newMap.Map(property.Key, property.Value);
+              }
+
+              it.RemapCurrent(FixupNestedContainers(newMap, maxRecursionDepth - 1)); // regrettable recursion
+              break;
+
+            case JArray jarr:
+              var newArr = new object[jarr.Count];
+
+              for (int j = 0; j < newArr.Length; ++j)
+              {
+                newArr[j] = jarr[j];
+              }
+
+              it.RemapCurrent(FixupNestedContainers(newArr, maxRecursionDepth - 1)); // fake recursion
+              break;
+
+            case JToken jtok:
+              Orator.Reached($"ping Levi? type={jtok.Type}");
+              it.RemapCurrent(jtok.ToString(Formatting.None));
+              break;
+          }
+        }
+      }
+
+      return map;
+    }
+
+
+    [NotNull]
+    public static HashMap<string,object> Genericize([NotNull] JObject jObject, [CanBeNull] HashMap<string,object> map,
+                                                    System.Func<int, HashMap<string,object>> mapMaker = null,
+                                                    System.Func<int, IList<object>> listMaker = null)
+    {
+      static HashMap<string,object> defaultMapMaker(int cap) => new HashMap<string,object>(cap);
+
+      static IList<object> defaultListMaker(int cap) => new object[cap];
+
+      if (mapMaker is null)
+      {
+        mapMaker = defaultMapMaker;
+      }
+
+      if (listMaker is null)
+      {
+        listMaker = defaultListMaker;
+      }
+
+      if (map is null)
+      {
+        map = mapMaker(jObject.Count);
+      }
+      else
+      {
+        map.Clear();
+        map.EnsureCapacity(jObject.Count);
+      }
+
+      foreach (var property in jObject)
+      {
+        switch (property.Value)
+        {
+          case null:
+            continue;
+
+          case JValue jval:
+            map[property.Key] = jval.Value;
+            break;
+
+          case JObject jobj:
+            map[property.Key] = Genericize(jobj, null, mapMaker, listMaker);
+            break;
+
+          case JArray jarr:
+            map[property.Key] = Genericize(jarr, null, listMaker, mapMaker);
+            break;
+
+          default:
+            Orator.Reached($"ping Levi? type={property.Value.Type}");
+            break;
+        }
+      }
+
+      return map;
+    }
+
+    public static IList<object> Genericize([NotNull] JArray jArray, [CanBeNull] IList<object> list,
+                                           System.Func<int, IList<object>> listMaker = null,
+                                           System.Func<int, HashMap<string,object>> mapMaker = null)
+    {
+      static IList<object> defaultListMaker(int cap) => new object[cap];
+
+      static HashMap<string,object> defaultMapMaker(int cap) => new HashMap<string,object>(cap);
+
+      if (listMaker is null)
+      {
+        listMaker = defaultListMaker;
+      }
+
+      if (mapMaker is null)
+      {
+        mapMaker = defaultMapMaker;
+      }
+
+      if (list is null)
+      {
+        list = listMaker(jArray.Count);
+      }
+      else
+      {
+        list.Clear();
+      }
+
+      foreach (var token in jArray)
+      {
+        switch (token)
+        {
+          case JValue jval:
+            list.Add(jval.Value);
+            break;
+
+          case JObject jobj:
+            list.Add(Genericize(jobj, null, mapMaker, listMaker));
+            break;
+
+          case JArray jarr:
+            list.Add(Genericize(jarr, null, listMaker, mapMaker));
+            break;
+
+          default:
+            Orator.Reached($"ping Levi? type={token.Type}");
+            break;
+        }
+      }
+
+      return list;
+    }
+
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+    #if UNITY_EDITOR
+    [UnityEditor.InitializeOnLoadMethod]
+    #endif
+    static void OverrideDefaultSettings()
     {
       JsonConvert.DefaultSettings = () => SerializerSettings;
         // makes the settings defined here in JsonAuthority apply to any default
         // Json.NET serializers created from now on
     }
+
+    #endif // NEWTONSOFT_JSON
 
   } // end class JsonAuthority
 }

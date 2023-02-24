@@ -26,14 +26,40 @@ namespace Ore
     }
 
     [PublicAPI]
-    public static void LoadSceneAdditiveAsync(int index)
+    public static void AddScene(int index)
     {
       var load = SceneManager.LoadSceneAsync(index, LoadSceneMode.Additive);
       load.allowSceneActivation = true;
     }
 
     [PublicAPI]
-    public static void LoadSceneAsync(int index)
+    public static void AddActiveScene(int index)
+    {
+      if (s_CurrentLoadAsync == index)
+        return;
+
+      if (-1 < s_CurrentLoadAsync)
+      {
+        Orator.WarnOnce($"Already loading scene #{s_CurrentLoadAsync}, can't queue another one!", Current);
+        return;
+      }
+
+      s_CurrentLoadAsync = index;
+      var load = SceneManager.LoadSceneAsync(index, LoadSceneMode.Additive);
+      load.allowSceneActivation = true;
+      load.completed += _ =>
+      {
+        s_CurrentLoadAsync = -1;
+        var scene = SceneManager.GetSceneByBuildIndex(index);
+        if (scene.isLoaded)
+        {
+          SceneManager.SetActiveScene(scene);
+        }
+      };
+    }
+
+    [PublicAPI]
+    public static void LoadScene(int index)
     {
       if (s_CurrentLoadAsync == index)
         return;
@@ -46,15 +72,15 @@ namespace Ore
 
       s_CurrentLoadAsync = index;
 
-      index = SceneManager.sceneCount; // now this is runtime index, not build index
+      var load = SceneManager.LoadSceneAsync(index, LoadSceneMode.Additive);
 
-      var load = SceneManager.LoadSceneAsync(s_CurrentLoadAsync, LoadSceneMode.Additive);
+      load.allowSceneActivation = true;
 
       load.completed += _ =>
       {
         s_CurrentLoadAsync = -1;
         var curr = SceneManager.GetActiveScene();
-        var next = SceneManager.GetSceneAt(index);
+        var next = SceneManager.GetSceneByBuildIndex(index);
         if (curr != next)
         {
           SceneManager.SetActiveScene(next);
@@ -64,8 +90,6 @@ namespace Ore
             SceneManager.UnloadSceneAsync(curr, UnloadSceneOptions.None);
         }
       };
-
-      load.allowSceneActivation = true;
     }
 
   } // end class SceneLord

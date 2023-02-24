@@ -23,6 +23,11 @@ namespace Ore
     public static readonly DateTime SpreadsheetEpoch = new DateTime(1899, 12, 30, 0, 0, 0, DateTimeKind.Utc);
 
 
+    public static DateTime Today => DateTime.UtcNow.Date; // Beware of DateTime.Today; it returns local time!
+    public static DateTime Tomorrow => DateTime.UtcNow.AddDays(1).Date;
+    public static DateTime Yesterday => DateTime.UtcNow.AddDays(-1).Date;
+
+
     public static string ToISO8601(this DateTime timepoint)
     {
       return timepoint.ToString("O", Strings.InvariantFormatter);

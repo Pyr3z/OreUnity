@@ -1,4 +1,4 @@
-/*! @file       Static/Invoke.cs
+/*! @file       Static/OInvoke.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-12-07
 **/
@@ -19,12 +19,12 @@ namespace Ore
   ///
   /// <remarks>
   /// If in a MonoBehaviour class, you will need to call this API as
-  /// "Ore.Invoke" rather than just "Invoke"—even if you have a
+  /// "Ore.OInvoke" rather than just "OInvoke"—even if you have a
   /// "using Ore" statement in your file! This is my bad... may rename
   /// this API later.
   /// </remarks>
   [PublicAPI]
-  public static class Invoke
+  public static class OInvoke
   {
 
     public static void NextFrame([NotNull]   Action    action,
@@ -76,5 +76,5 @@ namespace Ore
       }
     }
 
-  } // end static class Invoke
+  } // end static class OInvoke
 }

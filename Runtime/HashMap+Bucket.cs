@@ -3,8 +3,10 @@
  *  @date       2022-09-29
 **/
 
-using System.Collections.Generic;
 using JetBrains.Annotations;
+
+using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
+using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
 
 
 namespace Ore
@@ -22,12 +24,14 @@ namespace Ore
 
 
       [Pure]
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       public bool MightBeEmpty()
       {
         return (DirtyHash & int.MaxValue) == 0;
       }
 
 
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       public void Smear()
       {
         // A "smeared" bucket is the result of a bucket that was first dirtied
@@ -44,6 +48,7 @@ namespace Ore
       }
 
       [Pure]
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       public Bucket RehashClone(int hash31)
       {
         return new Bucket
@@ -67,7 +72,7 @@ namespace Ore
           if (buckets[i].DirtyHash >= 0)
           {
             buckets[i].DirtyHash |= int.MinValue;
-            ++collisions;
+            ++ collisions;
           }
 
           i = (i + jump) % ilen;

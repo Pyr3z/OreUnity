@@ -18,8 +18,8 @@ namespace Ore
     Continuous    = (1 << 31),
 
     OSVersion     = (1 <<  0) | Continuous, // Major version (API level on Android)
-    TotalRAM      = (1 <<  1) | Continuous, // MB
-    AvailRAM      = (1 <<  2) | Continuous, // MB
+    TotalRAM      = (1 <<  1) | Continuous, // MB; "Total" = total present on device
+    AvailRAM      = (1 <<  2) | Continuous, // MB; "Avail" = current amount available before "low memory"
     TotalDisk     = (1 <<  3) | Continuous, // MB
     AvailDisk     = (1 <<  4) | Continuous, // MB
     PixelDensity  = (1 <<  5) | Continuous, // DPI
@@ -30,11 +30,15 @@ namespace Ore
     Is64Bit       = (1 << 10),
     DeviceBrand   = (1 << 11),
     DeviceModel   = (1 << 12),
+    IsBlueStacks  = (1 << 21),
     IsTablet      = (1 << 13),
     IsT1Graphics  = (1 << 14),
     GPUVendor     = (1 << 15),
     GPUModel      = (1 << 16),
     ReportedGeo   = (1 << 17),
+    ThresholdRAM  = (1 << 18) | Continuous, // MB; "Threshold" = approximate point at which a "low memory" event is triggered
+    DisplayHz     = (1 << 19) | Continuous, // Hz; common values are 60, 30, 90, 120, 144
+    AspectRatio   = (1 << 20) | Continuous, // normalized ratio value [+1,+2.5] (though value could exceed 2.5)
   } // end enum HardwareDimension
 
 
@@ -48,6 +52,7 @@ namespace Ore
     }
 
 
+    [CanBeNull]
     public static object QueryValue(this DeviceDimension dim)
     {
       // success returns: float, string, bool (integers are boxed as floats)
@@ -84,6 +89,15 @@ namespace Ore
         case DeviceDimension.Timezone:
           return DeviceSpy.TimezoneOffset.TotalHours;
 
+        case DeviceDimension.ThresholdRAM:
+          return (float)DeviceSpy.LowRAMThreshold;
+
+        case DeviceDimension.DisplayHz:
+          return (float)DeviceSpy.ScreenRefreshHz;
+
+        case DeviceDimension.AspectRatio:
+          return DeviceSpy.AspectRatio;
+
         /* end Continuous dimensions */
 
         case DeviceDimension.Processor:
@@ -111,8 +125,10 @@ namespace Ore
           return SystemInfo.graphicsDeviceName;
 
         case DeviceDimension.ReportedGeo:
-          // TODO this will probably be better replaced by previous impls:
-          return System.Globalization.RegionInfo.CurrentRegion.TwoLetterISORegionName;
+          return DeviceSpy.CountryISOString;
+
+        case DeviceDimension.IsBlueStacks:
+          return DeviceSpy.IsBlueStacks;
 
         // ReSharper restore HeapView.BoxingAllocation
       }

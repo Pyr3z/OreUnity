@@ -19,19 +19,23 @@
 
 // ReSharper disable MemberCanBePrivate.Global
 
+using JetBrains.Annotations;
+
 using System.ComponentModel;
 using System.Collections.Generic;
-using JetBrains.Annotations;
-using UnityEngine;
-using UnityEngine.Diagnostics;
 
-using Debug         = UnityEngine.Debug;
-using AssException  = UnityEngine.Assertions.AssertionException;
-using Object = UnityEngine.Object;
+using UnityEngine;
+using UnityEngine.Diagnostics; // do not remove if unused
+
+using Debug        = UnityEngine.Debug;
+using AssException = UnityEngine.Assertions.AssertionException;
 
 
 namespace Ore
 {
+  #if !DEBUG_KONSOLE
+  [System.Diagnostics.DebuggerStepThrough]
+  #endif
   [DefaultExecutionOrder(-1337)]
   [AssetPath("Resources/Orator.asset")]
   public sealed class Orator : OAssetSingleton<Orator>
@@ -234,7 +238,11 @@ namespace Ore
 
       #if UNITY_EDITOR
 
+        #if UNITY_2021_1_OR_NEWER
+        var stage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+        #else
         var stage = UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+        #endif
 
         #if UNITY_2020_3_OR_NEWER
         if (stage)

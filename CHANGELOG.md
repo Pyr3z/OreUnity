@@ -1,14 +1,82 @@
-# TODOs (low/mid priority)
-- Unit tests for:
-    - ActiveScene
-    - Ore.Invoke
-    - JsonAuthority / Filesystem.Try\*Json
-
 # Changelog
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [v4.1.0][] - UNRELEASED
+- fef
+
+## [v4.0.0][] - 2023-02-23
+- Removed: Hard dependency on "com.unity.nuget.newtonsoft-json" v3.0.2 (package.json).
+    - However, without it in the project, several APIs become unavailable or nonfunctional.
+    - If you have a different Newtonsoft Json.NET provider in your project, you may try telling Ore to utilize it by adding `NEWTONSOFT_JSON` to your script compilation symbols (in <kbd>Project Settings</kbd> -> Player).
+    - Please inform @levi.perez or [create an issue][] if you have any trouble with this.
+
+- Added: Absorbed the [Decisions](https://leviperez.dev/upm/decisions) package (AKA "LAUD", now archived) into the Ore namespace, most notably adding the `DeviceDecider` data structure.
+    - Also: Removed the original package's pointless interfaces (IEvaluator, IDecider), renamed \*Evaluator to \*Factor
+    - Also: DeviceDeciders can now accept multiple pipe-separated (`|`) keys per serialized row, for instance to give a list of device models the same discrete value.
+    - Also: Updated the custom editor drawers from the old package to contain more useful displays (curves).
+- Added: New in `DeviceDimension`:
+    - Enum values: AspectRatio, DisplayHz, IsBlueStacks, ThresholdRAM
+    - Also: Fixed: DeviceDimension.ReportedGeo now queries its (still makeshift) runtime value from DeviceSpy.
+- Added: New in `DeviceSpy`:
+    - Properties: `UDID` -> may have a different value from IDFV, and is more safe from SystemInfo.deviceUniqueIdentifier returning "n/a" e.g. on WebGL.
+    - Advanced API: nested class `LittleBirdie` -> allows you to modify the DeviceSpy's perception of the current device.
+- Added: New in `TimeInterval`:
+    - Constants: Minute, Hour, Day, Week
+    - Method: Yield()
+- Added: New in `DateTimes`:
+    - Properties: Today, Yesterday, Tomorrow
+    - Note: Unlike any System.DateTime equivalents, these implementations return UTC time instead of local time.
+- Added: New in `HashMap`:
+    - Copy constructor
+    - Methods: MapAll(), Remap()\*, Union(), Intersect(), Except(), SymmetricExcept()
+    - Also: Changed: \*The following old methods have been renamed for clarity of function:
+        - Remap(K,V) -> OverMap(K,V)
+        - TryMap(..., out V) -> Map(..., out V)
+    - New method in `HashMap.Enumerator`: RemapCurrent(V) - allows inserting new values at existing keys while manually enumerating over a HashMap.
+        - Also: Fixed: Enumerator now enforces that only one instance can modify the same HashMap at a time.
+    - Also: Fixed: HashMap.KeyComparator throws an exception if it is changed in a non-empty HashMap.
+    - Also: Improved: Consolidated & simplified old constructors.
+    - Also: Improved: `Bucket` struct now uses aggressive inlining.
+- Added: New in `Strings`: extension methods Coerce(), NullCoerce()
+- Added: New in `Filesystem`: utility method GetFiles(path)
+- Added: New in `JsonAuthority`: utility methods FixupNestedContainers(), Genericize()
+    - Also: Fixed: JsonAuthority was initializing too late (or not at all in editor).
+- Added: New in `Paths`: utility methods ExtractExtension(), DetectAssetPathAssumptions()
+- Added: Unit tests:
+    - `DeviceSpyInEditor`
+    - `FilesystemInEditor`
+- Added: Some new inline XML documentation for:
+    - Runtime/HashMap.cs   (complete)
+    - Static/Filesystem.cs (incomplete)
+    - Static/Invoke.cs     (incomplete)
+    - Static/Strings.cs    (incomplete)
+
+- Changed: `SceneLord` API names are shorter without sacrificing descriptiveness.
+    - Also: Added: SceneLord.AddActiveScene(buildIndex)
+- Changed: `DelayedEvent` finally utilizes TimeIntervals and DelayedRoutines.
+    - Also: now guards against additional invokes if the first invoke is still counting down its delay.
+    - Also: Added: TryInvokeOnGlobalContext(), TryCancelInvoke()
+    - Also: Fixed: DelayedEvent invocation payload is now much more exception-safe, exiting gracefully.
+- Changed: Renamed static utility `Invoke` -> `OInvoke`.
+    - (so you don't have to call like `Ore.Invoke.*` anymore)
+- Changed: Renamed enum `ABIArch` -> `ABI`.
+- Changed: Renamed editor test `FilesystemCorrectness` -> `FilesystemInEditor`.
+    - Also: Fixed: Filesystem editor tests now works outside of KooBox. (was using a specific PNG under Assets/ before~)
+- Changed: `OAsset.TryCreate(..., path)` now warns and returns false if there was a problem loading an existing asset at the given path.
+    - Also: now detects assumptions about the given path if in editor, such as prepending "Assets/" or appending ".asset".
+- Changed: `Filesystem.TryReadJson()` now takes a generic T out parameter.
+    - Note: if you supply an IList or IDictionary out type, the returned structure will be deeply genericized. Related: JsonAuthority.FixupNestedContainers
+
+- Fixed: (bandaid) Ore's `[ReadOnly]` attribute is a no-op if `ODIN_INSPECTOR` is defined.
+    - Levi: _Odin..._
+- Fixed: Build error: `Orator.cs line 190`
+- Fixed: Some code quality schmutz (thank you @Irontown!)
+
+## [v3.5.1][] - 2023-02-13
+- Fixed: Orator uses an experimental PrefabStage API - now uses the proper API in Unity 2021+.
 
 ## [v3.5.0][] - 2023-02-09
 - Added: `OnEnableRunner` component - allows you to set up events on a specific GameObject's enable/disable, with optional delays.
@@ -252,8 +320,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 <!-- Hyperlink Refs -->
+
+[create an issue]: ../../issues/new
+
 <!-- - auto-generate with `git tag | awk -- '{print "["$1"]: ../../tags/"$1}' | sort -rV` -->
 
+[v4.0.0]: ../../tags/v4.0.0
+[v3.5.0]: ../../tags/v3.5.0
 [v3.4.0]: ../../tags/v3.4.0
 [v3.3.1]: ../../tags/v3.3.1
 [v3.3.0]: ../../tags/v3.3.0

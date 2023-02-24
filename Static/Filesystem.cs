@@ -5,12 +5,15 @@
 
 using JetBrains.Annotations;
 
+#if NEWTONSOFT_JSON
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+#endif
 
 using UnityEngine;
 
 using System.IO;
+using System.Collections.Generic;
 
 using Exception             = System.Exception;
 using UnauthorizedException = System.UnauthorizedAccessException;
@@ -51,10 +54,12 @@ namespace Ore
         {
           json = "{}";
         }
+        #if NEWTONSOFT_JSON
         else if (obj is JToken jtok)
         {
           json = jtok.ToString(pretty ? Formatting.Indented : Formatting.None);
         }
+        #endif
         else
         {
           json = JsonUtility.ToJson(obj, pretty);
@@ -72,10 +77,12 @@ namespace Ore
         LastException = null;
         return true;
       }
+      #if NEWTONSOFT_JSON
       catch (JsonException jex)
       {
         LastException = jex;
       }
+      #endif
       catch (IOException iox)
       {
         LastException = iox;
@@ -92,30 +99,58 @@ namespace Ore
       return false;
     }
 
-    public static bool TryWriteJson([NotNull] string filepath, [NotNull] JContainer token, bool pretty,
+
+    #if NEWTONSOFT_JSON
+
+    /// <param name="filepath">
+    ///   The valid path to the file to be written.
+    ///   The directories leading up to it do not need to exist.
+    /// </param>
+    /// <param name="data">
+    ///   An object representing your data. This is very softly-typed.
+    ///   Newtonsoft.Json.JContainers are valid, and so are generic IList or
+    ///   IDictionary objects.
+    /// </param>
+    /// <param name="pretty">
+    ///   Optionally override the default pretty-print settings (set in
+    ///   <see cref="JsonAuthority"/>.<see cref="JsonAuthority.SerializerSettings"/>)
+    ///   (this call only).
+    /// </param>
+    /// <param name="encoding">
+    ///   Optionally override <see cref="DefaultEncoding"/> with another encoder
+    ///   (this call only).
+    /// </param>
+    /// <param name="serializer">
+    ///   Optionally override the default serializer (defined by <see cref="JsonAuthority"/>)
+    ///   (this call only).
+    /// </param>
+    /// <returns>
+    ///   TRUE iff the data was written to a file at the given path successfully.
+    /// </returns>
+    public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object data, bool pretty,
                                     Encoding encoding = null, JsonSerializer serializer = null)
     {
-      if (pretty != (JsonAuthority.SerializerSettings.Formatting == Formatting.Indented))
+      if (serializer is null)
       {
-        if (serializer is null)
-        {
-          serializer = JsonSerializer.CreateDefault();
-        }
-
-        serializer.Formatting = pretty ? Formatting.Indented : Formatting.None;
+        serializer = JsonSerializer.CreateDefault();
       }
 
-      return TryWriteJson(filepath, token, encoding, serializer);
+      if (pretty && serializer.Formatting != Formatting.Indented)
+      {
+        serializer.Formatting = Formatting.Indented;
+      }
+      else if (!pretty && serializer.Formatting != Formatting.None)
+      {
+        serializer.Formatting = Formatting.None;
+      }
+
+      return TryWriteJson(filepath, data, encoding, serializer);
     }
 
-    public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object obj,
+    /// <inheritdoc cref="TryWriteJson(string,object,bool,Encoding,JsonSerializer)"/>
+    public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object data,
                                     Encoding encoding = null, JsonSerializer serializer = null)
     {
-      if (obj is null)
-      {
-        obj = JValue.CreateNull();
-      }
-
       StreamWriter   stream = null;
       JsonTextWriter writer = null;
       try
@@ -129,7 +164,7 @@ namespace Ore
           serializer = JsonSerializer.CreateDefault();
         }
 
-        serializer.Serialize(writer, obj);
+        serializer.Serialize(writer, data);
 
         s_LastModifiedPath = filepath;
         LastException = null;
@@ -159,6 +194,9 @@ namespace Ore
 
       return false;
     }
+
+    #endif // NEWTONSOFT_JSON
+
 
     public static bool TryWriteText([NotNull] string filepath, [CanBeNull] string text, Encoding encoding = null)
     {
@@ -217,6 +255,9 @@ namespace Ore
       return false;
     }
 
+
+    #if NEWTONSOFT_JSON
+
     public static bool TryUpdateJson([NotNull] string filepath, [NotNull] JContainer objectOrArray,
                                      Encoding encoding = null, JsonSerializer serializer = null)
     {
@@ -251,8 +292,10 @@ namespace Ore
       return false;
     }
 
+    #endif // NEWTONSOFT_JSON
 
-    public static bool TryReadObject<T>([NotNull] string filepath, [CanBeNull] out T obj, Encoding encoding = null)
+
+    public static bool TryReadObject<T>([NotNull] string filepath, out T obj, Encoding encoding = null)
     {
       if (!TryReadText(filepath, out string json, encoding))
       {
@@ -274,10 +317,14 @@ namespace Ore
       return false;
     }
 
-    public static bool TryReadJson([NotNull] string filepath, [NotNull] out JToken token,
-                                   Encoding encoding = null, JsonSerializer serializer = null)
+
+    #if NEWTONSOFT_JSON
+
+    public static bool TryReadJson<T>([NotNull] string filepath, out T token,
+                                      Encoding encoding = null, JsonSerializer serializer = null)
+      where T : class
     {
-      token = JValue.CreateUndefined();
+      token = null;
 
       if (!Paths.IsValidPath(filepath))
       {
@@ -297,15 +344,40 @@ namespace Ore
           serializer = JsonSerializer.CreateDefault();
         }
         
-        var maybeNull = serializer.Deserialize<JToken>(reader);
+        var maybeNull = serializer.Deserialize<T>(reader);
         
-        if (maybeNull != null)
-        {
-          token = maybeNull;
-        }
-
         LastException = null;
         s_LastReadPath = filepath;
+
+        switch (maybeNull)
+        {
+          case null:
+            break;
+
+          case IList<object> list:
+            token = JsonAuthority.FixupNestedContainers(list) as T;
+            break;
+
+          case HashMap<string,object> map:
+            token = JsonAuthority.FixupNestedContainers(map) as T;
+            break;
+
+          case Dictionary<string,object> dict:
+            token = JsonAuthority.FixupNestedContainers(dict) as T;
+            break;
+
+          default:
+            token = maybeNull;
+            return true;
+        }
+
+        if (token is null)
+        {
+          CurrentException = new System.InvalidCastException($"Failed to convert from <{maybeNull?.GetType().Name ?? "null"}> to <{typeof(T).Name}>.");
+          return false;
+        }
+
+        return true;
       }
       catch (JsonException jex)
       {
@@ -333,8 +405,11 @@ namespace Ore
         reader?.Close();
       }
 
-      return token.Type != JTokenType.Undefined;
+      return false;
     }
+
+    #endif // NEWTONSOFT_JSON
+
 
     public static bool TryReadText([NotNull] string filepath, [NotNull] out string text, Encoding encoding = null)
     {
@@ -543,7 +618,28 @@ namespace Ore
   #endregion FUNDAMENTAL FILE I/O
 
 
-  #region INFO & DEBUGGING
+  #region FILESYSTEM QUERIES
+
+    public static IEnumerable<FileInfo> GetFiles([NotNull] string path)
+    {
+      var dir = new DirectoryInfo(path);
+
+      if (!dir.Exists)
+      {
+        var fileInfo = new FileInfo(path);
+        if (fileInfo.Exists)
+          return new FileInfo[] { fileInfo };
+
+        return System.Array.Empty<FileInfo>();
+      }
+
+      return dir.EnumerateFiles();
+    }
+
+  #endregion FILESYSTEM QUERIES
+
+
+  #region OPERATION INFO & DEBUGGING
 
     public static string LastReadPath => s_LastReadPath ?? string.Empty;
 
@@ -647,7 +743,7 @@ namespace Ore
         Orator.NFE(ex);
     }
 
-  #endregion INFO & DEBUGGING
+  #endregion OPERATION INFO & DEBUGGING
 
 
   #region PRIVATE

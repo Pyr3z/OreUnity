@@ -35,6 +35,10 @@ namespace Ore
 
     public static readonly TimeInterval Frame     = new TimeInterval(1L, areFrames: true);
     public static readonly TimeInterval Second    = new TimeInterval(10000000L);
+    public static readonly TimeInterval Minute    = new TimeInterval(600000000L);
+    public static readonly TimeInterval Hour      = new TimeInterval(14400000000L);
+    public static readonly TimeInterval Day       = new TimeInterval(864000000000L);
+    public static readonly TimeInterval Week      = new TimeInterval(6048000000000L);
 
     public static readonly TimeInterval Epoch     = new TimeInterval(DateTimes.Epoch);
 
@@ -320,6 +324,28 @@ namespace Ore
     }
 
 
+    [CanBeNull]
+    public object Yield(bool scaledTime = false)
+    {
+      if (Ticks <= 1)
+      {
+        return null;
+      }
+
+      if (m_AsFrames)
+      {
+        return new WaitForFrames((int)Ticks);
+      }
+
+      if (scaledTime)
+      {
+        return new WaitForSeconds(FSeconds);
+      }
+
+      return new WaitForSecondsRealtime(FSeconds);
+    }
+
+
     // implement interfaces
 
     public int CompareTo(TimeInterval other)
@@ -425,6 +451,12 @@ namespace Ore
       return lhs;
     }
 
+    public static TimeInterval operator * (int lhs, TimeInterval rhs)
+    {
+      rhs.Ticks *= lhs;
+      return rhs;
+    }
+
     public static TimeInterval operator / (TimeInterval lhs, int rhs)
     {
       if (rhs == 0)
@@ -438,6 +470,12 @@ namespace Ore
     {
       lhs.Ticks = (long)(lhs.Ticks * rhs);
       return lhs;
+    }
+
+    public static TimeInterval operator * (double lhs, TimeInterval rhs)
+    {
+      rhs.Ticks = (long)(rhs.Ticks * lhs);
+      return rhs;
     }
 
     public static TimeInterval operator / (TimeInterval lhs, double rhs)

@@ -20,9 +20,6 @@ using TimeSpan = System.TimeSpan;
 
 using RegionInfo = System.Globalization.RegionInfo;
 
-using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
-using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
-
 
 namespace Ore
 {
@@ -34,43 +31,44 @@ namespace Ore
 
     // ReSharper disable ConvertToNullCoalescingCompoundAssignment
 
-    public static string IDFV
+    public static ABI ABI => (ABI)(s_ABI ?? (s_ABI = CalcABIArch()));
+
+    public static float AspectRatio => (float)(s_AspectRatio ?? (s_AspectRatio = CalcAspectRatio()));
+
+    public static string Brand
     {
       get
       {
-        #if UNITY_EDITOR
-          return SystemInfo.deviceUniqueIdentifier;
-        #elif UNITY_ANDROID
-          return s_IDFV ?? (s_IDFV = CalcAndroidIDFV());
-        #elif UNITY_IOS
-          return s_IDFV ?? (s_IDFV = Device.vendorIdentifier);
-        #else
-          return SystemInfo.deviceUniqueIdentifier;
-        #endif
+        if (s_Brand is null)
+          (s_Brand, s_Model) = CalcMakeModel();
+        return s_Brand;
       }
     }
-    public static string IDFA
-    {
-      get
-      {
-        #if UNITY_EDITOR
-          return SystemInfo.deviceUniqueIdentifier;
-        #elif UNITY_ANDROID
-          return s_IDFA ?? (s_IDFA = CalcAndroidIDFA());
-        #elif UNITY_IOS
-          return s_IDFA = Device.advertisingIdentifier; // TODO
-        #else
-          return SystemInfo.deviceUniqueIdentifier;
-        #endif
-      }
-    }
+
+    public static string Browser => s_Browser ?? (s_Browser = CalcBrowserName());
+
+    public static string Carrier => s_Carrier ?? (s_Carrier = CalcCarrier());
+
+    public static string CountryISOString => s_CountryISO3166a2 ?? (s_CountryISO3166a2 = CalcISO3166a2());
+
+    public static float DiagonalInches => (float)(s_DiagonalInches ?? (s_DiagonalInches = CalcScreenDiagonalInches()));
+
+    public static string IDFA => s_IDFA ?? (s_IDFA = CalcIDFA());
+
+    public static string IDFV => s_IDFV ?? (s_IDFV = CalcIDFV());
+
+    public static bool Is64Bit => ABI == ABI.ARM64 || s_ABI == ABI.x86_64;
+
+    public static bool IsBlueStacks => (bool)(s_IsBlueStacks ?? (s_IsBlueStacks = CalcIsBlueStacks()));
+
+    public static bool IsTablet => (bool)(s_IsTablet ?? (s_IsTablet = CalcIsTablet()));
 
     public static bool IsTrackingLimited
     {
       get
       {
         #if UNITY_EDITOR
-          return s_IsAdTrackingLimited = false;
+          return false;
         #elif UNITY_ANDROID
           if (s_IDFA is null)
             s_IDFA = CalcAndroidIDFA(); // TODO somehow reset cached value so it can update?
@@ -80,6 +78,20 @@ namespace Ore
         #else
           return s_IsAdTrackingLimited = false;
         #endif
+      }
+    }
+
+    public static string LanguageISOString => s_LangISO6391 ?? (s_LangISO6391 = CalcISO6391());
+
+    public static int LowRAMThreshold => (int)(s_LowRAMThresh ?? (s_LowRAMThresh = CalcLowRAMThreshold()));
+
+    public static string Model
+    {
+      get
+      {
+        if (s_Model is null)
+          (s_Brand, s_Model) = CalcMakeModel();
+        return s_Model;
       }
     }
 
@@ -94,56 +106,25 @@ namespace Ore
       }
     }
 
-    public static string Brand
-    {
-      get
-      {
-        if (s_Brand is null)
-          (s_Brand, s_Model) = CalcMakeModel();
-        return s_Brand;
-      }
-    }
-
-    public static string Model
-    {
-      get
-      {
-        if (s_Model is null)
-          (s_Brand, s_Model) = CalcMakeModel();
-        return s_Model;
-      }
-    }
-
-    public static string Browser => s_Browser ?? (s_Browser = CalcBrowserName());
-
-    public static string Carrier => s_Carrier ?? (s_Carrier = CalcCarrier());
+    public static int ScreenRefreshHz => (int)(s_ScreenRefreshHz ?? (s_ScreenRefreshHz = Screen.currentResolution.refreshRate.AtLeast(30)));
 
     public static string TimezoneISOString => Strings.MakeISOTimezone(TimezoneOffset);
 
-    public static string LanguageISOString => s_LangISO6391 ?? (s_LangISO6391 = CalcISO6391());
-
-    public static string CountryISOString => s_CountryISO3166a2 ?? (s_CountryISO3166a2 = CalcISO3166a2());
-
     public static TimeSpan TimezoneOffset => (TimeSpan)(s_TimezoneOffset ?? (s_TimezoneOffset = CalcTimezoneOffset()));
 
-    public static float DiagonalInches => (float)(s_DiagonalInches ?? (s_DiagonalInches = CalcScreenDiagonalInches()));
+    public static string UDID => s_UDID ?? (s_UDID = CalcVendorUDID());
 
-    public static float AspectRatio => (float)(s_AspectRatio ?? (s_AspectRatio = CalcAspectRatio()));
 
-    public static bool IsTablet => (bool)(s_IsTablet ?? (s_IsTablet = CalcIsTablet()));
+    public static long CalcRAMUsageBytes()
+    {
+      // NOTE: This is where Ore's internal definition for reported RAM resides
 
-    public static bool IsBlueStacks => (bool)(s_IsBlueStacks ?? (s_IsBlueStacks = CalcIsBlueStacks()));
-
-    public static bool Is64Bit => ABI == ABIArch.ARM64 || s_ABIArch == ABIArch.x86_64;
-
-    public static int ScreenRefreshHz => (int)(s_ScreenRefreshHz ?? (s_ScreenRefreshHz = Screen.currentResolution.refreshRate.AtLeast(30)));
-
-    public static ABIArch ABI => (ABIArch)(s_ABIArch ?? (s_ABIArch = CalcABIArch()));
-
-    // TODO fetch LowRAMThreshold from platform
-    // e.g. https://developer.android.com/reference/android/app/ActivityManager.MemoryInfo#threshold
-    public static int LowRAMThreshold => (int)(SystemInfo.systemMemorySize * 0.9f).AtLeast(256);
-
+      #if UNITY_2020_1_OR_NEWER
+        return UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong();
+      #else
+        return System.GC.GetTotalMemory(forceFullCollection: false);
+      #endif
+    }
 
     public static int CalcRAMUsageMB()
     {
@@ -203,52 +184,143 @@ namespace Ore
       #endif // NEWTONSOFT_JSON
     }
 
+
     #if UNITY_EDITOR
+
     [UnityEditor.MenuItem("Ore/Log/DeviceSpy (JSON)")]
-    private static void Menu_LogJSON()
-    {
-      Orator.Log($"\"{nameof(DeviceSpy)}\": {ToJSON(prettyPrint: true)}");
-    }
+    private static void Menu_LogJSON() => Orator.Log($"\"{nameof(DeviceSpy)}\": {ToJSON(prettyPrint: true)}");
+
     #endif // UNITY_EDITOR
+
+
+  #region Advanced API
+
+    /// <summary>
+    ///   Special API which allows you to globally override DeviceSpy's perception
+    ///   of the current device.
+    /// </summary>
+    /// <remarks>
+    ///   By design, nothing within this class is defensively validated. <br/>
+    ///   <i>Little birdies can lie.</i> <br/>
+    ///   <b>USE WITH CAUTION!</b>
+    /// </remarks>
+    [PublicAPI]
+    public static class LittleBirdie
+    {
+      // ReSharper disable MemberHidesStaticFromOuterClass
+
+      public static ABI ABI
+      {
+        get => DeviceSpy.ABI;
+        set => s_ABI = value;
+      }
+
+      public static string Brand
+      {
+        get => DeviceSpy.Brand;
+        set => s_Brand = value;
+      }
+
+      public static string Browser
+      {
+        get => DeviceSpy.Browser;
+        set => s_Browser = value;
+      }
+
+      public static string Carrier
+      {
+        get => DeviceSpy.Carrier;
+        set => s_Carrier = value;
+      }
+
+      public static string CountryISOString
+      {
+        get => DeviceSpy.CountryISOString;
+        set => s_CountryISO3166a2 = value;
+      }
+
+      public static string IDFA
+      {
+        get => DeviceSpy.IDFA;
+        set => s_IDFA = value;
+      }
+
+      public static string IDFV
+      {
+        get => DeviceSpy.IDFV;
+        set => s_IDFV = value;
+      }
+
+      public static bool IsBlueStacks
+      {
+        get => DeviceSpy.IsBlueStacks;
+        set => s_IsBlueStacks = value;
+      }
+
+      public static bool IsTablet
+      {
+        get => DeviceSpy.IsTablet;
+        set => s_IsTablet = value;
+      }
+
+      public static bool IsTrackingLimited
+      {
+        get => DeviceSpy.IsTrackingLimited;
+        set => s_IsAdTrackingLimited = value;
+      }
+
+      public static string LanguageISOString
+      {
+        get => DeviceSpy.LanguageISOString;
+        set => s_LangISO6391 = value;
+      }
+
+      public static int LowRAMThreshold
+      {
+        get => DeviceSpy.LowRAMThreshold;
+      }
+
+      public static string UDID
+      {
+        get => DeviceSpy.UDID;
+        set => s_UDID = value;
+      }
+
+      // ReSharper restore MemberHidesStaticFromOuterClass
+    } // end nested class LittleBirdie
+
+  #endregion Advanced API
 
   #endregion Public section
 
 
+
   #region Private section
 
-    private static string        s_IDFV;
-    private static string        s_IDFA;
-    private static bool          s_IsAdTrackingLimited;
-    private static SerialVersion s_OSVersion;
+    private static ABI?          s_ABI;
+    private static float?        s_AspectRatio;
     private static string        s_Brand;
-    private static string        s_Model;
     private static string        s_Browser;
     private static string        s_Carrier;
-    private static string        s_LangISO6391;
     private static string        s_CountryISO3166a2;
-    private static TimeSpan?     s_TimezoneOffset;
     private static float?        s_DiagonalInches;
-    private static float?        s_AspectRatio;
-    private static bool?         s_IsTablet;
+    private static string        s_IDFA;
+    private static string        s_IDFV;
+    private static bool          s_IsAdTrackingLimited;
     private static bool?         s_IsBlueStacks;
+    private static bool?         s_IsTablet;
+    private static string        s_LangISO6391;
+    private static int?          s_LowRAMThresh;
+    private static string        s_Model;
+    private static SerialVersion s_OSVersion;
     private static int?          s_ScreenRefreshHz;
-    private static ABIArch?      s_ABIArch;
+    private static TimeSpan?     s_TimezoneOffset;
+    private static string        s_UDID;
 
     private const long BYTES_PER_MIB = 1048576L; // = pow(2,20)
     private const long BYTES_PER_MB  = 1000000L;
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static long CalcRAMUsageBytes()
-    {
-      // NOTE: This is where Ore's internal definition for reported RAM resides
-
-      #if UNITY_2020_1_OR_NEWER
-        return UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong();
-      #else
-        return System.GC.GetTotalMemory(forceFullCollection: false);
-      #endif
-    }
+    private const string PREFKEY_UDID = "VENDOR_UDID";
 
 
     private static (string make, string model) CalcMakeModel()
@@ -264,6 +336,25 @@ namespace Ore
 
         return (makemodel.Remove(split), makemodel.Substring(split + 1));
       #endif
+    }
+
+    private static string CalcVendorUDID()
+    {
+      string udid = PlayerPrefs.GetString(PREFKEY_UDID); // don't tell Irontown
+      if (!udid.IsEmpty())
+        return udid;
+
+      udid = SystemInfo.deviceUniqueIdentifier;
+
+      if (udid.Equals(SystemInfo.unsupportedIdentifier))
+      {
+        udid = Strings.MakeGUID();
+      }
+
+      PlayerPrefs.SetString(PREFKEY_UDID, udid);
+      PlayerPrefs.Save(); // meh, should let someone else save?
+
+      return udid;
     }
 
     private static string CalcBrowserName()
@@ -324,14 +415,40 @@ namespace Ore
       return RegionInfo.CurrentRegion.TwoLetterISORegionName;
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static TimeSpan CalcTimezoneOffset()
     {
       // TODO there might be a better (100x faster) Java API to call for Android ~
-      return System.TimeZoneInfo.Local.GetUtcOffset(System.DateTime.Now);
+      return System.TimeZoneInfo.Local.BaseUtcOffset;
     }
 
+    private static string CalcIDFA()
+    {
+      #if UNITY_ANDROID
+        return CalcAndroidIDFA();
+      #elif UNITY_IOS
+        return Device.advertisingIdentifier;
+      #else
+        return UDID;
+      #endif
+    }
+
+    private static string CalcIDFV()
+    {
+      #if UNITY_ANDROID
+        return CalcAndroidIDFV();
+      #elif UNITY_IOS
+        return Device.vendorIdentifier;
+      #else
+        return UDID;
+      #endif
+    }
+
+    private static int CalcLowRAMThreshold()
+    {
+      // TODO fetch LowRAMThreshold from platform
+      // e.g. Android: https://developer.android.com/reference/android/app/ActivityManager.MemoryInfo#threshold
+      return (int)(SystemInfo.systemMemorySize * 0.1f).AtLeast(64);
+    }
 
     private static float CalcScreenDiagonalInches()
     {
@@ -378,28 +495,28 @@ namespace Ore
       return false;
     }
 
-    private static ABIArch CalcABIArch()
+    private static ABI CalcABIArch()
     {
       #if !UNITY_EDITOR && UNITY_IOS // TODO iOS needs to be tested
         if (System.Environment.Is64BitOperatingSystem)
-          return ABIArch.ARM64;
+          return ABI.ARM64;
         else
-          return ABIArch.ARM;
+          return ABI.ARM;
       #endif // UNITY_IOS
 
       string type = SystemInfo.processorType;
 
       // Android and Android-like devices are pretty standard here
       if (type.StartsWith("ARM64"))
-        return ABIArch.ARM64;
+        return ABI.ARM64;
       else if (type.StartsWith("ARMv7"))
-        return ABIArch.ARM32;
+        return ABI.ARM32;
 
       // Chrome OS (should be a rare case)
       if (System.Environment.Is64BitOperatingSystem)
-        return ABIArch.x86_64;
+        return ABI.x86_64;
       else
-        return ABIArch.x86;
+        return ABI.x86;
     }
 
     // TODO: CalcIsChromeOS() - https://docs.unity3d.com/ScriptReference/Android.AndroidDevice-hardwareType.html
@@ -411,16 +528,24 @@ namespace Ore
 
     private static string CalcAndroidIDFV()
     {
+      #if UNITY_EDITOR
+        if (Application.isEditor) return UDID;
+      #endif
+
       var resolver = AndroidBridge.Activity.Call<AndroidJavaObject>("getContentResolver");
       var secure = new AndroidJavaClass("android.provider.Settings$Secure");
 
       string id = secure.CallStatic<string>("getString", resolver, "android_id");
 
-      return id.IsEmpty() ? SystemInfo.deviceUniqueIdentifier : id;
+      return id ?? string.Empty;
     }
 
     private static string CalcAndroidIDFA()
     {
+      #if UNITY_EDITOR
+        if (Application.isEditor) return string.Empty;
+      #endif
+
       var adidClient = new AndroidJavaClass("com.google.android.gms.ads.identifier.AdvertisingIdClient");
       var adidInfo = adidClient.CallStatic<AndroidJavaObject>("getAdvertisingIdInfo", AndroidBridge.Activity);
 
@@ -430,14 +555,13 @@ namespace Ore
 
       string id = adidInfo.Call<string>("getId");
 
-      return id.IsEmpty() ? SystemInfo.unsupportedIdentifier : id;
+      return id ?? string.Empty;
     }
 
     private static string CalcAndroidBrowser()
     {
       #if UNITY_EDITOR
-      if (Application.isEditor)
-        return string.Empty;
+        if (Application.isEditor) return string.Empty;
       #endif
 
       const string DUMMY_URL          = "https://example.com";
@@ -453,7 +577,7 @@ namespace Ore
         intent = AndroidBridge.MakeIntent("android.intent.action.VIEW", uri);
         flags  = AndroidBridge.Classes.ResolveInfoFlags.CallStatic<AndroidJavaObject>("of", MATCH_DEFAULT_ONLY);
         resolv = AndroidBridge.PackageManager.Call<AndroidJavaObject>("resolveActivity", intent, flags);
-        return resolv.Call<AndroidJavaObject>("loadLabel", AndroidBridge.PackageManager).ToString();
+        return $"{resolv.Call<AndroidJavaObject>("loadLabel", AndroidBridge.PackageManager)}";
       }
       catch (AndroidJavaException aje)
       {
@@ -473,13 +597,12 @@ namespace Ore
     private static string CalcAndroidISO6391() // 2-letter retval
     {
       #if UNITY_EDITOR
-      if (Application.isEditor)
-        return string.Empty;
+        if (Application.isEditor) return string.Empty;
       #endif
 
       try
       {
-        return AndroidBridge.SystemLocale.Call<string>("getLanguage").ToUpperInvariant();
+        return AndroidBridge.SystemLocale.Call<string>("getLanguage")?.ToUpperInvariant() ?? string.Empty;
       }
       catch (AndroidJavaException aje)
       {
@@ -492,13 +615,12 @@ namespace Ore
     private static string CalcAndroidISO6392() // 3-letter retval
     {
       #if UNITY_EDITOR
-      if (Application.isEditor)
-        return string.Empty;
+        if (Application.isEditor) return string.Empty;
       #endif
 
       try
       {
-        return AndroidBridge.SystemLocale.Call<string>("getISO3Language").ToUpperInvariant();
+        return AndroidBridge.SystemLocale.Call<string>("getISO3Language")?.ToUpperInvariant() ?? string.Empty;
       }
       catch (AndroidJavaException aje)
       {
@@ -511,8 +633,7 @@ namespace Ore
     private static string CalcAndroidCarrier()
     {
       #if UNITY_EDITOR
-      if (Application.isEditor)
-        return string.Empty;
+        if (Application.isEditor) return string.Empty;
       #endif
 
       const string TELEPHONY_SERVICE = "phone"; // https://developer.android.com/reference/android/content/Context#TELEPHONY_SERVICE
@@ -540,7 +661,11 @@ namespace Ore
 
     #elif UNITY_IOS
 
+    // TODO
+
     #elif UNITY_WEBGL
+
+    // TODO
 
     #endif
 
