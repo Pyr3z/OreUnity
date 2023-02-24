@@ -73,10 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: (bandaid) Ore's `[ReadOnly]` attribute is a no-op if `ODIN_INSPECTOR` is defined.
     - Levi: _Odin..._
 - Fixed: Build error: `Orator.cs line 190`
+    - Also: Fixed: Orator uses an experimental PrefabStage API - now uses the proper API in Unity 2021+.
 - Fixed: Some code quality schmutz (thank you @Irontown!)
-
-## [v3.5.1][] - 2023-02-13
-- Fixed: Orator uses an experimental PrefabStage API - now uses the proper API in Unity 2021+.
 
 ## [v3.5.0][] - 2023-02-09
 - Added: `OnEnableRunner` component - allows you to set up events on a specific GameObject's enable/disable, with optional delays.
