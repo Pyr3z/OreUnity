@@ -7,8 +7,8 @@
  *  [x] HashMap.ContainsKey
  *  [x] HashMap.Map
  *  [x] HashMap.Unmap
- *  [x] HashMap.Remap
- *  [x] HashMap.TryMap
+ *  [x] HashMap.OverMap
+ *  [x] HashMap.Map
  *  [x] HashMap.Clear
  *  [x] HashMap.EnsureCapacity
  *  [x] value = HashMap[key]
@@ -161,13 +161,13 @@ public static class HashMapCorrectness
   }
 
   [Test]
-  public static void Remap()
+  public static void OverMap()
   {
     var map = new HashMap<string,string>();
 
-    Assert.True(map.Remap("fef", "fef"));
+    Assert.True(map.OverMap("fef", "fef"));
 
-    Assert.True(map.Remap("fef", "bub"));
+    Assert.True(map.OverMap("fef", "bub"));
 
     Assert.AreEqual(1, map.Count, "map count after 1st remap");
 
@@ -182,7 +182,7 @@ public static class HashMapCorrectness
     {
       int j = (i + 1) % ilen;
 
-      Assert.True(map.Remap(testvalues[i], testvalues[j]));
+      Assert.True(map.OverMap(testvalues[i], testvalues[j]));
       Assert.True(map.Find(testvalues[i], out string v));
       Assert.True(v == testvalues[j]);
     }
@@ -193,7 +193,7 @@ public static class HashMapCorrectness
   {
     var map = new HashMap<string,string>();
 
-    Assert.Null(map.TryMap(null, null, out string prev));
+    Assert.Null(map.Map(null, null, out string prev));
 
     var testvalues = GetTestStrings(50);
 
@@ -206,7 +206,7 @@ public static class HashMapCorrectness
 
     foreach (string key in testvalues)
     {
-      bool? result = map.TryMap(key, "flee", out prev);
+      bool? result = map.Map(key, "flee", out prev);
 
       Assert.NotNull(result);
 

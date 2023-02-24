@@ -72,7 +72,7 @@ namespace Ore
           if (buckets[i].DirtyHash >= 0)
           {
             buckets[i].DirtyHash |= int.MinValue;
-            ++collisions;
+            ++ collisions;
           }
 
           i = (i + jump) % ilen;

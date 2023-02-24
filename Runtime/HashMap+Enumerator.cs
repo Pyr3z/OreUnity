@@ -38,7 +38,7 @@ namespace Ore
 
       private HashMap<K,V> m_Parent;
 
-      private Bucket m_Bucket;
+      internal Bucket m_Bucket;
 
       private int m_Pos, m_Count, m_Version;
       private int m_Unmapped;

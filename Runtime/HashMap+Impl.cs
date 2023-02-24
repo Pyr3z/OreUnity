@@ -121,8 +121,8 @@ namespace Ore
           m_Buckets[i].Value     = val;
           m_Buckets[i].DirtyHash = hash31 | (dirtyHash & int.MinValue);
 
-          ++m_Count;
-          ++m_Version;
+          ++ m_Count;
+          ++ m_Version;
 
           m_CachedLookup = i;
 
@@ -140,7 +140,7 @@ namespace Ore
 
           m_Buckets[i].Key = key;
           m_Buckets[i].Value = val;
-          ++m_Version;
+          ++ m_Version;
 
           m_CachedLookup = i;
 
@@ -150,7 +150,7 @@ namespace Ore
         if (dirtyHash >= 0)
         {
           m_Buckets[i].DirtyHash = dirtyHash | int.MinValue;
-          ++m_Collisions;
+          ++ m_Collisions;
         }
 
         i = (i + jump) % m_Buckets.Length;
@@ -167,7 +167,7 @@ namespace Ore
       throw new UnanticipatedException($"HashMap.TryInsert: Too many consecutive collisions! hash31={hash31}, jumps={jumps}, key={key}");
     }
 
-    private int FindBucket([CanBeNull] in K key)
+    private int FindBucket([CanBeNull] in K key, int hash31 = -1)
     {
       if (m_Count == 0 || m_KeyComparator.IsNone(key))
       {
@@ -179,8 +179,12 @@ namespace Ore
         return m_CachedLookup;
       }
 
+      if (hash31 < 0)
+      {
+        hash31 = m_KeyComparator.GetHashCode(key) & int.MaxValue;
+      }
+
       int ilen   = m_Buckets.Length;
-      int hash31 = m_KeyComparator.GetHashCode(key) & int.MaxValue;
       int i      = hash31 % ilen;
       int jump   = m_Params.CalcJump(hash31, ilen);
       int jumps  = m_LongestChain;
@@ -191,7 +195,7 @@ namespace Ore
 
         if (bucket.DirtyHash == 0 && m_KeyComparator.IsNone(bucket.Key))
         {
-          return m_CachedLookup = -i;
+          break;
         }
         
         if ((bucket.DirtyHash & int.MaxValue) == hash31 && m_KeyComparator.Equals(key, bucket.Key))
@@ -205,7 +209,9 @@ namespace Ore
       }
       while (jumps --> 0);
 
-      return m_CachedLookup = -i;
+      m_CachedLookup = ~ i;
+
+      return ~ (m_LongestChain - jumps);
     }
 
     private int FindValue(in V value)
@@ -254,12 +260,12 @@ namespace Ore
 
       m_LongestChain = m_Collisions = 0;
       m_CachedLookup = -1;
-      m_LoadLimit  = m_Params.CalcLoadLimit(newSize);
+      m_LoadLimit    = m_Params.CalcLoadLimit(newSize);
 
       var newBuckets = new Bucket[newSize];
 
       #if UNITY_INCLUDE_TESTS
-      ++LifetimeAllocs;
+      ++ LifetimeAllocs;
       #endif
 
       if (m_Count == 0)
@@ -290,6 +296,16 @@ namespace Ore
       m_Buckets = newBuckets; // potential GC concern
 
       // Leave version unchanged, since the top-level data contents should be the same
+    }
+
+
+    private int IntersectSlow(IEnumerable<K> keys, IEnumerable<V> values, bool overwrite)
+    {
+      int delta = 0;
+
+      // TODO
+
+      return delta;
     }
 
   } // end partial class HashMap

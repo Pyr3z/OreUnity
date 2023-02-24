@@ -190,7 +190,7 @@ namespace Ore
         contract = this;
       }
 
-      if (null == m_ActiveMap.TryMap(key, new CoroutineList(), out CoroutineList list))
+      if (null == m_ActiveMap.Map(key, new CoroutineList(), out CoroutineList list))
       {
         Orator.Error($"Failed to start coroutine for \"{key}\"; HashMap state error.");
         return null;
