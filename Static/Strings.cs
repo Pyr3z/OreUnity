@@ -8,8 +8,12 @@
 **/
 
 using System.Collections.Generic;
+using System.Linq;
+
 using JetBrains.Annotations;
+
 using UnityEngine;
+
 using StringBuilder = System.Text.StringBuilder;
 using Encoding      = System.Text.Encoding;
 
@@ -352,15 +356,14 @@ namespace Ore
     }
 
 
-    public static bool ContainsOnly([NotNull] string str, char[] presortedChars)
+    public static bool ContainsOnly([NotNull] string str, [NotNull] IEnumerable<char> presortedChars)
     {
-      if (presortedChars.IsEmpty())
-        return str.IsEmpty();
+      char[] pscs = presortedChars as char[] ?? presortedChars.ToArray();
 
       foreach (char c in str)
       {
         // this is *probably* faster than a binary search... open to testing it tho. TODO
-        foreach (char psc in presortedChars)
+        foreach (char psc in pscs)
         {
           if (c < psc)
             return false;

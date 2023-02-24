@@ -30,40 +30,42 @@ namespace Ore
 
     public static SerialVersion ExtractOSVersion(string from)
     {
+      // https://mvi.github.io/UnitySystemInfoTable/
+
+      const int MAX_EXPECTED_OSVER = 20; // shmeh, kinda arbitrary
+
       string[] vers = from.Split(Strings.WHITESPACES, System.StringSplitOptions.RemoveEmptyEntries);
 
-      //#if UNITY_ANDROID
-      foreach (var ver in vers)
-      {
-        if (ver.StartsWith("API-"))
-          return ver.Substring(4);
-      }
-      //#endif
-
       // walk back, looking for something useful
+
       int i = vers.Length;
       while (i --> 0)
       {
         string ver = vers[i];
-        if (FuzzyValidate(ver))
-          return ver;
+
+        if (ver.Length > MAX_EXPECTED_OSVER || ver.StartsWith("("))
+          continue;
+
+        #if UNITY_ANDROID || UNITY_EDITOR // might be called in editor concerning Android~
+          if (ver.StartsWith("API-"))
+          {
+            if (i == vers.Length - 2) // include extra version info (should be in parens)
+              return new SerialVersion($"{ver} {vers[i +1]}");
+            else
+              return new SerialVersion(ver);
+          }
+        #endif
+
+        int tag = ver.IndexOfAny(TAG_DELIMS);
+        if (tag > 0)
+          ver = ver.Remove(tag);
+
+        if (Strings.ContainsOnly(ver, BASIC_CHARSET))
+          return new SerialVersion(ver);
       }
 
-      return "1"; // non-zero but shitty OS version number, too shitty to pass any checks
-    }
-
-
-    internal static bool FuzzyValidate(string str)
-    {
-      const float PCT_THRESHOLD = 0.5f;
-
-      int extra = str.IndexOfAny(TAG_DELIMS);
-      if (extra > 0)
-        str = str.Remove(extra);
-
-      float digs = Strings.CountDigits(str);
-
-      return digs / str.Length > PCT_THRESHOLD;
+      return new SerialVersion(1);
+        // non-zero but shitty OS version number, too shitty to pass any checks
     }
 
   #endregion Static section
@@ -87,7 +89,11 @@ namespace Ore
 
 
     internal const string SEPARATOR = ".";
-    internal static readonly char[] TAG_DELIMS = { '-', '+', '/', 'f' };
+
+    internal static readonly char[] BASIC_CHARSET = { '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'v' };
+
+    internal static readonly char[] TAG_DELIMS = { ' ', '-', '+', '/', 'a', 'b', 'f' };
+
     internal static readonly char[] TRIM_CHARS = { 'v', 'V', '(', ')', '-', '+' };
 
 
