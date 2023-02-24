@@ -20,9 +20,6 @@ using TimeSpan = System.TimeSpan;
 
 using RegionInfo = System.Globalization.RegionInfo;
 
-using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
-using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
-
 
 namespace Ore
 {
@@ -412,14 +409,12 @@ namespace Ore
       return iso6391;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string CalcISO3166a2() // 2-letter region code
     {
       // TODO this is probably inaccurate or else slow to call on devices
       return RegionInfo.CurrentRegion.TwoLetterISORegionName;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static TimeSpan CalcTimezoneOffset()
     {
       // TODO there might be a better (100x faster) Java API to call for Android ~
