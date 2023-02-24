@@ -446,7 +446,7 @@ namespace Ore
       #if UNITY_ANDROID
         return CalcAndroidIDFV();
       #elif UNITY_IOS
-        return Device.vendorIdentifier;
+        return CalcAppleIDFV();
       #else
         return UDID;
       #endif
@@ -669,6 +669,29 @@ namespace Ore
     }
 
     #elif UNITY_IOS
+
+    private static string CalcAppleIDFV()
+    {
+      // TODO is PlayerPrefs really necessary here?
+      // I know on iOS native we use the user's keychain to persist IDFV across
+      // fresh installs... I don't think PlayerPrefs is as robust.
+
+      const string PREFKEY_IDFV = "VENDOR_IDFV";
+
+      string idfv = PlayerPrefs.GetString(PREFKEY_IDFV);
+
+      if (idfv.IsEmpty() || idfv == SystemInfo.unsupportedIdentifier)
+      {
+        idfv = Device.vendorIdentifier;
+
+        if (idfv.IsEmpty())
+          return UDID;
+
+        PlayerPrefs.SetString(PREFKEY_IDFV, idfv);
+      }
+
+      return idfv;
+    }
 
     // TODO
 
