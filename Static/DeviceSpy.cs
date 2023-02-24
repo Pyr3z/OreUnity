@@ -95,16 +95,7 @@ namespace Ore
       }
     }
 
-    public static SerialVersion OSVersion
-    {
-      get
-      {
-        // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
-        if (s_OSVersion is null)
-          s_OSVersion = SerialVersion.ExtractOSVersion(SystemInfo.operatingSystem);
-        return s_OSVersion;
-      }
-    }
+    public static SerialVersion OSVersion => s_OSVersion ?? (s_OSVersion = CalcOSVersion());
 
     public static int ScreenRefreshHz => (int)(s_ScreenRefreshHz ?? (s_ScreenRefreshHz = Screen.currentResolution.refreshRate.AtLeast(30)));
 
@@ -320,8 +311,6 @@ namespace Ore
     private const long BYTES_PER_MIB = 1048576L; // = pow(2,20)
     private const long BYTES_PER_MB  = 1000000L;
 
-    private const string PREFKEY_UDID = "VENDOR_UDID";
-
 
     private static (string make, string model) CalcMakeModel()
     {
@@ -338,8 +327,15 @@ namespace Ore
       #endif
     }
 
+    private static SerialVersion CalcOSVersion()
+    {
+      return SerialVersion.ExtractOSVersion(SystemInfo.operatingSystem);
+    }
+
     private static string CalcVendorUDID()
     {
+      const string PREFKEY_UDID = "VENDOR_UDID";
+
       string udid = PlayerPrefs.GetString(PREFKEY_UDID); // don't tell Irontown
       if (!udid.IsEmpty())
         return udid;
@@ -362,9 +358,9 @@ namespace Ore
       #if UNITY_ANDROID
         return CalcAndroidBrowser();
       #elif UNITY_IOS
-        return string.Empty;
-      #elif UNITY_WEBGL // TODO: doable, but requires javascript plugin
-        return string.Empty;
+        return string.Empty; // TODO
+      #elif UNITY_WEBGL
+        return Brand;
       #else
         return string.Empty;
       #endif
@@ -375,7 +371,7 @@ namespace Ore
       #if UNITY_ANDROID
         return CalcAndroidCarrier();
       #elif UNITY_IOS
-        return string.Empty;
+        return string.Empty; // TODO
       #elif UNITY_WEBGL
         return string.Empty;
       #else
@@ -390,9 +386,9 @@ namespace Ore
       if (iso6391.IsEmpty())
       {
         #if UNITY_ANDROID
-          return CalcAndroidISO6391();
+          iso6391 = CalcAndroidISO6391();
         #else // TODO other platforms
-          return "";
+          iso6391 = string.Empty;
         #endif
       }
 
@@ -403,6 +399,8 @@ namespace Ore
           if (CalcAndroidISO6392() == "FIL") // FIL for Filipino, sometimes aggregated as Tagalog
             return "TL";
         #else // TODO other platforms
+          if (CountryISOString == "PH") // reasonable assumption
+            return "TL";
         #endif
       }
 
@@ -428,7 +426,7 @@ namespace Ore
       #elif UNITY_IOS
         return Device.advertisingIdentifier;
       #else
-        return UDID;
+        return string.Empty; // TODO (?)
       #endif
     }
 
