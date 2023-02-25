@@ -130,6 +130,41 @@ public static class HashMapCorrectness
   }
 
   [Test]
+  public static void TryMap()
+  {
+    var map = new HashMap<string,string>();
+
+    Assert.Null(map.Map(null, null, out string prev));
+
+    var testvalues = GetTestStrings(50);
+
+    for (int i = 0, ilen = testvalues.Count / 2; i < ilen; ++i)
+    {
+      map.Add(testvalues[i], "bub");
+    }
+
+    testvalues.Shuffle();
+
+    foreach (string key in testvalues)
+    {
+      bool? result = map.Map(key, "flee", out prev);
+
+      Assert.NotNull(result);
+
+      if (result == true)
+      {
+        Assert.AreEqual("flee", prev);
+        Assert.AreEqual("flee", map[key]);
+      }
+      else
+      {
+        Assert.NotNull(result);
+        Assert.AreEqual("bub", prev);
+      }
+    }
+  }
+
+  [Test]
   public static void Unmap()
   {
     var map = new HashMap<string,string>();
@@ -189,38 +224,47 @@ public static class HashMapCorrectness
   }
 
   [Test]
-  public static void TryMap()
+  public static void Union()
   {
-    var map = new HashMap<string,string>();
+    var map1 = HashMapSpeed.GetTestHashMap(50);
 
-    Assert.Null(map.Map(null, null, out string prev));
+    var keys = HashMapSpeed.GetSomeKeysFor(map1, nExist: 10, nFake: 10);
 
-    var testvalues = GetTestStrings(50);
+    Assert.Positive(keys.Count);
 
-    for (int i = 0, ilen = testvalues.Count / 2; i < ilen; ++i)
-    {
-      map.Add(testvalues[i], "bub");
-    }
+    var map2 = new HashMap<string,string>(keys, null);
 
-    testvalues.Shuffle();
+    Assert.AreEqual(keys.Count, map2.Count, "map2.Count");
+    Assert.True(map2.ContainsKey(keys[0]));
 
-    foreach (string key in testvalues)
-    {
-      bool? result = map.Map(key, "flee", out prev);
+    int n = map1.Count;
 
-      Assert.NotNull(result);
+    int d = map1.Union(map2, overwrite: false);
 
-      if (result == true)
-      {
-        Assert.AreEqual("flee", prev);
-        Assert.AreEqual("flee", map[key]);
-      }
-      else
-      {
-        Assert.NotNull(result);
-        Assert.AreEqual("bub", prev);
-      }
-    }
+    Assert.AreEqual(n + 10, map1.Count);
+    Assert.AreEqual(10, d);
+
+    n = map1.Count;
+    d = map1.Union(map2, overwrite: true);
+
+    Assert.AreEqual(n, map1.Count);
+    Assert.AreEqual(10, d);
+
+    map2["fef"] = "fef!";
+
+    n = map1.Count;
+    d = map1.Union(map2, overwrite: false);
+
+    Assert.AreEqual(n + 1, map1.Count);
+    Assert.AreEqual(1, d);
+
+    map2["fef"] = "noooooooooooooooooooooo";
+
+    n = map1.Count;
+    d = map1.Union(map2);
+
+    Assert.AreEqual(n, map1.Count);
+    Assert.AreEqual(0, d);
   }
 
   [Test]
