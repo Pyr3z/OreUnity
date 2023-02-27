@@ -248,7 +248,7 @@ public static class HashMapCorrectness
     d = map1.Union(map2, overwrite: true);
 
     Assert.AreEqual(n, map1.Count);
-    Assert.AreEqual(10, d);
+    Assert.AreEqual(20, d);
 
     map2["fef"] = "fef!";
 
@@ -261,10 +261,15 @@ public static class HashMapCorrectness
     map2["fef"] = "noooooooooooooooooooooo";
 
     n = map1.Count;
-    d = map1.Union(map2);
+    d = map1.Union(map2, overwrite: false);
 
     Assert.AreEqual(n, map1.Count);
     Assert.AreEqual(0, d);
+
+    foreach (var k in map2.Keys)
+    {
+      Assert.True(map1.ContainsKey(k));
+    }
   }
 
   [Test]

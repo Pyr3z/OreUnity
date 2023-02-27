@@ -538,11 +538,12 @@ namespace Ore
             if (j > m_LongestChain)
               m_LongestChain = j;
 
+            ++ m_Count;
             ++ m_Version;
           }
-          else if (overwrite)
+          else if (overwrite && ( m_ValueComparator == null ||
+                                 !m_ValueComparator.Equals(buck.Value, m_Buckets[i].Value) ))
           {
-            m_Buckets[i].Key   = buck.Key;
             m_Buckets[i].Value = buck.Value;
             ++ m_Version;
           }
@@ -584,8 +585,9 @@ namespace Ore
         return 0;
       }
 
-      if (!ReferenceEquals(m_KeyComparator, other.m_KeyComparator))
-        return IntersectSlow(other.Keys, other.Values, overwrite);
+      // TODO:
+      // if (!ReferenceEquals(m_KeyComparator, other.m_KeyComparator))
+      //   return IntersectSlow(other.Keys, other.Values, overwrite);
 
       int remaining = m_Count;
       int i = m_Buckets.Length;

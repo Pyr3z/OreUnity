@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - ExtractOSVersion(ver) - now works regardless of scripting defines, looking for patterns in the parameter to determine what platform it's for.
     - Also: ExtractOSVersion now returns more standardized representations, which contain maximal extra info (such as platform prefixes).
 
+- Fixed: in `HashMap`:
+    - Union(other) was entirely broken (by not incrementing the internal entry count).
+    - Union(other, overwrite:true) wasn't respecting a ValueComparator (if one was set).
+
 
 ## [v4.0.1][] - 2023-02-24
 - Added: New in `Strings`:
