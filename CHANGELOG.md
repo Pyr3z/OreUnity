@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: in `HashMap`:
     - Union(other) was entirely broken (by not incrementing the internal entry count).
     - Union(other, overwrite:true) wasn't respecting a ValueComparator (if one was set).
+    - Also: Added UnmapNulls() - QoL method
 
 
 ## [v4.0.1][] - 2023-02-24
