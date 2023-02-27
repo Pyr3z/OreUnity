@@ -203,81 +203,138 @@ namespace Ore
       public static ABI ABI
       {
         get => DeviceSpy.ABI;
-        set => s_ABI = value;
+        set
+        {
+          s_ABI = value;
+          OnCheepCheep?.Invoke(nameof(ABI), value);
+        }
       }
 
       public static string Brand
       {
         get => DeviceSpy.Brand;
-        set => s_Brand = value;
+        set
+        {
+          s_Brand = value;
+          OnCheepCheep?.Invoke(nameof(Brand), value);
+        }
       }
 
       public static string Browser
       {
         get => DeviceSpy.Browser;
-        set => s_Browser = value;
+        set
+        {
+          s_Browser = value;
+          OnCheepCheep?.Invoke(nameof(Browser), value);
+        }
       }
 
       public static string Carrier
       {
         get => DeviceSpy.Carrier;
-        set => s_Carrier = value;
+        set
+        {
+          s_Carrier = value;
+          OnCheepCheep?.Invoke(nameof(Carrier), value);
+        }
       }
 
       public static string CountryISOString
       {
         get => DeviceSpy.CountryISOString;
-        set => s_CountryISO3166a2 = value;
+        set
+        {
+          s_CountryISO3166a2 = value;
+          OnCheepCheep?.Invoke(nameof(CountryISOString), value);
+        }
       }
 
       public static string IDFA
       {
         get => DeviceSpy.IDFA;
-        set => s_IDFA = value;
+        set
+        {
+          s_IDFA = value;
+          OnCheepCheep?.Invoke(nameof(IDFA), value);
+        }
       }
 
       public static string IDFV
       {
         get => DeviceSpy.IDFV;
-        set => s_IDFV = value;
+        set
+        {
+          s_IDFV = value;
+          OnCheepCheep?.Invoke(nameof(IDFV), value);
+        }
       }
 
       public static bool IsBlueStacks
       {
         get => DeviceSpy.IsBlueStacks;
-        set => s_IsBlueStacks = value;
+        set
+        {
+          s_IsBlueStacks = value;
+          OnCheepCheep?.Invoke(nameof(IsBlueStacks), value);
+        }
       }
 
       public static bool IsTablet
       {
         get => DeviceSpy.IsTablet;
-        set => s_IsTablet = value;
+        set
+        {
+          s_IsTablet = value;
+          OnCheepCheep?.Invoke(nameof(IsTablet), value);
+        }
       }
 
       public static bool IsTrackingLimited
       {
         get => DeviceSpy.IsTrackingLimited;
-        set => s_IsAdTrackingLimited = value;
+        set
+        {
+          s_IsAdTrackingLimited = value;
+          OnCheepCheep?.Invoke(nameof(IsTrackingLimited), value);
+        }
       }
 
       public static string LanguageISOString
       {
         get => DeviceSpy.LanguageISOString;
-        set => s_LangISO6391 = value;
+        set
+        {
+          s_LangISO6391 = value;
+          OnCheepCheep?.Invoke(nameof(LanguageISOString), value);
+        }
       }
 
       public static int LowRAMThreshold
       {
         get => DeviceSpy.LowRAMThreshold;
+        set
+        {
+          s_LowRAMThresh = value;
+          OnCheepCheep?.Invoke(nameof(LowRAMThreshold), value);
+        }
       }
 
       public static string UDID
       {
         get => DeviceSpy.UDID;
-        set => s_UDID = value;
+        set
+        {
+          s_UDID = value;
+          OnCheepCheep?.Invoke(nameof(UDID), value);
+        }
       }
 
       // ReSharper restore MemberHidesStaticFromOuterClass
+
+      public delegate void PropertyAction(string propertyName, object value);
+      public static event PropertyAction OnCheepCheep;
+
     } // end nested class LittleBirdie
 
   #endregion Advanced API
