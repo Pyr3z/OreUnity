@@ -273,6 +273,24 @@ public static class HashMapCorrectness
   }
 
   [Test]
+  public static void Intersect() // TODO
+  {
+    Assert.Inconclusive("test not implemented.");
+  }
+
+  [Test]
+  public static void Except() // TODO
+  {
+    Assert.Inconclusive("test not implemented.");
+  }
+
+  [Test]
+  public static void SymmetricExcept() // TODO
+  {
+    Assert.Inconclusive("test not implemented.");
+  }
+
+  [Test]
   public static void IndexOperator()
   {
     var map = new HashMap<string,string>()
