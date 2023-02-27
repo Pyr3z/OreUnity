@@ -320,6 +320,16 @@ namespace Ore
         }
       }
 
+      public static TimeSpan TimezoneOffset
+      {
+        get => DeviceSpy.TimezoneOffset;
+        set
+        {
+          s_TimezoneOffset = value;
+          OnCheepCheep?.Invoke(nameof(TimezoneOffset), value);
+        }
+      }
+
       public static string UDID
       {
         get => DeviceSpy.UDID;
