@@ -10,31 +10,39 @@ using JetBrains.Annotations;
 
 using UnityEngine;
 
+#if NEWTONSOFT_JSON
+using Newtonsoft.Json;
+#endif
+
 
 namespace Ore
 {
+  #if NEWTONSOFT_JSON
+  [JsonObject(MemberSerialization.Fields)]
+  #endif
   [System.Serializable]
   public struct HashMapParams
   {
 
-    public enum CollisionPolicy
-    {
-      Default,
-
-      HashProbing = Default,
-      LinearProbing,
-      QuadraticProbing,
-
-      RobinHoodHashing,
-      HopscotchHashing,
-      CuckooHashing,
-
-      SeparateChaining,
-      ParallelChaining,
-    }
-
-
   #region Constants + Defaults
+
+    [System.Flags]
+    public enum Policies
+    {
+      Default = HashProbing,
+
+      NotImplemented   = (1 << 31),
+
+      HashProbing      = (1 << 0), // == double hashing, where the 2nd hash func == the 1st
+      LinearProbing    = (1 << 1) | NotImplemented,
+      QuadraticProbing = (1 << 2) | NotImplemented,
+      RobinHoodHashing = (1 << 3) | NotImplemented,
+      HopscotchHashing = (1 << 4) | NotImplemented,
+      CuckooHashing    = (1 << 5) | NotImplemented,
+
+      SeparateChaining = (1 << 6) | NotImplemented,
+      ParallelChaining = (1 << 7) | NotImplemented,
+    }
 
     private const int USERCAPACITY_DEFAULT = 5;
 
@@ -51,6 +59,8 @@ namespace Ore
 
     private static readonly AnimationCurve GROWTHCURVE_DEFAULT
       = AnimationCurve.Constant(0f, 0f, 2f);
+
+    private const bool UNMAP_NULLS_DEFAULT = false;
 
 
     [PublicAPI]
@@ -74,7 +84,7 @@ namespace Ore
     public int HashPrime;
 
     [SerializeField]
-    public CollisionPolicy Policy;
+    public Policies Policy;
 
 
     // private due to class reference danger:
@@ -108,16 +118,16 @@ namespace Ore
     /// the <see cref="Hashing"/> class. If a non-prime number is given, the
     /// nearest prime number will be used instead.
     /// </param>
-    /// <param name="collisionPolicy">
+    /// <param name="policy">
     /// Choices other than the default are not yet implemented.
     /// </param>
     [PublicAPI]
     public HashMapParams(
-      int             initialCapacity,
-      float           loadFactor      = LOADFACTOR_DEFAULT,
-      bool            isFixed         = false,
-      int             hashPrime       = HASHPRIME_DEFAULT,
-      CollisionPolicy collisionPolicy = CollisionPolicy.Default)
+      int      initialCapacity,
+      float    loadFactor = LOADFACTOR_DEFAULT,
+      bool     isFixed    = false,
+      int      hashPrime  = HASHPRIME_DEFAULT,
+      Policies policy     = Policies.Default)
     {
       LoadFactor = loadFactor.Clamp(LOADFACTOR_MIN, LOADFACTOR_MAX);
 
@@ -125,9 +135,15 @@ namespace Ore
 
       InitialSize = Primes.NextHashableSize((int)(initialCapacity / LoadFactor), HashPrime, 0);
 
-      Policy = CollisionPolicy.Default;
+      Policy = policy;
 
       m_GrowthCurve = isFixed ? null : GROWTHCURVE_DEFAULT;
+    }
+
+    [PublicAPI]
+    public HashMapParams(Policies policies)
+      : this(USERCAPACITY_DEFAULT, policy: policies)
+    {
     }
 
     public HashMapParams WithGrowthCurve([CanBeNull] AnimationCurve growthCurve)

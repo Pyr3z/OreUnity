@@ -79,7 +79,7 @@ public static class UnityTheseDays
   }
 
   [Test]
-  public static void WritesEnumsToJsonLikeThis()
+  public static void WritesNewtonsoftJsonLikeThis()
   {
     #if NEWTONSOFT_JSON
       var map = new HashMap<object,object>
@@ -91,6 +91,11 @@ public static class UnityTheseDays
       Assert.DoesNotThrow(() =>
                           {
                             Debug.Log(JObject.FromObject(map).ToString(Formatting.Indented));
+                          });
+
+      Assert.DoesNotThrow(() =>
+                          {
+                            Debug.Log(JObject.FromObject(HashMapParams.Default).ToString(Formatting.Indented));
                           });
     #endif
   }

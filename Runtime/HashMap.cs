@@ -364,6 +364,7 @@ namespace Ore
     public bool Remap([NotNull] in K key, in V val)
     {
       int i = FindBucket(in key);
+
       // if (i >= 0 && ( m_ValueComparator == null ||
       //                !m_ValueComparator.Equals(m_Buckets[i].Value, val) ))
       if (i >= 0)
@@ -482,6 +483,33 @@ namespace Ore
       return precount - m_Count;
     }
 
+    /// <summary>
+    ///   Unmaps all entries whose value is currently null.
+    /// </summary>
+    /// <returns>
+    ///   The number of entries unmapped by this operation.
+    /// </returns>
+    public int UnmapNulls()
+    {
+      if (m_Count == 0)
+        return 0;
+
+      int precount = m_Count;
+
+      using (var enumerator = new Enumerator(this))
+      {
+        while (enumerator.MoveNext())
+        {
+          if (enumerator.CurrentValue is null)
+          {
+            enumerator.UnmapCurrent();
+          }
+        }
+      }
+
+      return precount - m_Count;
+    }
+
     /// <returns>
     ///   <c>true</c> if the map changed as a result of the method call.
     /// </returns>
@@ -517,36 +545,37 @@ namespace Ore
 
       int changes = m_Version;
 
-      using (var enumerator = new Enumerator(other))
+      int o = other.m_Buckets.Length;
+      while (o --> 0)
       {
-        while (enumerator.MoveNext())
+        var otherBuck = other.m_Buckets[o];
+
+        if (otherBuck.MightBeEmpty() && m_KeyComparator.IsNone(otherBuck.Key))
+          continue;
+
+        int hash31 = otherBuck.DirtyHash & int.MaxValue;
+
+        int i = FindBucket(otherBuck.Key, otherBuck.DirtyHash & int.MaxValue);
+
+        if (i < 0)
         {
-          var buck = enumerator.m_Bucket;
+          otherBuck.DirtyHash = hash31;
+          var (c,j) = otherBuck.PlaceIn(m_Buckets,
+                                         m_Params.CalcJump(hash31, m_Buckets.Length),
+                                         m_KeyComparator);
+          m_Collisions += c;
 
-          int hash31 = buck.DirtyHash & int.MaxValue;
+          if (j > m_LongestChain)
+            m_LongestChain = j;
 
-          int i = FindBucket(buck.Key, buck.DirtyHash & int.MaxValue);
-
-          if (i < 0)
-          {
-            buck.DirtyHash = hash31;
-            var (c,j) = buck.PlaceIn(m_Buckets,
-                                           m_Params.CalcJump(hash31, m_Buckets.Length),
-                                           m_KeyComparator);
-            m_Collisions += c;
-
-            if (j > m_LongestChain)
-              m_LongestChain = j;
-
-            ++ m_Count;
-            ++ m_Version;
-          }
-          else if (overwrite && ( m_ValueComparator == null ||
-                                 !m_ValueComparator.Equals(buck.Value, m_Buckets[i].Value) ))
-          {
-            m_Buckets[i].Value = buck.Value;
-            ++ m_Version;
-          }
+          ++ m_Count;
+          ++ m_Version;
+        }
+        else if (overwrite && ( m_ValueComparator == null ||
+                               !m_ValueComparator.Equals(otherBuck.Value, m_Buckets[i].Value) ))
+        {
+          m_Buckets[i].Value = otherBuck.Value;
+          ++ m_Version;
         }
       }
 
@@ -591,7 +620,6 @@ namespace Ore
 
       int remaining = m_Count;
       int i = m_Buckets.Length;
-
       while (i --> 0)
       {
         var bucket = m_Buckets[i];
