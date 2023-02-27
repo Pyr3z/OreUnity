@@ -9,14 +9,22 @@
 using JetBrains.Annotations;
 
 using UnityEngine;
+using UnityEngine.Serialization;
 
 using System.Collections.Generic;
 using System.Linq;
+
+#if NEWTONSOFT_JSON
+using Newtonsoft.Json;
+#endif
 
 
 namespace Ore
 {
 
+  #if NEWTONSOFT_JSON
+  [JsonObject(MemberSerialization.OptIn)]
+  #endif
   [System.Serializable, PublicAPI]
   public sealed class SerialVersion :
     System.IComparable<SerialVersion>,
@@ -113,6 +121,9 @@ namespace Ore
     internal static readonly char[] TRIM_CHARS = { 'v', 'V', '(', ')', '-', '+' };
 
 
+    #if NEWTONSOFT_JSON
+    [JsonProperty(PropertyName = "version", Required = Required.Always)]
+    #endif
     [SerializeField, Delayed]
     private string m_String = string.Empty;
 
@@ -123,9 +134,12 @@ namespace Ore
     private int m_TagIndex = -1;
 
 
-    public SerialVersion([CanBeNull] string ver)
+    #if NEWTONSOFT_JSON
+    [JsonConstructor]
+    #endif
+    public SerialVersion([CanBeNull] string version)
     {
-      Deserialize(ver);
+      Deserialize(version);
     }
 
     public SerialVersion(params int[] versionParts)
