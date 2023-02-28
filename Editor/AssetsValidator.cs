@@ -31,14 +31,14 @@ namespace Ore.Editor
         typeof(System.ObsoleteAttribute)
       };
 
-      foreach (var tasset in TypeCache.GetTypesWithAttribute<AssetPathAttribute>())
+      foreach (var tasset in TypeCache.GetTypesWithAttribute<AutoCreateAssetAttribute>())
       {
         if (tasset is null || tasset.IsAbstract || tasset.IsGenericType || tasset.AreAnyDefined(silencers))
           continue;
 
         if (!tasset.IsSubclassOf(typeof(ScriptableObject)))
         {
-          Orator.Error($"[{nameof(AssetPathAttribute)}] is only intended for ScriptableObject types! (t:{tasset.Name})");
+          Orator.Error($"[{nameof(AutoCreateAssetAttribute)}] is only intended for ScriptableObject types! (t:{tasset.Name})");
           continue;
         }
 
@@ -51,7 +51,7 @@ namespace Ore.Editor
           continue;
         }
 
-        var attr = tasset.GetCustomAttribute<AssetPathAttribute>(); // shouldn't be heritable
+        var attr = tasset.GetCustomAttribute<AutoCreateAssetAttribute>(); // shouldn't be heritable
 
         if (!Filesystem.PathExists(attr.Path) && OAsset.TryCreate(tasset, out ScriptableObject asset, attr.Path))
         {
@@ -62,7 +62,7 @@ namespace Ore.Editor
       silencers = new []
       {
         typeof(CreateAssetMenuAttribute),
-        typeof(AssetPathAttribute), // we just checked these = skip
+        typeof(AutoCreateAssetAttribute), // we just checked these = skip
         typeof(System.ObsoleteAttribute)
       };
 

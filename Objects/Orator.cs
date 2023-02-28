@@ -37,7 +37,7 @@ namespace Ore
   [System.Diagnostics.DebuggerStepThrough]
   #endif
   [DefaultExecutionOrder(-1337)]
-  [AssetPath("Resources/Orator.asset")]
+  [AutoCreateAsset("Resources/Orator.asset")]
   public sealed class Orator : OAssetSingleton<Orator>
   {
 

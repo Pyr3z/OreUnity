@@ -1,4 +1,4 @@
-/*! @file       Attributes/AssetPathAttribute.cs
+/*! @file       Attributes/AutoCreateAssetAttribute.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2022-08-06
 **/
@@ -17,14 +17,14 @@ namespace Ore
   /// </remarks>
   [System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
   [System.Diagnostics.Conditional("UNITY_EDITOR")]
-  public class AssetPathAttribute : System.Attribute
+  public class AutoCreateAssetAttribute : System.Attribute
   {
     public readonly string Path;
 
     /// <param name="path">
     /// Relative path to the Assets/ folder, e.g., "Resources/GoodBoy.asset"
     /// </param>
-    public AssetPathAttribute([NotNull] string path)
+    public AutoCreateAssetAttribute([NotNull] string path)
     {
       #if UNITY_EDITOR
       OAssert.True(Paths.IsValidPath(path), $"invalid path: \"{path}\"");
