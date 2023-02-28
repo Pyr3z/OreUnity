@@ -11,13 +11,6 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.Profiling;
 
-using System.Collections.Generic;
-
-#if NEWTONSOFT_JSON
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-#endif
-
 
 public static class UnityTheseDays
 {
@@ -76,28 +69,6 @@ public static class UnityTheseDays
     Debug.Log($"total mem: {managed + native} bytes");
 
     Assert.Positive(managed + native, "total memory usage");
-  }
-
-  [Test]
-  public static void WritesNewtonsoftJsonLikeThis()
-  {
-    #if NEWTONSOFT_JSON
-      var map = new HashMap<object,object>
-      {
-        ["fef"] = DeviceDimension.DisplayHz,
-        [DeviceDimension.OSVersion] = DeviceSpy.OSVersion
-      };
-
-      Assert.DoesNotThrow(() =>
-                          {
-                            Debug.Log(JObject.FromObject(map).ToString(Formatting.Indented));
-                          });
-
-      Assert.DoesNotThrow(() =>
-                          {
-                            Debug.Log(JObject.FromObject(HashMapParams.Default).ToString(Formatting.Indented));
-                          });
-    #endif
   }
 
 }
