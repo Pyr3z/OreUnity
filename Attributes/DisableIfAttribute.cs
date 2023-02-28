@@ -12,10 +12,21 @@ namespace Ore
   [System.AttributeUsage(System.AttributeTargets.Field)]
   public class DisableIfAttribute : UnityEngine.PropertyAttribute
   {
+    public readonly string ValueGetter;
 
-    public DisableIfAttribute()
+    public readonly object CompareValue;
+
+
+    public DisableIfAttribute(string valueGetter)
     {
-      // TODO
+      ValueGetter  = valueGetter;
+      CompareValue = null;
+    }
+
+    public DisableIfAttribute(string valueGetter, object equalTo)
+    {
+      ValueGetter  = valueGetter;
+      CompareValue = equalTo;
     }
 
   } // end class DisableIfAttribute

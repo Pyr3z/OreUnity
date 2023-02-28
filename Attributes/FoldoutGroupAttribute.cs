@@ -13,9 +13,14 @@ namespace Ore
   public class FoldoutGroupAttribute : UnityEngine.PropertyAttribute
   {
 
-    public FoldoutGroupAttribute()
+    public readonly string GroupId;
+
+    public readonly bool StartExpanded;
+
+    public FoldoutGroupAttribute(string groupId, bool expanded = false)
     {
-      // TODO
+      GroupId       = groupId;
+      StartExpanded = expanded;
     }
 
   } // end class FoldoutGroupAttribute

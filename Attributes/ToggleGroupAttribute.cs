@@ -13,9 +13,20 @@ namespace Ore
   public class ToggleGroupAttribute : UnityEngine.PropertyAttribute
   {
 
-    public ToggleGroupAttribute()
+    public readonly string ToggleSource;
+
+    public readonly string Title;
+
+
+    public ToggleGroupAttribute(string toggleSource)
     {
-      // TODO
+      ToggleSource = toggleSource;
+    }
+
+    public ToggleGroupAttribute(string toggleSource, string title)
+    {
+      ToggleSource = toggleSource;
+      Title        = title;
     }
 
   } // end class ToggleGroupAttribute

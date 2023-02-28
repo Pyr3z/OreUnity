@@ -12,10 +12,21 @@ namespace Ore
   [System.AttributeUsage(System.AttributeTargets.Field)]
   public class EnableIfAttribute : UnityEngine.PropertyAttribute
   {
+    public readonly string ValueGetter;
 
-    public EnableIfAttribute()
+    public readonly object CompareValue;
+
+
+    public EnableIfAttribute(string valueGetter)
     {
-      // TODO
+      ValueGetter  = valueGetter;
+      CompareValue = null;
+    }
+
+    public EnableIfAttribute(string valueGetter, object equalTo)
+    {
+      ValueGetter  = valueGetter;
+      CompareValue = equalTo;
     }
 
   } // end class EnableIfAttribute

@@ -12,10 +12,21 @@ namespace Ore
   [System.AttributeUsage(System.AttributeTargets.Field)]
   public class ShowIfAttribute : UnityEngine.PropertyAttribute
   {
+    public readonly string ValueGetter;
 
-    public ShowIfAttribute()
+    public readonly object CompareValue;
+
+
+    public ShowIfAttribute(string valueGetter)
     {
-      // TODO
+      ValueGetter  = valueGetter;
+      CompareValue = null;
+    }
+
+    public ShowIfAttribute(string valueGetter, object equalTo)
+    {
+      ValueGetter  = valueGetter;
+      CompareValue = equalTo;
     }
 
   } // end class ShowIfAttribute

@@ -13,9 +13,11 @@ namespace Ore
   public class OnValueChangedAttribute : UnityEngine.PropertyAttribute
   {
 
-    public OnValueChangedAttribute()
+    public readonly string MethodName;
+
+    public OnValueChangedAttribute(string methodName)
     {
-      // TODO
+      MethodName = methodName;
     }
 
   } // end class OnValueChangedAttribute

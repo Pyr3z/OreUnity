@@ -5,16 +5,28 @@
 
 using JetBrains.Annotations;
 
+
 namespace Ore
 {
   [PublicAPI]
   [System.AttributeUsage(System.AttributeTargets.Field)]
   public class HideIfAttribute : UnityEngine.PropertyAttribute
   {
+    public readonly string ValueGetter;
 
-    public HideIfAttribute()
+    public readonly object CompareValue;
+
+
+    public HideIfAttribute(string valueGetter)
     {
-      // TODO
+      ValueGetter  = valueGetter;
+      CompareValue = null;
+    }
+
+    public HideIfAttribute(string valueGetter, object equalTo)
+    {
+      ValueGetter  = valueGetter;
+      CompareValue = equalTo;
     }
 
   } // end class HideIfAttribute

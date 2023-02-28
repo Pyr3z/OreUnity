@@ -26,15 +26,11 @@ namespace Ore
     /// </param>
     public AssetPathAttribute([NotNull] string path)
     {
+      #if UNITY_EDITOR
       OAssert.True(Paths.IsValidPath(path), $"invalid path: \"{path}\"");
+      #endif
 
-      if (!path.StartsWith("Assets/"))
-        path = $"Assets/{path}";
-
-      if (!path.EndsWith(".asset"))
-        path = $"{path}.asset";
-
-      Path = path;
+      Path = Paths.DetectAssetPathAssumptions(path);
     }
   }
 }
