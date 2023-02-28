@@ -16,6 +16,11 @@
             "name": "com.unity.nuget.newtonsoft-json",
             "expression": "3.0.0",
             "define": "NEWTONSOFT_JSON"
+        },
+        {
+            "name": "dev.leviperez.ore-inspector",
+            "expression": "0.1",
+            "define": "KORE_INSPECTOR"
         }
     ],
     "noEngineReferences": false
