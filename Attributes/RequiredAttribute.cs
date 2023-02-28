@@ -13,9 +13,15 @@ namespace Ore
   public class RequiredAttribute : UnityEngine.PropertyAttribute
   {
 
+    public string CustomMessage;
+
     public RequiredAttribute()
     {
-      // TODO
+    }
+
+    public RequiredAttribute([CanBeNull] string message)
+    {
+      CustomMessage = message;
     }
 
   } // end class RequiredAttribute
