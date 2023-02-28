@@ -14,7 +14,7 @@ namespace Ore
   public class RequiredAttribute : UnityEngine.PropertyAttribute
   {
 
-    public string CustomMessage;
+    public string ErrorMessage;
 
     public RequiredAttribute()
     {
@@ -22,7 +22,7 @@ namespace Ore
 
     public RequiredAttribute([CanBeNull] string message)
     {
-      CustomMessage = message;
+      ErrorMessage = message;
     }
 
   } // end class RequiredAttribute
