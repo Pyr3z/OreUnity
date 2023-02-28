@@ -10,6 +10,7 @@ namespace Ore
 {
   [PublicAPI]
   [System.AttributeUsage(System.AttributeTargets.Field)]
+  [System.Diagnostics.Conditional("UNITY_EDITOR")]
   public class ToggleGroupAttribute : UnityEngine.PropertyAttribute
   {
 

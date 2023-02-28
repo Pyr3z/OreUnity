@@ -10,6 +10,7 @@ namespace Ore
 {
   [PublicAPI]
   [System.AttributeUsage(System.AttributeTargets.Field)]
+  [System.Diagnostics.Conditional("UNITY_EDITOR")]
   public class HideIfAttribute : UnityEngine.PropertyAttribute
   {
     public readonly string ValueGetter;
