@@ -6,12 +6,11 @@
 using JetBrains.Annotations;
 
 #if NEWTONSOFT_JSON
-using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 #endif
 
-using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 
 using UnityEngine;
@@ -21,6 +20,9 @@ using StringComparison = System.StringComparison;
 
 using TextReader = System.IO.TextReader;
 using TextWriter = System.IO.TextWriter;
+
+using StringWriter  = System.IO.StringWriter;
+using StringBuilder = System.Text.StringBuilder;
 
 using CultureInfo = System.Globalization.CultureInfo;
 
@@ -203,6 +205,24 @@ namespace Ore
       settings.TypeNameHandling = enable ? TypeNameHandling.Objects : TypeNameHandling.None;
 
       return settings;
+    }
+
+
+    [NotNull]
+    public static string Serialize(object obj, JsonSerializer serializer = null, StringBuilder cachedBuilder = null)
+    {
+      if (serializer is null)
+        serializer = JsonSerializer.CreateDefault(SerializerSettings);
+
+      var strWriter = new StringWriter(cachedBuilder ?? new StringBuilder(4096), SerializerSettings.Culture);
+
+      using (var jsonWriter = new JsonTextWriter(strWriter))
+      {
+        jsonWriter.Formatting = Formatting;
+        serializer.Serialize(jsonWriter, obj);
+      }
+
+      return strWriter.ToString();
     }
 
 
