@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - [ToggleGroup]
     - **Note:** These are currently just placeholders. They do not (currently) do anything special. The implementation for them is destined for a separate package: [ore-inspector][].
     - Also: Added enum `PrefabKind` (to match Odin's [RequiredIn] public interface).
+- Added: `JsonAuthority.Serialize(obj, ...)`
+    - allows you to be a lot more GC-friendly, reusing memory.
 - Added: New unit test source file: [MiscInEditor.cs](Tests/Editor/MiscInEditor.cs)
 
 - Changed: **Breaking!** Renamed class attribute `[AssetPath]` -> `[AutoCreateAsset]`.
