@@ -214,7 +214,12 @@ namespace Ore
       if (serializer is null)
         serializer = JsonSerializer.CreateDefault(SerializerSettings);
 
-      var strWriter = new StringWriter(cachedBuilder ?? new StringBuilder(4096), SerializerSettings.Culture);
+      if (cachedBuilder is null)
+        cachedBuilder = new StringBuilder(2048);
+      else
+        cachedBuilder.Clear();
+
+      var strWriter = new StringWriter(cachedBuilder, SerializerSettings.Culture);
 
       using (var jsonWriter = new JsonTextWriter(strWriter))
       {
