@@ -41,6 +41,22 @@ internal static class MiscInEditor
                         });
   }
 
+  [Test]
+  public static void NewtonsoftJsonToObject()
+  {
+    string jObj = @"{
+    ""fef"": ""fef!"",
+    ""one"": 1
+    }";
+
+    var map = JsonConvert.DeserializeObject<HashMap<string,object>>(jObj);
+
+    Assert.NotNull(map);
+    Assert.Positive(map.Count);
+    Assert.True(map.Find("fef", out var fef) && fef.ToString() == "fef!");
+    Assert.True(map.Find("one", out var one) && one.GetHashCode() == 1);
+  }
+
   #endif // NEWTONSOFT_JSON
 
 } // end class MiscInEditor
