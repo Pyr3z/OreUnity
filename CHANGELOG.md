@@ -5,8 +5,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [v5.0.0](../../tree/unstable) - UNRELEASED
+## [v5.0.1](../../tree/unstable) - UNRELEASED
 - fef
+
+## [v5.0.0](../../tags/v5.0.0) - 2023-02-28
+- Added: New attributes to replace (some of) Odin Inspector's:
+    - [Required], [RequiredIn]
+    - [DisableIf], [EnableIf]
+    - [HideIf], [ShowIf]
+    - [OnValueChanged]
+    - [FoldoutGroup]
+    - [ToggleGroup]
+    - **Note:** These are currently just placeholders. They do not (currently) do anything special. The implementation for them is destined for a separate package: [ore-inspector][].
+    - Also: Added enum `PrefabKind` (to match Odin's [RequiredIn] public interface).
+- Added: New unit test source file: [MiscInEditor.cs](Tests/Editor/MiscInEditor.cs)
+
+- Changed: **Breaking!** Renamed class attribute `[AssetPath]` -> `[AutoCreateAsset]`.
+    - it's both more descriptive of its function, _and_ collides less with attributes from other packages.
+- Changed: Now keeping all non-nested enums in the `Static/` subdirectory.
+
+- Removed: `Editor/ReadOnlyDrawer.cs` (has been moved to [ore-inspector][]).
+    - Yes, this means that without this other package, the old [ReadOnly] attribute will become a no-op. Given how many packages add their own [ReadOnly] attribute, this was an intentional decision.
 
 
 ## [v4.1.0][] - 2023-02-27
@@ -386,6 +405,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- Hyperlink Refs -->
 
+[ore-inspector]: https://gitlab.com/UnityOre/ore-inspector
 [create an issue]: ../../issues/new
 
 <!-- - auto-generate with `git tag | awk -- '{print "["$1"]: ../../tags/"$1}' | sort -rV` -->
