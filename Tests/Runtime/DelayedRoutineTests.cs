@@ -12,8 +12,6 @@ using UnityEngine.TestTools;
 
 using System.Collections;
 
-using Action = System.Action;
-
 
 public static class DelayedRoutineTests
 {
