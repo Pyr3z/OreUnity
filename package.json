@@ -1,6 +1,6 @@
 {
   "name":         "dev.leviperez.ore",
-  "version":      "5.0.0",
+  "version":      "5.1.0-pre",
 
   "displayName":  "[Ore]",
   "description":  "Core package intended for Bore use, and (ideally) free of any hard dependencies.",

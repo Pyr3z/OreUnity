@@ -5,8 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [v5.0.1](../../tree/unstable) - UNRELEASED
-- fef
+## [v5.1.0](../../tree/unstable) - UNRELEASED
+- Added: new fakesync class: `Promise<T>` - works similarly to System.Threading.Tasks but more optimal for Unity (and coroutines).
+- Added: new exception class: `MultiException` - use MultiException.Create(...) to glob multiple exceptions into one.
+- Added: new tests: [`AsyncTests`](Tests/Runtime/AsyncTests.cs).
+
+- Changed: in `Orator`: lower-case instance methods are now private, since you can call static methods from UnityEvents these days.
+
+- Improved: Cleaned up `OAssert` (-200 lines), yeeted semi-circular logic tied to Orator.
+
 
 ## [v5.0.0](../../tags/v5.0.0) - 2023-02-28
 - Added: New attributes to replace (some of) Odin Inspector's:
