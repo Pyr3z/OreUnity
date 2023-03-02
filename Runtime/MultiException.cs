@@ -21,7 +21,7 @@ namespace Ore
     {
       if (theRest.IsEmpty())
       {
-        return new MultiException(top, next);
+        return new MultiException(outer: next, inner: top);
       }
 
       int i = theRest.Length;
@@ -30,17 +30,42 @@ namespace Ore
 
       while (i --> 0)
       {
-        curr = new MultiException(theRest[i], curr);
+        curr = new MultiException(outer: curr, inner: theRest[i]);
       }
 
-      return new MultiException(top, new MultiException(next, curr));
+      return new MultiException(outer: new MultiException(outer: curr, inner: next), inner: top);
     }
 
-    private MultiException([NotNull] Exception top, [CanBeNull] Exception next)
-      : base($"{top.GetType().Name}: {top.Message}", next)
+
+    private MultiException([NotNull] Exception outer, [NotNull] Exception inner)
+      : base(MakeMessage(inner, outer), inner)
     {
-      HelpLink = top.HelpLink;
-      Source   = top.Source;
+    }
+
+    private static string MakeMessage([NotNull] Exception inner, [NotNull] Exception outer)
+    {
+      int flags = 0;
+
+      if (inner is MultiException)
+        flags |= 0b01;
+      if (outer is MultiException)
+        flags |= 0b10;
+
+      switch (flags)
+      {
+        default:
+        case 0b00:
+          return $"{inner.GetType().Name}: {inner.Message}\n{outer.GetType().Name}: {outer.Message}";
+
+        case 0b01:
+          return $"{inner.Message}\n{outer.GetType().Name}: {outer.Message}";
+
+        case 0b10:
+          return $"{inner.GetType().Name}: {inner.Message}\n{outer.Message}";
+
+        case 0b11:
+          return $"{inner.Message}\n{outer.Message}";
+      }
     }
 
   } // end class MultiException

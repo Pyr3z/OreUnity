@@ -6,13 +6,16 @@
 using NUnit.Framework;
 
 using UnityEngine;
+using UnityEngine.TestTools;
 
-using Ore;
+using System.Text.RegularExpressions;
 
 #if NEWTONSOFT_JSON
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 #endif
+
+using Ore;
 
 
 internal static class MiscInEditor
@@ -63,15 +66,17 @@ internal static class MiscInEditor
   [Test]
   public static void ExceptionMessages()
   {
-    var nie = new System.NotImplementedException();
-    var nse = new System.NotSupportedException();
+    var nse = new System.NotSupportedException("(top)");
+    var ioe = new System.InvalidOperationException("(middle)");
+    var nie = new System.NotImplementedException("(bottom)");
 
     Assert.Throws<MultiException>(() =>
-                                  {
-                                    var mex = MultiException.Create(nse, nie);
-                                    Orator.NFE(mex);
-                                    throw mex;
-                                  });
+    {
+      var mex = MultiException.Create(nse, ioe, nie);
+      LogAssert.Expect(LogType.Exception, new Regex(@"NotSupportedException: \(top\)"));
+      Orator.NFE(mex);
+      throw mex;
+    });
   }
 
 } // end class MiscInEditor
