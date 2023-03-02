@@ -153,6 +153,62 @@ namespace Ore
     }
 
 
+    public static void FailAssertion(string msg)
+    {
+      FailAssertion(msg, null);
+    }
+
+    public static void FailAssertion(string msg, Object ctx)
+    {
+      #pragma warning disable CS0162
+      // ReSharper disable HeuristicUnreachableCode
+
+      if (Instance)
+      {
+        Instance.assertionFailed(msg, ctx);
+        return;
+      }
+
+      if (DEFAULT_INCLUDE_CONTEXT && ctx)
+      {
+        msg = AppendContext(msg, ctx);
+      }
+
+      if (DEFAULT_ASSERT_EXCEPTIONS)
+      {
+        throw new AssException(DEFAULT_ASSERT_MSG, msg);
+      }
+
+      Debug.LogFormat(DEFAULT_ASSERT_LOGTYPE, DEFAULT_ASSERT_LOGOPT,
+                      ctx, "{0} {1}", DEFAULT_ASSERT_MSG, msg);
+
+      // ReSharper restore HeuristicUnreachableCode
+      #pragma warning restore CS0162
+    }
+
+    public static void FailAssertionNoThrow(string msg)
+    {
+      FailAssertionNoThrow(msg, null);
+    }
+
+    public static void FailAssertionNoThrow(string msg, Object ctx)
+    {
+      if (Instance)
+      {
+        Instance.assertionFailedNoThrow(msg, ctx);
+        return;
+      }
+
+      if (DEFAULT_INCLUDE_CONTEXT && ctx)
+      {
+        msg = AppendContext(msg, ctx);
+      }
+
+      Debug.LogFormat(DEFAULT_ASSERT_LOGTYPE, DEFAULT_ASSERT_LOGOPT,
+                      ctx, "{0} {1}", DEFAULT_ASSERT_MSG, msg);
+    }
+
+
     [PublicAPI]
     public static void Panic(string msg)
     {
@@ -346,19 +402,19 @@ namespace Ore
 
 
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void reached()
+    private void reached()
     {
       reached(string.Empty, null);
     }
 
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void reached(Object ctx, string msg = null)
+    private void reached(Object ctx, string msg = null)
     {
       reached(msg, ctx);
     }
 
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void reached(string msg, Object ctx = null)
+    private void reached(string msg, Object ctx = null)
     {
       FixupMessageContext(ref msg, ref ctx);
 
@@ -369,19 +425,7 @@ namespace Ore
 
 
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void assertionFailed()
-    {
-      assertionFailed(string.Empty, null);
-    }
-
-    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void assertionFailed(Object ctx, string msg = null)
-    {
-      assertionFailed(msg, ctx);
-    }
-
-    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void assertionFailed(string msg, Object ctx = null)
+    private void assertionFailed(string msg, Object ctx = null)
     {
       FixupMessageContext(ref msg, ref ctx);
 
@@ -389,55 +433,35 @@ namespace Ore
 
       if (m_AssertionsRaiseExceptions)
         throw new AssException(AssertMessage, msg);
-      else
-        Debug.LogFormat(m_AssertionFailedFormat.LogType, m_AssertionFailedFormat.LogOption, ctx, "{0} {1}", AssertMessage, msg);
+
+      Debug.LogFormat(m_AssertionFailedFormat.LogType, m_AssertionFailedFormat.LogOption,
+                      ctx, "{0} {1}", AssertMessage, msg);
     }
 
-    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void assertionFailedNoThrow()
-    {
-      assertionFailedNoThrow(string.Empty, null);
-    }
 
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void assertionFailedNoThrow(Object ctx, string msg = null)
-    {
-      assertionFailedNoThrow(msg, ctx);
-    }
-
-    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void assertionFailedNoThrow(string msg, Object ctx = null)
+    private void assertionFailedNoThrow(string msg, Object ctx = null)
     {
       FixupMessageContext(ref msg, ref ctx);
 
       // TODO improved stacktrace info from PyroDK
 
-      Debug.LogFormat(m_AssertionFailedFormat.LogType, m_AssertionFailedFormat.LogOption, ctx, "{0} {1}", AssertMessage, msg);
+      Debug.LogFormat(m_AssertionFailedFormat.LogType, m_AssertionFailedFormat.LogOption,
+                      ctx, "{0} {1}", AssertMessage, msg);
     }
 
 
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void log(Object ctx, string msg = null)
-    {
-      log(msg, ctx);
-    }
-
-    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void log(string msg, Object ctx = null)
+    private void log(string msg, Object ctx = null)
     {
       FixupMessageContext(ref msg, ref ctx);
 
       Debug.LogFormat(LogType.Log, m_LogStackTracePolicy, ctx, "{0} {1}", m_OratorPrefix, msg);
     }
 
-    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void warn(Object ctx, string msg = null)
-    {
-      warn(msg, ctx);
-    }
 
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void warn(string msg, Object ctx = null)
+    private void warn(string msg, Object ctx = null)
     {
       FixupMessageContext(ref msg, ref ctx);
 
@@ -446,13 +470,7 @@ namespace Ore
 
 
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void error(Object ctx, string msg = null)
-    {
-      error(msg, ctx);
-    }
-
-    [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
-    public void error(string msg, Object ctx = null)
+    private void error(string msg, Object ctx = null)
     {
       FixupMessageContext(ref msg, ref ctx);
 
@@ -604,20 +622,7 @@ namespace Ore
       }
       else if (m_IncludeContextInMessages)
       {
-        if (ctx is UnityEngine.Component c)
-        {
-          // TODO construct full scene path for scene objects
-          msg = $"[{ctx.GetType().Name}] {msg}\n(scene path: \"{c.gameObject.scene.name}/{ctx.name}\")";
-        }
-        else if (ctx is GameObject go)
-        {
-          // TODO construct full scene path for scene objects
-          msg = $"[{ctx.GetType().Name}] {msg}\n(scene path: \"{go.scene.name}/{ctx.name}\")";
-        }
-        else
-        {
-          msg = $"[{ctx.GetType().Name}] {msg}\n(asset name: \"{ctx.name}\")";
-        }
+        msg = AppendContext(msg, ctx);
       }
 
       // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
@@ -625,6 +630,27 @@ namespace Ore
       {
         msg = string.Empty;
       }
+    }
+
+    private static string AppendContext(string msg, [NotNull] Object ctx)
+    {
+      string name = ctx.name;
+      if (name.IsEmpty())
+        name = "<no name>";
+
+      if (ctx is UnityEngine.Component c)
+      {
+        // TODO construct full scene path for scene objects
+        return $"[{ctx.GetType().Name}] {msg}\n(scene path: \"{c.gameObject.scene.name}/{name}\")";
+      }
+
+      if (ctx is GameObject go)
+      {
+        // TODO construct full scene path for scene objects
+        return $"[{ctx.GetType().Name}] {msg}\n(scene path: \"{go.scene.name}/{name}\")";
+      }
+
+      return $"[{ctx.GetType().Name}] {msg}\n(asset name: \"{name}\")";
     }
 
     #if UNITY_EDITOR

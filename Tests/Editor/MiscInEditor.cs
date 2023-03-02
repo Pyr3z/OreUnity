@@ -59,4 +59,19 @@ internal static class MiscInEditor
 
   #endif // NEWTONSOFT_JSON
 
+
+  [Test]
+  public static void ExceptionMessages()
+  {
+    var nie = new System.NotImplementedException();
+    var nse = new System.NotSupportedException();
+
+    Assert.Throws<MultiException>(() =>
+                                  {
+                                    var mex = MultiException.Create(nse, nie);
+                                    Orator.NFE(mex);
+                                    throw mex;
+                                  });
+  }
+
 } // end class MiscInEditor

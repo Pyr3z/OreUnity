@@ -37,7 +37,7 @@ namespace Ore
     }
 
     private MultiException([NotNull] Exception top, [CanBeNull] Exception next)
-      : base(top.Message, next)
+      : base($"{top.GetType().Name}: {top.Message}", next)
     {
       HelpLink = top.HelpLink;
       Source   = top.Source;
