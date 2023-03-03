@@ -661,7 +661,7 @@ namespace Ore
       const string DUMMY_URL          = "https://example.com";
       const long   MATCH_DEFAULT_ONLY = 0x00010000; // https://developer.android.com/reference/android/content/pm/PackageManager#MATCH_DEFAULT_ONLY
 
-      bool api33 = OSVersion.Major >= 33;
+      bool api33 = AndroidBridge.TargetAPI >= 33;
 
       AndroidJavaObject uri    = null,
                         intent = null,
