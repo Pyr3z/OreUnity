@@ -457,7 +457,7 @@ namespace Ore
     private static string CalcBrowserName()
     {
       #if UNITY_ANDROID
-        return CalcAndroidBrowser();
+        return CalcAndroidBrowser().Trim();
       #elif UNITY_IOS
         return string.Empty; // TODO
       #elif UNITY_WEBGL
@@ -470,7 +470,7 @@ namespace Ore
     private static string CalcCarrier()
     {
       #if UNITY_ANDROID
-        return CalcAndroidCarrier();
+        return CalcAndroidCarrier().Trim();
       #elif UNITY_IOS
         return string.Empty; // TODO
       #elif UNITY_WEBGL
@@ -649,8 +649,8 @@ namespace Ore
       var adidInfo = adidClient.CallStatic<AndroidJavaObject>("getAdvertisingIdInfo", AndroidBridge.Activity);
 
       s_IsAdTrackingLimited = adidInfo.Call<bool>("isLimitAdTrackingEnabled");
-      if (s_IsAdTrackingLimited == false)
-        return SystemInfo.unsupportedIdentifier;
+      if (s_IsAdTrackingLimited)
+        return string.Empty;
 
       string id = adidInfo.Call<string>("getId");
 
