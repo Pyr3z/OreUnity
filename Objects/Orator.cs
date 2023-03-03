@@ -29,6 +29,7 @@ using UnityEngine.Diagnostics; // do not remove if unused
 
 using Debug        = UnityEngine.Debug;
 using AssException = UnityEngine.Assertions.AssertionException;
+using Type         = System.Type;
 
 
 namespace Ore
@@ -38,6 +39,7 @@ namespace Ore
   #endif
   [DefaultExecutionOrder(-1337)]
   [AutoCreateAsset("Resources/Orator.asset")]
+  [PublicAPI]
   public sealed class Orator : OAssetSingleton<Orator>
   {
 
@@ -96,6 +98,16 @@ namespace Ore
         Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {DEFAULT_REACHED_MSG} \"{msg}\"");
     }
 
+    public static void Reached([NotNull] Type tctx, string msg = DEFAULT_REACHED_MSG)
+    {
+      Reached($"[{tctx.Name}] {msg}");
+    }
+
+    public static void Reached<TContext>(string msg = DEFAULT_REACHED_MSG)
+    {
+      Reached(typeof(TContext), msg);
+    }
+
 
     public static void Log(string msg)
     {
@@ -112,6 +124,17 @@ namespace Ore
       else
         Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
     }
+
+    public static void Log([NotNull] Type tctx, string msg)
+    {
+      Log($"[{tctx.Name}] {msg}");
+    }
+
+    public static void Log<TContext>(string msg)
+    {
+      Log(typeof(TContext), msg);
+    }
+
 
     public static void NFE(System.Exception ex, Object ctx = null)
     {
@@ -144,6 +167,16 @@ namespace Ore
         Debug.LogWarning($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
     }
 
+    public static void Warn([NotNull] Type tctx, string msg)
+    {
+      Warn($"[{tctx.Name}] {msg}");
+    }
+
+    public static void Warn<TContext>(string msg)
+    {
+      Warn(typeof(TContext), msg);
+    }
+
 
     public static void Error(string msg)
     {
@@ -159,6 +192,16 @@ namespace Ore
         Instance.error(msg, ctx);
       else
         Debug.LogError($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
+    }
+
+    public static void Error([NotNull] Type tctx, string msg)
+    {
+      Error($"[{tctx.Name}] {msg}");
+    }
+
+    public static void Error<TContext>(string msg)
+    {
+      Error(typeof(TContext), msg);
     }
 
 
@@ -218,19 +261,16 @@ namespace Ore
     }
 
 
-    [PublicAPI]
     public static void Panic(string msg)
     {
       Panic(msg, Instance);
     }
 
-    [PublicAPI]
     public static void Panic(Object ctx)
     {
       Panic(string.Empty, ctx);
     }
 
-    [PublicAPI]
     public static void Panic(string msg, Object ctx)
     {
       Error($"PANIC! {msg}", ctx);
@@ -256,6 +296,16 @@ namespace Ore
         Utils.ForceCrash(ForcedCrashCategory.Abort);
 
       #endif // UNITY_EDITOR
+    }
+
+    public static void Panic([NotNull] Type tctx)
+    {
+      Panic($"[{tctx.Name}]", null);
+    }
+
+    public static void Panic<TContext>()
+    {
+      Panic(typeof(TContext));
     }
 
   #endregion Static public API
