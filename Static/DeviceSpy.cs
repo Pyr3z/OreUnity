@@ -95,6 +95,7 @@ namespace Ore
       }
     }
 
+    [NotNull]
     public static SerialVersion OSVersion => s_OSVersion ?? (s_OSVersion = CalcOSVersion());
 
     public static int ScreenRefreshHz => (int)(s_ScreenRefreshHz ?? (s_ScreenRefreshHz = Screen.currentResolution.refreshRate.AtLeast(30)));
@@ -398,6 +399,7 @@ namespace Ore
       #endif
     }
 
+    [NotNull]
     private static SerialVersion CalcOSVersion()
     {
       switch (SystemInfo.operatingSystemFamily)
@@ -643,6 +645,8 @@ namespace Ore
       const string DUMMY_URL          = "https://example.com";
       const long   MATCH_DEFAULT_ONLY = 0x00010000; // https://developer.android.com/reference/android/content/pm/PackageManager#MATCH_DEFAULT_ONLY
 
+      bool api33 = OSVersion.Major >= 33;
+
       AndroidJavaObject uri    = null,
                         intent = null,
                         flags  = null,
@@ -651,8 +655,21 @@ namespace Ore
       {
         uri    = AndroidBridge.MakeUri(DUMMY_URL);
         intent = AndroidBridge.MakeIntent("android.intent.action.VIEW", uri);
-        flags  = AndroidBridge.Classes.ResolveInfoFlags.CallStatic<AndroidJavaObject>("of", MATCH_DEFAULT_ONLY);
-        resolv = AndroidBridge.PackageManager.Call<AndroidJavaObject>("resolveActivity", intent, flags);
+
+        // https://developer.android.com/reference/android/content/pm/PackageManager#resolveActivity(android.content.Intent,%20int)
+        if (api33)
+        {
+          flags  = AndroidBridge.Classes.ResolveInfoFlags.CallStatic<AndroidJavaObject>("of", MATCH_DEFAULT_ONLY);
+          resolv = AndroidBridge.PackageManager.Call<AndroidJavaObject>("resolveActivity", intent, flags);
+        }
+        else
+        {
+          resolv = AndroidBridge.PackageManager.Call<AndroidJavaObject>("resolveActivity", intent, MATCH_DEFAULT_ONLY);
+        }
+
+        if (resolv is null)
+          return string.Empty;
+
         return $"{resolv.Call<AndroidJavaObject>("loadLabel", AndroidBridge.PackageManager)}";
       }
       catch (AndroidJavaException aje)

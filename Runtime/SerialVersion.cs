@@ -37,6 +37,7 @@ namespace Ore
     public static readonly SerialVersion None = new SerialVersion(0);
 
 
+    [NotNull]
     public static SerialVersion ExtractOSVersion(string from)
     {
       // https://mvi.github.io/UnitySystemInfoTable/
