@@ -17,15 +17,21 @@ internal static class AsyncTests
 {
 
   [UnityTest]
-  public static IEnumerator Futures()
+  public static IEnumerator PromiseSuccess()
   {
-    IEnumerator subRoutine()
+    var promise = new Promise<string>();
+
+    static IEnumerator independentRoutine(Promise<string> outPromise)
     {
-      var promise = new Promise<int>();
-      yield break;
+      yield return new WaitForFrames(Random.Range(1,30));
+      outPromise.CompleteWith("as promised!");
     }
 
-    yield return subRoutine();
+    IEnumerator dependentRoutine(Promise<string> inPromise)
+    {
+      yield return inPromise;
+
+    }
 
     yield break;
   }

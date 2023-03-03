@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using System.Collections;
 
 using Exception = System.Exception;
+using InvalidAsynchronousStateException = System.ComponentModel.InvalidAsynchronousStateException;
 
 
 namespace Ore
@@ -15,7 +16,53 @@ namespace Ore
   [PublicAPI]
   public class Promise<T> : IEnumerator
   {
-    public T Value => m_Value;
+    public delegate void SuccessAction(T value);
+    public delegate void FailureAction([CanBeNull] T value, [CanBeNull] Exception ex);
+    private static void DefaultFailureAction(T value, Exception ex)
+    {
+      if (ex != null)
+        Orator.NFE(ex);
+    }
+
+
+    public T    Value       => m_Value;
+    public bool IsCompleted => m_State > State.Pending;
+    public bool Succeeded   => m_State == State.Succeeded;
+    public bool Failed      => m_State == State.Failed;
+
+    public event SuccessAction OnSucceeded
+    {
+      add
+      {
+        switch (m_State)
+        {
+          case State.Pending:
+            m_OnSucceeded += value;
+            break;
+          case State.Succeeded:
+            value?.Invoke(m_Value); // TODO behaves differently than if init'd early?
+            break;
+        }
+      }
+      remove => m_OnSucceeded -= value;
+    }
+
+    public event FailureAction OnFailed
+    {
+      add
+      {
+        switch (m_State)
+        {
+          case State.Pending:
+            m_OnFailed += value;
+            break;
+          case State.Failed:
+            value?.Invoke(m_Value, m_Exception);
+            break;
+        }
+      }
+      remove => m_OnFailed -= value;
+    }
 
 
     public Future<T> GetFuture()
@@ -23,39 +70,60 @@ namespace Ore
       return new Future<T>(this);
     }
 
-    public void CompleteWith(T value)
+    public void Maybe(T value)
     {
-      if (m_State < State.Completed)
+      if (m_State == State.Pending)
       {
         m_Value = value;
-        m_State = State.Completed;
       }
     }
 
     public void Complete()
     {
-      if (m_State < State.Completed)
+      if (m_State == State.Pending)
       {
-        m_State = State.Completed;
+        m_State = State.Succeeded;
       }
     }
 
-    public void Throw(Exception ex = null)
+    public void CompleteWith(T value)
     {
-      m_State = State.Errored;
+      if (m_State == State.Pending)
+      {
+        m_Value = value;
+        m_State = State.Succeeded;
+      }
+    }
+
+    public void Fail()
+    {
+      if (m_State == State.Succeeded)
+      {
+        throw new InvalidAsynchronousStateException("Cannot fail a Promise once it's already completed!");
+      }
+
+      m_State = State.Failed;
+    }
+
+    public void FailWith(Exception ex)
+    {
+      if (m_State == State.Succeeded)
+      {
+        throw new InvalidAsynchronousStateException("Cannot fail a Promise once it's already completed!", ex);
+      }
+
+      m_State = State.Failed;
 
       if (ex is null)
-      {
-        ex = new UnanticipatedException($"Promise<{typeof(T).Name}>");
-      }
+        return;
 
       if (m_Exception is null)
       {
         m_Exception = ex;
       }
-      else
+      else if (m_Exception != ex)
       {
-        m_Exception = MultiException.Create(ex, m_Exception);
+        m_Exception = MultiException.Create(m_Exception, ex);
       }
     }
 
@@ -65,34 +133,50 @@ namespace Ore
     private enum State
     {
       Pending,
-      Completed,
-      Errored
+      Succeeded,
+      Failed
     }
 
     private T         m_Value;
     private State     m_State;
     private Exception m_Exception;
 
+    private SuccessAction m_OnSucceeded;
+    private FailureAction m_OnFailed = DefaultFailureAction;
 
-    #region IEnumerator interface
+
+  #region IEnumerator interface
 
     object IEnumerator.Current => null;
 
     bool IEnumerator.MoveNext()
     {
-      if (m_Exception != null)
+      switch (m_State)
       {
-        Orator.NFE(m_Exception);
-        m_Exception = null;
+        default:
+        case State.Pending:
+          return true;
+
+        case State.Succeeded:
+          m_OnSucceeded?.Invoke(m_Value);
+          break;
+
+        case State.Failed:
+          m_OnFailed?.Invoke(m_Value, m_Exception);
+          break;
       }
 
-      return m_State == State.Pending;
+      // release delegate handles:
+      m_OnSucceeded = null;
+      m_OnFailed    = null;
+
+      return false;
     }
 
     void IEnumerator.Reset()
-      => throw new System.NotSupportedException(nameof(IEnumerator.Reset));
+      => throw new System.NotSupportedException("Promise<T>.Reset()");
 
-    #endregion IEnumerator interface
+  #endregion IEnumerator interface
 
   } // end class Promise
 }
