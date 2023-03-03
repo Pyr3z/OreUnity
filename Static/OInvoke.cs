@@ -45,7 +45,7 @@ namespace Ore
       {
         ActiveScene.Coroutines.Run(new DelayedRoutine(action, delay, ifTrue));
       }
-      else
+      else if (ifTrue is null || ifTrue.Invoke())
       {
         action.Invoke();
       }
@@ -63,7 +63,7 @@ namespace Ore
       {
         ActiveScene.Coroutines.Run(new DelayedRoutine(action, delay, ifTrue), ifAlive);
       }
-      else if ((ifTrue is null || ifTrue.Invoke()) && (ifAlive is null || ifAlive))
+      else if (ifTrue is null || ifTrue.Invoke())
       {
         action.Invoke();
       }
