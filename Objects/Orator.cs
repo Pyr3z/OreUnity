@@ -115,8 +115,17 @@ namespace Ore
 
     public static void NFE(System.Exception ex, Object ctx = null)
     {
-      // TODO replace this lazy wrapper
-      Debug.LogException(ex, ctx);
+      if (ex is FauxException faux)
+      {
+        #if DEBUG
+        LogOnce(faux.Message, ctx);
+        #endif
+      }
+      else
+      {
+        // TODO replace this lazy wrapper
+        Debug.LogException(ex, ctx);
+      }
     }
 
     public static void Warn(string msg)
