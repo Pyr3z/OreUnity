@@ -620,9 +620,17 @@ namespace Ore
 
   #region FILESYSTEM QUERIES
 
-    public static string GetTempPath()
+    public static string GetTempPath(string forFilename = null)
     {
-      return Application.temporaryCachePath;
+      if (!forFilename.IsEmpty() && !Paths.IsValidFileName(forFilename))
+      {
+        const string FALLBACK = "check_ur_warnings.tmp";
+        Orator.Warn(typeof(Filesystem), 
+                     $"Provided filename \"{forFilename}\" contains invalid chars. Using \"{FALLBACK}\" until you fix this.");
+        forFilename = FALLBACK;
+      }
+
+      return $"{Application.temporaryCachePath}/{forFilename}";
     }
 
     public static IEnumerable<FileInfo> GetFiles([NotNull] string path)
@@ -717,22 +725,26 @@ namespace Ore
       }
     }
 
-    public static bool TryGetLastException(out Exception ex, bool consume = false)
+    public static bool TryGetLastException(out Exception ex, bool consume = false, bool skipNulls = true)
     {
       // funky for-loop is necessary to preserve actual order of buffer reads
-      for (int i = 0; i < EXCEPTION_RING_SZ; ++i)
+      for (int i = 0, count = s_ExceptionRingIdx.AtMost(EXCEPTION_RING_SZ); i < count; ++i)
       {
         int idx = (s_ExceptionRingIdx - i) % EXCEPTION_RING_SZ;
-        if (idx < 0)
-          break;
-
-        if (s_ExceptionRingBuf[idx] is null)
-          continue;
 
         ex = s_ExceptionRingBuf[idx];
 
+        if (ex is null)
+        {
+          if (skipNulls)
+            continue;
+          return false;
+        }
+
         if (consume)
-          s_ExceptionRingBuf[idx] = null;
+        {
+          s_ExceptionRingBuf[idx] = ex.Silenced();
+        }
 
         return true;
       }
@@ -742,9 +754,9 @@ namespace Ore
     }
 
     [System.Diagnostics.Conditional("DEBUG")]
-    public static void LogLastException()
+    public static void LogLastException(bool consume = true, bool skipNulls = false)
     {
-      if (TryGetLastException(out var ex, consume: true))
+      if (TryGetLastException(out var ex, consume, skipNulls))
         Orator.NFE(ex);
     }
 
