@@ -46,7 +46,11 @@ namespace Ore
 
     public DeviceFactor Key(string key, float weight) // discrete (unless Timezone or float key)
     {
-      key ??= string.Empty;
+      if (key.IsEmpty())
+      {
+        m_DiscreteKeys[string.Empty] = weight;
+        return this;
+      }
 
       if (m_Dimension == DeviceDimension.Timezone &&
           Parsing.TryParseTimezoneOffset(key, out float offset))
