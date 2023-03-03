@@ -103,7 +103,8 @@ namespace Ore
     {
       if (m_State > State.Failed)
       {
-        throw new InvalidAsynchronousStateException("Cannot fail a Promise once it's already completed!");
+        Orator.Error<Promise<T>>("Cannot fail a Promise once it's already completed!");
+        return;
       }
 
       m_State = State.Failed;
@@ -113,7 +114,9 @@ namespace Ore
     {
       if (m_State > State.Failed)
       {
-        throw new InvalidAsynchronousStateException("Cannot fail a Promise once it's already completed!", ex);
+        Orator.Error<Promise<T>>("Cannot fail a Promise once it's already completed! (gonna throw something faux:)");
+        Orator.NFE(ex.Silenced());
+        return;
       }
 
       m_State = State.Failed;
