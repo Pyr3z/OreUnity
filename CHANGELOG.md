@@ -5,14 +5,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [v5.1.0](../../tree/unstable) - UNRELEASED
-- Added: new fakesync class: `Promise<T>` - works similarly to System.Threading.Tasks but more optimal for Unity (and coroutines).
-- Added: new exception class: `MultiException` - use MultiException.Create(...) to glob multiple exceptions into one.
-- Added: new tests: [`AsyncTests`](Tests/Runtime/AsyncTests.cs).
+## [v5.1.1](../../tree/unstable) - UNRELEASED
+- fef
 
-- Changed: in `Orator`: lower-case instance methods are now private, since you can call static methods from UnityEvents these days.
+
+## [v5.1.0](../../tags/v5.1.0) - 2023-03-02
+- Added: new "fakesync" class: `Promise<T>` - works similarly to System.Threading.Tasks but more optimal for Unity (and coroutines).
+    - Also: Usage example(s) in [`AsyncTests`](Tests/Runtime/AsyncTests.cs).
+- Added: new exception class: `MultiException` - use MultiException.Create(...) to glob multiple exceptions into one.
+    - Note: Currently just creates a linked list with the built-in "InnerException" interface. I acknowledge this implementation has room for improvement.
+- Added: new exception class: `FauxException` - use FauxException.Silence(Exception) (or new extension method Exception.Silenced()) to cause a deferred exception to be ignored.
+    - Note: Currently will only be ignored by `Orator.NFE(exception)`. Future patches may implement something with `System.AppDomain.CurrentDomain.UnhandledException` or `UnityEngine.Application.logMessageReceived` to squelch further.
+- Added: in `Orator`: static overloads that take a System.Type (or generic \<T\>) as a context.
+    - Also: Changed: lower-case instance methods are now private, since you can call static methods from UnityEvents these days.
+- Added: in `Filesystem`: GetTempPath([forFilepath])
+    - Also: Added new optional parameters to TryGetLastException(...) + LogLastException(...). 
+
+- Changed: Moved around some menu items under <kbd>Bore</kbd>.
+    - Note: Some were removed and reimplemented as unit tests.
+- Changed: `ActiveScene`'s default execution order lowered, from -500 -> -1337 (same bucket as Orator).
 
 - Improved: Cleaned up `OAssert` (-200 lines), yeeted semi-circular logic tied to Orator.
+
+- Fixed: (#35) DeviceSpy.Browser throwing AndroidJavaException on Android API < 33.
+- Fixed: (#36) Unity 2019 incompatibilities which were introduced in release [v4.0.0][] (DeviceFactor.cs).
+    - Also: Removed static nested functions from JsonAuthority.cs (_also_ incompatible with Unity 2019).
 
 
 ## [v5.0.0](../../tags/v5.0.0) - 2023-02-28
