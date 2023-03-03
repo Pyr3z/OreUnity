@@ -16,13 +16,6 @@ namespace Ore
   /// Static utility class that allows you to invoke actions at different times,
   /// or in special ways.
   /// </summary>
-  ///
-  /// <remarks>
-  /// If in a MonoBehaviour class, you will need to call this API as
-  /// "Ore.OInvoke" rather than just "OInvoke"—even if you have a
-  /// "using Ore" statement in your file! This is my bad... may rename
-  /// this API later.
-  /// </remarks>
   [PublicAPI]
   public static class OInvoke
   {
