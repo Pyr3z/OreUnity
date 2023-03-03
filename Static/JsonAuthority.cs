@@ -397,18 +397,14 @@ namespace Ore
                                                     System.Func<int, HashMap<string,object>> mapMaker = null,
                                                     System.Func<int, IList<object>> listMaker = null)
     {
-      static HashMap<string,object> defaultMapMaker(int cap) => new HashMap<string,object>(cap);
-
-      static IList<object> defaultListMaker(int cap) => new object[cap];
-
       if (mapMaker is null)
       {
-        mapMaker = defaultMapMaker;
+        mapMaker = DefaultMapMaker;
       }
 
       if (listMaker is null)
       {
-        listMaker = defaultListMaker;
+        listMaker = DefaultListMaker;
       }
 
       if (map is null)
@@ -453,18 +449,14 @@ namespace Ore
                                            System.Func<int, IList<object>> listMaker = null,
                                            System.Func<int, HashMap<string,object>> mapMaker = null)
     {
-      static IList<object> defaultListMaker(int cap) => new object[cap];
-
-      static HashMap<string,object> defaultMapMaker(int cap) => new HashMap<string,object>(cap);
-
       if (listMaker is null)
       {
-        listMaker = defaultListMaker;
+        listMaker = DefaultListMaker;
       }
 
       if (mapMaker is null)
       {
-        mapMaker = defaultMapMaker;
+        mapMaker = DefaultMapMaker;
       }
 
       if (list is null)
@@ -514,6 +506,16 @@ namespace Ore
     }
 
     #endif // NEWTONSOFT_JSON
+
+
+    private static HashMap<string,object> DefaultMapMaker(int capacity)
+    {
+      return new HashMap<string,object>(capacity);
+    }
+    private static IList<object> DefaultListMaker(int capacity)
+    {
+      return new object[capacity];
+    }
 
   } // end class JsonAuthority
 }
