@@ -20,15 +20,12 @@ internal static class AsyncTests
   {
     public bool IsTestFinished { get; private set; }
 
-    Promise<string> m_Promise;
-    bool            m_TestComplete;
-
     void Start()
     {
-      m_Promise = new Promise<string>();
+      var promise = new Promise<string>();
 
-      _ = StartCoroutine(Provide(m_Promise));
-      _ = StartCoroutine(Consume(m_Promise));
+      _ = StartCoroutine(Provide(promise));
+      _ = StartCoroutine(Consume(promise));
     }
 
     IEnumerator Provide(Promise<string> outPromise)
