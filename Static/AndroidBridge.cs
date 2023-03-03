@@ -31,8 +31,11 @@ namespace Ore
       public static AndroidJavaClass ResolveInfo
         => s_ResolveInfo ?? (s_ResolveInfo = new AndroidJavaClass("android.content.pm.ResolveInfo"));
 
-      public static AndroidJavaClass ResolveInfoFlags
+      public static AndroidJavaClass ResolveInfoFlags // API 33 only
         => s_ResolveInfoFlags ?? (s_ResolveInfoFlags = new AndroidJavaClass("android.content.pm.PackageManager$ResolveInfoFlags"));
+
+      public static AndroidJavaClass ApplicationInfoFlags // API 33 only
+        => s_ApplicationInfoFlags ?? (s_ApplicationInfoFlags = new AndroidJavaClass("android.content.pm.PackageManager$ApplicationInfoFlags"));
 
       public static AndroidJavaClass Locale
         => s_Locale ?? (s_Locale = new AndroidJavaClass("java.util.Locale"));
@@ -46,9 +49,38 @@ namespace Ore
     public static AndroidJavaObject PackageManager
       => s_PackageManager ?? (s_PackageManager = Activity.Call<AndroidJavaObject>("getPackageManager"));
 
+    public static AndroidJavaObject ApplicationInfo
+      => s_ApplicationInfo ?? (s_ApplicationInfo = PackageManager.Call<AndroidJavaObject>("getApplicationInfo", Application.identifier, 0));
+      // how ironic. In order to know our target API, I need to know our target API...
+      // ... the above might throw a warning if targeting API 33+ ... TODO
+
     public static AndroidJavaObject SystemLocale
       => s_SystemLocal ?? (s_SystemLocal = Classes.Locale.CallStatic<AndroidJavaObject>("getDefault"));
 
+
+    public static int TargetAPI
+    {
+      get
+      {
+        if (s_TargetAPI is null)
+        {
+          try
+          {
+            s_TargetAPI = ApplicationInfo.Get<int>("targetSdkVersion");
+          }
+          catch (System.Exception e)
+          {
+            Orator.NFE(e);
+            s_TargetAPI = 0;
+          }
+
+          if (s_TargetAPI == 0)
+            s_TargetAPI = MIN_TARGET_API;
+        }
+
+        return (int)s_TargetAPI;
+      }
+    }
 
 
     public static void RunOnUIThread(AndroidJavaRunnable runnable)
@@ -81,11 +113,16 @@ namespace Ore
     private static AndroidJavaClass s_Intent;
     private static AndroidJavaClass s_ResolveInfo;
     private static AndroidJavaClass s_ResolveInfoFlags;
+    private static AndroidJavaClass s_ApplicationInfoFlags;
     private static AndroidJavaClass s_Locale;
 
     private static AndroidJavaObject s_Activity;
     private static AndroidJavaObject s_PackageManager;
+    private static AndroidJavaObject s_ApplicationInfo;
     private static AndroidJavaObject s_SystemLocal;
+
+    private static int? s_TargetAPI;
+    private const int MIN_TARGET_API = 31;
 
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
@@ -126,6 +163,12 @@ namespace Ore
         s_ResolveInfoFlags = null;
       }
 
+      if (s_ApplicationInfoFlags != null)
+      {
+        s_ApplicationInfoFlags.Dispose();
+        s_ApplicationInfoFlags = null;
+      }
+
       if (s_Locale != null)
       {
         s_Locale.Dispose();
@@ -143,6 +186,12 @@ namespace Ore
       {
         s_PackageManager.Dispose();
         s_PackageManager = null;
+      }
+
+      if (s_ApplicationInfo != null)
+      {
+        s_ApplicationInfo.Dispose();
+        s_ApplicationInfo = null;
       }
 
       if (s_SystemLocal != null)
