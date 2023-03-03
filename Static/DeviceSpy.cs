@@ -631,12 +631,28 @@ namespace Ore
         if (Application.isEditor) return UDID;
       #endif
 
-      var resolver = AndroidBridge.Activity.Call<AndroidJavaObject>("getContentResolver");
-      var secure = new AndroidJavaClass("android.provider.Settings$Secure");
+      AndroidJavaObject resolv = null;
+      AndroidJavaClass  secure = null;
 
-      string id = secure.CallStatic<string>("getString", resolver, "android_id");
+      try
+      {
+        resolv = AndroidBridge.Activity.Call<AndroidJavaObject>("getContentResolver");
+        secure = new AndroidJavaClass("android.provider.Settings$Secure");
 
-      return id ?? string.Empty;
+        string id = secure.CallStatic<string>("getString", resolv, "android_id");
+        return id ?? string.Empty;
+      }
+      catch (AndroidJavaException aje)
+      {
+        Orator.NFE(aje);
+      }
+      finally
+      {
+        resolv?.Dispose();
+        secure?.Dispose();
+      }
+
+      return string.Empty;
     }
 
     private static string CalcAndroidIDFA()
@@ -645,16 +661,32 @@ namespace Ore
         if (Application.isEditor) return string.Empty;
       #endif
 
-      var adidClient = new AndroidJavaClass("com.google.android.gms.ads.identifier.AdvertisingIdClient");
-      var adidInfo = adidClient.CallStatic<AndroidJavaObject>("getAdvertisingIdInfo", AndroidBridge.Activity);
+      AndroidJavaClass adidClient = null;
+      AndroidJavaObject adidInfo = null;
+      try
+      {
+        adidClient = new AndroidJavaClass("com.google.android.gms.ads.identifier.AdvertisingIdClient");
+        adidInfo = adidClient.CallStatic<AndroidJavaObject>("getAdvertisingIdInfo", AndroidBridge.Activity);
 
-      s_IsAdTrackingLimited = adidInfo.Call<bool>("isLimitAdTrackingEnabled");
-      if (s_IsAdTrackingLimited)
-        return string.Empty;
+        s_IsAdTrackingLimited = adidInfo.Call<bool>("isLimitAdTrackingEnabled");
+        if (s_IsAdTrackingLimited)
+          return string.Empty;
 
-      string id = adidInfo.Call<string>("getId");
+        string id = adidInfo.Call<string>("getId");
 
-      return id ?? string.Empty;
+        return id ?? string.Empty;
+      }
+      catch (AndroidJavaException aje)
+      {
+        Orator.NFE(aje);
+      }
+      finally
+      {
+        adidClient?.Dispose();
+        adidInfo?.Dispose();
+      }
+
+      return string.Empty;
     }
 
     private static string CalcAndroidBrowser()
