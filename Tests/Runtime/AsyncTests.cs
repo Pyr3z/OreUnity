@@ -16,24 +16,59 @@ using System.Collections;
 internal static class AsyncTests
 {
 
-  [UnityTest]
-  public static IEnumerator PromiseSuccess()
+  class PromiseCoroutineTester : MonoBehaviour, IMonoBehaviourTest
   {
-    var promise = new Promise<string>();
+    public bool IsTestFinished { get; private set; }
 
-    static IEnumerator independentRoutine(Promise<string> outPromise)
+    Promise<string> m_Promise;
+    bool            m_TestComplete;
+
+    void Start()
     {
-      yield return new WaitForFrames(Random.Range(1,30));
-      outPromise.CompleteWith("as promised!");
+      m_Promise = new Promise<string>();
+
+      _ = StartCoroutine(Provide(m_Promise));
+      _ = StartCoroutine(Consume(m_Promise));
     }
 
-    IEnumerator dependentRoutine(Promise<string> inPromise)
+    IEnumerator Provide(Promise<string> outPromise)
     {
+      /**/ Assert.False(outPromise.IsCompleted);
+
+      yield return new WaitForFrames(Random.Range(1,60));
+
+      /**/ Assert.False(outPromise.IsCompleted);
+
+      outPromise.CompleteWith("as promised!");
+
+      /**/ Assert.True(outPromise.Succeeded);
+    }
+
+    IEnumerator Consume(Promise<string> inPromise)
+    {
+      /**/ Assert.False(inPromise.IsCompleted);
+
+      inPromise.OnSucceeded += Debug.Log;
+
+      /**/ LogAssert.Expect(LogType.Log, "as promised!");
+
       yield return inPromise;
 
-    }
+      /**/ Assert.True(inPromise.Succeeded);
 
-    yield break;
+      /**/ LogAssert.Expect(LogType.Log, "as promised!");
+      inPromise.OnSucceeded += Debug.Log;
+
+      IsTestFinished = true;
+    }
+  }
+
+
+  [UnityTest]
+  public static IEnumerator CoroutinePromises()
+  {
+    var test = new MonoBehaviourTest<PromiseCoroutineTester>();
+    return test;
   }
 
 } // end class AsyncTests

@@ -128,6 +128,14 @@ namespace Ore
     }
 
 
+    public static implicit operator T (Promise<T> promise)
+    {
+      if (promise is null || !promise.Succeeded)
+        return default;
+      return promise.m_Value;
+    }
+
+
     // private section
 
     private enum State
