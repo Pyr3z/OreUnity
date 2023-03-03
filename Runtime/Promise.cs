@@ -65,11 +65,6 @@ namespace Ore
     }
 
 
-    public Future<T> GetFuture()
-    {
-      return new Future<T>(this);
-    }
-
     public void Maybe(T value)
     {
       if (m_State == State.Pending)
