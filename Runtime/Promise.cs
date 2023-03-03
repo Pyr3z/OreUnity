@@ -27,6 +27,7 @@ namespace Ore
 
     public T    Value       => m_Value;
     public bool IsCompleted => m_State > State.Pending;
+    public bool Skipped     => m_State == State.Skipped;
     public bool Succeeded   => m_State == State.Succeeded;
     public bool Failed      => m_State == State.Failed;
 
@@ -90,9 +91,17 @@ namespace Ore
       }
     }
 
+    public void Skip()
+    {
+      if (m_State < State.Skipped)
+      {
+        m_State = State.Skipped;
+      }
+    }
+
     public void Fail()
     {
-      if (m_State == State.Succeeded)
+      if (m_State > State.Failed)
       {
         throw new InvalidAsynchronousStateException("Cannot fail a Promise once it's already completed!");
       }
@@ -102,7 +111,7 @@ namespace Ore
 
     public void FailWith(Exception ex)
     {
-      if (m_State == State.Succeeded)
+      if (m_State > State.Failed)
       {
         throw new InvalidAsynchronousStateException("Cannot fail a Promise once it's already completed!", ex);
       }
@@ -136,8 +145,9 @@ namespace Ore
     private enum State
     {
       Pending,
+      Failed,
+      Skipped,
       Succeeded,
-      Failed
     }
 
     private T         m_Value;
@@ -159,6 +169,10 @@ namespace Ore
         default:
         case State.Pending:
           return true;
+
+        case State.Skipped:
+          m_Value = default;
+          break;
 
         case State.Succeeded:
           m_OnSucceeded?.Invoke(m_Value);
