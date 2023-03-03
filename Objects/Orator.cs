@@ -349,6 +349,12 @@ namespace Ore
     private static bool AlreadyLogged(string msg, Object ctx)
     {
       int cap = Instance ? Instance.m_LogOnceMemorySize : DEFAULT_LOGONCE_MEMORY_SIZE;
+
+      if (cap <= 0)
+      {
+        return false;
+      }
+
       int hash;
 
       #if UNITY_EDITOR
