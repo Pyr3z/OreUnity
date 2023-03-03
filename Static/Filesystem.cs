@@ -713,6 +713,13 @@ namespace Ore
         case SecurityException _:
           return IOResult.NotPermitted;
 
+        case FauxException faux:
+        {
+          if (!((ex = faux.InnerException) is null))
+            goto TOP; // not recursion.
+          return IOResult.UnknownFailure;
+        }
+
         case UnanticipatedException unant:
         {
           if (!((ex = unant.InnerException) is null))
