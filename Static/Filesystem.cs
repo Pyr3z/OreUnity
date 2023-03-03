@@ -620,6 +620,11 @@ namespace Ore
 
   #region FILESYSTEM QUERIES
 
+    public static string GetTempPath()
+    {
+      return Application.temporaryCachePath;
+    }
+
     public static IEnumerable<FileInfo> GetFiles([NotNull] string path)
     {
       var dir = new DirectoryInfo(path);
