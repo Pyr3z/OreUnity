@@ -170,6 +170,11 @@ namespace Ore
           }
         }
 
+        json["OSVersionStripped"] = OSVersion.ToString(stripExtras: true);
+
+        #if !UNITY_EDITOR && UNITY_ANDROID
+        json["TargetAPI"]       = AndroidBridge.TargetAPI;
+        #endif
         json["RAMUsageMB"]      = CalcRAMUsageMB();
         json["RAMUsagePercent"] = CalcRAMUsagePercent();
 
