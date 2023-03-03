@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fef
 
 
-## [v5.1.0](../../tags/v5.1.0) - 2023-03-02
+## [v5.1.0](../../tags/v5.1.0) - 2023-03-03
 - Added: new "fakesync" class: `Promise<T>` - works similarly to System.Threading.Tasks but more optimal for Unity (and coroutines).
     - Also: Usage example(s) in [`AsyncTests`](Tests/Runtime/AsyncTests.cs).
 - Added: new exception class: `MultiException` - use MultiException.Create(...) to glob multiple exceptions into one.
@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: (#35) DeviceSpy.Browser throwing AndroidJavaException on Android API < 33.
 - Fixed: (#36) Unity 2019 incompatibilities which were introduced in release [v4.0.0][] (DeviceFactor.cs).
     - Also: Removed static nested functions from JsonAuthority.cs (_also_ incompatible with Unity 2019).
+- Fixed: in `DeviceSpy`: CalcAndroidIDFA now actually works `~.~`
 
 
 ## [v5.0.0](../../tags/v5.0.0) - 2023-02-28
