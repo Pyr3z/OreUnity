@@ -177,7 +177,7 @@ namespace Ore
       return false;
     }
 
-    void IEnumerator.Reset()
+    public void Reset()
     {
       m_Value       = default;
       m_State       = State.Pending;
