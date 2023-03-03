@@ -125,7 +125,7 @@ namespace Ore
 
     public static implicit operator T (Promise<T> promise)
     {
-      if (promise is null || !promise.Succeeded)
+      if (promise is null)
         return default;
       return promise.m_Value;
     }
@@ -166,6 +166,7 @@ namespace Ore
 
         case State.Failed:
           m_OnFailed?.Invoke(m_Value, m_Exception);
+          m_Exception = null;
           break;
       }
 
