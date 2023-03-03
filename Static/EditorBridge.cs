@@ -63,7 +63,7 @@ namespace Ore
     }
 
 
-    [MenuItem("Ore/Browse to Persistent Data Path")]
+    [MenuItem("Ore/Helpers/Browse to Persistent Data Path")]
     public static void BrowseToPersistentDataPath()
     {
       EditorUtility.RevealInFinder(Application.persistentDataPath);

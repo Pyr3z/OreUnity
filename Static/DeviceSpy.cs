@@ -136,9 +136,10 @@ namespace Ore
     }
 
 
-    public static string ToJSON(bool prettyPrint = EditorBridge.IS_DEBUG)
+    public static string ToJson(bool prettyPrint = EditorBridge.IS_DEBUG)
     {
       #if !NEWTONSOFT_JSON
+        // TODO
         return "\"Newtonsoft.Json not available.\"";
       #else
         // TODO this is cool code -- perhaps it can be more generalized and made into a utility?
@@ -179,8 +180,23 @@ namespace Ore
 
     #if UNITY_EDITOR
 
-    [UnityEditor.MenuItem("Ore/Log/DeviceSpy (JSON)")]
-    private static void Menu_LogJSON() => Orator.Log($"\"{nameof(DeviceSpy)}\": {ToJSON(prettyPrint: true)}");
+    [UnityEditor.MenuItem("Ore/Helpers/Write DeviceSpy to Json")]
+    private static void Menu_MakeJson()
+    {
+      string path = Filesystem.GetTempPath($"{nameof(DeviceSpy)}.json");
+      string json = ToJson(prettyPrint: true);
+
+      if (Filesystem.TryWriteText(path, json))
+      {
+        Orator.Log(typeof(DeviceSpy), $"Wrote json to \"{path}\": {json}");
+        UnityEditor.EditorUtility.RevealInFinder(path);
+      }
+      else
+      {
+        Filesystem.LogLastException();
+        Orator.Warn(typeof(DeviceSpy), $"Couldn't write to \"{path}\", but here's the json anyway: {json}");
+      }
+    }
 
     #endif // UNITY_EDITOR
 
