@@ -19,7 +19,7 @@ using UnityEngine.SceneManagement;
 namespace Ore
 {
 
-  [DefaultExecutionOrder(-500)] // rationale: Many things might depend on this class early-on.
+  [DefaultExecutionOrder(-1337)] // rationale: Many things might depend on this class early-on.
   [DisallowMultipleComponent]
   [PublicAPI]
   public class ActiveScene : OSingleton<ActiveScene>
