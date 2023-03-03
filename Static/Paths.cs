@@ -43,7 +43,7 @@ namespace Ore
     public static bool IsValidFileName([CanBeNull] string filename)
     {
       return ExtractBasePath(filename, out string name) &&
-              name.IndexOfAny(InvalidFileNameChars) < 0;
+             name.IndexOfAny(InvalidFileNameChars) < 0;
     }
 
 
@@ -120,18 +120,27 @@ namespace Ore
       if (filepath.IsEmpty())
         return false;
 
-      int slash = 1 + filepath.LastIndexOfAny(DirectorySeparators);
-
-      while (slash == filepath.Length)
+      int slash = -1, trailSlash = filepath.Length;
+      int i = trailSlash;
+      while (i --> 0)
       {
-        filepath = filepath.Remove(slash - 1);
-        slash = 1 + filepath.LastIndexOfAny(DirectorySeparators);
+        char c = filepath[i];
+
+        if (c == DirectorySeparator || c == LameDirectorySeparator)
+        {
+          if (i + 1 == trailSlash)
+          {
+            trailSlash = i;
+          }
+          else
+          {
+            slash = i;
+            break;
+          }
+        }
       }
 
-      if (slash < 1)
-        basepath = filepath;
-      else
-        basepath = filepath.Substring(slash);
+      basepath = filepath.Substring(slash + 1, trailSlash);
 
       return basepath.Length > 0;
     }
