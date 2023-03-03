@@ -178,7 +178,13 @@ namespace Ore
     }
 
     void IEnumerator.Reset()
-      => throw new System.NotSupportedException("Promise<T>.Reset()");
+    {
+      m_Value       = default;
+      m_State       = State.Pending;
+      m_Exception   = null;
+      m_OnSucceeded = null;
+      m_OnFailed    = DefaultFailureAction;
+    }
 
   #endregion IEnumerator interface
 
