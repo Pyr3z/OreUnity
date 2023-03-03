@@ -17,6 +17,8 @@ using Newtonsoft.Json.Linq;
 
 using Ore;
 
+using AssException = UnityEngine.Assertions.AssertionException;
+
 
 internal static class MiscInEditor
 {
@@ -64,7 +66,7 @@ internal static class MiscInEditor
 
 
   [Test]
-  public static void ExceptionMessages()
+  public static void MultiException()
   {
     var nse = new System.NotSupportedException("(top)");
     var ioe = new System.InvalidOperationException("(middle)");
@@ -72,11 +74,47 @@ internal static class MiscInEditor
 
     Assert.Throws<MultiException>(() =>
     {
-      var mex = MultiException.Create(nse, ioe, nie);
+      var mex = Ore.MultiException.Create(nse, ioe, nie);
       LogAssert.Expect(LogType.Exception, new Regex(@"NotSupportedException: \(top\)"));
       Orator.NFE(mex);
       throw mex;
     });
+  }
+
+  [Test]
+  public static void AssException()
+  {
+    Assert.Throws<AssException>(() => throw new AssException("message", "userMessage"));
+  }
+
+  [Test]
+  public static void OAssertExceptionContract()
+  {
+    bool expectException = Orator.RaiseExceptions;
+
+    if (expectException)
+    {
+      Assert.Throws<AssException>(() => OAssert.True(false));
+    }
+    else
+    {
+      Assert.DoesNotThrow(() => OAssert.True(false));
+    }
+
+    bool ok = false;
+    Assert.DoesNotThrow(() =>
+    {
+      bool pop = LogAssert.ignoreFailingMessages;
+      LogAssert.ignoreFailingMessages = true;
+
+      ok = OAssert.Fails(false) &&
+          !OAssert.Fails(true) &&
+           OAssert.FailsNullCheck(null) &&
+           OAssert.FailsNullChecks(new object(), null, new object());
+
+      LogAssert.ignoreFailingMessages = pop;
+    });
+    Assert.True(ok);
   }
 
 } // end class MiscInEditor

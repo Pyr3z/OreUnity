@@ -296,28 +296,7 @@ namespace Ore
 
   #region Private section
 
-    #if UNITY_EDITOR
-
-      [UnityEditor.MenuItem("Ore/Orator/Assertion Exception (No Orator)")]
-      private static void Menu_TestAssertException()
-      {
-        throw new AssException("message", "userMessage");
-      }
-
-      [UnityEditor.MenuItem("Ore/Orator/Assertion Log")]
-      private static void Menu_TestAssertLogOrator()
-      {
-        True(false, ctx: null);
-      }
-
-      [UnityEditor.MenuItem("Ore/Orator/Assertion Fails Null Checks")]
-      private static void Menu_TestAssertNulls()
-      {
-        _ = FailsNullChecks(new object(), null, new object());
-      }
-
-    #endif // UNITY_EDITOR
-
+    // MenuItems moved to unit tests (try in: MiscInEditor.cs)
 
     private const string FAIL_BOOL_T  = "Value was true  (expected: false).";
     private const string FAIL_BOOL_F  = "Value was false  (expected: true).";
@@ -330,7 +309,7 @@ namespace Ore
 
     private static string ForParameter(string msg, int i, int ilen)
     {
-      return $"Parameter # ({i+1}/{ilen}): {msg}";
+      return $"Parameter #{i+1} (of {ilen}): {msg}";
     }
 
   #endregion Private section
