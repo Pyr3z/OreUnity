@@ -11,9 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v5.1.1](../../tags/v5.1.1) - 2023-03-04
 - In `Orator`:
-  - Added: 
+  - Added: stubs for a Orator log filtering system (will have to make it into next release).
   - Changed: Setting the Orator.asset variable "Log Once Memory Size" to 0 now properly disables the fancy "log once" behavior. You may opt to do so to save on performance, although most of the savings will be in editor rather than runtime.
+  - Changed: `NFE(ex, ...)` - Exception parameter 'ex' is now null-safe.
   - Removed: variable "Force Assertions In Release" - it has merely been hidden (for now?), because it has actually never been fully implemented. It might make a come-back if there ever is a need/desire for the functionality.
+
+- In `Promise<T>`:
+  - Added: new method `Forget()` - marking neither success nor failure, the Promise is nevertheless treated as "Completed"—no value to show for it, nor any Exception or mark of erroneous behaviour. The promise was simply... _forgotten_.
+  - Changed: IEnumerator.Reset() has been made a public function, because why shouldn't you be able to reset a promise? :)
+  - Removed: The InvalidAsynchronousStateExceptions that were being thrown in `Fail()`/`FailWith(ex)` if called after the Promise was already completed (either successfully _or_ by forgetting it).
+
+- Fixed: `TimeInterval.ThisSession` was using Time.realtimeSinceStartupAsDouble – a property which only entered the API since Unity 2020, so now if in Unity < 2020, Time.realtimeSinceStartup is used instead.
 
 
 ## [v5.1.0](../../tags/v5.1.0) - 2023-03-03
