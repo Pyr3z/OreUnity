@@ -5,155 +5,162 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [v5.1.1](../../tree/unstable) - UNRELEASED
+## [v5.1.2](../../tree/unstable) - UNRELEASED
 - fef
+
+
+## [v5.1.1](../../tags/v5.1.1) - 2023-03-04
+- In `Orator`:
+  - Added: 
+  - Changed: Setting the Orator.asset variable "Log Once Memory Size" to 0 now properly disables the fancy "log once" behavior. You may opt to do so to save on performance, although most of the savings will be in editor rather than runtime.
+  - Removed: variable "Force Assertions In Release" - it has merely been hidden (for now?), because it has actually never been fully implemented. It might make a come-back if there ever is a need/desire for the functionality.
 
 
 ## [v5.1.0](../../tags/v5.1.0) - 2023-03-03
 - Added: new "fakesync" class: `Promise<T>` - works similarly to System.Threading.Tasks but more optimal for Unity (and coroutines).
-    - Also: Usage example(s) in [`AsyncTests`](Tests/Runtime/AsyncTests.cs).
+  - Also: Usage example(s) in [`AsyncTests`](Tests/Runtime/AsyncTests.cs).
 - Added: new exception class: `MultiException` - use MultiException.Create(...) to glob multiple exceptions into one.
-    - Note: Currently just creates a linked list with the built-in "InnerException" interface. I acknowledge this implementation has room for improvement.
+  - Note: Currently just creates a linked list with the built-in "InnerException" interface. I acknowledge this implementation has room for improvement.
 - Added: new exception class: `FauxException` - use FauxException.Silence(Exception) (or new extension method Exception.Silenced()) to cause a deferred exception to be ignored.
-    - Note: Currently will only be ignored by `Orator.NFE(exception)`. Future patches may implement something with `System.AppDomain.CurrentDomain.UnhandledException` or `UnityEngine.Application.logMessageReceived` to squelch further.
+  - Note: Currently will only be ignored by `Orator.NFE(exception)`. Future patches may implement something with `System.AppDomain.CurrentDomain.UnhandledException` or `UnityEngine.Application.logMessageReceived` to squelch further.
 - Added: in `Orator`: static overloads that take a System.Type (or generic \<T\>) as a context.
-    - Also: Changed: lower-case instance methods are now private, since you can call static methods from UnityEvents these days.
+  - Also: Changed: lower-case instance methods are now private, since you can call static methods from UnityEvents these days.
 - Added: in `Filesystem`: GetTempPath([forFilepath])
-    - Also: Added new optional parameters to TryGetLastException(...) + LogLastException(...). 
+  - Also: Added new optional parameters to TryGetLastException(...) + LogLastException(...). 
 
 - Changed: Moved around some menu items under <kbd>Bore</kbd>.
-    - Note: Some were removed and reimplemented as unit tests.
+  - Note: Some were removed and reimplemented as unit tests.
 - Changed: `ActiveScene`'s default execution order lowered, from -500 -> -1337 (same bucket as Orator).
 
 - Improved: Cleaned up `OAssert` (-200 lines), yeeted semi-circular logic tied to Orator.
 
 - Fixed: (#35) DeviceSpy.Browser throwing AndroidJavaException on Android API < 33.
 - Fixed: (#36) Unity 2019 incompatibilities which were introduced in release [v4.0.0][] (DeviceFactor.cs).
-    - Also: Removed static nested functions from JsonAuthority.cs (_also_ incompatible with Unity 2019).
+  - Also: Removed static nested functions from JsonAuthority.cs (_also_ incompatible with Unity 2019).
 - Fixed: in `DeviceSpy`: CalcAndroidIDFA now actually works `~.~`
 
 
 ## [v5.0.0](../../tags/v5.0.0) - 2023-02-28
 - Added: New attributes to replace (some of) Odin Inspector's:
-    - [Required], [RequiredIn]
-    - [DisableIf], [EnableIf]
-    - [HideIf], [ShowIf]
-    - [OnValueChanged]
-    - [FoldoutGroup]
-    - [ToggleGroup]
-    - **Note:** These are currently just placeholders. They do not (currently) do anything special. The implementation for them is destined for a separate package: [ore-inspector][].
-    - Also: Added enum `PrefabKind` (to match Odin's [RequiredIn] public interface).
+  - [Required], [RequiredIn]
+  - [DisableIf], [EnableIf]
+  - [HideIf], [ShowIf]
+  - [OnValueChanged]
+  - [FoldoutGroup]
+  - [ToggleGroup]
+  - **Note:** These are currently just placeholders. They do not (currently) do anything special. The implementation for them is destined for a separate package: [ore-inspector][].
+  - Also: Added enum `PrefabKind` (to match Odin's [RequiredIn] public interface).
 - Added: `JsonAuthority.Serialize(obj, ...)`
-    - allows you to be a lot more GC-friendly, reusing memory.
+  - allows you to be a lot more GC-friendly, reusing memory.
 - Added: New unit test source file: [MiscInEditor.cs](Tests/Editor/MiscInEditor.cs)
 
 - Changed: **Breaking!** Renamed class attribute `[AssetPath]` -> `[AutoCreateAsset]`.
-    - it's both more descriptive of its function, _and_ collides less with attributes from other packages.
+  - it's both more descriptive of its function, _and_ collides less with attributes from other packages.
 - Changed: Now keeping all non-nested enums in the `Static/` subdirectory.
 
 - Removed: `Editor/ReadOnlyDrawer.cs` (has been moved to [ore-inspector][]).
-    - Yes, this means that without this other package, the old [ReadOnly] attribute will become a no-op. Given how many packages add their own [ReadOnly] attribute, this was an intentional decision.
+  - Yes, this means that without this other package, the old [ReadOnly] attribute will become a no-op. Given how many packages add their own [ReadOnly] attribute, this was an intentional decision.
 
 
 ## [v4.1.0][] - 2023-02-27
 - Changed: in `DeviceSpy`:
-    - Browser - on WebGL builds, now returns the browser name _and_ its version number. Space-separated, parsed well by SerialVersion.
-    - Also: Added: LittleBirdie.OnCheepCheep - callback event triggered whenever a LittleBirdie override is made.
+  - Browser - on WebGL builds, now returns the browser name _and_ its version number. Space-separated, parsed well by SerialVersion.
+  - Also: Added: LittleBirdie.OnCheepCheep - callback event triggered whenever a LittleBirdie override is made.
 
 - Improved: in `ActiveScene`:
-    - Deprecation messages now point to the correct API to use (ActiveScene.Coroutines). No more wild goose chase!
-    - Also: Fixed edge case where CoroutineRunnerBuffers were only checking key equality by reference, whereas they should've been calling object.Equals(a,b).
-    - Related: `CoroutineRunner`.AdoptAndRun() now defends against the case where it's disabled in the hierarchy. (This is mainly important because it's technically in the public API.)
+  - Deprecation messages now point to the correct API to use (ActiveScene.Coroutines). No more wild goose chase!
+  - Also: Fixed edge case where CoroutineRunnerBuffers were only checking key equality by reference, whereas they should've been calling object.Equals(a,b).
+  - Related: `CoroutineRunner`.AdoptAndRun() now defends against the case where it's disabled in the hierarchy. (This is mainly important because it's technically in the public API.)
 
 - Fixed: in `SerialVersion`:
-    - ToString(true) - was including the tag hash in the reconstructed version.
-    - ExtractOSVersion(ver) - now works regardless of scripting defines, looking for patterns in the parameter to determine what platform it's for.
-    - Also: ExtractOSVersion now returns more standardized representations, which contain maximal extra info (such as platform prefixes).
+  - ToString(true) - was including the tag hash in the reconstructed version.
+  - ExtractOSVersion(ver) - now works regardless of scripting defines, looking for patterns in the parameter to determine what platform it's for.
+  - Also: ExtractOSVersion now returns more standardized representations, which contain maximal extra info (such as platform prefixes).
 
 - Fixed: in `HashMap`:
-    - Union(other) was entirely broken (by not incrementing the internal entry count).
-    - Union(other, overwrite:true) wasn't respecting a ValueComparator (if one was set).
-    - Also: Added UnmapNulls() - QoL method
+  - Union(other) was entirely broken (by not incrementing the internal entry count).
+  - Union(other, overwrite:true) wasn't respecting a ValueComparator (if one was set).
+  - Also: Added UnmapNulls() - QoL method
 
 
 ## [v4.0.1][] - 2023-02-24
 - Added: New in `Strings`:
-    - Constants: LOWERCASE, UPPERCASE, DIGITS, ALPHA, ALPHANUM, HEXADECIMAL
-    - Utility method: ContainsOnly(str, char[])
-    - Also: Trimmed the existing WHITESPACES array, and made sure all arrays are pre-sorted (ordinal order).
+  - Constants: LOWERCASE, UPPERCASE, DIGITS, ALPHA, ALPHANUM, HEXADECIMAL
+  - Utility method: ContainsOnly(str, char[])
+  - Also: Trimmed the existing WHITESPACES array, and made sure all arrays are pre-sorted (ordinal order).
 - Changed: DeviceSpy.Brand + DeviceSpy.Model now return an empty string when the info is unavailable.
-    - Formerly returned "n/a".
+  - Formerly returned "n/a".
 - Improved: SerialVersion.ExtractOSVersion() internal logic.
-    - Note: should also now keep more of the original string in the underlying SerialVersion returned, if it can be preserved without breaking the existing deserialization code.
+  - Note: should also now keep more of the original string in the underlying SerialVersion returned, if it can be preserved without breaking the existing deserialization code.
 
 
 ## [v4.0.0][] - 2023-02-23
 - Removed: Hard dependency on "com.unity.nuget.newtonsoft-json" v3.0.2 (package.json).
-    - However, without it in the project, several APIs become unavailable or nonfunctional.
-    - If you have a different Newtonsoft Json.NET provider in your project, you may try telling Ore to utilize it by adding `NEWTONSOFT_JSON` to your script compilation symbols (in <kbd>Project Settings</kbd> -> Player).
-    - Please inform @levi.perez or [create an issue][] if you have any trouble with this.
+  - However, without it in the project, several APIs become unavailable or nonfunctional.
+  - If you have a different Newtonsoft Json.NET provider in your project, you may try telling Ore to utilize it by adding `NEWTONSOFT_JSON` to your script compilation symbols (in <kbd>Project Settings</kbd> -> Player).
+  - Please inform @levi.perez or [create an issue][] if you have any trouble with this.
 
 - Added: Absorbed the [Decisions](https://leviperez.dev/upm/decisions) package (AKA "LAUD", now archived) into the Ore namespace, most notably adding the `DeviceDecider` data structure.
-    - Also: Removed the original package's pointless interfaces (IEvaluator, IDecider), renamed \*Evaluator to \*Factor
-    - Also: DeviceDeciders can now accept multiple pipe-separated (`|`) keys per serialized row, for instance to give a list of device models the same discrete value.
-    - Also: Updated the custom editor drawers from the old package to contain more useful displays (curves).
+  - Also: Removed the original package's pointless interfaces (IEvaluator, IDecider), renamed \*Evaluator to \*Factor
+  - Also: DeviceDeciders can now accept multiple pipe-separated (`|`) keys per serialized row, for instance to give a list of device models the same discrete value.
+  - Also: Updated the custom editor drawers from the old package to contain more useful displays (curves).
 - Added: New in `DeviceDimension`:
-    - Enum values: AspectRatio, DisplayHz, IsBlueStacks, ThresholdRAM
-    - Also: Fixed: DeviceDimension.ReportedGeo now queries its (still makeshift) runtime value from DeviceSpy.
+  - Enum values: AspectRatio, DisplayHz, IsBlueStacks, ThresholdRAM
+  - Also: Fixed: DeviceDimension.ReportedGeo now queries its (still makeshift) runtime value from DeviceSpy.
 - Added: New in `DeviceSpy`:
-    - Properties: `UDID` -> may have a different value from IDFV, and is more safe from SystemInfo.deviceUniqueIdentifier returning "n/a" e.g. on WebGL.
-    - Advanced API: nested class `LittleBirdie` -> allows you to modify the DeviceSpy's perception of the current device.
+  - Properties: `UDID` -> may have a different value from IDFV, and is more safe from SystemInfo.deviceUniqueIdentifier returning "n/a" e.g. on WebGL.
+  - Advanced API: nested class `LittleBirdie` -> allows you to modify the DeviceSpy's perception of the current device.
 - Added: New in `TimeInterval`:
-    - Constants: Minute, Hour, Day, Week
-    - Method: Yield()
+  - Constants: Minute, Hour, Day, Week
+  - Method: Yield()
 - Added: New in `DateTimes`:
-    - Properties: Today, Yesterday, Tomorrow
-    - Note: Unlike any System.DateTime equivalents, these implementations return UTC time instead of local time.
+  - Properties: Today, Yesterday, Tomorrow
+  - Note: Unlike any System.DateTime equivalents, these implementations return UTC time instead of local time.
 - Added: New in `HashMap`:
-    - Copy constructor
-    - Methods: MapAll(), Remap()\*, Union(), Intersect(), Except(), SymmetricExcept()
-    - Also: Changed: \*The following old methods have been renamed for clarity of function:
-        - Remap(K,V) -> OverMap(K,V)
-        - TryMap(..., out V) -> Map(..., out V)
-    - New method in `HashMap.Enumerator`: RemapCurrent(V) - allows inserting new values at existing keys while manually enumerating over a HashMap.
-        - Also: Fixed: Enumerator now enforces that only one instance can modify the same HashMap at a time.
-    - Also: Fixed: HashMap.KeyComparator throws an exception if it is changed in a non-empty HashMap.
-    - Also: Improved: Consolidated & simplified old constructors.
-    - Also: Improved: `Bucket` struct now uses aggressive inlining.
+  - Copy constructor
+  - Methods: MapAll(), Remap()\*, Union(), Intersect(), Except(), SymmetricExcept()
+  - Also: Changed: \*The following old methods have been renamed for clarity of function:
+    - Remap(K,V) -> OverMap(K,V)
+    - TryMap(..., out V) -> Map(..., out V)
+  - New method in `HashMap.Enumerator`: RemapCurrent(V) - allows inserting new values at existing keys while manually enumerating over a HashMap.
+    - Also: Fixed: Enumerator now enforces that only one instance can modify the same HashMap at a time.
+  - Also: Fixed: HashMap.KeyComparator throws an exception if it is changed in a non-empty HashMap.
+  - Also: Improved: Consolidated & simplified old constructors.
+  - Also: Improved: `Bucket` struct now uses aggressive inlining.
 - Added: New in `Strings`: extension methods Coerce(), NullCoerce()
 - Added: New in `Filesystem`: utility method GetFiles(path)
 - Added: New in `JsonAuthority`: utility methods FixupNestedContainers(), Genericize()
-    - Also: Fixed: JsonAuthority was initializing too late (or not at all in editor).
+  - Also: Fixed: JsonAuthority was initializing too late (or not at all in editor).
 - Added: New in `Paths`: utility methods ExtractExtension(), DetectAssetPathAssumptions()
 - Added: Unit tests:
-    - `DeviceSpyInEditor`
-    - `FilesystemInEditor`
+  - `DeviceSpyInEditor`
+  - `FilesystemInEditor`
 - Added: Some new inline XML documentation for:
-    - Runtime/HashMap.cs   (complete)
-    - Static/Filesystem.cs (incomplete)
-    - Static/Invoke.cs     (incomplete)
-    - Static/Strings.cs    (incomplete)
+  - Runtime/HashMap.cs   (complete)
+  - Static/Filesystem.cs (incomplete)
+  - Static/Invoke.cs   (incomplete)
+  - Static/Strings.cs  (incomplete)
 
 - Changed: `SceneLord` API names are shorter without sacrificing descriptiveness.
-    - Also: Added: SceneLord.AddActiveScene(buildIndex)
+  - Also: Added: SceneLord.AddActiveScene(buildIndex)
 - Changed: `DelayedEvent` finally utilizes TimeIntervals and DelayedRoutines.
-    - Also: now guards against additional invokes if the first invoke is still counting down its delay.
-    - Also: Added: TryInvokeOnGlobalContext(), TryCancelInvoke()
-    - Also: Fixed: DelayedEvent invocation payload is now much more exception-safe, exiting gracefully.
+  - Also: now guards against additional invokes if the first invoke is still counting down its delay.
+  - Also: Added: TryInvokeOnGlobalContext(), TryCancelInvoke()
+  - Also: Fixed: DelayedEvent invocation payload is now much more exception-safe, exiting gracefully.
 - Changed: Renamed static utility `Invoke` -> `OInvoke`.
-    - (so you don't have to call like `Ore.Invoke.*` anymore)
+  - (so you don't have to call like `Ore.Invoke.*` anymore)
 - Changed: Renamed enum `ABIArch` -> `ABI`.
 - Changed: Renamed editor test `FilesystemCorrectness` -> `FilesystemInEditor`.
-    - Also: Fixed: Filesystem editor tests now works outside of KooBox. (was using a specific PNG under Assets/ before~)
+  - Also: Fixed: Filesystem editor tests now works outside of KooBox. (was using a specific PNG under Assets/ before~)
 - Changed: `OAsset.TryCreate(..., path)` now warns and returns false if there was a problem loading an existing asset at the given path.
-    - Also: now detects assumptions about the given path if in editor, such as prepending "Assets/" or appending ".asset".
+  - Also: now detects assumptions about the given path if in editor, such as prepending "Assets/" or appending ".asset".
 - Changed: `Filesystem.TryReadJson()` now takes a generic T out parameter.
-    - Note: if you supply an IList or IDictionary out type, the returned structure will be deeply genericized. Related: JsonAuthority.FixupNestedContainers
+  - Note: if you supply an IList or IDictionary out type, the returned structure will be deeply genericized. Related: JsonAuthority.FixupNestedContainers
 
 - Fixed: (bandaid) Ore's `[ReadOnly]` attribute is a no-op if `ODIN_INSPECTOR` is defined.
-    - Levi: _Odin..._
+  - Levi: _Odin..._
 - Fixed: Build error: `Orator.cs line 190`
-    - Also: Fixed: Orator uses an experimental PrefabStage API - now uses the proper API in Unity 2021+.
+  - Also: Fixed: Orator uses an experimental PrefabStage API - now uses the proper API in Unity 2021+.
 - Fixed: Some code quality schmutz (thank you @Irontown!)
 
 
@@ -170,7 +177,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added: Paths.AreEquivalent(p1,p2) - for when you don't know backslash vs forward slash, relative vs absolute, etc.
 - Added: TimeInterval operators on System.DateTimes.
 - Added: TimeInterval explicit cast to System.DateTime.
-    - Note: TI representations of DateTimes always convert to/from UTC time.
+  - Note: TI representations of DateTimes always convert to/from UTC time.
 - Exposed: TimeInterval.TicksAreFrames
 - Fixed: TimeIntervalDrawer now works with frame count representations.
 - Changed: TimeInterval implicit cast to TimeSpan is now an **explicit** cast.
@@ -181,14 +188,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v3.3.1][] - 2023-01-25 (API hotfix)
 - Changed: `Filesystem.Try*Json()` - instead of a JsonSerializerSettings object, caller should pass in a custom JsonSerializer to override the defaults set in `JsonAuthority`.
-    - Reasoning: It is better if caller could decide if they want to reuse a customized serializer, and potentially keep it cached, rather than reconstruct one every time the Filesystem utility is invoked.
+  - Reasoning: It is better if caller could decide if they want to reuse a customized serializer, and potentially keep it cached, rather than reconstruct one every time the Filesystem utility is invoked.
 
 
 ## [v3.3.0][] - 2023-01-24
 - Added: `JsonAuthority.SerializerSettings` - default settings automatically used globally.
-    - Can be modified in-place to be automatically applied in subsequent Json.NET reads/writes.
+  - Can be modified in-place to be automatically applied in subsequent Json.NET reads/writes.
 - Added: `Filesystem.Try*Json()` now takes an optional `JsonSerializerSettings` parameter to override the JsonAuthority defaults.
-    - You can provide custom `JsonConverter` objects by inserting them in the settings object's `Converters` property. This resolves issue #25.
+  - You can provide custom `JsonConverter` objects by inserting them in the settings object's `Converters` property. This resolves issue #25.
 - Added: [CopyableField] attribute for serialized fields - adds a "Copy" button next to most basic inspector value types.
 - Added: Format string consts for roundtrip (accurate) stringification of floats / doubles (Floats.cs).
 - Added: Aggressive inlining + doc comments for `Bitwise`: `LSB(...)`, `LSBye(...)`, `CTZ(...)`.
@@ -208,12 +215,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v3.2.0][] - 2023-01-22
 - Added: `DateTimes` static utility, for when using Ore.TimeInterval proxies just don't make sense.
-    - Includes standardized method for (de)serializing DateTimes to/from PlayerPrefs.
+  - Includes standardized method for (de)serializing DateTimes to/from PlayerPrefs.
 - Added: `JsonAuthority` static utility, for standardizing how we serialize JSON objects (currently, thru Newtonsoft.Json).
 - Added: Methods in `Parsing` to parse hexadecimal more specifically.
 - Changed: Split `Invoke` APIs into overloads, mostly so that "ifAlive" objects are more clearly distinguished.
 - Fixed: The failed assertion (Editor-only) when changing the path in [AssetPath("path")] attributes for an OAssetSingleton after an instance has already been created.
-    - Note: You will still need to handle any file renaming adjustments yourself, if that is your intent.
+  - Note: You will still need to handle any file renaming adjustments yourself, if that is your intent.
 
 
 ## [v3.1.2][] - 2023-01-20
@@ -249,14 +256,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [v2.12.0][] - 2023-01-05
 - Changed: renamed VersionID -> SerialVersion; also simplified the implementation and added ctor from System.Version.
 - Changed: The following classes now participate in a trialing of C#'s [MethodImpl(MethodImplOptions.AggressiveInlining)]:
-    - Bitwise
-    - DeviceSpy
-    - Floats
-    - Hashing
-    - Integers
-    - Lists
-    - Parsing
-    - Strings
+  - Bitwise
+  - DeviceSpy
+  - Floats
+  - Hashing
+  - Integers
+  - Lists
+  - Parsing
+  - Strings
 - Changed: DeviceSpy timezone information API exposes underling TimeSpan offset.
 - Changed: DeviceSpy RAM reporting is in MB by default (was MiB).
 - Added: DeviceSpy API to report device region (ISO 3166-2).
@@ -283,16 +290,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v2.10.0][] - 2022-12-07
 - Added: struct `DelayedRoutine` optimizes trivial coroutine use cases.
-    - Note: DelayedRoutine's speed vs conventional `yield return` equivalents still needs to be measured.
+  - Note: DelayedRoutine's speed vs conventional `yield return` equivalents still needs to be measured.
 - Added: instance types (ICoroutineRunner, CoroutineRunner, CoroutineRunnerBuffer) to make ActiveScene pretty again.
 - Added: `Invoke` static API - namely good for `Invoke.NextFrame(*)` and `Invoke.AfterDelay(*)`.
-    - Note: Invoke.AfterDelay probably has undefined behaviour if called before any scenes are loaded. Will investigate later.
+  - Note: Invoke.AfterDelay probably has undefined behaviour if called before any scenes are loaded. Will investigate later.
 - Improved: Utility APIs and operators in `TimeInterval`.
-    - Also: Now using TimeInterval in more pre-existing places.
+  - Also: Now using TimeInterval in more pre-existing places.
 - Deprecated: The functionality of `ActiveScene.EnqueueCoroutine` and related APIs are now implemented through the static `ActiveScene.Coroutines.*` interface.
-    - These APIs will not be fully removed until Ore v3.
+  - These APIs will not be fully removed until Ore v3.
 - Deprecated: Coroutine-related helpers: `OComponent.{InvokeNextFrame,InvokeNextFrameIf,DelayInvoke}`. Using the new DeferringRoutine or static Invoke APIs is now the way.
-    - Also will not be fully removed until at least Ore v3.
+  - Also will not be fully removed until at least Ore v3.
 
 
 ## [v2.9.4][] - 2022-12-05
@@ -338,7 +345,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [v2.5.6][] - 2022-10-17
-- Added: PrefValue<T> + PrefColor - helper classes for dealing with EditorPrefs.
+- Added: PrefValue\<T\> + PrefColor - helper classes for dealing with EditorPrefs.
 - Merged: HashMap/Primes optimizations
 
 

@@ -1,15 +1,15 @@
-/*! @file       Static/LogTypeFilter.cs
+/*! @file       Static/LogTypeFlags.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2023-03-03
 **/
 
-using LogType = UnityEngine.LogType;
+using UnityEngine;
 
 
 namespace Ore
 {
   [System.Flags]
-  public enum LogTypeFilter
+  public enum LogTypeFlags
   {
     None      =  0,
     All       = ~0,
