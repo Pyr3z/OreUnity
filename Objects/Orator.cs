@@ -127,12 +127,27 @@ namespace Ore
     }
 
 
-    public static void NFE(System.Exception ex, Object ctx = null)
+    /// <summary>
+    ///   Logs a "Non-Fatal Error" via the vanilla means.
+    /// </summary>
+    /// <param name="ex">
+    ///   The Exception representing the error to log.
+    ///   If null is supplied, this function is an immediate no-op.
+    /// </param>
+    /// <param name="ctx">
+    ///   A context <see cref="Object"/> for the error.
+    ///   If supplied and you are running in the editor, the editor will attempt
+    ///   to ping this object. 
+    /// </param>
+    public static void NFE([CanBeNull] System.Exception ex, Object ctx = null)
     {
+      if (ex is null)
+        return;
+
       if (ex is FauxException faux)
       {
         #if DEBUG
-        LogOnce(faux.Message, ctx);
+          LogOnce(faux.Message, ctx);
         #endif
       }
       else
@@ -552,7 +567,8 @@ namespace Ore
 
       [SerializeField]
       public Color32 RichTextColor;
-      // TODO: rich text etc...
+        // TODO: would be SO easy to finish hooking this up
+        // TODO: if we moved Ore.Editor.Styles.ColorText(...) into runtime code!
     } // end struct LogFormatDef
 
     // compile-time default values:
