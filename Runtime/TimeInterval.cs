@@ -64,7 +64,11 @@ namespace Ore
     public static TimeInterval ThisSession
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      #if UNITY_2020_1_OR_NEWER
       get => !ActiveScene.IsPlaying ? Zero : new TimeInterval(Time.realtimeSinceStartupAsDouble);
+      #else
+      get => !ActiveScene.IsPlaying ? Zero : new TimeInterval(Time.realtimeSinceStartup);
+      #endif
     }
 
     public static TimeInterval UtcNow
