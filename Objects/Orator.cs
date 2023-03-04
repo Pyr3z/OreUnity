@@ -27,9 +27,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Diagnostics; // do not remove if unused
 
-using Debug        = UnityEngine.Debug;
-using AssException = UnityEngine.Assertions.AssertionException;
-using Type         = System.Type;
+using ObsoleteAttribute = System.ObsoleteAttribute;
+using AssException      = UnityEngine.Assertions.AssertionException;
+using Type              = System.Type;
 
 
 namespace Ore
@@ -61,15 +61,6 @@ namespace Ore
       {
         if (Instance)
           Instance.m_AssertionsRaiseExceptions = value;
-      }
-    }
-    public static bool ForceAssertionsInRelease
-    {
-      get => Instance ? Instance.m_ForceAssertionsInRelease : DEFAULT_ASSERTIONS_IN_RELEASE;
-      set
-      {
-        if (Instance)
-          Instance.m_ForceAssertionsInRelease = value;
       }
     }
 
@@ -598,8 +589,9 @@ namespace Ore
     private LogOption m_LogStackTracePolicy = DEFAULT_LOG_LOGOPT;
 
     [SerializeField]
-    private bool m_AssertionsRaiseExceptions = DEFAULT_ASSERT_EXCEPTIONS;     // TODO
+    private bool m_AssertionsRaiseExceptions = DEFAULT_ASSERT_EXCEPTIONS;
     [SerializeField]
+    [HideInInspector, Obsolete("Assertions in release have never been fully implemented.", error: true)]
     private bool m_ForceAssertionsInRelease = DEFAULT_ASSERTIONS_IN_RELEASE;  // TODO
 
     [Space]
