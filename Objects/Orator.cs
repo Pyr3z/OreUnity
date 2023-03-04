@@ -605,9 +605,12 @@ namespace Ore
 
     [SerializeField]
     private bool m_AssertionsRaiseExceptions = DEFAULT_ASSERT_EXCEPTIONS;
+
+  #pragma warning disable CS0414
     [SerializeField]
     [HideInInspector, Obsolete("Assertions in release have never been fully implemented.", error: true)]
     private bool m_ForceAssertionsInRelease = DEFAULT_ASSERTIONS_IN_RELEASE;  // TODO
+  #pragma warning restore CS0414
 
     [Space]
 
