@@ -573,24 +573,23 @@ namespace Ore
 
     // compile-time default values:
 
-    internal const EditorBrowsableState INSTANCE_BROWSABLE_POLICY = EditorBrowsableState.Never;
+    const EditorBrowsableState INSTANCE_BROWSABLE_POLICY = EditorBrowsableState.Never;
 
-    internal const string DEFAULT_KONSOLE_PREFIX = "<color=\"orange\">[" + nameof(Orator) + "]</color>";
-    internal const LogOption DEFAULT_LOG_LOGOPT = LogOption.NoStacktrace;
-    internal const bool DEFAULT_INCLUDE_CONTEXT = true;
+    const string    DEFAULT_KONSOLE_PREFIX        = "<color=\"orange\">[" + nameof(Orator) + "]</color>";
+    const bool      DEFAULT_INCLUDE_CONTEXT       = true;
+    const LogOption DEFAULT_LOG_LOGOPT            = LogOption.NoStacktrace;
 
-    internal const string DEFAULT_REACHED_MSG = "<b>Reached!</b>";
-    internal const LogType DEFAULT_REACHED_LOGTYPE = LogType.Warning;
-    internal const LogOption DEFAULT_REACHED_LOGOPT = LogOption.None;
+    const string    DEFAULT_REACHED_MSG           = "<b>Reached!</b>";
+    const LogType   DEFAULT_REACHED_LOGTYPE       = LogType.Warning;
+    const LogOption DEFAULT_REACHED_LOGOPT        = LogOption.None;
 
-    internal const LogType DEFAULT_ASSERT_LOGTYPE = LogType.Assert;
-    internal const string DEFAULT_ASSERT_MSG = "<b>Assertion failed!</b>";
-    internal const LogOption DEFAULT_ASSERT_LOGOPT = LogOption.None;
+    const LogType   DEFAULT_ASSERT_LOGTYPE        = LogType.Assert;
+    const string    DEFAULT_ASSERT_MSG            = "<b>Assertion failed!</b>";
+    const LogOption DEFAULT_ASSERT_LOGOPT         = LogOption.None;
+    const bool      DEFAULT_ASSERT_EXCEPTIONS     = true;
+    const bool      DEFAULT_ASSERTIONS_IN_RELEASE = false;
 
-    internal const bool DEFAULT_ASSERT_EXCEPTIONS = true;
-    internal const bool DEFAULT_ASSERTIONS_IN_RELEASE = false;
-
-    internal const int DEFAULT_LOGONCE_MEMORY_SIZE = 256;
+    const int       DEFAULT_LOGONCE_MEMORY_SIZE   = 256;
 
 
     [Header("Orator Properties")]
