@@ -18,18 +18,27 @@ namespace Ore
     public delegate void SuccessAction(T value);
     public delegate void FailureAction([CanBeNull] T flotsam, [CanBeNull] Exception ex);
 
-    public static void DefaultFailureAction(T flotsam, Exception ex)
+    private static void DefaultFailureAction(T flotsam, Exception ex)
     {
       Orator.NFE(ex);
     }
 
-    /// <summary>
-    ///   Add this dummy delegate to <see cref="OnFailed"/> before you call
-    ///   <see cref="FailWith">FailWith(ex)</see> in order to squelch the
-    ///   default failure action (<see cref="Orator.NFE">Orator.NFE(ex)</see>).
-    /// </summary>
-    public static void NoFailureAction(T flotsam, Exception ex)
+    private static void NoFailureAction(T flotsam, Exception ex)
     {
+      /* intentionally left blank */
+    }
+
+
+    public Promise()
+    {
+    }
+
+    public Promise(bool squelchDefaultFailAction)
+    {
+      if (squelchDefaultFailAction)
+      {
+        m_OnFailed = NoFailureAction;
+      }
     }
 
 
