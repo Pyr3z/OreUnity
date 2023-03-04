@@ -484,12 +484,12 @@ namespace Ore
     }
 
     /// <summary>
-    ///   Unmaps all entries whose value is currently null.
+    ///   Unmaps all entries whose value is currently default(V).
     /// </summary>
     /// <returns>
     ///   The number of entries unmapped by this operation.
     /// </returns>
-    public int UnmapNulls()
+    public int UnmapNulls() // TODO change the public API to reflect the fact that this isn't actually checking for nulls
     {
       if (m_Count == 0)
         return 0;
@@ -500,7 +500,7 @@ namespace Ore
       {
         while (enumerator.MoveNext())
         {
-          if (enumerator.CurrentValue is null)
+          if (Equals(enumerator.CurrentValue, default(V)))
           {
             enumerator.UnmapCurrent();
           }

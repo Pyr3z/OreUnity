@@ -5,8 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [v5.1.2](../../tree/unstable) - UNRELEASED
+## [v5.1.3](../../tree/unstable) - UNRELEASED
 - fef
+
+
+## [v5.1.2](../../tags/v5.1.2) - 2023-03-04 (later)
+- Fixed: null implication of generic parameter V in HashMap\<K,V\>.
+  - Note: the API in question (HashMap.UnmapNulls()) will probably need to be renamed in the future, due to this change in internal logic.
+
+- sorry Henru
 
 
 ## [v5.1.1](../../tags/v5.1.1) - 2023-03-04
