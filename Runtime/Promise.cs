@@ -16,17 +16,16 @@ namespace Ore
   public class Promise<T> : IEnumerator
   {
     public delegate void SuccessAction(T value);
-    public delegate void FailureAction([CanBeNull] T value, [CanBeNull] Exception ex);
-    private static void DefaultFailureAction(T value, Exception ex)
+    public delegate void FailureAction([CanBeNull] T flotsam, [CanBeNull] Exception ex);
+    private static void DefaultFailureAction(T flotsam, Exception ex)
     {
-      if (ex != null)
-        Orator.NFE(ex);
+      Orator.NFE(ex);
     }
 
 
     public T    Value       => m_Value;
     public bool IsCompleted => m_State > State.Pending;
-    public bool Skipped     => m_State == State.Skipped;
+    public bool Forgotten   => m_State == State.Forgotten;
     public bool Succeeded   => m_State == State.Succeeded;
     public bool Failed      => m_State == State.Failed;
 
@@ -90,11 +89,11 @@ namespace Ore
       }
     }
 
-    public void Skip()
+    public void Forget()
     {
-      if (m_State < State.Skipped)
+      if (m_State < State.Forgotten)
       {
-        m_State = State.Skipped;
+        m_State = State.Forgotten;
       }
     }
 
@@ -131,6 +130,11 @@ namespace Ore
       {
         m_Exception = MultiException.Create(m_Exception, ex);
       }
+
+      if (m_OnFailed is null)
+      {
+        m_OnFailed = DefaultFailureAction;
+      }
     }
 
 
@@ -148,7 +152,7 @@ namespace Ore
     {
       Pending,
       Failed,
-      Skipped,
+      Forgotten,
       Succeeded,
     }
 
@@ -157,7 +161,7 @@ namespace Ore
     private Exception m_Exception;
 
     private SuccessAction m_OnSucceeded;
-    private FailureAction m_OnFailed = DefaultFailureAction;
+    private FailureAction m_OnFailed;
 
 
   #region IEnumerator interface
@@ -172,7 +176,7 @@ namespace Ore
         case State.Pending:
           return true;
 
-        case State.Skipped:
+        case State.Forgotten:
           m_Value = default;
           break;
 
@@ -199,7 +203,7 @@ namespace Ore
       m_State       = State.Pending;
       m_Exception   = null;
       m_OnSucceeded = null;
-      m_OnFailed    = DefaultFailureAction;
+      m_OnFailed    = null;
     }
 
   #endregion IEnumerator interface
