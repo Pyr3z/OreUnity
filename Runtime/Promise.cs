@@ -8,7 +8,6 @@ using JetBrains.Annotations;
 using System.Collections;
 
 using Exception = System.Exception;
-using InvalidAsynchronousStateException = System.ComponentModel.InvalidAsynchronousStateException;
 
 
 namespace Ore
