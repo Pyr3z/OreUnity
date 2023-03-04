@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed: The InvalidAsynchronousStateExceptions that were being thrown in `Fail()`/`FailWith(ex)` if called after the Promise was already completed (either successfully _or_ by forgetting it).
 
 - Fixed: `TimeInterval.ThisSession` was using Time.realtimeSinceStartupAsDouble – a property which only entered the API since Unity 2020, so now if in Unity < 2020, Time.realtimeSinceStartup is used instead.
+- Fixed: `DeviceSpy.CalcBrowser()` _actually_ should've been branching based on device API lvl, not target API lvl.
 
 
 ## [v5.1.0](../../tags/v5.1.0) - 2023-03-03
