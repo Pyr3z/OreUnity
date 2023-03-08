@@ -32,7 +32,9 @@ internal static class MiscInEditor
     {
       ["fef"]                     = DeviceDimension.DisplayHz,
       [DeviceDimension.OSVersion] = DeviceSpy.OSVersion,
-      ["guid"]                    = System.Guid.NewGuid()
+      ["guid"]                    = System.Guid.NewGuid(),
+      ["platform"]                = Application.platform,
+      ["platformStr"]             = Application.platform.ToInvariant(),
     };
 
     Assert.DoesNotThrow(() =>
