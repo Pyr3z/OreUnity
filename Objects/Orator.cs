@@ -69,24 +69,30 @@ namespace Ore
     {
       if (Instance)
         Instance.reached();
+      #if AGGRESSIVE_KONSOLE
       else
         Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {DEFAULT_REACHED_MSG}");
+      #endif
     }
 
     public static void Reached(Object ctx)
     {
       if (Instance)
         Instance.reached(ctx);
+      #if AGGRESSIVE_KONSOLE
       else
         Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {DEFAULT_REACHED_MSG} (name=\"{ctx}\")", ctx);
+      #endif
     }
 
     public static void Reached(string msg)
     {
       if (Instance)
         Instance.reached(msg);
+      #if AGGRESSIVE_KONSOLE
       else
         Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {DEFAULT_REACHED_MSG} \"{msg}\"");
+      #endif
     }
 
     public static void Reached([NotNull] Type tctx, string msg = DEFAULT_REACHED_MSG)
@@ -104,16 +110,20 @@ namespace Ore
     {
       if (Instance)
         Instance.log(msg);
+      #if AGGRESSIVE_KONSOLE
       else
         Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {msg}");
+      #endif
     }
 
     public static void Log(string msg, Object ctx)
     {
       if (Instance)
         Instance.log(msg, ctx);
+      #if AGGRESSIVE_KONSOLE
       else
         Debug.Log($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
+      #endif
     }
 
     public static void Log([NotNull] Type tctx, string msg)
@@ -144,6 +154,14 @@ namespace Ore
       if (ex is null)
         return;
 
+      #if AGGRESSIVE_KONSOLE
+        if (Instance && Instance.ShouldIgnore(LogType.Exception, ex.Message))
+          return;
+      #else
+        if (!Instance || Instance.ShouldIgnore(LogType.Exception, ex.Message))
+          return;
+      #endif
+
       if (ex is FauxException faux)
       {
         #if DEBUG
@@ -161,16 +179,20 @@ namespace Ore
     {
       if (Instance)
         Instance.warn(msg);
+      #if AGGRESSIVE_KONSOLE
       else
         Debug.LogWarning($"{DEFAULT_KONSOLE_PREFIX} {msg}");
+      #endif
     }
 
     public static void Warn(string msg, Object ctx)
     {
       if (Instance)
         Instance.warn(msg, ctx);
+      #if AGGRESSIVE_KONSOLE
       else
         Debug.LogWarning($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
+      #endif
     }
 
     public static void Warn([NotNull] Type tctx, string msg)
@@ -188,16 +210,20 @@ namespace Ore
     {
       if (Instance)
         Instance.error(msg);
+      #if AGGRESSIVE_KONSOLE
       else
         Debug.LogError($"{DEFAULT_KONSOLE_PREFIX} {msg}");
+      #endif
     }
 
     public static void Error(string msg, Object ctx)
     {
       if (Instance)
         Instance.error(msg, ctx);
+      #if AGGRESSIVE_KONSOLE
       else
         Debug.LogError($"{DEFAULT_KONSOLE_PREFIX} {msg}", ctx);
+      #endif
     }
 
     public static void Error([NotNull] Type tctx, string msg)
@@ -227,6 +253,8 @@ namespace Ore
         return;
       }
 
+      #if AGGRESSIVE_KONSOLE
+
       if (DEFAULT_INCLUDE_CONTEXT && ctx)
       {
         msg = AppendContext(msg, ctx);
@@ -242,6 +270,8 @@ namespace Ore
 
       // ReSharper restore HeuristicUnreachableCode
       #pragma warning restore CS0162
+
+      #endif
     }
 
     public static void FailAssertionNoThrow(string msg)
@@ -257,6 +287,8 @@ namespace Ore
         return;
       }
 
+      #if AGGRESSIVE_KONSOLE
+
       if (DEFAULT_INCLUDE_CONTEXT && ctx)
       {
         msg = AppendContext(msg, ctx);
@@ -264,6 +296,7 @@ namespace Ore
 
       Debug.LogFormat(DEFAULT_ASSERT_LOGTYPE, DEFAULT_ASSERT_LOGOPT,
                       ctx, "{0} {1}", DEFAULT_ASSERT_MSG, msg);
+      #endif
     }
 
 
