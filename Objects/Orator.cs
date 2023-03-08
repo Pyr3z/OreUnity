@@ -467,6 +467,8 @@ namespace Ore
 
   #region Instance public API
 
+    public List<OratorFilter> Filters => m_Filters;
+
     /* IDE1006 => public member name does not match style guide */
     #pragma warning disable IDE1006
     // lowercase function names = convention for instance versions of static methods
@@ -487,17 +489,25 @@ namespace Ore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     private void reached(string msg, Object ctx = null)
     {
+      msg = $"{ReachedMessage} {msg}";
+
+      if (ShouldIgnore(m_ReachedFormat.LogType, msg))
+        return;
+
       FixupMessageContext(ref msg, ref ctx);
 
       // TODO improved stacktrace info from PyroDK
 
-      Debug.LogFormat(m_ReachedFormat.LogType, m_ReachedFormat.LogOption, ctx, "{0} {1}", ReachedMessage, msg);
+      Debug.LogFormat(m_ReachedFormat.LogType, m_ReachedFormat.LogOption, ctx, msg);
     }
 
 
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     private void assertionFailed(string msg, Object ctx = null)
     {
+      if (ShouldIgnore(m_AssertionFailedFormat.LogType, msg))
+        return;
+
       FixupMessageContext(ref msg, ref ctx);
 
       // TODO improved stacktrace info from PyroDK
@@ -513,6 +523,9 @@ namespace Ore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     private void assertionFailedNoThrow(string msg, Object ctx = null)
     {
+      if (ShouldIgnore(m_AssertionFailedFormat.LogType, msg))
+        return;
+
       FixupMessageContext(ref msg, ref ctx);
 
       // TODO improved stacktrace info from PyroDK
@@ -525,6 +538,9 @@ namespace Ore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     private void log(string msg, Object ctx = null)
     {
+      if (ShouldIgnore(LogType.Log, msg))
+        return;
+
       FixupMessageContext(ref msg, ref ctx);
 
       Debug.LogFormat(LogType.Log, m_LogStackTracePolicy, ctx, "{0} {1}", m_OratorPrefix, msg);
@@ -534,6 +550,9 @@ namespace Ore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     private void warn(string msg, Object ctx = null)
     {
+      if (ShouldIgnore(LogType.Warning, msg))
+        return;
+
       FixupMessageContext(ref msg, ref ctx);
 
       Debug.LogFormat(LogType.Warning, LogOption.None, ctx, "{0} {1}", m_OratorPrefix, msg);
@@ -543,6 +562,9 @@ namespace Ore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     private void error(string msg, Object ctx = null)
     {
+      if (ShouldIgnore(LogType.Error, msg))
+        return;
+
       FixupMessageContext(ref msg, ref ctx);
 
       Debug.LogFormat(LogType.Error, LogOption.None, ctx, "{0} {1}", m_OratorPrefix, msg);
@@ -565,7 +587,7 @@ namespace Ore
       [SerializeField, Delayed]
       public string BaseMessage;
 
-      [SerializeField]
+      [SerializeField, HideInInspector]
       public Color32 RichTextColor;
         // TODO: would be SO easy to finish hooking this up
         // TODO: if we moved Ore.Editor.Styles.ColorText(...) into runtime code!
@@ -637,6 +659,11 @@ namespace Ore
     [SerializeField, Tooltip("or, the maximum number of log signatures to keep in RAM to prevent duplicate logging.")]
     private int m_LogOnceMemorySize = DEFAULT_LOGONCE_MEMORY_SIZE;
 
+    [Space]
+
+    [SerializeField]
+    private List<OratorFilter> m_Filters = new List<OratorFilter>();
+
   #endregion Instance fields
 
   #region Internal section
@@ -689,6 +716,18 @@ namespace Ore
       m_FormattedAssertMessage = null;
     }
 
+
+    private bool ShouldIgnore(LogType type, string message)
+    {
+      foreach (var filter in m_Filters)
+      {
+        if (filter.IsMatch(type, message))
+          return true;
+      }
+
+      return false;
+    }
+
     private void FixupMessageContext(ref string msg, ref Object ctx)
     {
       if (!ctx)
@@ -706,6 +745,7 @@ namespace Ore
         msg = string.Empty;
       }
     }
+
 
     private static string AppendContext(string msg, [NotNull] Object ctx)
     {

@@ -16,7 +16,6 @@ namespace Ore
   [System.Serializable]
   public struct OratorFilter : ISerializationCallbackReceiver
   {
-
     [SerializeField]
     public bool Invert;
 
@@ -47,11 +46,44 @@ namespace Ore
     private const long REGEX_TIMEOUT = (long)(0.5 / TimeInterval.TICKS2MS + 0.5);
 
 
-    public bool Filters(LogType type, string message)
+    public OratorFilter(LogTypeFlags types, string regex = null)
+    {
+      Invert         = false;
+      Types          = types;
+      m_MessageRegex = regex;
+      m_Regex        = null;
+
+      RecompileRegex();
+    }
+
+
+    public bool IsMatch(LogType type, string message)
     {
       int flag = 1 << (int)type;
       return Invert ^ ( ((int)Types & flag) == flag &&
                         ( m_Regex is null || m_Regex.IsMatch(message) ) );
+    }
+
+    public OratorFilter Inverted()
+    {
+      return new OratorFilter
+      {
+        Invert         = !Invert,
+        Types          = Types,
+        m_MessageRegex = m_MessageRegex,
+        m_Regex        = m_Regex
+      };
+    }
+
+
+    public static implicit operator OratorFilter (LogTypeFlags flags)
+    {
+      return new OratorFilter(flags);
+    }
+
+    public static implicit operator OratorFilter (string regex)
+    {
+      return new OratorFilter(LogTypeFlags.Any, regex);
     }
 
 
