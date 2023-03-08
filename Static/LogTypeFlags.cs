@@ -14,7 +14,7 @@ namespace Ore
     None      =  0,
     All       = ~0,
     Error     = (1 << LogType.Error),
-    Assert    = (1 << LogType.Warning),
+    Assert    = (1 << LogType.Assert),
     Warning   = (1 << LogType.Warning),
     Log       = (1 << LogType.Log),
     Exception = (1 << LogType.Exception),
