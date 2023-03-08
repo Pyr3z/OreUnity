@@ -7,6 +7,8 @@ using UnityEngine;
 
 using System.Text.RegularExpressions;
 
+using TimeSpan = System.TimeSpan;
+
 
 namespace Ore
 {
@@ -31,7 +33,7 @@ namespace Ore
       }
     }
 
-    [SerializeField, Delayed]
+    [SerializeField, Delayed, Tooltip("Can be left empty to skip.")]
     private string m_MessageRegex;
 
 
@@ -41,6 +43,8 @@ namespace Ore
     private const RegexOptions REGEX_OPTS = RegexOptions.Compiled   |
                                             RegexOptions.Singleline |
                                             RegexOptions.CultureInvariant;
+
+    private const long REGEX_TIMEOUT = (long)(0.5 / TimeInterval.TICKS2MS + 0.5);
 
 
     public bool Filters(LogType type, string message)
@@ -59,7 +63,7 @@ namespace Ore
       }
       else
       {
-        m_Regex = new Regex(m_MessageRegex, REGEX_OPTS);
+        m_Regex = new Regex(m_MessageRegex, REGEX_OPTS, TimeSpan.FromTicks(REGEX_TIMEOUT));
       }
     }
 
