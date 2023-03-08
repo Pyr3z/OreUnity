@@ -5,8 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [v5.1.3](../../tree/unstable) - UNRELEASED
+## [v5.1.4](../../tree/unstable) - UNRELEASED
 - fef
+
+## [v5.2.0](../../tags/v5.2.0) - 2023-03-08
+- In `HashMap`:
+  - Added: overload `Map(key, value, overwrite)` - allows you to pass a parameter to specify overwriting policy. (works nicer with algorithms.)
+  - Changed: `UnmapNulls()` -> Now uses the map's KeyComparator (or the default Comparator for \<V\>) `IsNone(v)` definition to determine which entries to unmap.
+
+- In `Orator`:
+  - Fixed: Squelched warning CS0414 for deprecated field.
 
 
 ## [v5.1.2](../../tags/v5.1.2) - 2023-03-04 (later)

@@ -262,6 +262,15 @@ namespace Ore
     }
 
     /// <summary>
+    ///   If overwrite is false, behaves like <see cref="Map(K,V)"/>; else
+    ///   behaves like <see cref="OverMap"/>.
+    /// </summary>
+    public bool Map([NotNull] in K key, in V val, bool overwrite)
+    {
+      return TryInsert(in key, in val, overwrite, out _ );
+    }
+
+    /// <summary>
     ///   Overload of <see cref="Map(K,V)"/> for callers who need to know about
     ///   potentially preexisting values at the given key.
     /// </summary>
@@ -484,15 +493,19 @@ namespace Ore
     }
 
     /// <summary>
-    ///   Unmaps all entries whose value is currently default(V).
+    ///   Unmaps all entries whose value computes equal to null (given by the
+    ///   IsNone(v) implementation in <see cref="ValueComparator"/> (if defined)
+    ///   or else the <see cref="Comparator{T}.Default"/> comparator).
     /// </summary>
     /// <returns>
     ///   The number of entries unmapped by this operation.
     /// </returns>
-    public int UnmapNulls() // TODO change the public API to reflect the fact that this isn't actually checking for nulls
+    public int UnmapNulls()
     {
       if (m_Count == 0)
         return 0;
+
+      var cmp = m_ValueComparator ?? Comparator<V>.Default;
 
       int precount = m_Count;
 
@@ -500,7 +513,7 @@ namespace Ore
       {
         while (enumerator.MoveNext())
         {
-          if (Equals(enumerator.CurrentValue, default(V)))
+          if (cmp.IsNone(enumerator.CurrentValue))
           {
             enumerator.UnmapCurrent();
           }
