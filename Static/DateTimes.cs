@@ -23,9 +23,21 @@ namespace Ore
     public static readonly DateTime SpreadsheetEpoch = new DateTime(1899, 12, 30, 0, 0, 0, DateTimeKind.Utc);
 
 
+    public const long TicksPerMs     = 10000L;
+    public const long TicksPerSecond = 10000000L;
+    public const long TicksPerHour   = 36000000000L;
+    public const long TicksPerDay    = 864000000000L;
+
+
     public static DateTime Today => DateTime.UtcNow.Date; // Beware of DateTime.Today; it returns local time!
     public static DateTime Tomorrow => DateTime.UtcNow.AddDays(1).Date;
     public static DateTime Yesterday => DateTime.UtcNow.AddDays(-1).Date;
+
+
+    public static bool IsToday(long ticks)
+    {
+      return ticks - ticks % TicksPerDay == Today.Ticks;
+    }
 
 
     public static string ToISO8601(this DateTime timepoint)
