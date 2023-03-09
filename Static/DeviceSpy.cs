@@ -717,7 +717,7 @@ namespace Ore
         }
         else
         {
-          resolv = AndroidBridge.PackageManager.Call<AndroidJavaObject>("resolveActivity", intent, MATCH_DEFAULT_ONLY);
+          resolv = AndroidBridge.PackageManager.Call<AndroidJavaObject>("resolveActivity", intent, (int)MATCH_DEFAULT_ONLY);
         }
 
         if (resolv is null)
