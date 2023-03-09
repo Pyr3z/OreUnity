@@ -4,9 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-
-## [v5.2.1](../../tree/unstable) - UNRELEASED
+## [v5.2.2](../../tree/unstable) - UNRELEASED
 - fef
+
+
+## [v5.2.1](../../tags/v5.2.1) - 2023-03-08 (later)
+- In `Orator`:
+  - Added: `OratorFilter`s may now be supplied to the Orator instance (Resources/Orator.asset), allowing you to filter logs by type or message regex.
+  - Changed: Destroying the Orator instance will now hush all Orator logs, unless you define `AGGRESSIVE_KONSOLE`.
+
+- Fixed: Test assembly not compiling in Unity 2019 ([PrimesCorrectness](Tests/Runtime/PrimesCorrectness.cs)).
 
 
 ## [v5.2.0](../../tags/v5.2.0) - 2023-03-08
