@@ -156,6 +156,19 @@ namespace Ore
       }
     }
 
+    public void SquelchDefaultFailureAction()
+    {
+      if (m_OnFailed != null)
+      {
+        m_OnFailed -= DefaultFailureAction;
+      }
+
+      if (m_OnFailed is null)
+      {
+        m_OnFailed = NoFailureAction;
+      }
+    }
+
 
     public static implicit operator T (Promise<T> promise)
     {
