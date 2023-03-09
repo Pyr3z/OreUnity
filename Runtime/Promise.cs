@@ -7,13 +7,14 @@ using JetBrains.Annotations;
 
 using System.Collections;
 
-using Exception = System.Exception;
+using Exception   = System.Exception;
+using IDisposable = System.IDisposable;
 
 
 namespace Ore
 {
   [PublicAPI]
-  public class Promise<T> : IEnumerator
+  public class Promise<T> : IEnumerator, IDisposable
   {
     public delegate void SuccessAction(T value);
     public delegate void FailureAction([CanBeNull] T flotsam, [CanBeNull] Exception ex);
@@ -196,7 +197,7 @@ namespace Ore
     private FailureAction m_OnFailed;
 
 
-  #region IEnumerator interface
+  #region interfaces
 
     object IEnumerator.Current => null;
 
@@ -218,11 +219,10 @@ namespace Ore
 
         case State.Failed:
           m_OnFailed?.Invoke(m_Value, m_Exception);
-          m_Exception = null;
           break;
       }
 
-      // release delegate handles:
+      m_Exception   = null;
       m_OnSucceeded = null;
       m_OnFailed    = null;
 
@@ -231,6 +231,11 @@ namespace Ore
 
     public void Reset()
     {
+      if (m_Value is IDisposable disposable)
+      {
+        disposable.Dispose();
+      }
+
       m_Value       = default;
       m_State       = State.Pending;
       m_Exception   = null;
@@ -238,7 +243,9 @@ namespace Ore
       m_OnFailed    = null;
     }
 
-  #endregion IEnumerator interface
+    void IDisposable.Dispose() => Reset();
+
+  #endregion interfaces
 
   } // end class Promise
 }
