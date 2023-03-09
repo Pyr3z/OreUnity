@@ -122,12 +122,12 @@ public static class PrimesCorrectness
   {
     DoNext((p,hp) => Primes.NextHashableSize(p, hp));
 
-    int p = Primes.GetRandom(max: Primes.MaxSizePrime >> 1);
-    p = Primes.NextHashableSize(p);
+    int prime = Primes.GetRandom(max: Primes.MaxSizePrime >> 1);
+    prime = Primes.NextHashableSize(prime);
 
-    Assert.True(Primes.IsPrime(p));
-    Assert.Contains(p, Primes.HashableSizes as ICollection);
-    Assert.AreEqual(p, Primes.NextHashableSize(p, incr: 0));
+    Assert.True(Primes.IsPrime(prime));
+    Assert.Contains(prime, Primes.HashableSizes as ICollection);
+    Assert.AreEqual(prime, Primes.NextHashableSize(prime, incr: 0));
   }
 
   private static void DoNext(System.Func<int, int, int> nextFunc)
