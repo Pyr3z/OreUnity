@@ -36,7 +36,7 @@ namespace Ore
 
     public static bool IsToday(long ticks)
     {
-      return ticks - ticks % TicksPerDay == Today.Ticks;
+      return ticks / TicksPerDay == Today.Ticks / TicksPerDay;
     }
 
 
