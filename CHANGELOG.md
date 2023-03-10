@@ -4,8 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v5.2.2](../../tree/unstable) - UNRELEASED
+## [v5.2.3](../../tree/unstable) - UNRELEASED
 - fef
+
+
+## [v5.2.2](../../tags/v5.2.2) - 2023-03-09
+- In `DeviceSpy`:
+  - Fixed: Runtime Java error "no non-static method with name='resolveActivity'..." (in CalcAndroidBrowser()) (see: #37).
+  - _fun fact: the JNI bridge **does** care if you explicitly cast `int` <-> `long` or not..._
+
+- In `Promise<T>`:
+  - Added: Now inherits from IDisposable. This doesn't really do anything meaningful unless `T` (the promised value's type) also implements `IDisposable`.
+  - Added: (smol thing) You can now squelch the default OnFailure callback without having to reconstruct the Promise.
 
 
 ## [v5.2.1](../../tags/v5.2.1) - 2023-03-08 (later)
