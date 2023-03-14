@@ -24,6 +24,7 @@ using TimeSpan = System.TimeSpan;
 using RegionInfo = System.Globalization.RegionInfo;
 
 using Encoding = System.Text.Encoding;
+using System.Globalization;
 
 namespace Ore
 {
@@ -110,7 +111,6 @@ namespace Ore
 
     public static string UDID => s_UDID ?? (s_UDID = CalcVendorUDID());
 
-
     public static long CalcRAMUsageBytes()
     {
       // NOTE: This is where Ore's internal definition for reported RAM resides
@@ -184,6 +184,47 @@ namespace Ore
 
         return json.ToString(prettyPrint ? Formatting.Indented : Formatting.None);
       #endif // NEWTONSOFT_JSON
+    }
+
+    public static IEnumerator CalcCountryFromIP(System.Action<string> callback)
+    {
+      // getCountryWithIP does not care about inputs, they're just used for hashing
+      // Should change this up in the future for 3rd party - Darren
+      string data = "appName=&ipAddress=&timestamp=&hash=74be16979710d4c4e7c6647856088456";
+      UnityWebRequest req = new UnityWebRequest("https://api.boreservers.com/borePlatform2/getCountryWithIP.php");
+      req.method = UnityWebRequest.kHttpVerbPOST;
+      req.downloadHandler = new DownloadHandlerBuffer();
+      req.uploadHandler = new UploadHandlerRaw(data.ToBytes(Encoding.UTF8));
+      req.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+      yield return req.SendWebRequest();
+
+      while (!req.isDone)
+      {
+          yield return null;
+      }
+
+      #if UNITY_2020_1_OR_NEWER
+      if (req.result == UnityWebRequest.Result.Success)
+      #else
+      if (!req.isHttpError && !req.isNetworkError)
+      #endif
+      {
+        var response = JObject.Parse(req.downloadHandler.text);
+        if (response.ContainsKey("result"))
+        {
+          var countryCode = response["result"]["countryCode"].ToString();
+          Orator.Log($"WE GOT COUNTRY: {countryCode}");
+          req.Dispose();
+          if (callback != null) { callback.Invoke(countryCode); }
+        }
+        else
+        {
+          string error = response["error"]["message"].ToString();
+          Orator.Log($"Error encounted when grabbing country code from server: {error}");
+          if (callback != null) { callback.Invoke(null); }
+        }
+      }
     }
 
 
@@ -512,49 +553,8 @@ namespace Ore
       return iso6391;
     }
 
-    private static IEnumerator CalcCountryFromIP(System.Action<string> callback)
-    {
-      // getCountryWithIP does not care about inputs, they're just used for hashing
-      // Should change this up in the future for 3rd party - Darren
-      string data = "appName=&ipAddress=&timestamp=&hash=74be16979710d4c4e7c6647856088456";
-      UnityWebRequest req = new UnityWebRequest("https://api.boreservers.com/borePlatform2/getCountryWithIP.php");
-      req.method = UnityWebRequest.kHttpVerbPOST;
-      req.downloadHandler = new DownloadHandlerBuffer();
-      req.uploadHandler = new UploadHandlerRaw(data.ToBytes(Encoding.UTF8));
-      req.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-      yield return req.SendWebRequest();
-
-      while (!req.isDone)
-      {
-          yield return true;
-      }
-
-      #if UNITY_2020_1_OR_NEWER
-      if (req.result == UnityWebRequest.Result.Success)
-      #else
-      if (!req.isHttpError && !req.isNetworkError)
-      #endif
-      {
-        var response = JObject.Parse(req.downloadHandler.text);
-        if (response.ContainsKey("result"))
-        {
-          var countryCode = response["result"]["countryCode"].ToString();
-          req.Dispose();
-          if (callback != null) { callback.Invoke(countryCode); }
-        }
-        else
-        {
-          string error = response["error"]["message"].ToString();
-          Orator.Log($"Error encounted when grabbing country code from server: {error}");
-          if (callback != null) { callback.Invoke(null); }
-        }
-      }
-    }
-
     private static string CalcISO3166a2() // 2-letter region code
     {
-      // TODO this is probably inaccurate or else slow to call on devices
       return RegionInfo.CurrentRegion.TwoLetterISORegionName;
     }
 
