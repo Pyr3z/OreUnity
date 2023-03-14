@@ -601,21 +601,24 @@ namespace Ore
           return ABI.ARM64;
         else
           return ABI.ARM;
-      #endif // UNITY_IOS
 
-      string type = SystemInfo.processorType;
+      #else
 
-      // Android and Android-like devices are pretty standard here
-      if (type.StartsWith("ARM64"))
-        return ABI.ARM64;
-      else if (type.StartsWith("ARMv7"))
-        return ABI.ARM32;
+        string type = SystemInfo.processorType;
 
-      // Chrome OS (should be a rare case)
-      if (System.Environment.Is64BitOperatingSystem)
-        return ABI.x86_64;
-      else
-        return ABI.x86;
+        // Android and Android-like devices are pretty standard here
+        if (type.StartsWith("ARM64"))
+          return ABI.ARM64;
+        else if (type.StartsWith("ARMv7"))
+          return ABI.ARM32;
+
+        // Chrome OS (should be a rare case)
+        if (System.Environment.Is64BitOperatingSystem)
+          return ABI.x86_64;
+        else
+          return ABI.x86;
+
+      #endif // !UNITY_IOS
     }
 
     // TODO: CalcIsChromeOS() - https://docs.unity3d.com/ScriptReference/Android.AndroidDevice-hardwareType.html
