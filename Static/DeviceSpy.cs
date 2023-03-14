@@ -24,7 +24,6 @@ using TimeSpan = System.TimeSpan;
 using RegionInfo = System.Globalization.RegionInfo;
 
 using Encoding = System.Text.Encoding;
-using System.Globalization;
 
 namespace Ore
 {
@@ -186,6 +185,7 @@ namespace Ore
       #endif // NEWTONSOFT_JSON
     }
 
+    // Probably not the way to do it but it's jankily working for now
     public static IEnumerator CalcCountryFromIP(System.Action<string> callback)
     {
       // getCountryWithIP does not care about inputs, they're just used for hashing
