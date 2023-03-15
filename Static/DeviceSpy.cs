@@ -188,6 +188,11 @@ namespace Ore
     // Probably not the way to do it but it's jankily working for now
     public static IEnumerator CalcCountryFromIP(System.Action<string> callback)
     {
+      if (Application.internetReachability == NetworkReachability.NotReachable)
+      {
+        if (callback != null) { callback.Invoke(null); }
+      }
+
       // getCountryWithIP does not care about inputs, they're just used for hashing
       // Should change this up in the future for 3rd party - Darren
       string data = "appName=&ipAddress=&timestamp=&hash=74be16979710d4c4e7c6647856088456";
@@ -214,7 +219,6 @@ namespace Ore
         if (response.ContainsKey("result"))
         {
           var countryCode = response["result"]["countryCode"].ToString();
-          Orator.Log($"WE GOT COUNTRY: {countryCode}");
           req.Dispose();
           if (callback != null) { callback.Invoke(countryCode); }
         }
@@ -555,6 +559,7 @@ namespace Ore
 
     private static string CalcISO3166a2() // 2-letter region code
     {
+      // TODO this is probably inaccurate or else slow to call on devices
       return RegionInfo.CurrentRegion.TwoLetterISORegionName;
     }
 
