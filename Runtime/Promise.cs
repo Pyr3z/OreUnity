@@ -171,6 +171,12 @@ namespace Ore
     }
 
 
+    public override string ToString()
+    {
+      return $"{m_Value}";
+    }
+
+
     public static implicit operator T (Promise<T> promise)
     {
       if (promise is null)
