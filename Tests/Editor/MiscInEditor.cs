@@ -8,6 +8,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 #if NEWTONSOFT_JSON
@@ -72,6 +73,39 @@ internal static class MiscInEditor
     Assert.Positive(map.Count);
     Assert.True(map.Find("fef", out var fef) && fef.ToString() == "fef!");
     Assert.True(map.Find("one", out var one) && one.GetHashCode() == 1);
+  }
+
+  [Test]
+  public static void NewtonsoftJsonSerialize()
+  {
+    var serializer = JsonSerializer.CreateDefault();
+    var sbob = new System.Text.StringBuilder(2048);
+
+    var map = new HashMap<object,object>
+    {
+      ["fef"]                     = DeviceDimension.DisplayHz,
+      [DeviceDimension.OSVersion] = DeviceSpy.OSVersion,
+      ["guid"]                    = System.Guid.NewGuid(),
+      ["platform"]                = Application.platform,
+      ["platformStr"]             = Application.platform.ToInvariant(),
+    };
+
+    Assert.DoesNotThrow(() =>
+                        {
+                          string json = JsonAuthority.Serialize(map, serializer, sbob);
+                          Debug.Log(json);
+                        });
+
+    var list = new List<IDictionary<object,object>>
+    {
+      map
+    };
+
+    Assert.DoesNotThrow(() =>
+                        {
+                          string json = JsonAuthority.Serialize(list, serializer, sbob);
+                          Debug.Log(json);
+                        });
   }
 
   #endif // NEWTONSOFT_JSON
