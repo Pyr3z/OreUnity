@@ -37,14 +37,24 @@ internal static class MiscInEditor
       ["platformStr"]             = Application.platform.ToInvariant(),
     };
 
+    var serializer = JsonSerializer.CreateDefault();
+
     Assert.DoesNotThrow(() =>
                         {
-                          Debug.Log(JObject.FromObject(map).ToString(Formatting.Indented));
+                          var jobj = JObject.FromObject(map, serializer);
+                          Debug.Log(jobj.ToString(Formatting.Indented));
                         });
 
     Assert.DoesNotThrow(() =>
                         {
-                          Debug.Log(JObject.FromObject(HashMapParams.Default).ToString(Formatting.Indented));
+                          var jobj = JObject.FromObject(HashMapParams.Default, serializer);
+                          Debug.Log(jobj.ToString(Formatting.Indented));
+                        });
+
+    Assert.DoesNotThrow(() =>
+                        {
+                          var jarr = new JArray(JObject.FromObject(map, serializer));
+                          Debug.Log(jarr.ToString(Formatting.Indented));
                         });
   }
 
