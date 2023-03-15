@@ -106,6 +106,17 @@ internal static class MiscInEditor
                           string json = JsonAuthority.Serialize(list, serializer, sbob);
                           Debug.Log(json);
                         });
+
+    var map2 = new HashMap<string,object>
+    {
+      ["data"] = list
+    };
+
+    Assert.DoesNotThrow(() =>
+                        {
+                          string json = JsonAuthority.Serialize(map2, serializer, sbob);
+                          Debug.Log(json);
+                        });
   }
 
   #endif // NEWTONSOFT_JSON
