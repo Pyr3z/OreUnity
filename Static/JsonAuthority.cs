@@ -484,9 +484,11 @@ namespace Ore
             list.Add(Genericize(jarr, null, listMaker, mapMaker));
             break;
 
+          case null:
+            throw new UnanticipatedException("Json.NET JToken type=<null>");
+
           default:
-            Orator.Reached($"ping Levi? type={token.Type}");
-            break;
+            throw new UnanticipatedException($"Json.NET JToken type={token.Type}");
         }
       }
 
