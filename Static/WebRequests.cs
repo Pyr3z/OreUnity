@@ -15,6 +15,17 @@ namespace Ore
   public static class WebRequests
   {
 
+    public static bool Succeeded([CanBeNull] this UnityWebRequest request)
+    {
+      // ReSharper disable once MergeIntoPattern
+      return request != null &&
+             #if UNITY_2020_1_OR_NEWER
+             request.result == UnityWebRequest.Result.Success;
+             #else
+             !request.isNetworkError && !request.isHttpError;
+             #endif
+    }
+
     public static Promise<string> Promise([NotNull] this UnityWebRequest request,
                                           string errorSubstring = null)
     {
@@ -47,20 +58,10 @@ namespace Ore
         {
           promise.Maybe(request.downloadHandler.text);
 
-        #if UNITY_2020_1_OR_NEWER
-          if (request.result == UnityWebRequest.Result.Success)
-        #else
-          if (!request.isHttpError && !request.isNetworkError)
-        #endif
+          if (request.Succeeded() && ( errorSubstring.IsEmpty() ||
+                                       !promise.Value.Contains(errorSubstring) ))
           {
-            if (errorSubstring.IsEmpty() || !promise.Value.Contains(errorSubstring))
-            {
-              promise.Complete();
-            }
-            else
-            {
-              promise.Fail();
-            }
+            promise.Complete();
           }
           else
           {

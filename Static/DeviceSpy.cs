@@ -211,31 +211,32 @@ namespace Ore
       promise.OnSucceeded += response =>
       {
         // TODO implement non Json.NET solution ?
-      #if NEWTONSOFT_JSON
 
-        var jobj = JObject.Parse(response, JsonAuthority.LoadStrict);
+        #if NEWTONSOFT_JSON
 
-        string geoCode = jobj["response"]?["countryCode"]?.ToString();
+          var jobj = JObject.Parse(response, JsonAuthority.LoadStrict);
 
-        if (geoCode.IsEmpty() || !geoCode.Length.IsBetween(2, 6))
-        {
-          promise.Forget()
-                 .FailWith(new UnanticipatedException($"{nameof(PromiseCountryFromIP)} -> \"{geoCode}\""));
-          return;
-        }
+          string geoCode = jobj["response"]?["countryCode"]?.ToString();
 
-        promise.CompleteWith(geoCode);
-        // (so subsequent OnSucceeded callbacks will have the parsed geo code)
+          if (geoCode.IsEmpty() || !geoCode.Length.IsBetween(2, 6))
+          {
+            promise.Forget()
+                   .FailWith(new UnanticipatedException($"{nameof(PromiseCountryFromIP)} -> \"{geoCode}\""));
+            return;
+          }
 
-        LittleBirdie.CountryISOString = geoCode;
-        // (LittleBirdie is used to propogate changes to listeners)
+          promise.CompleteWith(geoCode);
+          // (so subsequent OnSucceeded callbacks will have the parsed geo code)
 
-      #elif DEBUG
+          LittleBirdie.CountryISOString = geoCode;
+          // (LittleBirdie is used to propogate changes to listeners)
 
-        Orator.Warn($"Newtonsoft JSON is not available; {nameof(CalcCountryFromIP)} will pass up the raw server response.\n" +
-                     response);
+        #elif DEBUG
 
-      #endif // NEWTONSOFT_JSON
+          Orator.Warn($"Newtonsoft JSON is not available; {nameof(CalcCountryFromIP)} will pass up the raw server response.\n" +
+                       response);
+
+        #endif // NEWTONSOFT_JSON
       };
 
       return promise;
