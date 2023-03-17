@@ -106,6 +106,16 @@ namespace Ore
       return this;
     }
 
+    public Promise<T> UpdateValue(T value)
+    {
+      if (m_State == State.Succeeded)
+      {
+        m_Value = value;
+      }
+
+      return this;
+    }
+
     public Promise<T> Forget()
     {
       // can forget from any state~
