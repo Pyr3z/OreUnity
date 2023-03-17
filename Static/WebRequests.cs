@@ -26,6 +26,21 @@ namespace Ore
              #endif
     }
 
+    public static string GetErrorInfo([NotNull] this UnityWebRequest request)
+    {
+      #if UNITY_2020_1_OR_NEWER
+
+      return $"result={request.result}, error=\"{request.error}\"\n" +
+             $"response={request.downloadHandler?.text}";
+
+      #else
+
+      return $"isHttpError={request.isHttpError}, isNetworkError={request.isNetworkError}, error=\"{request.error}\"\n" +
+             $"response={request.downloadHandler?.text}";
+
+      #endif
+    }
+
     public static Promise<string> Promise([NotNull] this UnityWebRequest request,
                                           string errorSubstring = null)
     {
