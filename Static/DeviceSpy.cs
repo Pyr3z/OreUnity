@@ -216,7 +216,7 @@ namespace Ore
 
           var jobj = JObject.Parse(response, JsonAuthority.LoadStrict);
 
-          string geoCode = jobj["response"]?["countryCode"]?.ToString();
+          string geoCode = jobj["result"]?["countryCode"]?.ToString();
 
           if (geoCode.IsEmpty() || !geoCode.Length.IsBetween(2, 6))
           {
