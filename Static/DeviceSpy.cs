@@ -216,7 +216,7 @@ namespace Ore
         if (!req.isHttpError && !req.isNetworkError)
       #endif
         {
-          #if !NEWTONSOFT_JSON
+          #if NEWTONSOFT_JSON
           var response = JObject.Parse(req.downloadHandler.text);
 
           string code = response["result"]?["countryCode"]?.ToString();
