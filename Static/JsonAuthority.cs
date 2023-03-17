@@ -232,6 +232,27 @@ namespace Ore
 
 
     [NotNull]
+    public static IDictionary<string,object> GenericParse(string rawJson,
+                                                          System.Func<int, IDictionary<string,object>> mapMaker = null,
+                                                          System.Func<int, IList<object>> listMaker = null)
+    {
+      if (mapMaker is null)
+      {
+        mapMaker = DefaultMapMaker;
+      }
+
+      var jobj = JsonConvert.DeserializeObject<JObject>(rawJson, SerializerSettings);
+
+      if (jobj is null)
+      {
+        return mapMaker(1);
+      }
+
+      return Genericize(jobj, null, mapMaker: mapMaker, listMaker: listMaker);
+    }
+
+
+    [NotNull]
     public static IList<object> FixupNestedContainers([NotNull] IList<object> list, int maxRecursionDepth = 3)
     {
       int ilen = list.Count;
@@ -393,9 +414,9 @@ namespace Ore
 
 
     [NotNull]
-    public static HashMap<string,object> Genericize([NotNull] JObject jObject, [CanBeNull] HashMap<string,object> map,
-                                                    System.Func<int, HashMap<string,object>> mapMaker = null,
-                                                    System.Func<int, IList<object>> listMaker = null)
+    public static IDictionary<string,object> Genericize([NotNull] JObject jObject, [CanBeNull] IDictionary<string,object> map,
+                                                        System.Func<int, IDictionary<string,object>> mapMaker = null,
+                                                        System.Func<int, IList<object>> listMaker = null)
     {
       if (mapMaker is null)
       {
@@ -414,7 +435,11 @@ namespace Ore
       else
       {
         map.Clear();
-        map.EnsureCapacity(jObject.Count);
+
+        if (map is HashMap<string,object> hashMap)
+        {
+          hashMap.EnsureCapacity(jObject.Count);
+        }
       }
 
       foreach (var property in jObject)
@@ -447,7 +472,7 @@ namespace Ore
 
     public static IList<object> Genericize([NotNull] JArray jArray, [CanBeNull] IList<object> list,
                                            System.Func<int, IList<object>> listMaker = null,
-                                           System.Func<int, HashMap<string,object>> mapMaker = null)
+                                           System.Func<int, IDictionary<string,object>> mapMaker = null)
     {
       if (listMaker is null)
       {
@@ -507,7 +532,28 @@ namespace Ore
         // Json.NET serializers created from now on
     }
 
-    #endif // NEWTONSOFT_JSON
+
+    #else // !NEWTONSOFT_JSON
+
+
+    [NotNull]
+    public static IDictionary<string,object> GenericParse(string rawJson,
+                                                          System.Func<int, IDictionary<string,object>> mapMaker = null,
+                                                          System.Func<int, IList<object>> listMaker = null)
+    {
+      if (mapMaker is null)
+      {
+        mapMaker = DefaultMapMaker;
+      }
+
+      // TODO
+
+      throw new System.NotImplementedException($"{nameof(JsonAuthority)}.{nameof(GenericParse)}(...) - sans NEWTONSOFT_JSON");
+    }
+
+    // TODO the rest
+
+    #endif // !NEWTONSOFT_JSON
 
 
     private static HashMap<string,object> DefaultMapMaker(int capacity)
