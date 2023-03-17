@@ -225,9 +225,6 @@ namespace Ore
             return;
           }
 
-          promise.CompleteWith(geoCode);
-          // (so subsequent OnSucceeded callbacks will have the parsed geo code)
-
           LittleBirdie.CountryISOString = geoCode;
           // (LittleBirdie is used to propogate changes to listeners)
 
