@@ -4,8 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v5.2.3](../../tree/unstable) - UNRELEASED
-- fef
+## [v5.3.0](../../tree/unstable) - UNRELEASED
+- In `DeviceSpy`:
+  - Added: CalcCountryFromIP() - softly internal, this API should be treated as volatile and may change sans major version increment.
 
 
 ## [v5.2.2](../../tags/v5.2.2) - 2023-03-09
