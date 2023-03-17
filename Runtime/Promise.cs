@@ -108,17 +108,14 @@ namespace Ore
 
     public Promise<T> Forget()
     {
-      if (m_State < State.Forgotten)
-      {
-        m_State = State.Forgotten;
-      }
-
+      // can forget from any state~
+      m_State = State.Forgotten;
       return this;
     }
 
     public Promise<T> Fail()
     {
-      if (m_State > State.Failed)
+      if (m_State == State.Succeeded)
       {
         Orator.Error<Promise<T>>("Cannot fail a Promise once it's already completed!");
       }
@@ -132,7 +129,7 @@ namespace Ore
 
     public Promise<T> FailWith(T flotsam)
     {
-      if (m_State > State.Failed)
+      if (m_State == State.Succeeded)
       {
         Orator.Error<Promise<T>>("Cannot fail a Promise once it's already completed!");
       }
@@ -147,7 +144,7 @@ namespace Ore
 
     public Promise<T> FailWith(Exception ex)
     {
-      if (m_State > State.Failed)
+      if (m_State == State.Succeeded)
       {
         Orator.Error<Promise<T>>("Cannot fail a Promise once it's already completed! (gonna throw something faux:)");
         Orator.NFE(ex.Silenced());
