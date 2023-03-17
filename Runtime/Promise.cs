@@ -36,11 +36,40 @@ namespace Ore
 
 
     public T    Value       => m_Value;
+
+    /// <summary>
+    ///   A promise is considered "completed" as long as it's not "pending".
+    ///   That is, a completed promise could have succeeded, failed, OR it could
+    ///   have been forgotten.
+    /// </summary>
     public bool IsCompleted => m_State > State.Pending;
+
+    /// <summary>
+    ///   Forgotten promises are considered completed, having neither succeeded
+    ///   nor failed.
+    /// </summary>
     public bool IsForgotten => m_State == State.Forgotten;
+
+    /// <summary>
+    ///   The promise completed successfully.
+    /// </summary>
     public bool Succeeded   => m_State == State.Succeeded;
+
+    /// <summary>
+    ///   The promise completed, but was marked as a failure.
+    /// </summary>
     public bool Failed      => m_State == State.Failed;
 
+
+    /// <summary>
+    ///   This event is invoked in a subsequent call to <see cref="IEnumerator.MoveNext"/>,
+    ///   provided that either <see cref="Complete"/> or <see cref="CompleteWith"/>
+    ///   were called successfully on this promise.
+    /// </summary>
+    /// <remarks>
+    ///   If the promise already succeeded by the time you add your delegate to
+    ///   this event, the delegate will be invoked immediately upon subscription.
+    /// </remarks>
     public event SuccessAction OnSucceeded
     {
       add
@@ -58,6 +87,16 @@ namespace Ore
       remove => m_OnSucceeded -= value;
     }
 
+    /// <summary>
+    ///   This event is invoked in a subsequent call to <see cref="IEnumerator.MoveNext"/>
+    ///   provided that either <see cref="Fail"/>, <see cref="FailWith(T)"/>,
+    ///   or <see cref="FailWith(Exception)"/> were called on this promise.
+    /// </summary>
+    /// <remarks>
+    ///   If the promise already completed with failure by the time you add your
+    ///   delegate to this event, the delegate will be invoked immediately upon
+    ///   subscription.
+    /// </remarks>
     public event FailureAction OnFailed
     {
       add
@@ -76,9 +115,13 @@ namespace Ore
     }
 
     /// <summary>
-    ///   Event callback that is invoked regardless of success/fail, so long as
-    ///   the promise is no longer pending.
+    ///   Event callback that is invoked regardless of success/fail/forgotten,
+    ///   so long as the promise is no longer pending.
     /// </summary>
+    /// <remarks>
+    ///   If the promise already completed by the time you add your delegate to
+    ///   this event, the delegate will be invoked immediately upon subscription.
+    /// </remarks>
     public event Action OnCompleted
     {
       add
@@ -92,6 +135,10 @@ namespace Ore
     }
 
 
+    /// <summary>
+    ///   Tentatively sets the promise's value if and only if it is currently in
+    ///   a "pending" state. Doing so does not change the promise's state.
+    /// </summary>
     public Promise<T> Maybe(T value)
     {
       if (m_State == State.Pending)
@@ -102,6 +149,10 @@ namespace Ore
       return this;
     }
 
+    /// <summary>
+    ///   Sets the promise's state to <see cref="Succeeded"/>, if and only if
+    ///   the promise is still pending.
+    /// </summary>
     public Promise<T> Complete()
     {
       if (m_State == State.Pending)
@@ -112,6 +163,11 @@ namespace Ore
       return this;
     }
 
+    /// <summary>
+    ///   Equivalent to calling <see cref="Maybe"/> and <see cref="Complete"/>
+    ///   in sequence, EXCEPT that it can be used to update an already <see cref="Succeeded"/>
+    ///   promise with a new value.
+    /// </summary>
     public Promise<T> CompleteWith(T value)
     {
       if (m_State == State.Pending || m_State == State.Succeeded)
@@ -123,6 +179,15 @@ namespace Ore
       return this;
     }
 
+    /// <summary>
+    ///   No matter what state the promise is currently in, forget about it.
+    /// </summary>
+    /// <remarks>
+    ///   If the "forgotten" state remains unchanged until the next
+    ///   <see cref="IEnumerator.MoveNext"/>, then the value held by this
+    ///   promise will be overwritten with default(T) when said MoveNext() is
+    ///   invoked.
+    /// </remarks>
     public Promise<T> Forget()
     {
       // can forget from any state~
@@ -130,6 +195,14 @@ namespace Ore
       return this;
     }
 
+    /// <summary>
+    ///   Marks the promise as <see cref="Failed"/>, if and only if it hasn't
+    ///   already been marked as <see cref="Succeeded"/>.
+    /// </summary>
+    /// <remarks>
+    ///   You can still mark a "Succeeded" promise as "Failed" if you explicitly
+    ///   call <see cref="Forget"/> first.
+    /// </remarks>
     public Promise<T> Fail()
     {
       if (m_State == State.Succeeded)
@@ -144,7 +217,14 @@ namespace Ore
       return this;
     }
 
-    public Promise<T> FailWith(T flotsam)
+    /// <inheritdoc cref="Fail"/>
+    /// <param name="flotsam">
+    ///   Following this operation, the "flotsam" value will be passed to
+    ///   <see cref="OnFailed"/> and be returned by this.<see cref="Value"/>.
+    ///   Thus, the meaning of this parameter is defined by the caller (you),
+    ///   and typically varies by use case.
+    /// </param>
+    public Promise<T> FailWith([CanBeNull] T flotsam)
     {
       if (m_State == State.Succeeded)
       {
@@ -159,7 +239,12 @@ namespace Ore
       return this;
     }
 
-    public Promise<T> FailWith(Exception ex)
+    /// <inheritdoc cref="Fail"/>
+    /// <param name="ex">
+    ///   Specify an exception to associate this promise's failure with a more
+    ///   specific reason <i>why</i>.
+    /// </param>
+    public Promise<T> FailWith([CanBeNull] Exception ex)
     {
       if (m_State == State.Succeeded)
       {
@@ -187,6 +272,11 @@ namespace Ore
     }
 
 
+    /// <summary>
+    ///   Call me if you already created your promise object, and don't want to
+    ///   hear from the default <see cref="OnFailed"/> action.
+    ///   <seealso cref="Orator.NFE">Orator.NFE(...)</seealso>
+    /// </summary>
     public void SquelchDefaultFailureAction()
     {
       if (m_OnFailed != null)
@@ -198,7 +288,8 @@ namespace Ore
 
     /// <summary>
     ///   Danger: Blocks the current thread while this promise is pending.
-    ///   You probably don't want to call this from the main thread.
+    ///   You probably don't want to call this from the main thread, but I'm not
+    ///   your boss.
     /// </summary>
     public void AwaitBlocking()
     {
@@ -221,6 +312,8 @@ namespace Ore
     /// <param name="key">
     ///   A string key retval that you can use to refer to the coroutine spawned
     ///   by this method later.
+    ///   <seealso cref="ActiveScene.Coroutines">ActiveScene.Coroutines</seealso>
+    ///   <seealso cref="ICoroutineRunner"/>
     /// </param>
     public void AwaitCoroutine(out string key)
     {
@@ -299,6 +392,14 @@ namespace Ore
       return false;
     }
 
+    /// <summary>
+    ///   Resets this promise back to its default, valueless pending state.
+    /// </summary>
+    /// <remarks>
+    ///   If you originally squelched the default failure action, you will need
+    ///   to call <see cref="SquelchDefaultFailureAction"/> explicitly after
+    ///   calling Reset().
+    /// </remarks>
     public void Reset()
     {
       if (m_Value is IDisposable disposable)
@@ -310,7 +411,7 @@ namespace Ore
       m_State       = State.Pending;
       m_Exception   = null;
       m_OnSucceeded = null;
-      m_OnFailed    = null;
+      m_OnFailed    = DefaultFailureAction;
       m_OnCompleted = null;
     }
 
