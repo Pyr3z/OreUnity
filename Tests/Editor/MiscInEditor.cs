@@ -174,4 +174,32 @@ internal static class MiscInEditor
     Assert.True(ok);
   }
 
+
+  [Test]
+  public static void ActionNullability()
+  {
+    System.Action action = null;
+
+    Assert.DoesNotThrow(() =>
+                        {
+                          action += Orator.Reached;
+                        });
+
+    Assert.NotNull(action);
+
+    Assert.DoesNotThrow(() =>
+                        {
+                          action -= Orator.Reached;
+                        });
+
+    Assert.Null(action);
+
+    Assert.DoesNotThrow(() =>
+                        {
+                          action -= Orator.Reached;
+                        });
+
+    Assert.Null(action);
+  }
+
 } // end class MiscInEditor
