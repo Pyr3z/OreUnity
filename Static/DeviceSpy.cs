@@ -185,7 +185,7 @@ namespace Ore
       #endif // NEWTONSOFT_JSON
     }
 
-    public static Promise<string> TryCalcCountryFromIP()
+    public static Promise<string> PromiseCountryFromIP(int timeout = 30)
     {
       // getCountryWithIP does not care about inputs, they're just used for hashing
       // Should change this up in the future for 3rd party - Darren
@@ -203,11 +203,14 @@ namespace Ore
 
       req.SetRequestHeader("Content-Type", MIME);
 
+      req.timeout = timeout;
+
       var promise = req.Promise(ERRORMARK);
                     // Note: extension calls req.Dispose() for us
 
       promise.OnSucceeded += response =>
       {
+        // TODO implement non Json.NET solution ?
       #if NEWTONSOFT_JSON
 
         var jobj = JObject.Parse(response, JsonAuthority.LoadStrict);
@@ -217,7 +220,7 @@ namespace Ore
         if (geoCode.IsEmpty())
         {
           promise.Forget()
-                 .FailWith(new UnanticipatedException(nameof(TryCalcCountryFromIP)));
+                 .FailWith(new UnanticipatedException(nameof(PromiseCountryFromIP)));
           return;
         }
 
