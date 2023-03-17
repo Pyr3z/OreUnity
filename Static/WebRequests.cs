@@ -30,24 +30,27 @@ namespace Ore
       try
       {
         asyncOp = request.SendWebRequest();
+
+        if (asyncOp is null)
+        {
+          return promise.FailWith(new System.InvalidOperationException(request.url));
+        }
       }
       catch (System.Exception ex)
       {
         return promise.FailWith(ex);
       }
 
-      asyncOp.completed += (ao) =>
+      asyncOp.completed += _ =>
       {
         try
         {
-          var req = ((UnityWebRequestAsyncOperation)ao).webRequest;
-
-          promise.Maybe(req.downloadHandler.text);
+          promise.Maybe(request.downloadHandler.text);
 
         #if UNITY_2020_1_OR_NEWER
-          if (req.result == UnityWebRequest.Result.Success)
+          if (request.result == UnityWebRequest.Result.Success)
         #else
-          if (!req.isHttpError && !req.isNetworkError)
+          if (!request.isHttpError && !request.isNetworkError)
         #endif
           {
             if (errorSubstring.IsEmpty() || !promise.Value.Contains(errorSubstring))
@@ -67,6 +70,10 @@ namespace Ore
         catch (System.Exception ex)
         {
           promise.FailWith(ex);
+        }
+        finally
+        {
+          request.Dispose();
         }
       };
 
