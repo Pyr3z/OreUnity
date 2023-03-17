@@ -24,21 +24,12 @@ namespace Ore
       Orator.NFE(ex);
     }
 
-    private static void NoFailureAction(T flotsam, Exception ex)
-    {
-      /* intentionally left blank */
-    }
 
-
-    public Promise()
+    public Promise(bool squelchDefaultFailAction = false)
     {
-    }
-
-    public Promise(bool squelchDefaultFailAction)
-    {
-      if (squelchDefaultFailAction)
+      if (!squelchDefaultFailAction)
       {
-        m_OnFailed = NoFailureAction;
+        m_OnFailed = DefaultFailureAction;
       }
     }
 
@@ -150,11 +141,6 @@ namespace Ore
       {
         m_Exception = MultiException.Create(m_Exception, ex);
       }
-
-      if (m_OnFailed is null)
-      {
-        m_OnFailed = DefaultFailureAction;
-      }
     }
 
     public void SquelchDefaultFailureAction()
@@ -162,11 +148,6 @@ namespace Ore
       if (m_OnFailed != null)
       {
         m_OnFailed -= DefaultFailureAction;
-      }
-
-      if (m_OnFailed is null)
-      {
-        m_OnFailed = NoFailureAction;
       }
     }
 
