@@ -9,6 +9,7 @@ using System.Collections;
 
 using Exception   = System.Exception;
 using IDisposable = System.IDisposable;
+using Action      = System.Action;
 
 
 namespace Ore
@@ -36,7 +37,7 @@ namespace Ore
 
     public T    Value       => m_Value;
     public bool IsCompleted => m_State > State.Pending;
-    public bool Forgotten   => m_State == State.Forgotten;
+    public bool IsForgotten => m_State == State.Forgotten;
     public bool Succeeded   => m_State == State.Succeeded;
     public bool Failed      => m_State == State.Failed;
 
@@ -50,7 +51,7 @@ namespace Ore
             m_OnSucceeded += value;
             break;
           case State.Succeeded:
-            value?.Invoke(m_Value); // TODO behaves differently than if init'd early?
+            value?.Invoke(m_Value);
             break;
         }
       }
@@ -72,6 +73,22 @@ namespace Ore
         }
       }
       remove => m_OnFailed -= value;
+    }
+
+    /// <summary>
+    ///   Event callback that is invoked regardless of success/fail, so long as
+    ///   the promise is no longer pending.
+    /// </summary>
+    public event Action OnCompleted
+    {
+      add
+      {
+        if (m_State == State.Pending)
+          m_OnCompleted += value;
+        else
+          value?.Invoke();
+      }
+      remove => m_OnCompleted -= value;
     }
 
 
@@ -97,20 +114,10 @@ namespace Ore
 
     public Promise<T> CompleteWith(T value)
     {
-      if (m_State == State.Pending)
+      if (m_State == State.Pending || m_State == State.Succeeded)
       {
         m_Value = value;
         m_State = State.Succeeded;
-      }
-
-      return this;
-    }
-
-    public Promise<T> UpdateValue(T value)
-    {
-      if (m_State == State.Succeeded)
-      {
-        m_Value = value;
       }
 
       return this;
@@ -218,6 +225,7 @@ namespace Ore
 
     private SuccessAction m_OnSucceeded;
     private FailureAction m_OnFailed;
+    private Action        m_OnCompleted;
 
 
   #region interfaces
@@ -249,6 +257,12 @@ namespace Ore
       m_OnSucceeded = null;
       m_OnFailed    = null;
 
+      if (m_OnCompleted != null)
+      {
+        m_OnCompleted.Invoke();
+        m_OnCompleted = null;
+      }
+
       return false;
     }
 
@@ -264,6 +278,7 @@ namespace Ore
       m_Exception   = null;
       m_OnSucceeded = null;
       m_OnFailed    = null;
+      m_OnCompleted = null;
     }
 
     void IDisposable.Dispose()
