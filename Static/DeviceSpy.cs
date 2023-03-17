@@ -217,10 +217,10 @@ namespace Ore
 
         string geoCode = jobj["response"]?["countryCode"]?.ToString();
 
-        if (geoCode.IsEmpty())
+        if (geoCode.IsEmpty() || !geoCode.Length.IsBetween(2, 6))
         {
           promise.Forget()
-                 .FailWith(new UnanticipatedException(nameof(PromiseCountryFromIP)));
+                 .FailWith(new UnanticipatedException($"{nameof(PromiseCountryFromIP)} -> \"{geoCode}\""));
           return;
         }
 
