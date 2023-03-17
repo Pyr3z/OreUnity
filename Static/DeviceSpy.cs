@@ -189,9 +189,10 @@ namespace Ore
     {
       // getCountryWithIP does not care about inputs, they're just used for hashing
       // Should change this up in the future for 3rd party - Darren
-      const string PARAMS = "appName=&ipAddress=&timestamp=&hash=74be16979710d4c4e7c6647856088456";
-      const string API    = "https://api.boreservers.com/borePlatform2/getCountryWithIP.php";
-      const string MIME   = "application/x-www-form-urlencoded";
+      const string PARAMS    = "appName=&ipAddress=&timestamp=&hash=74be16979710d4c4e7c6647856088456";
+      const string API       = "https://api.boreservers.com/borePlatform2/getCountryWithIP.php";
+      const string MIME      = "application/x-www-form-urlencoded";
+      const string ERRORMARK = "\"error\"";
 
       var req = new UnityWebRequest(API)
       {
@@ -202,7 +203,7 @@ namespace Ore
 
       req.SetRequestHeader("Content-Type", MIME);
 
-      var promise = req.Promise("\"error\"");
+      var promise = req.Promise(ERRORMARK);
                     // Note: extension calls req.Dispose() for us
 
       promise.OnSucceeded += response =>
@@ -236,62 +237,6 @@ namespace Ore
 
       return promise;
     }
-
-    // Probably not the way to do it but it's jankily working for now
-    public static IEnumerator CalcCountryFromIP(System.Action<string> callback)
-    {
-      if (Application.internetReachability == NetworkReachability.NotReachable)
-      {
-        callback?.Invoke(CountryISOString);
-        yield break;
-      }
-
-      // getCountryWithIP does not care about inputs, they're just used for hashing
-      // Should change this up in the future for 3rd party - Darren
-      const string    PARAMS = "appName=&ipAddress=&timestamp=&hash=74be16979710d4c4e7c6647856088456";
-      const string    API    = "https://api.boreservers.com/borePlatform2/getCountryWithIP.php";
-      const string    MIME   = "application/x-www-form-urlencoded";
-
-      using (var req = new UnityWebRequest(API))
-      {
-        req.method          = UnityWebRequest.kHttpVerbPOST;
-        req.downloadHandler = new DownloadHandlerBuffer();
-        req.uploadHandler   = new UploadHandlerRaw(PARAMS.ToBytes(Encoding.UTF8));
-
-        req.SetRequestHeader("Content-Type", MIME);
-
-        yield return req.SendWebRequest();
-
-      #if UNITY_2020_1_OR_NEWER
-        if (req.result == UnityWebRequest.Result.Success)
-      #else
-        if (!req.isHttpError && !req.isNetworkError)
-      #endif
-        {
-          #if NEWTONSOFT_JSON
-          var response = JObject.Parse(req.downloadHandler.text);
-
-          string code = response["result"]?["countryCode"]?.ToString();
-
-          if (code != null)
-          {
-            s_CountryISO3166a2 = code;
-            callback?.Invoke(code);
-          }
-          else
-          {
-            string error = response["error"]?["message"]?.ToString();
-            Orator.Log($"Error encounted when grabbing country code from server: {error}");
-            callback?.Invoke(CountryISOString);
-          }
-          #else
-          Orator.Warn($"Newtonsoft JSON is not available. {nameof(CalcCountryFromIP)} will pass up the raw server response.");
-          callback?.Invoke(req.downloadHandler.text);
-          #endif // !NEWTONSOFT_JSON
-        }
-      }
-    }
-
 
     #if UNITY_EDITOR
 
