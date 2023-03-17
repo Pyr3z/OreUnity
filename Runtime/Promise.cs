@@ -249,7 +249,12 @@ namespace Ore
       m_OnFailed    = null;
     }
 
-    void IDisposable.Dispose() => Reset();
+    void IDisposable.Dispose()
+    {
+      // invoke MoveNext just in case we haven't invoked our callbacks yet:
+      _ = ((IEnumerator)this).MoveNext();
+      Reset();
+    }
 
   #endregion interfaces
 
