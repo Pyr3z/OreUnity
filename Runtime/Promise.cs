@@ -75,72 +75,101 @@ namespace Ore
     }
 
 
-    public void Maybe(T value)
+    public Promise<T> Maybe(T value)
     {
       if (m_State == State.Pending)
       {
         m_Value = value;
       }
+
+      return this;
     }
 
-    public void Complete()
+    public Promise<T> Complete()
     {
       if (m_State == State.Pending)
       {
         m_State = State.Succeeded;
       }
+
+      return this;
     }
 
-    public void CompleteWith(T value)
+    public Promise<T> CompleteWith(T value)
     {
       if (m_State == State.Pending)
       {
         m_Value = value;
         m_State = State.Succeeded;
       }
+
+      return this;
     }
 
-    public void Forget()
+    public Promise<T> Forget()
     {
       if (m_State < State.Forgotten)
       {
         m_State = State.Forgotten;
       }
+
+      return this;
     }
 
-    public void Fail()
+    public Promise<T> Fail()
     {
       if (m_State > State.Failed)
       {
         Orator.Error<Promise<T>>("Cannot fail a Promise once it's already completed!");
-        return;
+      }
+      else
+      {
+        m_State = State.Failed;
       }
 
-      m_State = State.Failed;
+      return this;
     }
 
-    public void FailWith(Exception ex)
+    public Promise<T> FailWith(T flotsam)
+    {
+      if (m_State > State.Failed)
+      {
+        Orator.Error<Promise<T>>("Cannot fail a Promise once it's already completed!");
+      }
+      else
+      {
+        m_Value = flotsam;
+        m_State = State.Failed;
+      }
+
+      return this;
+    }
+
+    public Promise<T> FailWith(Exception ex)
     {
       if (m_State > State.Failed)
       {
         Orator.Error<Promise<T>>("Cannot fail a Promise once it's already completed! (gonna throw something faux:)");
         Orator.NFE(ex.Silenced());
-        return;
       }
-
-      m_State = State.Failed;
-
-      if (ex is null)
-        return;
-
-      if (m_Exception is null)
+      else
       {
-        m_Exception = ex;
+        m_State = State.Failed;
+
+        if (ex != null)
+        {
+          if (m_Exception is null)
+          {
+            m_Exception = ex;
+          }
+          else if (m_Exception != ex)
+          {
+            m_Exception = MultiException.Create(m_Exception, ex);
+          }
+        }
       }
-      else if (m_Exception != ex)
-      {
-        m_Exception = MultiException.Create(m_Exception, ex);
-      }
+
+      return this;
     }
 
     public void SquelchDefaultFailureAction()
