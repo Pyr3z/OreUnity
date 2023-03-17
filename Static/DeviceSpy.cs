@@ -185,6 +185,58 @@ namespace Ore
       #endif // NEWTONSOFT_JSON
     }
 
+    public static Promise<string> TryCalcCountryFromIP()
+    {
+      // getCountryWithIP does not care about inputs, they're just used for hashing
+      // Should change this up in the future for 3rd party - Darren
+      const string PARAMS = "appName=&ipAddress=&timestamp=&hash=74be16979710d4c4e7c6647856088456";
+      const string API    = "https://api.boreservers.com/borePlatform2/getCountryWithIP.php";
+      const string MIME   = "application/x-www-form-urlencoded";
+
+      var req = new UnityWebRequest(API)
+      {
+        method          = UnityWebRequest.kHttpVerbPOST,
+        downloadHandler = new DownloadHandlerBuffer(),
+        uploadHandler   = new UploadHandlerRaw(PARAMS.ToBytes(Encoding.UTF8))
+      };
+
+      req.SetRequestHeader("Content-Type", MIME);
+
+      var promise = req.Promise("\"error\"");
+                    // Note: extension calls req.Dispose() for us
+
+      promise.OnSucceeded += response =>
+      {
+      #if NEWTONSOFT_JSON
+
+        var jobj = JObject.Parse(response, JsonAuthority.LoadStrict);
+
+        string geoCode = jobj["response"]?["countryCode"]?.ToString();
+
+        if (geoCode.IsEmpty())
+        {
+          promise.Forget()
+                 .FailWith(new UnanticipatedException(nameof(TryCalcCountryFromIP)));
+          return;
+        }
+
+        promise.CompleteWith(geoCode);
+        // (so subsequent OnSucceeded callbacks will have the parsed geo code)
+
+        LittleBirdie.CountryISOString = geoCode;
+        // (LittleBirdie is used to propogate changes to listeners)
+
+      #elif DEBUG
+
+        Orator.Warn($"Newtonsoft JSON is not available; {nameof(CalcCountryFromIP)} will pass up the raw server response.\n" +
+                     response);
+
+      #endif // NEWTONSOFT_JSON
+      };
+
+      return promise;
+    }
+
     // Probably not the way to do it but it's jankily working for now
     public static IEnumerator CalcCountryFromIP(System.Action<string> callback)
     {
