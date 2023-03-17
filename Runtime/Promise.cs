@@ -186,6 +186,32 @@ namespace Ore
       return this;
     }
 
+
+    /// <summary>
+    ///   Danger: Blocks the current thread while this promise is pending.
+    ///   You probably don't want to call this from the main thread.
+    /// </summary>
+    public void AwaitBlocking()
+    {
+      while (((IEnumerator)this).MoveNext())
+      {
+        // await
+      }
+    }
+
+    /// <summary>
+    ///   Included for clarity, as you technically can just yield return this
+    ///   promise directly.
+    /// </summary>
+    /// <returns>
+    ///   This promise object.
+    /// </returns>
+    public IEnumerator AwaitCoroutine()
+    {
+      return this;
+    }
+
+
     public void SquelchDefaultFailureAction()
     {
       if (m_OnFailed != null)
