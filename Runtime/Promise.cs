@@ -187,6 +187,15 @@ namespace Ore
     }
 
 
+    public void SquelchDefaultFailureAction()
+    {
+      if (m_OnFailed != null)
+      {
+        m_OnFailed -= DefaultFailureAction;
+      }
+    }
+
+
     /// <summary>
     ///   Danger: Blocks the current thread while this promise is pending.
     ///   You probably don't want to call this from the main thread.
@@ -200,24 +209,22 @@ namespace Ore
     }
 
     /// <summary>
-    ///   Included for clarity, as you technically can just yield return this
-    ///   promise directly.
+    ///   Like <see cref="AwaitBlocking"/>, except awaits using a coroutine in
+    ///   the <see cref="ActiveScene"/>.
     /// </summary>
-    /// <returns>
-    ///   This promise object.
-    /// </returns>
-    public IEnumerator AwaitCoroutine()
+    public void AwaitCoroutine()
     {
-      return this;
+      ActiveScene.Coroutines.Run(this);
     }
 
-
-    public void SquelchDefaultFailureAction()
+    /// <inheritdoc cref="AwaitCoroutine()"/>
+    /// <param name="key">
+    ///   A string key retval that you can use to refer to the coroutine spawned
+    ///   by this method later.
+    /// </param>
+    public void AwaitCoroutine(out string key)
     {
-      if (m_OnFailed != null)
-      {
-        m_OnFailed -= DefaultFailureAction;
-      }
+      ActiveScene.Coroutines.Run(this, out key);
     }
 
 
