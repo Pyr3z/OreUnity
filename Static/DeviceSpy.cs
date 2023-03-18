@@ -230,7 +230,7 @@ namespace Ore
 
         #elif DEBUG
 
-          Orator.Warn($"Newtonsoft JSON is not available; {nameof(CalcCountryFromIP)} will pass up the raw server response.\n" +
+          Orator.Warn($"Newtonsoft JSON is not available; {nameof(PromiseCountryFromIP)} will pass up the raw server response.\n" +
                        response);
 
         #endif // NEWTONSOFT_JSON
