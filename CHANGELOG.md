@@ -4,8 +4,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v5.2.3](../../tree/unstable) - UNRELEASED
-- fef
+## [v5.3.0](../../tags/v5.3.0) - 2023-03-17
+- In `JsonAuthority`:
+  - Added: GenericParse(rawJson)
+  - Changed: return type and optional parameters for Genericize(...) now specify IDictionary instead of HashMap.
+    - Note: Thanks to contravariance in C#, this works as-is with the more qualified 'maker' delegates.
+  - Improved: Exceptions are used for truly exceptional circumstances. (removes a "ping Levi?" Orator log)
+
+- In `Promise<T>`:
+  - Added: event OnCompleted - parameterless callback action that is called after the state changes from "pending" to something else, ignoring the success vs failure distinction.
+  - Added: FailWith(T value) overload - sets a "flotsam" value to the promise before marking it as a failure.
+  - Added: AwaitBlocking(), AwaitCoroutine([out key]) - handy methods for awaiting a promise. Often called after callbacks are all set.
+  - Added: ToString() override (safely prints Value).
+  - Changed: The following void methods now return the promise itself (`return this`):
+    - Maybe(value)
+    - Complete()
+    - CompleteWith(value)
+    - Forget()
+    - Fail()
+    - FailWith(...)
+  - Changed: Forget() can now be called from any state.
+  - Changed: It is now only an error to call Fail() / FailWith(...) if the promise has already _succeeded_; specifically, it is no longer an error to call these methods if the promise has been forgotten.
+  - Changed: CompleteWith(value) can now be called even if the promise previously succeeded, allowing you to update the value of the promise.
+    - Note: Doing so from within an OnSucceeded delegate will NOT propagate the updated value to the parameter passed to further delegates in the same invocation.
+  - Changed: (impl. detail) Dispose() now calls MoveNext() once before disposing, in an attempt to ensure relevant events have been invoked.
+  - Improved: Added inline XML doc comments.
+
+- Added: in `DeviceSpy`: PromiseCountryFromIP() - uses an internal KA service to try and guess the user's country from their IP address.
+  - Note: This is Ore's first usage of UnityWebRequest.
+  - Note: If Ore ever goes public, this code will need to be scrubbed out.
+
+- Added: static utility `WebRequests` (for UnityWebRequests):
+  - extension request.Succeeded() - necessary to use the right APIs for your Unity version
+  - extension request.GetErrorInfo()
+  - extension request.Promise([errorSubstring]) - also nicely handles disposing
+
+- Added: Test in `MiscInEditor`: ActionNullability - proves how delegate nullness works
 
 
 ## [v5.2.2](../../tags/v5.2.2) - 2023-03-09

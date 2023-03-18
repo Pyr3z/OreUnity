@@ -6,6 +6,9 @@
 using JetBrains.Annotations;
 
 using UnityEngine;
+using UnityEngine.Networking;
+
+using System.Collections;
 
 #if NEWTONSOFT_JSON
 using Newtonsoft.Json;
@@ -20,6 +23,7 @@ using TimeSpan = System.TimeSpan;
 
 using RegionInfo = System.Globalization.RegionInfo;
 
+using Encoding = System.Text.Encoding;
 
 namespace Ore
 {
@@ -106,7 +110,6 @@ namespace Ore
 
     public static string UDID => s_UDID ?? (s_UDID = CalcVendorUDID());
 
-
     public static long CalcRAMUsageBytes()
     {
       // NOTE: This is where Ore's internal definition for reported RAM resides
@@ -182,6 +185,59 @@ namespace Ore
       #endif // NEWTONSOFT_JSON
     }
 
+    public static Promise<string> PromiseCountryFromIP(int timeout = 30)
+    {
+      // getCountryWithIP does not care about inputs, they're just used for hashing
+      // Should change this up in the future for 3rd party - Darren
+      const string PARAMS    = "appName=&ipAddress=&timestamp=&hash=74be16979710d4c4e7c6647856088456";
+      const string API       = "https://api.boreservers.com/borePlatform2/getCountryWithIP.php";
+      const string MIME      = "application/x-www-form-urlencoded";
+      const string ERRORMARK = "\"error\"";
+
+      var req = new UnityWebRequest(API)
+      {
+        method          = UnityWebRequest.kHttpVerbPOST,
+        downloadHandler = new DownloadHandlerBuffer(),
+        uploadHandler   = new UploadHandlerRaw(PARAMS.ToBytes(Encoding.UTF8))
+      };
+
+      req.SetRequestHeader("Content-Type", MIME);
+
+      req.timeout = timeout;
+
+      var promise = req.Promise(ERRORMARK);
+                    // Note: extension calls req.Dispose() for us
+
+      promise.OnSucceeded += response =>
+      {
+        // TODO implement non Json.NET solution ?
+
+        #if NEWTONSOFT_JSON
+
+          var jobj = JObject.Parse(response, JsonAuthority.LoadStrict);
+
+          string geoCode = jobj["result"]?["countryCode"]?.ToString();
+
+          if (geoCode.IsEmpty() || !geoCode.Length.IsBetween(2, 6))
+          {
+            promise.Forget()
+                   .FailWith(new UnanticipatedException($"{nameof(PromiseCountryFromIP)} -> \"{geoCode}\""));
+            return;
+          }
+
+          LittleBirdie.CountryISOString = geoCode;
+          // (LittleBirdie is used to propogate changes to listeners)
+
+        #elif DEBUG
+
+          Orator.Warn($"Newtonsoft JSON is not available; {nameof(CalcCountryFromIP)} will pass up the raw server response.\n" +
+                       response);
+
+        #endif // NEWTONSOFT_JSON
+      };
+
+      return promise;
+    }
 
     #if UNITY_EDITOR
 
@@ -601,21 +657,24 @@ namespace Ore
           return ABI.ARM64;
         else
           return ABI.ARM;
-      #endif // UNITY_IOS
 
-      string type = SystemInfo.processorType;
+      #else
 
-      // Android and Android-like devices are pretty standard here
-      if (type.StartsWith("ARM64"))
-        return ABI.ARM64;
-      else if (type.StartsWith("ARMv7"))
-        return ABI.ARM32;
+        string type = SystemInfo.processorType;
 
-      // Chrome OS (should be a rare case)
-      if (System.Environment.Is64BitOperatingSystem)
-        return ABI.x86_64;
-      else
-        return ABI.x86;
+        // Android and Android-like devices are pretty standard here
+        if (type.StartsWith("ARM64"))
+          return ABI.ARM64;
+        else if (type.StartsWith("ARMv7"))
+          return ABI.ARM32;
+
+        // Chrome OS (should be a rare case)
+        if (System.Environment.Is64BitOperatingSystem)
+          return ABI.x86_64;
+        else
+          return ABI.x86;
+
+      #endif // !UNITY_IOS
     }
 
     // TODO: CalcIsChromeOS() - https://docs.unity3d.com/ScriptReference/Android.AndroidDevice-hardwareType.html

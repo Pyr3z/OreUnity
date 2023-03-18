@@ -8,6 +8,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 #if NEWTONSOFT_JSON
@@ -37,14 +38,24 @@ internal static class MiscInEditor
       ["platformStr"]             = Application.platform.ToInvariant(),
     };
 
+    var serializer = JsonSerializer.CreateDefault();
+
     Assert.DoesNotThrow(() =>
                         {
-                          Debug.Log(JObject.FromObject(map).ToString(Formatting.Indented));
+                          var jobj = JObject.FromObject(map, serializer);
+                          Debug.Log(jobj.ToString(Formatting.Indented));
                         });
 
     Assert.DoesNotThrow(() =>
                         {
-                          Debug.Log(JObject.FromObject(HashMapParams.Default).ToString(Formatting.Indented));
+                          var jobj = JObject.FromObject(HashMapParams.Default, serializer);
+                          Debug.Log(jobj.ToString(Formatting.Indented));
+                        });
+
+    Assert.DoesNotThrow(() =>
+                        {
+                          var jarr = new JArray(JObject.FromObject(map, serializer));
+                          Debug.Log(jarr.ToString(Formatting.Indented));
                         });
   }
 
@@ -62,6 +73,50 @@ internal static class MiscInEditor
     Assert.Positive(map.Count);
     Assert.True(map.Find("fef", out var fef) && fef.ToString() == "fef!");
     Assert.True(map.Find("one", out var one) && one.GetHashCode() == 1);
+  }
+
+  [Test]
+  public static void NewtonsoftJsonSerialize()
+  {
+    var serializer = JsonSerializer.CreateDefault();
+    var sbob = new System.Text.StringBuilder(2048);
+
+    var map = new HashMap<object,object>
+    {
+      ["fef"]                     = DeviceDimension.DisplayHz,
+      [DeviceDimension.OSVersion] = DeviceSpy.OSVersion,
+      ["guid"]                    = System.Guid.NewGuid(),
+      ["platform"]                = Application.platform,
+      ["platformStr"]             = Application.platform.ToInvariant(),
+    };
+
+    Assert.DoesNotThrow(() =>
+                        {
+                          string json = JsonAuthority.Serialize(map, serializer, sbob);
+                          Debug.Log(json);
+                        });
+
+    var list = new List<IDictionary<object,object>>
+    {
+      map
+    };
+
+    Assert.DoesNotThrow(() =>
+                        {
+                          string json = JsonAuthority.Serialize(list, serializer, sbob);
+                          Debug.Log(json);
+                        });
+
+    var map2 = new HashMap<string,object>
+    {
+      ["data"] = list
+    };
+
+    Assert.DoesNotThrow(() =>
+                        {
+                          string json = JsonAuthority.Serialize(map2, serializer, sbob);
+                          Debug.Log(json);
+                        });
   }
 
   #endif // NEWTONSOFT_JSON
@@ -117,6 +172,34 @@ internal static class MiscInEditor
       LogAssert.ignoreFailingMessages = pop;
     });
     Assert.True(ok);
+  }
+
+
+  [Test]
+  public static void ActionNullability()
+  {
+    System.Action action = null;
+
+    Assert.DoesNotThrow(() =>
+                        {
+                          action += Orator.Reached;
+                        });
+
+    Assert.NotNull(action);
+
+    Assert.DoesNotThrow(() =>
+                        {
+                          action -= Orator.Reached;
+                        });
+
+    Assert.Null(action);
+
+    Assert.DoesNotThrow(() =>
+                        {
+                          action -= Orator.Reached;
+                        });
+
+    Assert.Null(action);
   }
 
 } // end class MiscInEditor
