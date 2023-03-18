@@ -279,10 +279,7 @@ namespace Ore
     /// </summary>
     public void SquelchDefaultFailureAction()
     {
-      if (m_OnFailed != null)
-      {
-        m_OnFailed -= DefaultFailureAction;
-      }
+      m_OnFailed -= DefaultFailureAction;
     }
 
 
