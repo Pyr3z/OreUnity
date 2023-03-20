@@ -19,6 +19,7 @@ using Newtonsoft.Json.Linq;
 using Device = UnityEngine.iOS.Device;
 #endif
 
+using DateTime = System.DateTime;
 using TimeSpan = System.TimeSpan;
 
 using RegionInfo = System.Globalization.RegionInfo;
@@ -212,6 +213,23 @@ namespace Ore
   #region Advanced API
 
 
+    public static DateTime LastSuccessfulGeoIP
+    {
+      get
+      {
+        // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
+        if (s_LastSuccessfulGeoIP is null)
+        {
+          s_LastSuccessfulGeoIP = DateTimes.GetPlayerPref(PREFKEY_LAST_GEOIP);
+        }
+
+        return (DateTime)s_LastSuccessfulGeoIP;
+      }
+    }
+
+    public static TimeSpan TimeSinceLastSuccessfulGeoIP => DateTime.UtcNow - LastSuccessfulGeoIP;
+
+
     public static Promise<string> PromiseCountryFromIP(int timeout = 30)
     {
       // getCountryWithIP does not care about inputs, they're just used for hashing
@@ -261,6 +279,10 @@ namespace Ore
                        response);
 
         #endif // NEWTONSOFT_JSON
+
+        var now = DateTime.UtcNow;
+        now.SetPlayerPref(PREFKEY_LAST_GEOIP);
+        s_LastSuccessfulGeoIP = now;
       };
 
       return promise;
@@ -449,6 +471,7 @@ namespace Ore
     private static bool?         s_IsBlueStacks;
     private static bool?         s_IsTablet;
     private static string        s_LangISO6391;
+    private static DateTime?     s_LastSuccessfulGeoIP;
     private static int?          s_LowRAMThresh;
     private static string        s_Model;
     private static SerialVersion s_OSVersion;
@@ -458,6 +481,8 @@ namespace Ore
 
     private const long BYTES_PER_MIB = 1048576L; // = pow(2,20)
     private const long BYTES_PER_MB  = 1000000L;
+
+    private const string PREFKEY_LAST_GEOIP = "DeviceSpy.LastSuccessfulGeoIP";
 
 
     private static (string make, string model) CalcMakeModel()
