@@ -225,6 +225,21 @@ namespace Ore
       return false;
     }
 
+    /// <inheritdoc cref="Find"/>>
+    [Pure]
+    public bool Find<VCasted>([CanBeNull] in K key, [CanBeNull] out VCasted value)
+      where VCasted : V
+    {
+      int i = FindBucket(in key);
+      if (i > -1 && m_Buckets[i].Value is VCasted casted)
+      {
+        value = casted;
+        return true;
+      }
+
+      value = default;
+      return false;
+    }
 
     /// <summary>
     ///   For syntactic sugar and familiarity, however no different from Map(),
