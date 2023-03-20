@@ -867,8 +867,8 @@ namespace Ore
 
   #region IDictionary<K,V>
 
-    public ICollection<K> Keys     => new KeyCollection(this);
-    ICollection IDictionary.Keys   => new KeyCollection(this);
+    public ICollection<K> Keys     => new KeySet(this);
+    ICollection IDictionary.Keys   => new KeySet(this);
     public ICollection<V> Values   => new ValueCollection(this);
     ICollection IDictionary.Values => new ValueCollection(this);
 
