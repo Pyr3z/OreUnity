@@ -29,5 +29,8 @@ namespace Ore
 
     [Pure]
     int Compare([CanBeNull] in T a, [CanBeNull] in T b);
+
+    [Pure]
+    bool ComparatorEquals<U>(IComparator<U> other);
   }
 }
