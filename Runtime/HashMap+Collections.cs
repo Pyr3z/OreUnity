@@ -3,8 +3,10 @@
  *  @date       2022-10-26
 **/
 
-using System.Collections.Generic;
+using JetBrains.Annotations;
+
 using System.Collections;
+using System.Collections.Generic;
 
 
 namespace Ore
@@ -19,7 +21,7 @@ namespace Ore
       IUseComparator<K>
     {
       public int    Count          => m_Parent.m_Count;
-      public bool   IsReadOnly     => true;
+      public bool   IsReadOnly     { get; private set; } = true;
       public bool   IsSynchronized => ((ICollection)m_Parent).IsSynchronized;
       public object SyncRoot       => ((ICollection)m_Parent).SyncRoot;
 
@@ -29,9 +31,17 @@ namespace Ore
       private readonly HashMap<K,V> m_Parent;
 
 
-      public KeySet(HashMap<K,V> forMap)
+      internal KeySet([NotNull] HashMap<K,V> forMap)
       {
         m_Parent = forMap;
+      }
+
+
+      [PublicAPI]
+      public KeySet MakeWriteProxy()
+      {
+        IsReadOnly = false;
+        return this;
       }
 
 
@@ -491,7 +501,7 @@ namespace Ore
       private readonly HashMap<K,V> m_Parent;
 
 
-      public ValueCollection(HashMap<K,V> forMap)
+      internal ValueCollection([NotNull] HashMap<K,V> forMap)
       {
         m_Parent = forMap;
       }
