@@ -93,13 +93,6 @@ namespace Ore
     }
 
 
-    [Pure]
-    public virtual bool ComparatorEquals<U>(IComparator<U> other)
-    {
-      return ReferenceEquals(this, other);
-    }
-
-
     bool IEqualityComparer<T>.Equals(T a, T b)
       => Equals(in a, in b);
 

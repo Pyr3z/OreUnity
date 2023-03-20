@@ -31,6 +31,6 @@ namespace Ore
     int Compare([CanBeNull] in T a, [CanBeNull] in T b);
 
     [Pure]
-    bool ComparatorEquals<U>(IComparator<U> other);
+    bool Equals(object otherComparator);
   }
 }
