@@ -220,7 +220,7 @@ namespace Ore
         // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
         if (s_LastSuccessfulGeoIP is null)
         {
-          s_LastSuccessfulGeoIP = DateTimes.GetPlayerPref(PREFKEY_LAST_GEOIP);
+          s_LastSuccessfulGeoIP = DateTimes.GetPlayerPref(PREFKEY_FETCHED_GEOIP_AT);
         }
 
         return (DateTime)s_LastSuccessfulGeoIP;
@@ -281,11 +281,18 @@ namespace Ore
         #endif // NEWTONSOFT_JSON
 
         var now = DateTime.UtcNow;
-        now.SetPlayerPref(PREFKEY_LAST_GEOIP);
+        now.SetPlayerPref(PREFKEY_FETCHED_GEOIP_AT);
         s_LastSuccessfulGeoIP = now;
       };
 
       return promise;
+    }
+
+    public static void ClearCachedCountry()
+    {
+      LittleBirdie.CountryISOString = null;
+      PlayerPrefs.DeleteKey(PREFKEY_FETCHED_GEOIP_AT);
+      s_LastSuccessfulGeoIP = default;
     }
 
 
@@ -349,6 +356,16 @@ namespace Ore
         set
         {
           s_CountryISO3166a2 = value;
+
+          if (value.IsEmpty())
+          {
+            PlayerPrefs.DeleteKey(PREFKEY_CACHED_GEOIP);
+          }
+          else
+          {
+            PlayerPrefs.SetString(PREFKEY_CACHED_GEOIP, value);
+          }
+
           OnCheepCheep?.Invoke(nameof(CountryISOString), value);
         }
       }
@@ -482,7 +499,8 @@ namespace Ore
     private const long BYTES_PER_MIB = 1048576L; // = pow(2,20)
     private const long BYTES_PER_MB  = 1000000L;
 
-    private const string PREFKEY_LAST_GEOIP = "DeviceSpy.LastSuccessfulGeoIP";
+    private const string PREFKEY_FETCHED_GEOIP_AT = "DeviceSpy.FetchedGeoIPAt";
+    private const string PREFKEY_CACHED_GEOIP  = "DeviceSpy.CachedGeoIP";
 
 
     private static (string make, string model) CalcMakeModel()
@@ -594,8 +612,10 @@ namespace Ore
 
     private static string CalcISO3166a2() // 2-letter region code
     {
-      // TODO this is probably inaccurate or else slow to call on devices
-      return RegionInfo.CurrentRegion.TwoLetterISORegionName;
+      string fallback = RegionInfo.CurrentRegion.TwoLetterISORegionName;
+        // this is an ABSOLUTE fallback and does not give accurate geo on most devices
+
+      return PlayerPrefs.GetString(PREFKEY_CACHED_GEOIP, fallback);
     }
 
     private static TimeSpan CalcTimezoneOffset()
