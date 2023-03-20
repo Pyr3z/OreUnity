@@ -185,10 +185,37 @@ namespace Ore
       #endif // NEWTONSOFT_JSON
     }
 
+
+    #if UNITY_EDITOR
+
+    [UnityEditor.MenuItem("Ore/Helpers/Write DeviceSpy to Json")]
+    private static void Menu_MakeJson()
+    {
+      string path = Filesystem.GetTempPath($"{nameof(DeviceSpy)}.json");
+      string json = ToJson(prettyPrint: true);
+
+      if (Filesystem.TryWriteText(path, json))
+      {
+        Orator.Log(typeof(DeviceSpy), $"Wrote json to \"{path}\": {json}");
+        UnityEditor.EditorUtility.RevealInFinder(path);
+      }
+      else
+      {
+        Filesystem.LogLastException();
+        Orator.Warn(typeof(DeviceSpy), $"Couldn't write to \"{path}\", but here's the json anyway: {json}");
+      }
+    }
+
+    #endif // UNITY_EDITOR
+
+
+  #region Advanced API
+
+
     public static Promise<string> PromiseCountryFromIP(int timeout = 30)
     {
       // getCountryWithIP does not care about inputs, they're just used for hashing
-      // Should change this up in the future for 3rd party - Darren
+      // TODO Should change this up in the future for 3rd party - Darren
       const string PARAMS    = "appName=&ipAddress=&timestamp=&hash=74be16979710d4c4e7c6647856088456";
       const string API       = "https://api.boreservers.com/borePlatform2/getCountryWithIP.php";
       const string MIME      = "application/x-www-form-urlencoded";
@@ -210,7 +237,7 @@ namespace Ore
 
       promise.OnSucceeded += response =>
       {
-        // TODO implement non Json.NET solution ?
+        // TODO implement non Json.NET solution? see #43
 
         #if NEWTONSOFT_JSON
 
@@ -239,30 +266,6 @@ namespace Ore
       return promise;
     }
 
-    #if UNITY_EDITOR
-
-    [UnityEditor.MenuItem("Ore/Helpers/Write DeviceSpy to Json")]
-    private static void Menu_MakeJson()
-    {
-      string path = Filesystem.GetTempPath($"{nameof(DeviceSpy)}.json");
-      string json = ToJson(prettyPrint: true);
-
-      if (Filesystem.TryWriteText(path, json))
-      {
-        Orator.Log(typeof(DeviceSpy), $"Wrote json to \"{path}\": {json}");
-        UnityEditor.EditorUtility.RevealInFinder(path);
-      }
-      else
-      {
-        Filesystem.LogLastException();
-        Orator.Warn(typeof(DeviceSpy), $"Couldn't write to \"{path}\", but here's the json anyway: {json}");
-      }
-    }
-
-    #endif // UNITY_EDITOR
-
-
-  #region Advanced API
 
     /// <summary>
     ///   Special API which allows you to globally override DeviceSpy's perception
