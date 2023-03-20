@@ -175,19 +175,6 @@ namespace Ore
     }
 
 
-    /// <summary>
-    ///   Sets this map's optional <see cref="ValueComparator"/> property.
-    /// </summary>
-    /// <remarks>
-    ///   Intended to be called following a constructor, e.g. <br/>
-    ///   <c>new HashMap().WithValueComparator(cmp)</c>
-    /// </remarks>
-    public HashMap<K,V> WithValueComparator(IComparator<V> cmp)
-    {
-      m_ValueComparator = cmp;
-      return this;
-    }
-
     /// <returns>
     ///   a new HashMap with the given FIXED capacity.
     /// </returns>
