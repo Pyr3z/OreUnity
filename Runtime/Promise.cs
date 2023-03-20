@@ -26,6 +26,42 @@ namespace Ore
     }
 
 
+    public static Promise<T> ForgetOnArrival(bool squelch = false)
+    {
+      return new Promise<T>(squelch)
+      {
+        m_State = State.Forgotten
+      };
+    }
+
+    public static Promise<T> FailOnArrival(T flotsam, bool squelch = false)
+    {
+      return new Promise<T>(squelch)
+      {
+        m_State = State.Failed,
+        m_Value = flotsam
+      };
+    }
+
+    public static Promise<T> FailOnArrival(Exception ex, bool squelch = false)
+    {
+      return new Promise<T>(squelch)
+      {
+        m_State     = State.Failed,
+        m_Exception = ex
+      };
+    }
+
+    public static Promise<T> SucceedOnArrival(T value, bool squelch = false)
+    {
+      return new Promise<T>(squelch)
+      {
+        m_State = State.Succeeded,
+        m_Value = value
+      };
+    }
+
+
     public Promise(bool squelchDefaultFailAction = false)
     {
       if (!squelchDefaultFailAction)
