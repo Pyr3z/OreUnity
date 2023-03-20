@@ -213,87 +213,124 @@ namespace Ore
   #region Advanced API
 
 
-    public static DateTime LastSuccessfulGeoIP
+    [PublicAPI]
+    public static class GeoIP
     {
-      get
+      [CanBeNull]
+      public static string Value => PlayerPrefs.GetString(CACHED, null);
+
+      public static DateTime LastFetchedAt
       {
-        // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
-        if (s_LastSuccessfulGeoIP is null)
+        get
         {
-          s_LastSuccessfulGeoIP = DateTimes.GetPlayerPref(PREFKEY_FETCHED_GEOIP_AT);
-        }
-
-        return (DateTime)s_LastSuccessfulGeoIP;
-      }
-    }
-
-    public static TimeSpan TimeSinceLastSuccessfulGeoIP => DateTime.UtcNow - LastSuccessfulGeoIP;
-
-
-    public static Promise<string> PromiseCountryFromIP(int timeout = 30)
-    {
-      // getCountryWithIP does not care about inputs, they're just used for hashing
-      // TODO Should change this up in the future for 3rd party - Darren
-      const string PARAMS    = "appName=&ipAddress=&timestamp=&hash=74be16979710d4c4e7c6647856088456";
-      const string API       = "https://api.boreservers.com/borePlatform2/getCountryWithIP.php";
-      const string MIME      = "application/x-www-form-urlencoded";
-      const string ERRORMARK = "\"error\"";
-
-      var req = new UnityWebRequest(API)
-      {
-        method          = UnityWebRequest.kHttpVerbPOST,
-        downloadHandler = new DownloadHandlerBuffer(),
-        uploadHandler   = new UploadHandlerRaw(PARAMS.ToBytes(Encoding.UTF8))
-      };
-
-      req.SetRequestHeader("Content-Type", MIME);
-
-      req.timeout = timeout;
-
-      var promise = req.Promise(ERRORMARK);
-                    // Note: extension calls req.Dispose() for us
-
-      promise.OnSucceeded += response =>
-      {
-        // TODO implement non Json.NET solution? see #43
-
-        #if NEWTONSOFT_JSON
-
-          var jobj = JObject.Parse(response, JsonAuthority.LoadStrict);
-
-          string geoCode = jobj["result"]?["countryCode"]?.ToString();
-
-          if (geoCode.IsEmpty() || !geoCode.Length.IsBetween(2, 6))
+          // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
+          if (s_LastFetchedAt is null)
           {
-            promise.Forget()
-                   .FailWith(new UnanticipatedException($"{nameof(PromiseCountryFromIP)} -> \"{geoCode}\""));
-            return;
+            s_LastFetchedAt = DateTimes.GetPlayerPref(FETCHED_AT);
           }
 
-          LittleBirdie.CountryISOString = geoCode;
-          // (LittleBirdie is used to propogate changes to listeners)
+          return (DateTime)s_LastFetchedAt;
+        }
+      }
 
-        #elif DEBUG
+      public static TimeInterval TimeSinceLastFetched => DateTime.UtcNow - LastFetchedAt;
 
-          Orator.Warn($"Newtonsoft JSON is not available; {nameof(PromiseCountryFromIP)} will pass up the raw server response.\n" +
-                       response);
 
-        #endif // NEWTONSOFT_JSON
+      [NotNull]
+      public static Promise<string> FetchIfStale(TimeInterval staleAfter, int timeout = DEFAULT_TIMEOUT)
+      {
+        if (TimeSinceLastFetched < staleAfter && PlayerPrefs.HasKey(CACHED))
+        {
+          return Promise<string>.SucceedOnArrival(CountryISOString);
+        }
 
-        var now = DateTime.UtcNow;
-        now.SetPlayerPref(PREFKEY_FETCHED_GEOIP_AT);
-        s_LastSuccessfulGeoIP = now;
-      };
+        return Fetch(timeout);
+      }
 
-      return promise;
-    }
+      [NotNull]
+      public static Promise<string> Fetch(int timeout = DEFAULT_TIMEOUT)
+      {
+        // getCountryWithIP does not care about inputs, they're just used for hashing
+        // TODO Should change this up in the future for 3rd party - Darren
+        const string PARAMS    = "appName=&ipAddress=&timestamp=&hash=74be16979710d4c4e7c6647856088456";
+        const string API       = "https://api.boreservers.com/borePlatform2/getCountryWithIP.php";
+        const string MIME      = "application/x-www-form-urlencoded";
+        const string ERRORMARK = "\"error\"";
 
-    public static void ClearCachedCountry()
-    {
-      LittleBirdie.CountryISOString = null;
-      PlayerPrefs.DeleteKey(PREFKEY_FETCHED_GEOIP_AT);
-      s_LastSuccessfulGeoIP = default;
-    }
+        var req = new UnityWebRequest(API)
+        {
+          method          = UnityWebRequest.kHttpVerbPOST,
+          downloadHandler = new DownloadHandlerBuffer(),
+          uploadHandler   = new UploadHandlerRaw(PARAMS.ToBytes(Encoding.UTF8))
+        };
+
+        req.SetRequestHeader("Content-Type", MIME);
+
+        req.timeout = timeout;
+
+        var promise = req.Promise(ERRORMARK);
+                      // Note: extension calls req.Dispose() for us
+
+        if (promise.IsCompleted && !promise.Succeeded)
+        {
+          return promise;
+        }
+
+        s_LastFetchedAt = DateTime.UtcNow;
+
+        promise.OnSucceeded += response =>
+        {
+          // TODO implement non Json.NET solution? see #43
+
+          #if NEWTONSOFT_JSON
+
+            var jobj = JObject.Parse(response, JsonAuthority.LoadStrict);
+
+            string geoCode = jobj["result"]?["countryCode"]?.ToString();
+
+            // ReSharper disable once PossibleNullReferenceException
+            if (geoCode.IsEmpty() || !geoCode.Length.IsBetween(2, 6))
+            {
+              promise.Forget()
+                     .FailWith(new UnanticipatedException($"{nameof(GeoIP)}.{nameof(Fetch)} -> \"{geoCode}\""));
+              return;
+            }
+
+            LittleBirdie.CountryISOString = geoCode;
+            // (LittleBirdie is used to propogate changes to listeners)
+
+            PlayerPrefs.SetString(CACHED, geoCode);
+
+          #elif DEBUG
+
+            Orator.Warn($"Newtonsoft JSON is not available; {nameof(GeoIP)}.{nameof(Fetch)} will pass up the raw server response.\n" +
+                         response);
+
+          #endif // NEWTONSOFT_JSON
+
+          s_LastFetchedAt.Value.SetPlayerPref(FETCHED_AT);
+        };
+
+        return promise;
+      }
+
+      public static void Reset()
+      {
+        PlayerPrefs.DeleteKey(CACHED);
+        PlayerPrefs.DeleteKey(FETCHED_AT);
+        s_CountryISO3166a2 = null;
+        s_LastFetchedAt    = default(DateTime);
+      }
+
+
+
+      private static DateTime? s_LastFetchedAt;
+
+      private  const int    DEFAULT_TIMEOUT = 30;
+      private  const string FETCHED_AT = "DeviceSpy.GeoIP.FetchedAt";
+      internal const string CACHED     = "DeviceSpy.GeoIP.Cached";
+
+    } // end nested static class GeoIP
 
 
     /// <summary>
@@ -356,16 +393,6 @@ namespace Ore
         set
         {
           s_CountryISO3166a2 = value;
-
-          if (value.IsEmpty())
-          {
-            PlayerPrefs.DeleteKey(PREFKEY_CACHED_GEOIP);
-          }
-          else
-          {
-            PlayerPrefs.SetString(PREFKEY_CACHED_GEOIP, value);
-          }
-
           OnCheepCheep?.Invoke(nameof(CountryISOString), value);
         }
       }
@@ -488,7 +515,6 @@ namespace Ore
     private static bool?         s_IsBlueStacks;
     private static bool?         s_IsTablet;
     private static string        s_LangISO6391;
-    private static DateTime?     s_LastSuccessfulGeoIP;
     private static int?          s_LowRAMThresh;
     private static string        s_Model;
     private static SerialVersion s_OSVersion;
@@ -498,9 +524,6 @@ namespace Ore
 
     private const long BYTES_PER_MIB = 1048576L; // = pow(2,20)
     private const long BYTES_PER_MB  = 1000000L;
-
-    private const string PREFKEY_FETCHED_GEOIP_AT = "DeviceSpy.FetchedGeoIPAt";
-    private const string PREFKEY_CACHED_GEOIP  = "DeviceSpy.CachedGeoIP";
 
 
     private static (string make, string model) CalcMakeModel()
@@ -615,7 +638,7 @@ namespace Ore
       string fallback = RegionInfo.CurrentRegion.TwoLetterISORegionName;
         // this is an ABSOLUTE fallback and does not give accurate geo on most devices
 
-      return PlayerPrefs.GetString(PREFKEY_CACHED_GEOIP, fallback);
+      return PlayerPrefs.GetString(GeoIP.CACHED, fallback);
     }
 
     private static TimeSpan CalcTimezoneOffset()
