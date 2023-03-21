@@ -22,7 +22,7 @@ namespace Ore
     public readonly string Path;
 
     /// <param name="path">
-    /// Relative path to the Assets/ folder, e.g., "Resources/GoodBoy.asset"
+    ///   Relative path to the Assets/ folder, e.g., "Resources/GoodBoy.asset"
     /// </param>
     public AutoCreateAssetAttribute([NotNull] string path)
     {
@@ -32,5 +32,11 @@ namespace Ore
 
       Path = Paths.DetectAssetPathAssumptions(path);
     }
+
+    public AutoCreateAssetAttribute(bool doIt)
+    {
+      Path = doIt ? string.Empty : null;
+    }
+
   }
 }
