@@ -352,8 +352,11 @@ namespace Ore
         get => DeviceSpy.ABI;
         set
         {
-          s_ABI = value;
-          OnCheepCheep?.Invoke(nameof(ABI), value);
+          if (!s_ABI.Equals(value))
+          {
+            s_ABI = value;
+            OnCheepCheep?.Invoke(nameof(ABI), value);
+          }
         }
       }
 
@@ -375,8 +378,11 @@ namespace Ore
         get => DeviceSpy.Brand;
         set
         {
-          s_Brand = value;
-          OnCheepCheep?.Invoke(nameof(Brand), value);
+          if (s_Brand != value)
+          {
+            s_Brand = value;
+            OnCheepCheep?.Invoke(nameof(Brand), value);
+          }
         }
       }
 
@@ -385,8 +391,11 @@ namespace Ore
         get => DeviceSpy.Browser;
         set
         {
-          s_Browser = value;
-          OnCheepCheep?.Invoke(nameof(Browser), value);
+          if (s_Browser != value)
+          {
+            s_Browser = value;
+            OnCheepCheep?.Invoke(nameof(Browser), value);
+          }
         }
       }
 
@@ -395,8 +404,11 @@ namespace Ore
         get => DeviceSpy.Carrier;
         set
         {
-          s_Carrier = value;
-          OnCheepCheep?.Invoke(nameof(Carrier), value);
+          if (s_Carrier != value)
+          {
+            s_Carrier = value;
+            OnCheepCheep?.Invoke(nameof(Carrier), value);
+          }
         }
       }
 
@@ -405,8 +417,11 @@ namespace Ore
         get => DeviceSpy.CountryISOString;
         set
         {
-          s_CountryISO3166a2 = value;
-          OnCheepCheep?.Invoke(nameof(CountryISOString), value);
+          if (s_CountryISO3166a2 != value)
+          {
+            s_CountryISO3166a2 = value;
+            OnCheepCheep?.Invoke(nameof(CountryISOString), value);
+          }
         }
       }
 
@@ -415,8 +430,11 @@ namespace Ore
         get => DeviceSpy.IDFA;
         set
         {
-          s_IDFA = value;
-          OnCheepCheep?.Invoke(nameof(IDFA), value);
+          if (s_IDFA != value)
+          {
+            s_IDFA = value;
+            OnCheepCheep?.Invoke(nameof(IDFA), value);
+          }
         }
       }
 
@@ -425,8 +443,11 @@ namespace Ore
         get => DeviceSpy.IDFV;
         set
         {
-          s_IDFV = value;
-          OnCheepCheep?.Invoke(nameof(IDFV), value);
+          if (s_IDFV != value)
+          {
+            s_IDFV = value;
+            OnCheepCheep?.Invoke(nameof(IDFV), value);
+          }
         }
       }
 
@@ -435,8 +456,11 @@ namespace Ore
         get => DeviceSpy.IsBlueStacks;
         set
         {
-          s_IsBlueStacks = value;
-          OnCheepCheep?.Invoke(nameof(IsBlueStacks), value);
+          if (!s_IsBlueStacks.Equals(value))
+          {
+            s_IsBlueStacks = value;
+            OnCheepCheep?.Invoke(nameof(IsBlueStacks), value);
+          }
         }
       }
 
@@ -445,8 +469,11 @@ namespace Ore
         get => DeviceSpy.IsTablet;
         set
         {
-          s_IsTablet = value;
-          OnCheepCheep?.Invoke(nameof(IsTablet), value);
+          if (!s_IsTablet.Equals(value))
+          {
+            s_IsTablet = value;
+            OnCheepCheep?.Invoke(nameof(IsTablet), value);
+          }
         }
       }
 
@@ -455,8 +482,11 @@ namespace Ore
         get => DeviceSpy.IsTrackingLimited;
         set
         {
-          s_IsAdTrackingLimited = value;
-          OnCheepCheep?.Invoke(nameof(IsTrackingLimited), value);
+          if (!s_IsAdTrackingLimited.Equals(value))
+          {
+            s_IsAdTrackingLimited = value;
+            OnCheepCheep?.Invoke(nameof(IsTrackingLimited), value);
+          }
         }
       }
 
@@ -465,8 +495,11 @@ namespace Ore
         get => DeviceSpy.LanguageISOString;
         set
         {
-          s_LangISO6391 = value;
-          OnCheepCheep?.Invoke(nameof(LanguageISOString), value);
+          if (s_LangISO6391 != value)
+          {
+            s_LangISO6391 = value;
+            OnCheepCheep?.Invoke(nameof(LanguageISOString), value);
+          }
         }
       }
 
@@ -475,8 +508,11 @@ namespace Ore
         get => DeviceSpy.LowRAMThreshold;
         set
         {
-          s_LowRAMThresh = value;
-          OnCheepCheep?.Invoke(nameof(LowRAMThreshold), value);
+          if (!s_LowRAMThresh.Equals(value))
+          {
+            s_LowRAMThresh = value;
+            OnCheepCheep?.Invoke(nameof(LowRAMThreshold), value);
+          }
         }
       }
 
@@ -524,8 +560,11 @@ namespace Ore
         get => DeviceSpy.TimezoneOffset;
         set
         {
-          s_TimezoneOffset = value;
-          OnCheepCheep?.Invoke(nameof(TimezoneOffset), value);
+          if (!s_TimezoneOffset.Equals(value))
+          {
+            s_TimezoneOffset = value;
+            OnCheepCheep?.Invoke(nameof(TimezoneOffset), value);
+          }
         }
       }
 
@@ -534,8 +573,11 @@ namespace Ore
         get => DeviceSpy.UDID;
         set
         {
-          s_UDID = value;
-          OnCheepCheep?.Invoke(nameof(UDID), value);
+          if (s_UDID != value)
+          {
+            s_UDID = value;
+            OnCheepCheep?.Invoke(nameof(UDID), value);
+          }
         }
       }
 
