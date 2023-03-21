@@ -104,7 +104,7 @@ namespace Ore
     public bool IsNone  => m_String.IsEmpty() || m_String == "0";
     public bool HasTag  => m_TagIndex > 0;
 
-    public string Tag => HasTag ? m_String.Substring(m_TagIndex) : string.Empty;
+    public string Tag => m_TagIndex > 0 ? m_String.Substring(m_TagIndex) : string.Empty;
 
     public int Length => m_Vers?.Length - HasTag.ToInt() ?? 0;
       // if there is a tag, the final array element is its hash,
@@ -209,8 +209,11 @@ namespace Ore
       return other is null ? +1 : DeepCompareTo(other);
     }
 
-    public int DeepCompareTo([NotNull] SerialVersion other)
+    public int DeepCompareTo([NotNull] SerialVersion other, bool ignoreTag = false)
     {
+      if (ReferenceEquals(this, other))
+        return 0;
+
       for (int i = 0, ilen = Length.AtLeast(other.Length); i < ilen; ++i)
       {
         int lhs = this[i];
@@ -219,6 +222,11 @@ namespace Ore
           return -1;
         if (rhs < lhs)
           return +1;
+      }
+
+      if (!ignoreTag)
+      {
+        return string.CompareOrdinal(Tag, other.Tag);
       }
 
       return 0;
@@ -240,6 +248,25 @@ namespace Ore
         return !IsValid;
 
       return DeepEquals(other);
+    }
+
+    public bool DeepEquals([NotNull] SerialVersion other, bool ignoreTag = false)
+    {
+      if (ReferenceEquals(this, other))
+        return true;
+
+      for (int i = 0, ilen = Length.AtLeast(other.Length); i < ilen; ++i)
+      {
+        if (this[i] != other[i])
+          return false;
+      }
+
+      if (!ignoreTag)
+      {
+        return Tag.Equals(other.Tag);
+      }
+
+      return true;
     }
 
 
@@ -272,14 +299,14 @@ namespace Ore
     {
       if (lhs is null)
         return rhs is null || !rhs.IsValid;
-      return lhs.CompareTo(rhs) == 0;
+      return lhs.Equals(rhs);
     }
 
     public static bool operator != ([CanBeNull] SerialVersion lhs, [CanBeNull] SerialVersion rhs)
     {
       if (lhs is null)
         return !(rhs is null) && rhs.IsValid;
-      return lhs.CompareTo(rhs) != 0;
+      return !lhs.Equals(rhs);
     }
 
 
@@ -437,18 +464,6 @@ namespace Ore
       {
         m_Vers[i] = str.Substring(m_TagIndex).GetHashCode();
       }
-    }
-
-
-    private bool DeepEquals([NotNull] SerialVersion other)
-    {
-      for (int i = 0, ilen = Length.AtLeast(other.Length); i < ilen; ++i)
-      {
-        if (this[i] != other[i])
-          return false;
-      }
-
-      return true;
     }
 
   } // end class SerialVersion
