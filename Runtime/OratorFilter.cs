@@ -3,6 +3,8 @@
  *  @date       2023-03-03
 **/
 
+using JetBrains.Annotations;
+
 using UnityEngine;
 
 using System.Text.RegularExpressions;
@@ -14,7 +16,7 @@ namespace Ore
 {
 
   [System.Serializable]
-  public struct OratorFilter : ISerializationCallbackReceiver
+  public struct OratorFilter
   {
     [SerializeField]
     public bool Invert;
@@ -57,11 +59,17 @@ namespace Ore
     }
 
 
-    public bool IsMatch(LogType type, string message)
+    public bool IsMatch(LogType type, [NotNull] string message)
     {
       int flag = 1 << (int)type;
       return Invert ^ ( ((int)Types & flag) == flag &&
                         ( m_Regex is null || m_Regex.IsMatch(message) ) );
+    }
+
+    public bool IsMatch(LogTypeFlags flags, [NotNull] string message)
+    {
+      return Invert ^ ( (Types & flags) == flags &&
+                        ( m_Regex is null || m_Regex.IsMatch(message) ));
     }
 
     public OratorFilter Inverted()
@@ -76,14 +84,10 @@ namespace Ore
     }
 
 
-    public static implicit operator OratorFilter (LogTypeFlags flags)
+    internal bool HasRegex() // should only be called from Orator
     {
-      return new OratorFilter(flags);
-    }
-
-    public static implicit operator OratorFilter (string regex)
-    {
-      return new OratorFilter(LogTypeFlags.Any, regex);
+      RecompileRegex();
+      return m_Regex != null;
     }
 
 
@@ -97,15 +101,6 @@ namespace Ore
       {
         m_Regex = new Regex(m_MessageRegex, REGEX_OPTS, TimeSpan.FromTicks(REGEX_TIMEOUT));
       }
-    }
-
-    void ISerializationCallbackReceiver.OnAfterDeserialize()
-    {
-      RecompileRegex();
-    }
-
-    void ISerializationCallbackReceiver.OnBeforeSerialize()
-    {
     }
 
   } // end struct OratorFilter
