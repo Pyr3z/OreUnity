@@ -233,7 +233,8 @@ namespace Ore
         }
       }
 
-      public static TimeInterval TimeSinceLastFetched => DateTime.UtcNow - LastFetchedAt;
+      public static TimeInterval TimeSinceLastFetched => new TimeInterval(DateTime.UtcNow - LastFetchedAt)
+                                                            .RoundToInterval(TimeInterval.Second);
 
 
       [NotNull]
