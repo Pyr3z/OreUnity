@@ -17,7 +17,7 @@
             (which typically call the instance methods on the singleton).
 **/
 
-// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable ConvertIfStatementToNullCoalescingAssignment
 
 using JetBrains.Annotations;
 
@@ -25,6 +25,8 @@ using System.ComponentModel;
 using System.Collections.Generic;
 
 using UnityEngine;
+using UnityEngine.Serialization;
+// ReSharper disable once RedundantUsingDirective
 using UnityEngine.Diagnostics; // do not remove if unused
 
 using ObsoleteAttribute = System.ObsoleteAttribute;
@@ -155,10 +157,10 @@ namespace Ore
         return;
 
       #if AGGRESSIVE_KONSOLE
-        if (Instance && Instance.ShouldIgnore(LogType.Exception, ex.Message))
+        if (Instance && Instance.ShouldIgnore(LogType.Exception, ex.Message ?? string.Empty))
           return;
       #else
-        if (!Instance || Instance.ShouldIgnore(LogType.Exception, ex.Message))
+        if (!Instance || Instance.ShouldIgnore(LogType.Exception, ex.Message ?? string.Empty))
           return;
       #endif
 
@@ -250,6 +252,7 @@ namespace Ore
       if (Instance)
       {
         Instance.assertionFailed(msg, ctx);
+        // ReSharper disable once RedundantJumpStatement
         return;
       }
 
@@ -268,10 +271,10 @@ namespace Ore
       Debug.LogFormat(DEFAULT_ASSERT_LOGTYPE, DEFAULT_ASSERT_LOGOPT,
                       ctx, "{0} {1}", DEFAULT_ASSERT_MSG, msg);
 
+      #endif
+
       // ReSharper restore HeuristicUnreachableCode
       #pragma warning restore CS0162
-
-      #endif
     }
 
     public static void FailAssertionNoThrow(string msg)
@@ -284,6 +287,7 @@ namespace Ore
       if (Instance)
       {
         Instance.assertionFailedNoThrow(msg, ctx);
+        // ReSharper disable once RedundantJumpStatement
         return;
       }
 
@@ -349,6 +353,7 @@ namespace Ore
 
   #endregion Static public API
 
+
   #region Static "Log Once" API
 
     public static void ReachedOnce(Object ctx)
@@ -405,6 +410,7 @@ namespace Ore
         #endif
 
         #if UNITY_2020_3_OR_NEWER
+        // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
         if (stage)
         {
           hash = Hashing.MakeHash(msg, stage.assetPath);
@@ -498,9 +504,8 @@ namespace Ore
 
   #endregion Static "Log Once" API
 
-  #region Instance public API
 
-    public List<OratorFilter> Filters => m_Filters;
+  #region Instance methods
 
     /* IDE1006 => public member name does not match style guide */
     #pragma warning disable IDE1006
@@ -510,7 +515,7 @@ namespace Ore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     private void reached()
     {
-      reached(string.Empty, null);
+      reached(string.Empty);
     }
 
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
@@ -538,7 +543,7 @@ namespace Ore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     private void assertionFailed(string msg, Object ctx = null)
     {
-      if (ShouldIgnore(m_AssertionFailedFormat.LogType, msg))
+      if (ShouldIgnore(m_AssertionFailedFormat.LogType, ref msg))
         return;
 
       FixupMessageContext(ref msg, ref ctx);
@@ -556,7 +561,7 @@ namespace Ore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     private void assertionFailedNoThrow(string msg, Object ctx = null)
     {
-      if (ShouldIgnore(m_AssertionFailedFormat.LogType, msg))
+      if (ShouldIgnore(m_AssertionFailedFormat.LogType, ref msg))
         return;
 
       FixupMessageContext(ref msg, ref ctx);
@@ -571,7 +576,7 @@ namespace Ore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     private void log(string msg, Object ctx = null)
     {
-      if (ShouldIgnore(LogType.Log, msg))
+      if (ShouldIgnore(LogType.Log, ref msg))
         return;
 
       FixupMessageContext(ref msg, ref ctx);
@@ -583,7 +588,7 @@ namespace Ore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     private void warn(string msg, Object ctx = null)
     {
-      if (ShouldIgnore(LogType.Warning, msg))
+      if (ShouldIgnore(LogType.Warning, ref msg))
         return;
 
       FixupMessageContext(ref msg, ref ctx);
@@ -595,7 +600,7 @@ namespace Ore
     [EditorBrowsable(INSTANCE_BROWSABLE_POLICY)]
     private void error(string msg, Object ctx = null)
     {
-      if (ShouldIgnore(LogType.Error, msg))
+      if (ShouldIgnore(LogType.Error, ref msg))
         return;
 
       FixupMessageContext(ref msg, ref ctx);
@@ -606,7 +611,8 @@ namespace Ore
 
     #pragma warning restore IDE1006
 
-  #endregion Instance public API
+  #endregion Instance methods
+
 
   #region Instance fields
 
@@ -694,22 +700,13 @@ namespace Ore
 
     [Space]
 
-    [SerializeField]
-    private List<OratorFilter> m_Filters = new List<OratorFilter>();
+    [SerializeField, FormerlySerializedAs("m_Filters")]
+    private List<OratorFilter> m_IgnoreFilters = new List<OratorFilter>();
 
   #endregion Instance fields
 
+
   #region Internal section
-
-    #if !UNITY_EDITOR // Remove rich text tags from strings in builds!
-    private void Awake()
-    {
-      m_OratorPrefix = Strings.RemoveHypertextTags(m_OratorPrefix);
-      m_ReachedFormat.BaseMessage = Strings.RemoveHypertextTags(m_ReachedFormat.BaseMessage);
-      m_AssertionFailedFormat.BaseMessage = Strings.RemoveHypertextTags(m_AssertionFailedFormat.BaseMessage);
-    }
-    #endif
-
 
     private string ReachedMessage
     {
@@ -734,11 +731,28 @@ namespace Ore
     }
 
 
-    private string m_FormattedReachedMessage = null;
+    [System.NonSerialized]
+    private string m_FormattedReachedMessage;
+    [System.NonSerialized]
+    private string m_FormattedAssertMessage;
 
-    private string m_FormattedAssertMessage = null;
+    [System.NonSerialized]
+    private OratorFilter[] m_RtIgnoreFilters = System.Array.Empty<OratorFilter>();
+
 
     // TODO fancy formatting w/ PyroDK.RichText API
+
+
+    #if !UNITY_EDITOR // Remove rich text tags from strings in builds!
+    private void Awake()
+    {
+      m_OratorPrefix                     = Strings.RemoveHypertextTags(m_OratorPrefix);
+      m_ReachedFormat.BaseMessage         = Strings.RemoveHypertextTags(m_ReachedFormat.BaseMessage);
+      m_AssertionFailedFormat.BaseMessage = Strings.RemoveHypertextTags(m_AssertionFailedFormat.BaseMessage);
+
+      RecompileFilters();
+    }
+    #endif
 
     protected override void OnValidate()
     {
@@ -746,19 +760,71 @@ namespace Ore
 
       // reset cached message strings
       m_FormattedReachedMessage = null;
-      m_FormattedAssertMessage = null;
+      m_FormattedAssertMessage  = null;
+
+      RecompileFilters();
+    }
+
+    private void RecompileFilters()
+    {
+      int i = m_IgnoreFilters.Count;
+      if (i == 0)
+      {
+        m_RtIgnoreFilters = System.Array.Empty<OratorFilter>();
+        return;
+      }
+
+      var rtIgnoreFilters = new List<OratorFilter>(i);
+
+      var ignoreFlags = new OratorFilter();
+
+      while (i --> 0)
+      {
+        var filter = m_IgnoreFilters[i];
+
+        if (filter.HasRegex())
+        {
+          rtIgnoreFilters.Add(filter);
+        }
+        else if (filter.Invert)
+        {
+          ignoreFlags.Types |= ~ filter.Types;
+        }
+        else
+        {
+          ignoreFlags.Types |= filter.Types;
+        }
+      }
+
+      if (ignoreFlags.Types != LogTypeFlags.None)
+      {
+        rtIgnoreFilters.Add(ignoreFlags);
+          // it's important that this be the top of the stack
+      }
+
+      m_RtIgnoreFilters = rtIgnoreFilters.ToArray();
     }
 
 
-    private bool ShouldIgnore(LogType type, string message)
+    private bool ShouldIgnore(LogType type, [NotNull] string msg)
     {
-      foreach (var filter in m_Filters)
+      int i = m_RtIgnoreFilters.Length;
+
+      while (i --> 0)
       {
-        if (filter.IsMatch(type, message))
+        if (m_RtIgnoreFilters[i].IsMatch(type, msg))
           return true;
       }
 
       return false;
+    }
+
+    private bool ShouldIgnore(LogType type, [CanBeNull] ref string msg)
+    {
+      if (msg is null)
+        msg = string.Empty;
+
+      return ShouldIgnore(type, msg);
     }
 
     private void FixupMessageContext(ref string msg, ref Object ctx)
@@ -770,12 +836,6 @@ namespace Ore
       else if (m_IncludeContextInMessages)
       {
         msg = AppendContext(msg, ctx);
-      }
-
-      // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
-      if (msg is null)
-      {
-        msg = string.Empty;
       }
     }
 

@@ -3,16 +3,17 @@
  *  @date       2023-03-03
 **/
 
-using UnityEngine;
+using LogType = UnityEngine.LogType;
 
 
 namespace Ore
 {
+  // ReSharper disable once ShiftExpressionZeroLeftOperand
+
   [System.Flags]
   public enum LogTypeFlags
   {
-    None      =  0,
-    Any       = ~0,
+    None      = (0 << 0),
     Error     = (1 << LogType.Error),
     Assert    = (1 << LogType.Assert),
     Warning   = (1 << LogType.Warning),
