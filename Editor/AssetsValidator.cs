@@ -5,6 +5,7 @@
 
 using System.Collections.Generic;
 using System.Reflection;
+
 using UnityEngine;
 using UnityEditor;
 
@@ -42,22 +43,22 @@ namespace Ore.Editor
           continue;
         }
 
-        var basetype = tasset.BaseType;
-        if ((basetype?.IsGenericType ?? false)                              &&
-            basetype.GetGenericTypeDefinition() == typeof(OAssetSingleton<>) &&
-            !AssetDatabase.FindAssets($"t:{tasset.Name}").IsEmpty())
-        {
-          // already exists, just has been moved to a different path
+        string filepath = tasset.GetCustomAttribute<AutoCreateAssetAttribute>().Path;
+
+        if (filepath is null) // package user has squelched us
           continue;
-        }
 
-        var attr = tasset.GetCustomAttribute<AutoCreateAssetAttribute>(); // shouldn't be heritable
+        if (filepath.Length == 0)
+          filepath = $"Assets/Resources/{tasset.Name}.asset";
 
-        if (!Filesystem.PathExists(attr.Path) && OAsset.TryCreate(tasset, out ScriptableObject asset, attr.Path))
+        if (Filesystem.PathExists(filepath) || AssetTypeHasInstance(tasset))
+          continue;
+
+        if (OAsset.TryCreate(tasset, out ScriptableObject asset, filepath))
         {
-          Orator.Log($"Created new Asset of type <{tasset.Name}> at \"{attr.Path}\"", asset);
+          Orator.Log($"Created new Asset of type <{tasset.Name}> at \"{filepath}\"", asset);
         }
-      }
+      } // end [AutoCreateAsset] loop
 
       silencers = new []
       {
@@ -71,12 +72,12 @@ namespace Ore.Editor
         if (tsingleton is null || tsingleton.IsAbstract || tsingleton.IsGenericType || tsingleton.AreAnyDefined(silencers))
           continue;
 
-        if (!AssetDatabase.FindAssets($"t:{tsingleton.Name}").IsEmpty())
-          continue;
-
         string filepath = $"Assets/Resources/{tsingleton.Name}.asset";
 
-        if (!Filesystem.PathExists(filepath) && OAsset.TryCreate(tsingleton, out OAsset singleton, filepath))
+        if (Filesystem.PathExists(filepath) || AssetTypeHasInstance(tsingleton))
+          continue;
+
+        if (OAsset.TryCreate(tsingleton, out OAsset singleton, filepath))
         {
           Orator.Log($"Created new OAssetSingleton <{tsingleton.Name}> at \"{filepath}\"", singleton);
         }
@@ -111,6 +112,28 @@ namespace Ore.Editor
         Orator.Log($"{nameof(EditorBridge)}: Cleaning up {changed} null / duplicate \"Preloaded Asset\" entries.");
         PlayerSettings.SetPreloadedAssets(preloaded.ToArray());
       }
+    }
+
+
+    private static bool AssetTypeHasInstance(System.Type tasset)
+    {
+      string[] guids = AssetDatabase.FindAssets($"t:{tasset.Name}");
+
+      if (guids.IsEmpty())
+        return false;
+
+      foreach (string guid in guids)
+      {
+        var maybes = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GUIDToAssetPath(guid));
+
+        foreach (var maybe in maybes)
+        {
+          if (maybe.GetType() == tasset) // already exists elsewhere
+            return true;
+        }
+      }
+
+      return false;
     }
 
   } // end static calss AssetsValidator
