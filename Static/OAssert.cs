@@ -5,17 +5,18 @@
  *  @remark     Moved from Orator.Assert, which was entirely removed in 2.12.
 **/
 
-using System.Collections.Generic;
 using JetBrains.Annotations;
-using UnityEngine;
 
-using Conditional  = System.Diagnostics.ConditionalAttribute;
-using UnityAssert  = UnityEngine.Assertions.Assert;
-using AssException = UnityEngine.Assertions.AssertionException;
+using System.Collections.Generic;
+
+using UnityEngine;
 
 
 namespace Ore
 {
+  #if !DEBUG_KONSOLE
+  [System.Diagnostics.DebuggerStepThrough]
+  #endif
   [PublicAPI]
   public static class OAssert
   {
@@ -23,7 +24,7 @@ namespace Ore
 
   #region Public API
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void True(bool value, Object ctx = null)
     {
       if (value)
@@ -32,7 +33,7 @@ namespace Ore
       Orator.FailAssertion(FAIL_BOOL_F, ctx);
     }
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void True(bool value, string msg, Object ctx = null)
     {
       if (value)
@@ -42,13 +43,13 @@ namespace Ore
     }
 
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllTrue(params bool[] values)
     {
       AllTrue(null, values);
     }
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllTrue(Object ctx, params bool[] values)
     {
       for (int i = 0, ilen = values?.Length ?? 0; i < ilen; ++i)
@@ -63,7 +64,7 @@ namespace Ore
     }
 
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void False(bool value, Object ctx = null)
     {
       if (!value)
@@ -72,7 +73,7 @@ namespace Ore
       Orator.FailAssertion(FAIL_BOOL_T, ctx);
     }
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void False(bool value, string msg, Object ctx = null)
     {
       if (!value)
@@ -82,13 +83,13 @@ namespace Ore
     }
 
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllFalse(params bool[] values)
     {
       AllFalse(null, values);
     }
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllFalse(Object ctx, params bool[] values)
     {
       for (int i = 0, ilen = values?.Length ?? 0; i < ilen; ++i)
@@ -103,7 +104,7 @@ namespace Ore
     }
 
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void NotNull(object reference, Object ctx = null)
     {
       if (reference != null)
@@ -112,7 +113,7 @@ namespace Ore
       Orator.FailAssertion(FAIL_NULL_T, ctx);
     }
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void NotNull(object reference, string msg, Object ctx = null)
     {
       if (reference != null)
@@ -122,13 +123,13 @@ namespace Ore
     }
 
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllNotNull(params object[] references)
     {
       AllNotNull(null, references);
     }
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllNotNull(Object ctx, params object[] references)
     {
       for (int i = 0, ilen = references?.Length ?? 0; i < ilen; ++i)
@@ -143,7 +144,7 @@ namespace Ore
     }
 
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void Exists(Object obj, Object ctx = null)
     {
       if (obj)
@@ -152,7 +153,7 @@ namespace Ore
       Orator.FailAssertion(FAIL_NULL_T, ctx);
     }
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void Exists(Object obj, string msg, Object ctx = null)
     {
       if (obj)
@@ -175,7 +176,7 @@ namespace Ore
     }
 
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void NotEmpty<T>(ICollection<T> list, Object ctx = null)
     {
       if (list != null && list.Count != 0)
@@ -184,7 +185,7 @@ namespace Ore
       Orator.FailAssertion(FAIL_EMPTY_T, ctx);
     }
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void NotEmpty<T>(ICollection<T> list, string msg, Object ctx = null)
     {
       if (list != null && list.Count != 0)
@@ -193,13 +194,13 @@ namespace Ore
       Orator.FailAssertion(msg, ctx);
     }
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllNotEmpty<T>(params ICollection<T>[] lists)
     {
       AllNotEmpty(null, lists);
     }
 
-    [Conditional(DEF_UNITY_ASSERTIONS)]
+    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllNotEmpty<T>(Object ctx, params ICollection<T>[] lists)
     {
       for (int i = 0, ilen = lists?.Length ?? 0; i < ilen; ++i)
