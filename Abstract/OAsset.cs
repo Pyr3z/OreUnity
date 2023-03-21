@@ -29,9 +29,8 @@ namespace Ore
     public static bool TryCreate<T>(out T instance, [CanBeNull] string path = null)
       where T : ScriptableObject
     {
-      if (TryCreate(typeof(T), out ScriptableObject so, path))
+      if (TryCreate(typeof(T), out instance, path))
       {
-        instance = (T)so;
         return true;
       }
 
