@@ -28,8 +28,10 @@ namespace Ore
   ///   is non-abstract, non-generic, and such an asset does not already exist.*
   /// </summary>
   /// <typeparam name="TSelf">
-  ///   Successor should pass its own type (CRTP), or else another "TSelf"
-  ///   generic type parameter if you're trying to create a middleman base class.
+  ///   Successor should pass its own type
+  ///   (<a href="https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern">CRTP</a>),
+  ///   or else its own "TSelf" generic type parameter if the intent is to
+  ///   create a middleman base class.
   /// </typeparam>
   /// <remarks>
   ///   * The auto-instantiation behaviour can be tweaked/squelched with
@@ -37,6 +39,15 @@ namespace Ore
   ///   and is implicitly disabled by the presence of either
   ///   <see cref="CreateAssetMenuAttribute">[CreateAssetMenu(...)]</see> or
   ///   <see cref="System.ObsoleteAttribute">[System.Obsolete]</see>.
+  ///   <br/><br/>
+  ///   <b>Pro Tip 1:</b> You can implement the built-in <c>void Reset()</c>
+  ///   Unity message to define better defaults for this base class's instance
+  ///   properties. This way, you can eliminate human configuration error when
+  ///   your singleton expects and only works when, for example,
+  ///   <see cref="IsRequiredOnLaunch"/> is set to <c>true</c>. <br/><br/>
+  ///   <b>Pro Tip 2:</b> (extends Pro Tip 1) If you use <c>void OnValidate()</c>
+  ///   instead of <c>Reset()</c>, you can <i>force</i> your singleton's
+  ///   configuration to be certain way, as opposed to redefining default values.
   /// </remarks>
   /// <seealso cref="Ore.Editor.AssetsValidator"/>
   [PublicAPI]
@@ -92,22 +103,41 @@ namespace Ore
 
     // instance shtuff
 
+    /// <summary>
+    ///   Provided as a property for completeness, and potentially for the
+    ///   purposes of unit testing. <br/>
+    ///   If toggled in the Editor, the instance of this asset singleton will be
+    ///   added to / removed from the global "Preloaded Assets" list.
+    /// </summary>
     public bool IsRequiredOnLaunch => m_IsRequiredOnLaunch;
 
-    public bool IsReplaceable      => m_IsReplaceable;
+    /// <summary>
+    ///   If true at runtime: <br/>
+    ///   In the event that a new instance of this class gets instantiated, the
+    ///   current instance will be destroyed and replaced. Otherwise, new
+    ///   instances trying to replace the current instance will be
+    ///   auto-destroyed before they finish initializing.
+    /// </summary>
+    public bool IsReplaceable
+    {
+      get => m_IsReplaceable;
+      set => m_IsReplaceable = value;
+    }
 
 
     [SerializeField]
     [Tooltip("If toggled in the Editor, the instance of this asset singleton will be " +
              "added to / removed from the global \"Preloaded Assets\" list.")]
     protected bool m_IsRequiredOnLaunch = false;
-    [SerializeField]
-    [Tooltip("If true at runtime, then the current instance will be destroyed and " +
-             "replaced in the event that another, new instance of this class is instantiated.")]
-    protected bool m_IsReplaceable = false;
 
     [SerializeField]
-    [FormerlySerializedAs("m_OnAfterInitialized")]
+    [Tooltip("If true at runtime:\nIn the event that a new instance of this "       +
+             "class gets instantiated, the current instance will be destroyed and " +
+             "replaced. Otherwise, new instances trying to replace the current "    +
+             "instance will be auto-destroyed before they finish initializing.")]
+    protected bool m_IsReplaceable = false;
+
+    [SerializeField, FormerlySerializedAs("m_OnAfterInitialized")]
     protected DelayedEvent m_OnFirstInitialized = new DelayedEvent();
 
 
