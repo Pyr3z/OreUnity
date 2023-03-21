@@ -34,6 +34,7 @@ namespace Ore
     public static readonly TimeInterval Epsilon   = new TimeInterval(1000L);
 
     public static readonly TimeInterval Frame     = new TimeInterval(1L, areFrames: true);
+    public static readonly TimeInterval Milli     = new TimeInterval(10000L);
     public static readonly TimeInterval Second    = new TimeInterval(10000000L);
     public static readonly TimeInterval Minute    = new TimeInterval(600000000L);
     public static readonly TimeInterval Hour      = new TimeInterval(14400000000L);
@@ -325,6 +326,43 @@ namespace Ore
     public void DecrementFrame(int n = 1)
     {
       IncrementFrame(-1 * n);
+    }
+
+
+    public TimeInterval RoundToInterval(TimeInterval interval)
+    {
+      long i;
+      if (m_AsFrames)
+      {
+        i = interval.WithFrameTicks().Ticks;
+      }
+      else if (interval.m_AsFrames)
+      {
+        i = interval.WithSystemTicks().Ticks;
+      }
+      else
+      {
+        i = interval.Ticks;
+      }
+
+      if (i == 0L)
+      {
+        Ticks = 0L;
+        return this;
+      }
+
+      if (i < 0L)
+      {
+        i *= -1L;
+      }
+
+      long r = Ticks % i;
+      if (r < i >> 1)
+        Ticks -= r;       // round down
+      else
+        Ticks += (i - r); // round up
+
+      return this;
     }
 
 
