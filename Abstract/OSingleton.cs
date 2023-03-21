@@ -22,7 +22,8 @@ namespace Ore
   ///   it therefore requires a "parent" GameObject and scene context.
   /// </summary>
   /// <typeparam name="TSelf">
-  ///   Successor should pass its own type (CRTP).
+  ///   Successor should pass its own type (CRTP), or else be deferred with
+  ///   another "TSelf" generic type parameter (i.e. for base classes).
   /// </typeparam>
   [DisallowMultipleComponent]
   [PublicAPI]
@@ -59,7 +60,7 @@ namespace Ore
       }
 
       instance = new GameObject($"[{typeof(TSelf).Name}]").AddComponent<TSelf>();
-      return instance && instance.m_IsSingletonInitialized;
+      return instance && !instance.m_OnFirstInitialized.IsEnabled;
     }
 
     public static bool TryGetScene(out Scene scene)
@@ -89,16 +90,12 @@ namespace Ore
     protected DelayedEvent m_OnFirstInitialized = new DelayedEvent();
 
 
-    [System.NonSerialized]
-    private bool m_IsSingletonInitialized;
-
-
     [System.Diagnostics.Conditional("DEBUG")]
     public void ValidateInitialization() // good to call as a listener to "On First Initialized"
     {
       // ReSharper disable once HeapView.ObjectAllocation
       OAssert.AllTrue(this, s_Current == this,
-                               m_IsSingletonInitialized || !m_OnFirstInitialized.IsEnabled,
+                               !m_OnFirstInitialized.IsEnabled,
                                isActiveAndEnabled);
       Orator.Log($"Singleton registration validated.", this);
     }
@@ -123,6 +120,7 @@ namespace Ore
       if (s_Current == this)
       {
         s_Current = null;
+        m_OnFirstInitialized.TryCancelInvoke();
       }
     }
 
@@ -155,12 +153,13 @@ namespace Ore
         DontDestroyOnLoad(gameObject);
       }
 
-      if (m_IsSingletonInitialized || !m_OnFirstInitialized.IsEnabled)
+      if (!m_OnFirstInitialized.IsEnabled || m_OnFirstInitialized.TryInvoke())
       {
+        m_OnFirstInitialized.IsEnabled = false;
         return true;
       }
 
-      return m_IsSingletonInitialized = m_OnFirstInitialized.TryInvoke();
+      return false;
     }
 
 
