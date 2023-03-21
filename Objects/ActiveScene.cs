@@ -22,7 +22,7 @@ namespace Ore
   [DefaultExecutionOrder(-1337)] // rationale: Many things might depend on this class early-on.
   [DisallowMultipleComponent]
   [PublicAPI]
-  public class ActiveScene : OSingleton<ActiveScene>
+  public sealed class ActiveScene : OSingleton<ActiveScene>
   {
     public static Scene Scene => s_ActiveScene;
 
