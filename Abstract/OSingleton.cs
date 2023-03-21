@@ -30,12 +30,30 @@ namespace Ore
   public abstract class OSingleton<TSelf> : OComponent
     where TSelf : OSingleton<TSelf>
   {
+    /// <summary>
+    ///   Get the current singleton instance.
+    /// </summary>
+    /// <remarks>
+    ///   Some folks prefer <see cref="Instance">"Instance"</see>, some prefer
+    ///   <see cref="Current">"Current"</see>, and <i>some</i> even prefer
+    ///   <see cref="Agent">"Agent"</see>; they are all exactly the same. <br/><br/>
+    ///   This is one of the few times I will attempt to make everyone happy ;)
+    /// </remarks>
     public static TSelf Current  => s_Current;
-    public static TSelf Instance => s_Current; // compatibility API
 
-    public static bool IsActive => s_Current && s_Current.isActiveAndEnabled;
-    public static bool IsDontDestroyOnLoad => s_Current && s_Current.m_DontDestroyOnLoad;
-    public static bool IsReplaceable => !s_Current || s_Current.m_IsReplaceable;
+    /// <inheritdoc cref="Current"/>>
+    public static TSelf Instance => s_Current;
+
+    /// <inheritdoc cref="Current"/>>
+    public static TSelf Agent    => s_Current;
+
+
+    public static bool IsActive             => s_Current && s_Current.isActiveAndEnabled;
+
+    public static bool IsDontDestroyOnLoad  => s_Current && s_Current.m_DontDestroyOnLoad;
+
+    public static bool IsReplaceable        => !s_Current || s_Current.m_IsReplaceable;
+
     public static bool IsValidWhileDisabled => s_Current && s_Current.m_IsValidWhileDisabled;
 
 
@@ -146,6 +164,11 @@ namespace Ore
         s_Current.DestroyGameObject();
       }
 
+      if (m_OnFirstInitialized.IsEnabled && !m_OnFirstInitialized.TryInvoke())
+        return false;
+
+      m_OnFirstInitialized.IsEnabled = false;
+
       s_Current = self;
 
       if (m_DontDestroyOnLoad)
@@ -153,13 +176,7 @@ namespace Ore
         DontDestroyOnLoad(gameObject);
       }
 
-      if (!m_OnFirstInitialized.IsEnabled || m_OnFirstInitialized.TryInvoke())
-      {
-        m_OnFirstInitialized.IsEnabled = false;
-        return true;
-      }
-
-      return false;
+      return true;
     }
 
 
