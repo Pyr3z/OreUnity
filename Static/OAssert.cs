@@ -8,6 +8,7 @@
 using JetBrains.Annotations;
 
 using System.Collections.Generic;
+using System.Diagnostics;
 
 using UnityEngine;
 
@@ -15,7 +16,7 @@ using UnityEngine;
 namespace Ore
 {
   #if !DEBUG_KONSOLE
-  [System.Diagnostics.DebuggerStepThrough]
+  [DebuggerStepThrough]
   #endif
   [PublicAPI]
   public static class OAssert
@@ -24,7 +25,7 @@ namespace Ore
 
   #region Public API
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void True(bool value, Object ctx = null)
     {
       if (value)
@@ -33,7 +34,7 @@ namespace Ore
       Orator.FailAssertion(FAIL_BOOL_F, ctx);
     }
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void True(bool value, string msg, Object ctx = null)
     {
       if (value)
@@ -43,17 +44,18 @@ namespace Ore
     }
 
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllTrue(params bool[] values)
     {
       AllTrue(null, values);
     }
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllTrue(Object ctx, params bool[] values)
     {
       for (int i = 0, ilen = values?.Length ?? 0; i < ilen; ++i)
       {
+        // ReSharper disable once PossibleNullReferenceException
         if (values[i])
           continue;
 
@@ -64,7 +66,7 @@ namespace Ore
     }
 
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void False(bool value, Object ctx = null)
     {
       if (!value)
@@ -73,7 +75,7 @@ namespace Ore
       Orator.FailAssertion(FAIL_BOOL_T, ctx);
     }
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void False(bool value, string msg, Object ctx = null)
     {
       if (!value)
@@ -83,17 +85,18 @@ namespace Ore
     }
 
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllFalse(params bool[] values)
     {
       AllFalse(null, values);
     }
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllFalse(Object ctx, params bool[] values)
     {
       for (int i = 0, ilen = values?.Length ?? 0; i < ilen; ++i)
       {
+        // ReSharper disable once PossibleNullReferenceException
         if (!values[i])
           continue;
 
@@ -104,7 +107,7 @@ namespace Ore
     }
 
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void NotNull(object reference, Object ctx = null)
     {
       if (reference != null)
@@ -113,7 +116,7 @@ namespace Ore
       Orator.FailAssertion(FAIL_NULL_T, ctx);
     }
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void NotNull(object reference, string msg, Object ctx = null)
     {
       if (reference != null)
@@ -123,17 +126,18 @@ namespace Ore
     }
 
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllNotNull(params object[] references)
     {
       AllNotNull(null, references);
     }
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllNotNull(Object ctx, params object[] references)
     {
       for (int i = 0, ilen = references?.Length ?? 0; i < ilen; ++i)
       {
+        // ReSharper disable once PossibleNullReferenceException
         if (references[i] != null)
           continue;
 
@@ -144,7 +148,7 @@ namespace Ore
     }
 
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void Exists(Object obj, Object ctx = null)
     {
       if (obj)
@@ -153,7 +157,7 @@ namespace Ore
       Orator.FailAssertion(FAIL_NULL_T, ctx);
     }
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void Exists(Object obj, string msg, Object ctx = null)
     {
       if (obj)
@@ -166,6 +170,7 @@ namespace Ore
     {
       for (int i = 0, ilen = objs?.Length ?? 0; i < ilen; ++i)
       {
+        // ReSharper disable once PossibleNullReferenceException
         if (objs[i])
           continue;
 
@@ -176,7 +181,7 @@ namespace Ore
     }
 
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void NotEmpty<T>(ICollection<T> list, Object ctx = null)
     {
       if (list != null && list.Count != 0)
@@ -185,7 +190,7 @@ namespace Ore
       Orator.FailAssertion(FAIL_EMPTY_T, ctx);
     }
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void NotEmpty<T>(ICollection<T> list, string msg, Object ctx = null)
     {
       if (list != null && list.Count != 0)
@@ -194,17 +199,18 @@ namespace Ore
       Orator.FailAssertion(msg, ctx);
     }
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllNotEmpty<T>(params ICollection<T>[] lists)
     {
       AllNotEmpty(null, lists);
     }
 
-    [System.Diagnostics.Conditional(DEF_UNITY_ASSERTIONS)]
+    [Conditional(DEF_UNITY_ASSERTIONS)]
     public static void AllNotEmpty<T>(Object ctx, params ICollection<T>[] lists)
     {
       for (int i = 0, ilen = lists?.Length ?? 0; i < ilen; ++i)
       {
+        // ReSharper disable once PossibleNullReferenceException
         if (lists[i] != null && lists[i].Count != 0)
           continue;
 
@@ -214,7 +220,6 @@ namespace Ore
       }
     }
 
-  #endregion Public API
 
   #region Boolean return value API
 
@@ -267,7 +272,8 @@ namespace Ore
       {
         for (int i = 0, ilen = objs?.Length ?? 0; i < ilen; ++i)
         {
-          if (!(objs[i] is null))
+          // ReSharper disable once PossibleNullReferenceException
+          if (objs[i] != null)
             continue;
 
           Orator.FailAssertionNoThrow(ForParameter(FAIL_NULL_T, i, ilen));
@@ -293,6 +299,9 @@ namespace Ore
     #endif // UNITY_ASSERTIONS
 
   #endregion Boolean return value API
+
+
+  #endregion Public API
 
 
   #region Private section
