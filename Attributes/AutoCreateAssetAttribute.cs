@@ -9,7 +9,8 @@ using JetBrains.Annotations;
 namespace Ore
 {
   /// <summary>
-  ///   Apply me to ScriptableObjects to supply them with a custom path to be created in.
+  ///   Apply me to ScriptableObjects to supply them with a custom path to be
+  ///   auto-created in.
   /// </summary>
   /// <remarks>
   ///   (1) 'Assets/' is already implied in the relative path.<br/>
@@ -19,11 +20,14 @@ namespace Ore
   [System.Diagnostics.Conditional("UNITY_EDITOR")]
   public class AutoCreateAssetAttribute : System.Attribute
   {
+
     public readonly string Path;
 
+
     /// <param name="path">
-    ///   Relative path to the Assets/ folder, e.g., "Resources/GoodBoy.asset"
+    ///   Path relative to the Assets/ folder, e.g., "Resources/GoodBoy.asset"
     /// </param>
+    [PublicAPI]
     public AutoCreateAssetAttribute([NotNull] string path)
     {
       #if UNITY_EDITOR
@@ -33,7 +37,14 @@ namespace Ore
       Path = Paths.DetectAssetPathAssumptions(path);
     }
 
-    public AutoCreateAssetAttribute(bool doIt)
+    /// <param name="doIt"> <br/>
+    ///   <c>true</c> (default) = assume an asset path, constructed like so: <br/>
+    ///   <c>"Assets/Resources/{typeName}.asset"</c> <br/><br/>
+    ///   <c>false</c> = squelch (disable) any auto-instantiation logic for the
+    ///   applied type.
+    /// </param>
+    [PublicAPI]
+    public AutoCreateAssetAttribute(bool doIt = true)
     {
       Path = doIt ? string.Empty : null;
     }
