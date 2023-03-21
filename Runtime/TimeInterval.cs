@@ -84,6 +84,7 @@ namespace Ore
     public const double TICKS2MIN = TICKS2SEC / 60;
     public const double TICKS2HR  = TICKS2MIN / 60;
     public const double TICKS2DAY = TICKS2HR  / 24;
+    public const double TICKS2WK  = TICKS2DAY / 7;
 
     // using constant now since Application.targetFrameRate cannot be called in all contexts...
     private const double TICKS_PER_FRAME_60FPS = 1.0 / 60 / TICKS2SEC;
