@@ -353,6 +353,16 @@ namespace Ore
       ActiveScene.Coroutines.Run(this, out key);
     }
 
+    /// <inheritdoc cref="AwaitCoroutine()"/>>
+    /// <param name="key">
+    ///   Re-use an existing string key to associate the coroutine spawned by
+    ///   this method with.
+    /// </param>
+    public void AwaitCoroutine([NotNull] string key)
+    {
+      ActiveScene.Coroutines.Run(this, key);
+    }
+
 
     public override string ToString()
     {
