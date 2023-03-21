@@ -111,7 +111,6 @@ namespace Ore
       }
     }
 
-
     private void SetupCoroutineRunner()
     {
       var coroutiner = GetComponent<CoroutineRunner>();
@@ -129,7 +128,13 @@ namespace Ore
       s_Coroutiner = coroutiner;
     }
 
+
     // the rest ensures this singleton is ALWAYS on the "active" scene.
+
+    protected override void OnValidate()
+    {
+      // don't do base logic
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void RegisterActiveSceneListener()

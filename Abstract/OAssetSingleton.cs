@@ -78,8 +78,8 @@ namespace Ore
 
 
     /// <summary>
-    ///   Attempts to guarantee (with a very likelihood of success) the existence
-    ///   of this singleton's instance.
+    ///   Attempts to guarantee (with the maximum possible likelihood of success)
+    ///   the existence of this singleton's instance.
     /// </summary>
     /// <returns>
     ///   False if no instance could be found or successfully created.
@@ -162,7 +162,6 @@ namespace Ore
     }
 
 
-    // ReSharper disable once CognitiveComplexity
     protected bool TryInitialize(TSelf self)
     {
       OAssert.True(this == self, "Proper usage: this.TryInitialize(this)", this);
@@ -171,18 +170,11 @@ namespace Ore
       {
         if (!s_Current.m_IsReplaceable)
         {
-          if (Application.isEditor)
-            DestroyImmediate(this, allowDestroyingAssets: true);
-          else
-            Destroy(this);
-
+          DestroySelf();
           return false;
         }
 
-        if (Application.isEditor)
-          DestroyImmediate(s_Current, allowDestroyingAssets: true);
-        else
-          Destroy(s_Current);
+        DestroyOther(s_Current);
       }
 
       if (m_OnFirstInitialized.IsEnabled && !m_OnFirstInitialized.TryInvoke())
