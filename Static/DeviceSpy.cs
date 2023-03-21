@@ -357,6 +357,19 @@ namespace Ore
         }
       }
 
+      public static float AspectRatio
+      {
+        get => DeviceSpy.AspectRatio;
+        set
+        {
+          if (!s_AspectRatio.Equals(value))
+          {
+            s_AspectRatio = value;
+            OnCheepCheep?.Invoke(nameof(AspectRatio), value);
+          }
+        }
+      }
+
       public static string Brand
       {
         get => DeviceSpy.Brand;
@@ -467,6 +480,45 @@ namespace Ore
         }
       }
 
+      public static string Model
+      {
+        get => DeviceSpy.Model;
+        set
+        {
+          if (s_Model != value)
+          {
+            s_Model = value;
+            OnCheepCheep?.Invoke(nameof(Model), value);
+          }
+        }
+      }
+
+      public static SerialVersion OSVersion
+      {
+        get => DeviceSpy.OSVersion;
+        set
+        {
+          if (s_OSVersion != value)
+          {
+            s_OSVersion = value;
+            OnCheepCheep?.Invoke(nameof(OSVersion), value);
+          }
+        }
+      }
+
+      public static int ScreenRefreshHz
+      {
+        get => DeviceSpy.ScreenRefreshHz;
+        set
+        {
+          if (!s_ScreenRefreshHz.Equals(value))
+          {
+            s_ScreenRefreshHz = value;
+            OnCheepCheep?.Invoke(nameof(ScreenRefreshHz), value);
+          }
+        }
+      }
+
       public static TimeSpan TimezoneOffset
       {
         get => DeviceSpy.TimezoneOffset;
@@ -489,7 +541,7 @@ namespace Ore
 
       // ReSharper restore MemberHidesStaticFromOuterClass
 
-      public delegate void PropertyAction(string propertyName, object value);
+      public delegate void PropertyAction([NotNull] string propertyName, [CanBeNull] object value);
       public static event PropertyAction OnCheepCheep;
 
     } // end nested class LittleBirdie
