@@ -869,10 +869,13 @@ namespace Ore
 
   #region IDictionary<K,V>
 
-    public ICollection<K> Keys     => new KeySet(this);
-    ICollection IDictionary.Keys   => new KeySet(this);
-    public ICollection<V> Values   => new ValueCollection(this);
-    ICollection IDictionary.Values => new ValueCollection(this);
+    public KeySet Keys => new KeySet(this);
+    ICollection<K> IDictionary<K,V>.Keys => new KeySet(this);
+    ICollection         IDictionary.Keys => new KeySet(this);
+
+    public ValueCollection Values => new ValueCollection(this);
+    ICollection<V> IDictionary<K,V>.Values => new ValueCollection(this);
+    ICollection         IDictionary.Values => new ValueCollection(this);
 
     public bool IsReadOnly => false;
 
