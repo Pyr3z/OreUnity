@@ -194,18 +194,7 @@ namespace Ore
     {
       yield return new WaitForSeconds(seconds);
 
-      try
-      {
-        ((UnityEvent)this).Invoke();
-      }
-      catch (System.Exception ex)
-      {
-        Orator.NFE(ex, m_Context);
-      }
-      finally
-      {
-        m_InvokeHandle = null;
-      }
+      InvokePayload();
     }
 
     private void InvokePayload()
