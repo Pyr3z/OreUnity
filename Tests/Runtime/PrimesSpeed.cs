@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using Stopwatch = System.Diagnostics.Stopwatch;
 
 
+// ReSharper disable once CheckNamespace
 public static class PrimesSpeed
 {
   private const int NFRAMES = 60;

@@ -13,6 +13,7 @@ using DateTime = System.DateTime;
 using TimeSpan = System.TimeSpan;
 
 
+// ReSharper disable once CheckNamespace
 internal static class DeviceSpyInEditor
 {
 
