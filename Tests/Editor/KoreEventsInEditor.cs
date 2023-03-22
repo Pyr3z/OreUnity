@@ -24,13 +24,27 @@ internal static class OreEventsInEditor
   [Test]
   public static void AddStatic()
   {
-    var @event = new VoidEvent(isEnabled: true);
+    var vdEvent = new VoidEvent(isEnabled: true);
 
-    @event.AddListener(StaticMethod);
+    vdEvent.AddListener(StaticMethod);
 
     LogAssert.Expect(LogType.Log, "schmee.");
 
-    Assert.True(@event.TryInvoke());
+    Assert.True(vdEvent.TryInvoke());
+
+    vdEvent -= StaticMethod;
+
+    Assert.NotNull(vdEvent);
+
+    LogAssert.NoUnexpectedReceived();
+
+    Assert.True(vdEvent.TryInvoke());
+
+    vdEvent += StaticMethod;
+
+    LogAssert.Expect(LogType.Log, "schmee.");
+
+    Assert.True(vdEvent.TryInvoke());
 
     Assert.Pass("no news is good news");
   }
