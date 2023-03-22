@@ -80,42 +80,6 @@ namespace Ore
     }
 
 
-    public VoidEvent AddPersistent([NotNull] UnityAction action)
-    {
-      if (action.Target is Object uObj)
-      {
-        AddPersistent(uObj, action.Method);
-      }
-      else if (action.Method.IsStatic)
-      {
-        AddPersistent(action.Method);
-      }
-      else
-      {
-        Orator.Warn<VoidEvent>("Not sure what to do here... adding action as a runtime listener.");
-        AddListener(action);
-      }
-
-      return this;
-    }
-
-    public VoidEvent AddPersistent([NotNull] Object instance, [NotNull] MethodInfo method)
-    {
-      int i = GetPersistentEventCount();
-      RegisterPersistentListener(i, instance, method);
-      return this;
-    }
-
-    public VoidEvent AddPersistent([NotNull] MethodInfo staticMethod)
-    {
-      OAssert.True(staticMethod.IsStatic, "staticMethod.IsStatic");
-
-      int i = GetPersistentEventCount();
-      RegisterPersistentListener(i, null, staticMethod.DeclaringType, staticMethod);
-      return this;
-    }
-
-
     [NotNull]
     public static VoidEvent operator + ([CanBeNull] VoidEvent   lhs,
                                         [CanBeNull] UnityAction rhs)

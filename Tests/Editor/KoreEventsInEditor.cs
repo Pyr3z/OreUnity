@@ -22,11 +22,11 @@ internal static class OreEventsInEditor
 
 
   [Test]
-  public static void AddPersistentStatic()
+  public static void AddStatic()
   {
     var @event = new VoidEvent(isEnabled: true);
 
-    @event.AddPersistent(StaticMethod);
+    @event.AddListener(StaticMethod);
 
     LogAssert.Expect(LogType.Log, "schmee.");
 
