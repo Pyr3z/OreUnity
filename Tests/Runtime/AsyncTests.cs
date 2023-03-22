@@ -13,6 +13,7 @@ using UnityEngine.TestTools;
 using System.Collections;
 
 
+// ReSharper disable once CheckNamespace
 internal static class AsyncTests
 {
 

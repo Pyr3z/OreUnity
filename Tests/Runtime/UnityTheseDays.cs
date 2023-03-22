@@ -12,6 +12,7 @@ using UnityEngine.TestTools;
 using UnityEngine.Profiling;
 
 
+// ReSharper disable once CheckNamespace
 public static class UnityTheseDays
 {
 

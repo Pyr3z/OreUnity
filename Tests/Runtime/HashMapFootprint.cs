@@ -19,6 +19,7 @@ using System.Collections;
 using UnityEngine;
 
 
+// ReSharper disable once CheckNamespace
 public static class HashMapFootprint
 {
 

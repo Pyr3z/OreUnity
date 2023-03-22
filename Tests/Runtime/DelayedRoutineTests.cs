@@ -13,6 +13,7 @@ using UnityEngine.TestTools;
 using System.Collections;
 
 
+// ReSharper disable once CheckNamespace
 public static class DelayedRoutineTests
 {
 

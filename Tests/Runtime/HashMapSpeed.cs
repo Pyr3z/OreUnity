@@ -27,6 +27,7 @@ using Debug = UnityEngine.Debug;
 using Stopwatch = System.Diagnostics.Stopwatch;
 
 
+// ReSharper disable once CheckNamespace
 public static class HashMapSpeed
 {
 

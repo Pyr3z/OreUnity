@@ -16,6 +16,7 @@ using UnityEngine;
 using System.Collections.Generic;
 
 
+// ReSharper disable once CheckNamespace
 public static class Primes10K
 {
   private const int MAX_TEST_VALUE = Primes.MaxSizePrime;

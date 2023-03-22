@@ -12,10 +12,11 @@ using UnityEngine.Events;
 using UnityEngine.TestTools;
 
 
+// ReSharper disable once CheckNamespace
 internal static class OreEventsInEditor
 {
 
-  public static void StaticMethod()
+  static void StaticMethod()
   {
     Debug.Log("shmee.");
   }

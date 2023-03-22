@@ -24,6 +24,7 @@ using UnityEngine;
 using Math = System.Math;
 
 
+// ReSharper disable once CheckNamespace
 public static class PrimesCorrectness
 {
   [Test]
