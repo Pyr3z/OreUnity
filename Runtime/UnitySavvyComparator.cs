@@ -3,12 +3,15 @@
  *  @date       2022-12-07
 **/
 
+using JetBrains.Annotations;
+
 using Object = UnityEngine.Object;
 
 
 namespace Ore
 {
 
+  [PublicAPI]
   public class UnitySavvyComparator<T> : Comparator<object>, IComparator<T>
     where T : Object
   {
@@ -22,7 +25,7 @@ namespace Ore
     }
 
 
-    private readonly Comparator<T> m_ObjComparator = Comparator<T>.Default;
+    readonly Comparator<T> m_ObjComparator = Comparator<T>.Default;
 
 
     public bool Equals(T a, T b)
@@ -68,11 +71,9 @@ namespace Ore
   } // end sealed class UnitySavvyComparator<T>
 
 
+  [PublicAPI]
   public sealed class UnitySavvyComparator : UnitySavvyComparator<Object>
   {
-
-    public new static readonly UnitySavvyComparator Default = new UnitySavvyComparator();
-
   }
 
 }
