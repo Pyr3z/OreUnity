@@ -38,7 +38,7 @@ namespace Ore
 
 
       [PublicAPI]
-      public KeySet MakeWriteProxy()
+      public ISet<K> MakeWriteProxy()
       {
         IsReadOnly = false;
         return this;
