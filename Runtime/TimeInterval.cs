@@ -26,6 +26,19 @@ namespace Ore
     IComparable<TimeInterval>, IEquatable<TimeInterval>,
     IComparable<TimeSpan>, IEquatable<TimeSpan>
   {
+    public enum Units
+    {
+      Frames,
+      Ticks,
+      Milliseconds,
+      Seconds,
+      Minutes,
+      Hours,
+      Days,
+      Weeks
+    }
+
+
     public static readonly TimeInterval Zero      = new TimeInterval(0L);
     public static readonly TimeInterval MinValue  = new TimeInterval(long.MinValue);
     public static readonly TimeInterval MaxValue  = new TimeInterval(long.MaxValue);
@@ -85,6 +98,34 @@ namespace Ore
 
     const DateTimeKind ASSUME_DATETIME_KIND = DateTimeKind.Utc;
 
+
+    public static Units DetectUnits(long ticks)
+    {
+      if (ticks < 0)
+        ticks *= -1;
+
+      // the following thresholds were chosen only *somewhat* arbitrarily
+
+      if (ticks < Milli.Ticks)
+        return Units.Ticks;
+
+      if (ticks < OfSeconds(0.5).Ticks)
+        return Units.Milliseconds;
+
+      if (ticks < OfMinutes(5).Ticks)
+        return Units.Seconds;
+
+      if (ticks < OfHours(4).Ticks)
+        return Units.Minutes;
+
+      if (ticks < OfDays(3).Ticks)
+        return Units.Hours;
+
+      return Units.Days;
+    }
+
+
+    // instance shminstance
 
     //
     // TODO none of the following properties (up until `Frames`) work when m_AsFrames=true
