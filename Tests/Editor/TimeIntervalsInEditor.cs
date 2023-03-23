@@ -18,13 +18,28 @@ internal class TimeIntervalsInEditor
   [Test]
   public static void RoundToInterval()
   {
-    var ti = TimeInterval.OfSeconds(3.14f);
+    var ti = TimeInterval.OfSeconds(3.14);
+    Assert.AreEqual(3.14, ti.Seconds, Floats.Epsilon);
 
-    Assert.AreEqual(TimeInterval.OfSeconds(3), ti.RoundToInterval(TimeInterval.Second));
+    AssertAreEqual(TimeInterval.OfSeconds(3), 
+                   ti.RoundToInterval(TimeInterval.Second),
+                    "rounding 3.14s");
 
     ti = TimeInterval.OfHours(23.6);
+    Assert.AreEqual(23.6, ti.Hours, Floats.Epsilon);
 
-    Assert.AreEqual(TimeInterval.OfHours(24), ti.RoundToInterval(TimeInterval.Hour));
+    AssertAreEqual(TimeInterval.OfHours(24),
+                   ti.RoundToInterval(TimeInterval.Hour),
+                    "rounding 23.6h");
+  }
+
+
+  static void AssertAreEqual(TimeInterval expected, TimeInterval actual, string msg = null)
+  {
+    var units = TimeInterval.DetectUnits(expected);
+
+    // do this so that assertion messages are more readable
+    Assert.AreEqual(expected.ToUnits(units), actual.ToUnits(units), msg);
   }
 
 } // end class TimeIntervalsInEditor

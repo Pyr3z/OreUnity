@@ -339,6 +339,31 @@ namespace Ore
     }
 
 
+    public double ToUnits(Units units)
+    {
+      switch (units)
+      {
+        default:
+        case Units.Ticks:
+          return Ticks;
+        case Units.Frames:
+          return Frames;
+        case Units.Milliseconds:
+          return Millis;
+        case Units.Seconds:
+          return Seconds;
+        case Units.Minutes:
+          return Minutes;
+        case Units.Hours:
+          return Hours;
+        case Units.Days:
+          return Days;
+        case Units.Weeks:
+          return Days / 7;
+      }
+    }
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public TimeInterval WithSystemTicks()
     {
