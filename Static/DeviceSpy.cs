@@ -190,7 +190,7 @@ namespace Ore
     #if UNITY_EDITOR
 
     [UnityEditor.MenuItem("Ore/Helpers/Write DeviceSpy to Json")]
-    private static void Menu_MakeJson()
+    static void Menu_MakeJson()
     {
       string path = Filesystem.GetTempPath($"{nameof(DeviceSpy)}.json");
       string json = ToJson(prettyPrint: true);
@@ -711,31 +711,31 @@ namespace Ore
 
   #region Private section
 
-    private static ABI?          s_ABI;
-    private static float?        s_AspectRatio;
-    private static string        s_Brand;
-    private static string        s_Browser;
-    private static string        s_Carrier;
-    private static string        s_CountryISO3166a2;
-    private static float?        s_DiagonalInches;
-    private static string        s_IDFA;
-    private static string        s_IDFV;
-    private static bool          s_IsAdTrackingLimited;
-    private static bool?         s_IsBlueStacks;
-    private static bool?         s_IsTablet;
-    private static string        s_LangISO6391;
-    private static int?          s_LowRAMThresh;
-    private static string        s_Model;
-    private static SerialVersion s_OSVersion;
-    private static int?          s_ScreenRefreshHz;
-    private static TimeSpan?     s_TimezoneOffset;
-    private static string        s_UDID;
+    static ABI?          s_ABI;
+    static float?        s_AspectRatio;
+    static string        s_Brand;
+    static string        s_Browser;
+    static string        s_Carrier;
+    static string        s_CountryISO3166a2;
+    static float?        s_DiagonalInches;
+    static string        s_IDFA;
+    static string        s_IDFV;
+    static bool          s_IsAdTrackingLimited;
+    static bool?         s_IsBlueStacks;
+    static bool?         s_IsTablet;
+    static string        s_LangISO6391;
+    static int?          s_LowRAMThresh;
+    static string        s_Model;
+    static SerialVersion s_OSVersion;
+    static int?          s_ScreenRefreshHz;
+    static TimeSpan?     s_TimezoneOffset;
+    static string        s_UDID;
 
-    private const long BYTES_PER_MIB = 1048576L; // = pow(2,20)
-    private const long BYTES_PER_MB  = 1000000L;
+    const long BYTES_PER_MIB = 1048576L; // = pow(2,20)
+    const long BYTES_PER_MB  = 1000000L;
 
 
-    private static (string make, string model) CalcMakeModel()
+    static (string make, string model) CalcMakeModel()
     {
       #if UNITY_IOS
         return ("Apple", SystemInfo.deviceModel);
@@ -755,7 +755,7 @@ namespace Ore
     }
 
     [NotNull]
-    private static SerialVersion CalcOSVersion()
+    static SerialVersion CalcOSVersion()
     {
       switch (SystemInfo.operatingSystemFamily)
       {
@@ -767,7 +767,7 @@ namespace Ore
       }
     }
 
-    private static string CalcVendorUDID()
+    static string CalcVendorUDID()
     {
       const string PREFKEY_UDID = "VENDOR_UDID";
 
@@ -788,7 +788,7 @@ namespace Ore
       return udid;
     }
 
-    private static string CalcBrowserName()
+    static string CalcBrowserName()
     {
       #if UNITY_ANDROID
         return CalcAndroidBrowser().Trim();
@@ -801,7 +801,7 @@ namespace Ore
       #endif
     }
 
-    private static string CalcCarrier()
+    static string CalcCarrier()
     {
       #if UNITY_ANDROID
         return CalcAndroidCarrier().Trim();
@@ -814,7 +814,7 @@ namespace Ore
       #endif
     }
 
-    private static string CalcISO6391()
+    static string CalcISO6391()
     {
       string iso6391 = Strings.MakeISO6391(Application.systemLanguage);
 
@@ -842,20 +842,20 @@ namespace Ore
       return iso6391;
     }
 
-    private static string CalcISO3166a2() // 2-letter region code
+    static string CalcISO3166a2() // 2-letter region code
     {
       return GeoIP.CachedValue ?? RegionInfo.CurrentRegion.TwoLetterISORegionName;
         // RegionInfo.CurrentRegion is a temporary fallback,
         // and does not give accurate geo on most devices.
     }
 
-    private static TimeSpan CalcTimezoneOffset()
+    static TimeSpan CalcTimezoneOffset()
     {
       // TODO there might be a better (100x faster) Java API to call for Android ~
       return System.TimeZoneInfo.Local.BaseUtcOffset;
     }
 
-    private static string CalcIDFA()
+    static string CalcIDFA()
     {
       #if UNITY_ANDROID
         return CalcAndroidIDFA();
@@ -866,7 +866,7 @@ namespace Ore
       #endif
     }
 
-    private static string CalcIDFV()
+    static string CalcIDFV()
     {
       #if UNITY_ANDROID
         return CalcAndroidIDFV();
@@ -877,21 +877,21 @@ namespace Ore
       #endif
     }
 
-    private static int CalcLowRAMThreshold()
+    static int CalcLowRAMThreshold()
     {
       // TODO fetch LowRAMThreshold from platform
       // e.g. Android: https://developer.android.com/reference/android/app/ActivityManager.MemoryInfo#threshold
       return (int)(SystemInfo.systemMemorySize * 0.1f).AtLeast(64);
     }
 
-    private static float CalcScreenDiagonalInches()
+    static float CalcScreenDiagonalInches()
     {
       float w = Screen.width  / Screen.dpi;
       float h = Screen.height / Screen.dpi;
       return Mathf.Sqrt(w * w + h * h);
     }
 
-    private static float CalcAspectRatio()
+    static float CalcAspectRatio()
     {
       if (Screen.height < Screen.width)
         return (float)Screen.width / Screen.height;
@@ -899,7 +899,7 @@ namespace Ore
         return (float)Screen.height / Screen.width;
     }
 
-    private static bool CalcIsTablet()
+    static bool CalcIsTablet()
     {
       #if AD_MEDIATION_MAX
         return MaxSdkUtils.IsTablet();
@@ -908,14 +908,14 @@ namespace Ore
       #endif
     }
 
-    private static bool CalcIsTabletByScreenSize()
+    static bool CalcIsTabletByScreenSize()
     {
       const float MIN_DIAGONAL_INCHES = 6.5f;
       const float MAX_ASPECT_RATIO = 2.0f;
       return DiagonalInches > MIN_DIAGONAL_INCHES && AspectRatio < MAX_ASPECT_RATIO;
     }
 
-    private static bool CalcIsBlueStacks()
+    static bool CalcIsBlueStacks()
     {
       #if !UNITY_EDITOR && UNITY_ANDROID
         foreach (string dir in new string[]{  "/sdcard/windows/BstSharedFolder",
@@ -929,7 +929,7 @@ namespace Ore
       return false;
     }
 
-    private static ABI CalcABIArch()
+    static ABI CalcABIArch()
     {
       #if !UNITY_EDITOR && UNITY_IOS // TODO iOS needs to be tested
         if (System.Environment.Is64BitOperatingSystem)
@@ -963,7 +963,7 @@ namespace Ore
 
     #if UNITY_ANDROID
 
-    private static string CalcAndroidIDFV()
+    static string CalcAndroidIDFV()
     {
       #if UNITY_EDITOR
         if (Application.isEditor) return UDID;
@@ -993,7 +993,7 @@ namespace Ore
       return string.Empty;
     }
 
-    private static string CalcAndroidIDFA()
+    static string CalcAndroidIDFA()
     {
       #if UNITY_EDITOR
         if (Application.isEditor) return string.Empty;
@@ -1027,7 +1027,7 @@ namespace Ore
       return string.Empty;
     }
 
-    private static string CalcAndroidBrowser()
+    static string CalcAndroidBrowser()
     {
       #if UNITY_EDITOR
         if (Application.isEditor) return string.Empty;
@@ -1078,7 +1078,7 @@ namespace Ore
       return string.Empty; // no deferred calcing
     }
 
-    private static string CalcAndroidISO6391() // 2-letter retval
+    static string CalcAndroidISO6391() // 2-letter retval
     {
       #if UNITY_EDITOR
         if (Application.isEditor) return string.Empty;
@@ -1096,7 +1096,7 @@ namespace Ore
       return string.Empty;
     }
 
-    private static string CalcAndroidISO6392() // 3-letter retval
+    static string CalcAndroidISO6392() // 3-letter retval
     {
       #if UNITY_EDITOR
         if (Application.isEditor) return string.Empty;
@@ -1114,7 +1114,7 @@ namespace Ore
       return string.Empty;
     }
 
-    private static string CalcAndroidCarrier()
+    static string CalcAndroidCarrier()
     {
       #if UNITY_EDITOR
         if (Application.isEditor) return string.Empty;
@@ -1145,7 +1145,7 @@ namespace Ore
 
     #elif UNITY_IOS
 
-    private static string CalcAppleIDFV()
+    static string CalcAppleIDFV()
     {
       // TODO is PlayerPrefs really necessary here?
       // I know on iOS native we use the user's keychain to persist IDFV across
