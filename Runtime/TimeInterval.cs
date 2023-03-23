@@ -185,7 +185,7 @@ namespace Ore
     public double Millis
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => Ticks * TICKS2MS;
+      get => WithSystemTicks().Ticks * TICKS2MS;
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2MS + (value >= 0 ? 0.5 : -0.5));
     }
@@ -193,7 +193,7 @@ namespace Ore
     public float FMillis
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => (float)(Ticks * TICKS2MS);
+      get => (float)(WithSystemTicks().Ticks * TICKS2MS);
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2MS + (value >= 0f ? 0.5f : -0.5f));
     }
@@ -201,7 +201,7 @@ namespace Ore
     public double Seconds
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => Ticks * TICKS2SEC;
+      get => WithSystemTicks().Ticks * TICKS2SEC;
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2SEC + (value >= 0 ? 0.5 : -0.5));
     }
@@ -209,7 +209,7 @@ namespace Ore
     public float FSeconds
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => (float)(Ticks * TICKS2SEC);
+      get => (float)(WithSystemTicks().Ticks * TICKS2SEC);
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2SEC + (value >= 0f ? 0.5f : -0.5f));
     }
@@ -217,7 +217,7 @@ namespace Ore
     public double Minutes
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => Ticks * TICKS2MIN;
+      get => WithSystemTicks().Ticks * TICKS2MIN;
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2MIN + (value >= 0 ? 0.5 : -0.5));
     }
@@ -225,7 +225,7 @@ namespace Ore
     public float FMinutes
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => (float)(Ticks * TICKS2MIN);
+      get => (float)(WithSystemTicks().Ticks * TICKS2MIN);
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2MIN + (value >= 0f ? 0.5f : -0.5f));
     }
@@ -233,7 +233,7 @@ namespace Ore
     public double Hours
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => Ticks * TICKS2HR;
+      get => WithSystemTicks().Ticks * TICKS2HR;
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2HR + (value >= 0 ? 0.5 : -0.5));
     }
@@ -241,7 +241,7 @@ namespace Ore
     public float FHours
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => (float)(Ticks * TICKS2HR);
+      get => (float)(WithSystemTicks().Ticks * TICKS2HR);
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2HR + (value >= 0f ? 0.5f : -0.5f));
     }
@@ -249,7 +249,7 @@ namespace Ore
     public double Days
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => Ticks * TICKS2DAY;
+      get => WithSystemTicks().Ticks * TICKS2DAY;
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2DAY + (value >= 0 ? 0.5 : -0.5));
     }
@@ -257,7 +257,7 @@ namespace Ore
     public float FDays
     {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => (float)(Ticks * TICKS2DAY);
+      get => (float)(WithSystemTicks().Ticks * TICKS2DAY);
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       set => Ticks = (long)(value / TICKS2DAY + (value >= 0f ? 0.5f : -0.5f));
     }
