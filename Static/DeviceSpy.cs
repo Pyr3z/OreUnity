@@ -19,12 +19,11 @@ using Newtonsoft.Json.Linq;
 using Device = UnityEngine.iOS.Device;
 #endif
 
-using DateTime = System.DateTime;
-using TimeSpan = System.TimeSpan;
-
+using DateTime   = System.DateTime;
+using TimeSpan   = System.TimeSpan;
+using Encoding   = System.Text.Encoding;
 using RegionInfo = System.Globalization.RegionInfo;
 
-using Encoding = System.Text.Encoding;
 
 namespace Ore
 {
@@ -35,6 +34,7 @@ namespace Ore
   #region Public section
 
     // ReSharper disable ConvertToNullCoalescingCompoundAssignment
+    // ReSharper disable ConvertIfStatementToNullCoalescingAssignment
 
     public static ABI ABI => (ABI)(s_ABI ?? (s_ABI = CalcABIArch()));
 
@@ -213,17 +213,44 @@ namespace Ore
   #region Advanced API
 
 
+    /// <summary>
+    ///   Nested API to gift you some control over if/how/when the DeviceSpy
+    ///   should utilize a proprietary geo-ip service, which takes an
+    ///   internet-connected user's public IP address and gets an estimate as to
+    ///   their device's current geo location.
+    /// </summary>
+    /// <remarks>
+    ///   Current granularity: ISP's country only (2-char ISO 3166-a2 code).
+    /// </remarks>
     [PublicAPI]
     public static class GeoIP
     {
-      [CanBeNull]
-      public static string Value => PlayerPrefs.GetString(CACHED, null);
+      // TODO yeet PlayerPrefs
 
+      /// <summary>
+      ///   Gets the last cached value acquired by this system, or null if we
+      ///   don't have one.
+      /// </summary>
+      /// <remarks>
+      ///   Not guaranteed to be equivalent to the current value reported by
+      ///   <see cref="DeviceSpy.CountryISOString"/>!
+      /// </remarks>
+      [CanBeNull]
+      public static string CachedValue => PlayerPrefs.GetString(CACHED, null);
+
+      /// <summary>
+      ///   Get the timepoint (in UTC) when we last cached a geolocation value
+      ///   received from our remote service.
+      /// </summary>
+      /// <returns>
+      ///   <c>default(DateTime)</c> if we've never successfully cached a
+      ///   geolocation provided by the remote service.
+      /// </returns>
+      /// <seealso cref="CachedValue"/>
       public static DateTime LastFetchedAt
       {
         get
         {
-          // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
           if (s_LastFetchedAt is null)
           {
             s_LastFetchedAt = DateTimes.GetPlayerPref(FETCHED_AT);
@@ -233,10 +260,29 @@ namespace Ore
         }
       }
 
+      /// <summary>
+      ///   Get the <see cref="TimeInterval"/> since we last cached a
+      ///   geolocation value received from our remote service, <b>rounded to
+      ///   the nearest whole second.</b>
+      /// </summary>
+      /// <returns>
+      ///   The equivalent of <see cref="DateTime.UtcNow"/> as a TimeInterval
+      ///   if we've never successfully cached a geolocation.
+      /// </returns>
       public static TimeInterval TimeSinceLastFetched => new TimeInterval(DateTime.UtcNow - LastFetchedAt)
                                                             .RoundToInterval(TimeInterval.Second);
 
 
+      /// <summary>
+      ///   <b>You should probably prefer this over <see cref="Fetch"/>.</b> <br/>
+      ///   Attempts to asynchronously ping our remote geoip service.
+      /// </summary>
+      /// <param name="staleAfter">
+      ///   The amount of time that must have passed since the last successful
+      ///   <see cref="Fetch"/> before this call considers our cached
+      ///   geolocation to be "stale" and attempt to refresh it with a new Fetch.
+      /// </param>
+      /// <inheritdoc cref="Fetch"/>
       [NotNull]
       public static Promise<string> FetchIfStale(TimeInterval staleAfter, int timeout = DEFAULT_TIMEOUT)
       {
@@ -248,15 +294,36 @@ namespace Ore
         return Fetch(timeout);
       }
 
+      /// <summary>
+      ///   <b>You should probably prefer <see cref="FetchIfStale"/> over this
+      ///   method</b>, unless of course you know the difference between the two
+      ///   and have judged accordingly.
+      /// </summary>
+      /// <param name="timeout">
+      ///   The timeout interval (in whole seconds) allotted to the request. If
+      ///   it is exceeded, the request will halt and catch fire.
+      /// </param>
+      /// <returns>
+      ///   A static <see cref="Promise{T}"/> (of T string) ready for you to
+      ///   await and/or subscribe delegates to. <br/>
+      ///   If Fetch has already been called and is still awaiting a server
+      ///   response, the same promise object that was originally returned will
+      ///   be returned again.
+      /// </returns>
       [NotNull]
       public static Promise<string> Fetch(int timeout = DEFAULT_TIMEOUT)
       {
         // getCountryWithIP does not care about inputs, they're just used for hashing
         // TODO Should change this up in the future for 3rd party - Darren
-        const string PARAMS    = "appName=&ipAddress=&timestamp=&hash=74be16979710d4c4e7c6647856088456";
-        const string API       = "https://api.boreservers.com/borePlatform2/getCountryWithIP.php";
+        const string PARAMS    = "appName=&ipAddress=&timestamp=&hash=74be16979710d4c4e7c6647856088456"; // TODO encrypt (& scrub?)
+        const string API       = "https://api.boreservers.com/borePlatform2/getCountryWithIP.php"; // TODO encrypt (& scrub?)
         const string MIME      = "application/x-www-form-urlencoded";
         const string ERRORMARK = "\"error\"";
+
+        if (s_WWW != null)
+        {
+          return s_Promise;
+        }
 
         var req = new UnityWebRequest(API)
         {
@@ -269,15 +336,25 @@ namespace Ore
 
         req.timeout = timeout;
 
-        var promise = req.Promise(ERRORMARK);
+        s_Promise.Reset();
+
+        var promise = req.PromiseText(ERRORMARK, s_Promise);
                       // Note: extension calls req.Dispose() for us
 
         if (promise.IsCompleted && !promise.Succeeded)
         {
+          #if DEBUG
+          Orator.Log(typeof(GeoIP), "Fetch failed rather quickly - you sure about your internet connection?");
+          #endif
           return promise;
         }
 
-        s_LastFetchedAt = DateTime.UtcNow;
+        s_WWW = req;
+
+        promise.OnCompleted += () =>
+        {
+          s_WWW = null;
+        };
 
         promise.OnSucceeded += response =>
         {
@@ -309,27 +386,64 @@ namespace Ore
 
           #endif // NEWTONSOFT_JSON
 
-          s_LastFetchedAt.Value.SetPlayerPref(FETCHED_AT);
+          var now = DateTime.UtcNow;
+          now.SetPlayerPref(FETCHED_AT);
+          s_LastFetchedAt = now;
         };
 
         return promise;
       }
 
+      /// <summary>
+      ///   Resets everything cached and handled by <see cref="GeoIP"/>, making
+      ///   its state as if the current user just had their first launch again. <br/>
+      ///   In the off-chance that there is an ongoing <see cref="Fetch"/>
+      ///   request still running, it will be aborted, the associated promise
+      ///   will be expedited, and in DEBUG, a warning will get logged to let
+      ///   you know that this unicorn edge case has occurred.
+      /// </summary>
+      /// <remarks>
+      ///   Intended for debugging.
+      /// </remarks>
       public static void Reset()
       {
-        PlayerPrefs.DeleteKey(CACHED);
-        PlayerPrefs.DeleteKey(FETCHED_AT);
+        if (s_WWW != null)
+        {
+          s_WWW.Abort();
+          s_WWW = null;
+
+          if (!s_Promise.IsCompleted)
+          {
+            #if DEBUG
+            Orator.Warn(typeof(GeoIP), "Called GeoIP.Reset() while a request is still pending; " +
+                                            "undefined behaviour may result.");
+            #endif
+
+            s_Promise.Forget();
+          }
+
+          // just to double check that listeners aren't getting shafted:
+          s_Promise.AwaitBlocking();
+
+          s_Promise.Reset();
+        }
+
         s_CountryISO3166a2 = null;
         s_LastFetchedAt    = default(DateTime);
+
+        PlayerPrefs.DeleteKey(CACHED);
+        PlayerPrefs.DeleteKey(FETCHED_AT);
       }
 
 
 
-      private static DateTime? s_LastFetchedAt;
+      static          UnityWebRequest s_WWW;
+      static readonly Promise<string> s_Promise = new Promise<string>();
+      static          DateTime?       s_LastFetchedAt;
 
-      private  const int    DEFAULT_TIMEOUT = 30;
-      private  const string FETCHED_AT = "DeviceSpy.GeoIP.FetchedAt";
-      internal const string CACHED     = "DeviceSpy.GeoIP.Cached";
+      const int    DEFAULT_TIMEOUT = 30;
+      const string FETCHED_AT      = "DeviceSpy.GeoIP.FetchedAt";
+      const string CACHED          = "DeviceSpy.GeoIP.Cached";
 
     } // end nested static class GeoIP
 
@@ -339,7 +453,7 @@ namespace Ore
     ///   of the current device.
     /// </summary>
     /// <remarks>
-    ///   By design, nothing within this class is defensively validated. <br/>
+    ///   By design, nothing within this class is defensively validated (aside from data type, of course). <br/>
     ///   <i>Little birdies can lie.</i> <br/>
     ///   <b>USE WITH CAUTION!</b>
     /// </remarks>
@@ -730,10 +844,9 @@ namespace Ore
 
     private static string CalcISO3166a2() // 2-letter region code
     {
-      string fallback = RegionInfo.CurrentRegion.TwoLetterISORegionName;
-        // this is an ABSOLUTE fallback and does not give accurate geo on most devices
-
-      return PlayerPrefs.GetString(GeoIP.CACHED, fallback);
+      return GeoIP.CachedValue ?? RegionInfo.CurrentRegion.TwoLetterISORegionName;
+        // RegionInfo.CurrentRegion is a temporary fallback,
+        // and does not give accurate geo on most devices.
     }
 
     private static TimeSpan CalcTimezoneOffset()

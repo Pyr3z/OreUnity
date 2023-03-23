@@ -380,7 +380,7 @@ namespace Ore
 
     // private section
 
-    private enum State
+    enum State
     {
       Pending,
       Failed,
@@ -388,13 +388,13 @@ namespace Ore
       Succeeded,
     }
 
-    private T         m_Value;
-    private State     m_State;
-    private Exception m_Exception;
+    T         m_Value;
+    State     m_State;
+    Exception m_Exception;
 
-    private SuccessAction m_OnSucceeded;
-    private FailureAction m_OnFailed;
-    private Action        m_OnCompleted;
+    SuccessAction m_OnSucceeded;
+    FailureAction m_OnFailed;
+    Action        m_OnCompleted;
 
 
   #region interfaces
