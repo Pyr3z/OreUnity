@@ -87,9 +87,9 @@ namespace Ore
     public const double TICKS2WK  = TICKS2DAY / 7;
 
     // using constant now since Application.targetFrameRate cannot be called in all contexts...
-    private const double TICKS_PER_FRAME_60FPS = 1.0 / 60 / TICKS2SEC;
+    const double TICKS_PER_FRAME_60FPS = 1.0 / 60 / TICKS2SEC;
 
-    private const DateTimeKind ASSUME_DATETIME_KIND = DateTimeKind.Utc;
+    const DateTimeKind ASSUME_DATETIME_KIND = DateTimeKind.Utc;
 
 
     //
@@ -330,20 +330,31 @@ namespace Ore
     }
 
 
-    public TimeInterval RoundToInterval(TimeInterval interval)
+    /// <summary>
+    ///   Modifies this TimeInterval to represent the nearest multiple of the
+    ///   given step.
+    /// </summary>
+    /// <param name="step">
+    ///   If the step is <see cref="Zero"/>, the interval will be zeroed out. <br/>
+    ///   If the step is negative, its absolute value will be used.
+    /// </param>
+    /// <returns>
+    ///   <c>this</c>.
+    /// </returns>
+    public TimeInterval RoundToInterval(TimeInterval step)
     {
       long i;
       if (m_AsFrames)
       {
-        i = interval.WithFrameTicks().Ticks;
+        i = step.WithFrameTicks().Ticks;
       }
-      else if (interval.m_AsFrames)
+      else if (step.m_AsFrames)
       {
-        i = interval.WithSystemTicks().Ticks;
+        i = step.WithSystemTicks().Ticks;
       }
       else
       {
-        i = interval.Ticks;
+        i = step.Ticks;
       }
 
       if (i == 0L)
@@ -367,6 +378,15 @@ namespace Ore
     }
 
 
+    /// <summary>
+    ///   Get a "wait" object (null => a single frame or less) that can be
+    ///   <c>yield return</c>ed by a Unity coroutine, causing the coroutine to
+    ///   wait for the time interval represented by this struct.
+    /// </summary>
+    /// <param name="scaledTime">
+    ///   If specified and true, <see cref="Time.timeScale"/> will be ignored in
+    ///   the resulting wait object.
+    /// </param>
     [CanBeNull]
     public object Yield(bool scaledTime = false)
     {
