@@ -16,11 +16,11 @@ internal static class TimeIntervalsInEditor
 {
 
   [Test]
-  public static void SmolParse()
+  public static void LazySmolParse()
   {
     (string test, TimeInterval expected)[] tests =
     {
-      ("1337 ticks", ),
+      ("1337 ticks", TimeInterval.OfTicks(1337)),
       ("22ms",       TimeInterval.OfMillis(22)),
       ("3.14s",      TimeInterval.OfSeconds(3.14)),
       ("5.0m",       TimeInterval.OfMinutes(5)),
