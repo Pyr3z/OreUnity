@@ -124,7 +124,7 @@ namespace Ore
       return Units.Days;
     }
 
-    public static TimeInterval FromShorthand([CanBeNull] string str)
+    public static TimeInterval SmolParse([CanBeNull] string str)
     {
       if (str.IsEmpty())
         return default;
@@ -159,7 +159,7 @@ namespace Ore
           return OfFrames((float)d);
         case 't':
         case 'L':
-          return new TimeInterval((long)d);
+          return OfTicks((long)d);
         case 'm':
           if (unitPart.Length > 1 && unitPart[1] == 's')
             return OfMillis(d);
@@ -328,6 +328,14 @@ namespace Ore
       m_AsFrames = false;
     }
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TimeInterval OfTicks(long ticks)
+    {
+      // "middleman" function provided simply for API uniformity.
+      // good thing it's aggressively compiled out~
+      return new TimeInterval(ticks);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TimeInterval OfMillis(double ms)
