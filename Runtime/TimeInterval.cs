@@ -124,6 +124,57 @@ namespace Ore
       return Units.Days;
     }
 
+    public static TimeInterval FromShorthand([CanBeNull] string str)
+    {
+      if (str.IsEmpty())
+        return default;
+
+      // ReSharper disable once PossibleNullReferenceException
+      int i = str.Length;
+      bool hasUnit = false;
+
+      while (i -- > 0 && ( str[i] > '9' || str[i] < '.' ))
+      {
+        hasUnit = true;
+      }
+
+      string unitPart = "f";
+      if (hasUnit)
+      {
+        ++ i;
+
+        unitPart = str.Substring(i).Trim();
+        str = str.Remove(i);
+
+        if (unitPart.Length == 0)
+          unitPart = "f";
+      }
+
+      _ = double.TryParse(str, out double d);
+
+      switch (unitPart[0])
+      {
+     // case 'f':
+        default:
+          return OfFrames((float)d);
+        case 't':
+        case 'L':
+          return new TimeInterval((long)d);
+        case 'm':
+          if (unitPart.Length > 1 && unitPart[1] == 's')
+            return OfMillis(d);
+          return OfSeconds(d);
+        case 's':
+          return OfSeconds(d);
+        case 'h':
+          return OfHours(d);
+        case 'd':
+          return OfDays(d);
+        case 'w':
+          return OfDays(d) / 7; // TODO
+      }
+    }
+
 
     // instance shminstance
 
@@ -259,6 +310,7 @@ namespace Ore
       if (dateTime.Kind != ASSUME_DATETIME_KIND)
       {
         #pragma warning disable CS0162
+        // ReSharper disable HeuristicUnreachableCode
         switch (ASSUME_DATETIME_KIND)
         {
           case DateTimeKind.Utc:
@@ -268,6 +320,7 @@ namespace Ore
             dateTime = dateTime.ToLocalTime();
             break;
         }
+        // ReSharper restore HeuristicUnreachableCode
         #pragma warning restore CS0162
       }
 
