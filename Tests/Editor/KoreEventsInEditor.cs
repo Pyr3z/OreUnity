@@ -16,9 +16,11 @@ using UnityEngine.TestTools;
 internal static class OreEventsInEditor
 {
 
+  static int s_StaticMethodCount;
+
   static void StaticMethod()
   {
-    Debug.Log("shmee.");
+    ++ s_StaticMethodCount;
   }
 
 
@@ -27,25 +29,27 @@ internal static class OreEventsInEditor
   {
     var vdEvent = new VoidEvent(isEnabled: true);
 
+    int start = s_StaticMethodCount;
+
     vdEvent.AddListener(StaticMethod);
 
-    LogAssert.Expect(LogType.Log, "schmee.");
-
     Assert.True(vdEvent.TryInvoke());
+
+    Assert.AreEqual(s_StaticMethodCount, start + 1);
 
     vdEvent -= StaticMethod;
 
     Assert.NotNull(vdEvent);
 
-    LogAssert.NoUnexpectedReceived();
-
     Assert.True(vdEvent.TryInvoke());
+
+    Assert.AreEqual(s_StaticMethodCount, start + 1);
 
     vdEvent += StaticMethod;
 
-    LogAssert.Expect(LogType.Log, "schmee.");
-
     Assert.True(vdEvent.TryInvoke());
+
+    Assert.AreEqual(s_StaticMethodCount, start + 2);
 
     Assert.Pass("no news is good news");
   }
