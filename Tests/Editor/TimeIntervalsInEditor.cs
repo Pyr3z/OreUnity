@@ -10,10 +10,26 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
+using DateTime = System.DateTime;
+using TimeSpan = System.TimeSpan;
+
 
 // ReSharper disable once CheckNamespace
 internal static class TimeIntervalsInEditor
 {
+
+  [Test]
+  public static void Constants()
+  {
+    Assert.AreEqual(default(TimeInterval),        TimeInterval.Zero,         "Zero");
+    Assert.AreEqual(TimeSpan.TicksPerMillisecond, TimeInterval.Milli.Ticks,  "Milli");
+    Assert.AreEqual(TimeSpan.TicksPerSecond,      TimeInterval.Second.Ticks, "Second");
+    Assert.AreEqual(TimeSpan.TicksPerMinute,      TimeInterval.Minute.Ticks, "Minute");
+    Assert.AreEqual(TimeSpan.TicksPerHour,        TimeInterval.Hour.Ticks,   "Hour");
+    Assert.AreEqual(TimeSpan.TicksPerDay,         TimeInterval.Day.Ticks,    "Day");
+    Assert.AreEqual(TimeSpan.TicksPerDay * 7,     TimeInterval.Week.Ticks,   "Week");
+  }
+
 
   [Test]
   public static void LazySmolParse()
