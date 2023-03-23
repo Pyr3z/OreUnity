@@ -72,12 +72,6 @@ namespace Ore
       #endif
     }
 
-    public static TimeInterval UtcNow
-    {
-      [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => new TimeInterval(DateTime.UtcNow);
-    }
-
 
     public const double TICKS2MS  = 1e-4;
     public const double TICKS2SEC = TICKS2MS  / 1000;
