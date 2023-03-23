@@ -51,13 +51,18 @@ namespace Ore
     }
 
     /// <summary>
-    ///   Creates a promise object for the given web request.
+    ///   Creates a <see cref="Promise{T}"/> object for the given web request. <br/> <br/>
+    ///   As the name suggests, your request should be preconstructed to handle
+    ///   downloading <b>text</b> (encoded in UTF8). <br/> <br/>
+    ///   Does not support calling multiple times on the same request instance. <br/> <br/>
+    ///   Finally, this API makes the firm guarantee that your request will be
+    ///   disposed of properly in virtually all cases, so you should not attempt
+    ///   to do any additional disposal on the request after calling this.
     /// </summary>
     ///
     /// <param name="request">
-    ///   A non-null, non-sent UnityWebRequest object. This request is guaranteed
-    ///   to be disposed after it finishes, or else if some error occurs along
-    ///   the way.
+    ///   Assumed not-null, not-already-sent, and to have a valid
+    ///   <see cref="DownloadHandlerBuffer"/> already attached.
     /// </param>
     ///
     /// <param name="errorSubstring">
@@ -73,9 +78,9 @@ namespace Ore
     ///   you</b>, so it's <i>your</i> responsibility to call it beforehand (if
     ///   applicable)!
     /// </param>
-    public static Promise<string> Promise([NotNull] this UnityWebRequest request,
-                                          string   errorSubstring = null,
-                                          Promise<string> promise = null)
+    public static Promise<string> PromiseText([NotNull] this UnityWebRequest request,
+                                              string   errorSubstring = null,
+                                              Promise<string> promise = null)
     {
       if (promise is null)
         promise = new Promise<string>();
@@ -85,6 +90,15 @@ namespace Ore
       {
         request.Dispose();
         return promise.Forget();
+      }
+
+      // some light validation
+      if (!(request.downloadHandler is DownloadHandlerBuffer downloader))
+      {
+        request.Dispose();
+        return promise.FailWith(new System.NullReferenceException(
+                                  "request.downloadHandler as DownloadHandlerBuffer"
+                                ));
       }
 
       UnityWebRequestAsyncOperation asyncOp;
@@ -109,16 +123,28 @@ namespace Ore
       {
         try
         {
-          promise.Maybe(request.downloadHandler.text);
-
-          if (request.Succeeded() && ( errorSubstring.IsEmpty() ||
-                                       !promise.Value.Contains(errorSubstring) ))
+          if (!downloader.error.IsEmpty())
           {
-            promise.Complete();
+            promise.FailWith(downloader.error);
+            return;
+          }
+
+          OAssert.True(downloader.isDone);
+
+          string response = downloader.text;
+
+          if (request.Succeeded())
+          {
+            promise.Maybe(response);
+
+            if (errorSubstring.IsEmpty() || !response.Contains(errorSubstring))
+              promise.Complete();
+            else
+              promise.Fail();
           }
           else
           {
-            promise.Fail();
+            promise.FailWith(request.error);
           }
         }
         catch (System.Exception ex)
