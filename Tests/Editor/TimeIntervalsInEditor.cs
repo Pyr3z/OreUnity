@@ -12,8 +12,30 @@ using UnityEngine.TestTools;
 
 
 // ReSharper disable once CheckNamespace
-internal class TimeIntervalsInEditor
+internal static class TimeIntervalsInEditor
 {
+
+  [Test]
+  public static void SmolParse()
+  {
+    (string test, TimeInterval expected)[] tests =
+    {
+      ("1337 ticks", ),
+      ("22ms",       TimeInterval.OfMillis(22)),
+      ("3.14s",      TimeInterval.OfSeconds(3.14)),
+      ("5.0m",       TimeInterval.OfMinutes(5)),
+      ("0.50 hr ",   TimeInterval.OfHours(0.5)),
+      ("1 day",      TimeInterval.OfDays(1)),
+      ("1.5days",    TimeInterval.OfDays(1.5)),
+    };
+
+    foreach (var (test, expected) in tests)
+    {
+      var actual = TimeInterval.SmolParse(test);
+      AssertAreEqual(expected, actual, $"SmolParse(\"{test}\")");
+    }
+  }
+
 
   [Test]
   public static void RoundToInterval()
@@ -36,10 +58,10 @@ internal class TimeIntervalsInEditor
 
   static void AssertAreEqual(TimeInterval expected, TimeInterval actual, string msg = null)
   {
-    var units = TimeInterval.DetectUnits(expected);
+    var units = TimeInterval.DetectUnits(expected.Ticks.AtMost(actual.Ticks));
 
     // do this so that assertion messages are more readable
-    Assert.AreEqual(expected.ToUnits(units), actual.ToUnits(units), msg);
+    Assert.AreEqual(expected.ToUnits(units), actual.ToUnits(units), Floats.Epsilon, msg);
   }
 
 } // end class TimeIntervalsInEditor
