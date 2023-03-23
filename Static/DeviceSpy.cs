@@ -378,6 +378,9 @@ namespace Ore
             // (LittleBirdie is used to propogate changes to listeners)
 
             PlayerPrefs.SetString(CACHED, geoCode);
+            // meh... I *GUESS* since this is such rare code, triggering a save wouldn't kill us...
+            PlayerPrefs.Save();
+            // (but TODO just in case)
 
           #elif DEBUG
 
@@ -433,6 +436,7 @@ namespace Ore
 
         PlayerPrefs.DeleteKey(CACHED);
         PlayerPrefs.DeleteKey(FETCHED_AT);
+        PlayerPrefs.Save();
       }
 
 
