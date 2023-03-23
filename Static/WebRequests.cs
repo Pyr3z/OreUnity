@@ -50,24 +50,36 @@ namespace Ore
       #endif
     }
 
-
     /// <summary>
     ///   Creates a promise object for the given web request.
     /// </summary>
+    ///
     /// <param name="request">
     ///   A non-null, non-sent UnityWebRequest object. This request is guaranteed
     ///   to be disposed after it finishes, or else if some error occurs along
     ///   the way.
     /// </param>
+    ///
     /// <param name="errorSubstring">
     ///   If provided, the presence of this substring in the downloadHandler's
     ///   text body indicates an error has occurred, even if the HTTP result code
     ///   is 2XX.
     /// </param>
+    ///
+    /// <param name="promise">
+    ///   If provided, this call will reuse an existing <see cref="Promise{T}"/>
+    ///   object for the retval, instead of instantiating a new one. <br/>
+    ///   <b>Note: This helper will not call promise.<see cref="Promise{T}.Reset"/> for
+    ///   you</b>, so it's <i>your</i> responsibility to call it beforehand (if
+    ///   applicable)!
+    /// </param>
     public static Promise<string> Promise([NotNull] this UnityWebRequest request,
-                                          string errorSubstring = null)
+                                          string   errorSubstring = null,
+                                          Promise<string> promise = null)
     {
-      var promise = new Promise<string>();
+      if (promise is null)
+        promise = new Promise<string>();
+      // else, intentionally NOT going to call promise.Reset() for you
 
       if (Application.internetReachability == NetworkReachability.NotReachable)
       {
