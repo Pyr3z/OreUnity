@@ -27,6 +27,7 @@ namespace Ore
     IComparable<TimeSpan>, IEquatable<TimeSpan>
   {
     public enum Units
+      // TODO now that we have this enum, one might be tempted to radically restructure this POD...
     {
       Frames,
       Ticks,
@@ -163,7 +164,7 @@ namespace Ore
         case 'm':
           if (unitPart.Length > 1 && unitPart[1] == 's')
             return OfMillis(d);
-          return OfSeconds(d);
+          return OfMinutes(d);
         case 's':
           return OfSeconds(d);
         case 'h':
