@@ -26,11 +26,15 @@ namespace Ore
     protected bool m_IsEnabled;
 
 
+    public VoidEvent()
+    {
+    }
+
     /// <param name="isEnabled">
     ///   Whether or not the event should start enabled (making it invokable). <br/>
     ///   False by default, for base use case optimization.
     /// </param>
-    public VoidEvent(bool isEnabled = false)
+    public VoidEvent(bool isEnabled)
     {
       m_IsEnabled = isEnabled;
     }
