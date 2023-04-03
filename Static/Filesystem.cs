@@ -277,7 +277,7 @@ namespace Ore
 
       try
       {
-        objectOrArray.Merge(token, JsonAuthority.MergeReplace);
+        objectOrArray.Merge(token, NewtonsoftAuthority.MergeReplace);
         return true;
       }
       catch (JsonException jex)
@@ -355,15 +355,15 @@ namespace Ore
             break;
 
           case IList<object> list:
-            token = JsonAuthority.FixupNestedContainers(list) as T;
+            token = NewtonsoftAuthority.FixupNestedContainers(list) as T;
             break;
 
           case HashMap<string,object> map:
-            token = JsonAuthority.FixupNestedContainers(map) as T;
+            token = NewtonsoftAuthority.FixupNestedContainers(map) as T;
             break;
 
           case Dictionary<string,object> dict:
-            token = JsonAuthority.FixupNestedContainers(dict) as T;
+            token = NewtonsoftAuthority.FixupNestedContainers(dict) as T;
             break;
 
           default:
