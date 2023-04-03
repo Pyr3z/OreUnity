@@ -92,6 +92,30 @@ namespace Ore
       MergeNullValueHandling = MergeNullValueHandling.Ignore
     };
 
+
+    [NotNull]
+    public static string Serialize(object obj, JsonSerializer serializer = null, StringBuilder cachedBuilder = null)
+    {
+      if (serializer is null)
+        serializer = JsonSerializer.CreateDefault(SerializerSettings);
+
+      if (cachedBuilder is null)
+        cachedBuilder = new StringBuilder(2048);
+      else
+        cachedBuilder.Clear();
+
+      var strWriter = new StringWriter(cachedBuilder, SerializerSettings.Culture);
+
+      using (var jsonWriter = new JsonTextWriter(strWriter))
+      {
+        jsonWriter.Formatting = Formatting;
+        serializer.Serialize(jsonWriter, obj);
+      }
+
+      return strWriter.ToString();
+    }
+
+
     [NotNull]
     public static JsonTextWriter MakeWriter([NotNull] TextWriter writer, [NotNull] out JsonConverter[] converters,
                                             JsonSerializerSettings overrides = null)
@@ -193,29 +217,6 @@ namespace Ore
       settings.TypeNameHandling = enable ? TypeNameHandling.Objects : TypeNameHandling.None;
 
       return settings;
-    }
-
-
-    [NotNull]
-    public static string Serialize(object obj, JsonSerializer serializer = null, StringBuilder cachedBuilder = null)
-    {
-      if (serializer is null)
-        serializer = JsonSerializer.CreateDefault(SerializerSettings);
-
-      if (cachedBuilder is null)
-        cachedBuilder = new StringBuilder(2048);
-      else
-        cachedBuilder.Clear();
-
-      var strWriter = new StringWriter(cachedBuilder, SerializerSettings.Culture);
-
-      using (var jsonWriter = new JsonTextWriter(strWriter))
-      {
-        jsonWriter.Formatting = Formatting;
-        serializer.Serialize(jsonWriter, obj);
-      }
-
-      return strWriter.ToString();
     }
 
 
@@ -523,23 +524,7 @@ namespace Ore
 
   #else // !NEWTONSOFT_JSON
 
-
-    [NotNull]
-    public static IDictionary<string,object> GenericParse(string rawJson,
-                                                          System.Func<int, IDictionary<string,object>> mapMaker = null,
-                                                          System.Func<int, IList<object>> listMaker = null)
-    {
-      if (mapMaker is null)
-      {
-        mapMaker = DefaultMapMaker;
-      }
-
-      // TODO
-
-      throw new System.NotImplementedException($"{nameof(JsonAuthority)}.{nameof(GenericParse)}(...) - sans NEWTONSOFT_JSON");
-    }
-
-    // TODO the rest
+    // TODO ?
 
   #endif // !NEWTONSOFT_JSON
 
