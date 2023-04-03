@@ -1,5 +1,6 @@
-/*! @file       Runtime/MiniJSON.cs
- *  @author     
+/*! @file       Runtime/MiniJson.cs
+ *  @author     Calvin Rien (https://gist.github.com/darktable/1411710)
+ *              (license info at end of file)
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2023-04-01
 **/
@@ -16,7 +17,7 @@ using System.Text;
 namespace Ore
 {
   /// <summary>
-  ///   This class encodes and decodes JSON strings. <br/>
+  ///   This class encodes and decodes JSON strings. <br/> <br/>
   ///   JSON uses Arrays and Objects. These correspond here to the datatypes IList and IDictionary.
   ///   All numbers are parsed to doubles. <br/> <br/>
   ///
