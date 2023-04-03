@@ -94,19 +94,22 @@ namespace Ore
       return true;
     }
 
-    public static void PushProvider(JsonProvider provider)
-    {
-      s_ProviderStack.Push(Provider);
-      _ = TrySetProvider(provider);
-    }
 
-    public static void PopProvider()
+    public sealed class ProviderScope : System.IDisposable
     {
-      if (s_ProviderStack.Count == 0)
-        Provider = JsonProvider.Default;
-      else
-        Provider = s_ProviderStack.Pop();
-    }
+      public ProviderScope(JsonProvider provider)
+      {
+        m_Restore = Provider;
+        _         = TrySetProvider(provider);
+      }
+
+      public void Dispose()
+      {
+        Provider = m_Restore;
+      }
+
+      readonly JsonProvider m_Restore;
+    } // end nested class ProviderScope
 
 
     internal static IDictionary<string,object> DefaultMapMaker(int capacity)
@@ -118,8 +121,6 @@ namespace Ore
       return new object[capacity];
     }
 
-
-    static readonly Stack<JsonProvider> s_ProviderStack = new Stack<JsonProvider>();
 
   #region DEPRECATIONS
 
