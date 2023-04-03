@@ -35,10 +35,6 @@ namespace Ore
     [PublicAPI] [CanBeNull]
     public static object Deserialize([CanBeNull] string json)
     {
-      // save the string for debug information
-      if (json.IsEmpty())
-        return null;
-
       return Parser.Parse(json);
     }
 
@@ -64,6 +60,9 @@ namespace Ore
     {
       public static object Parse(string jsonString)
       {
+        if (jsonString.IsEmpty())
+          return jsonString;
+
         using (var instance = new Parser(jsonString))
         {
           return instance.ParseValue();
