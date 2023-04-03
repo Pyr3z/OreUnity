@@ -362,7 +362,7 @@ namespace Ore
 
           #if NEWTONSOFT_JSON
 
-            var jobj = JObject.Parse(response, JsonAuthority.LoadStrict);
+            var jobj = JObject.Parse(response, NewtonsoftAuthority.LoadStrict);
 
             string geoCode = jobj["result"]?["countryCode"]?.ToString();
 

@@ -92,7 +92,7 @@ internal static class MiscInEditor
 
     Assert.DoesNotThrow(() =>
                         {
-                          string json = JsonAuthority.Serialize(map, serializer, sbob);
+                          string json = NewtonsoftAuthority.Serialize(map, serializer, sbob);
                           Debug.Log(json);
                         });
 
@@ -103,7 +103,7 @@ internal static class MiscInEditor
 
     Assert.DoesNotThrow(() =>
                         {
-                          string json = JsonAuthority.Serialize(list, serializer, sbob);
+                          string json = NewtonsoftAuthority.Serialize(list, serializer, sbob);
                           Debug.Log(json);
                         });
 
@@ -114,7 +114,7 @@ internal static class MiscInEditor
 
     Assert.DoesNotThrow(() =>
                         {
-                          string json = JsonAuthority.Serialize(map2, serializer, sbob);
+                          string json = NewtonsoftAuthority.Serialize(map2, serializer, sbob);
                           Debug.Log(json);
                         });
   }
