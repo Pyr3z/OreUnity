@@ -13,7 +13,7 @@ using System.IO;
 using System.Text;
 
 
-namespace MiniJSON
+namespace Ore
 {
   /// <summary>
   ///   This class encodes and decodes JSON strings. <br/>
@@ -22,24 +22,21 @@ namespace MiniJSON
   ///
   ///   Spec. details, see https://www.json.org/
   /// </summary>
-  public static class Json
+  public static class MiniJson
   {
 
-    /// <summary>
-    ///   Parses the string json into a value
-    /// </summary>
     /// <param name="json">
-    ///   A JSON string.
+    ///   The JSON string to parse.
     /// </param>
     /// <returns>
     ///   A List&lt;object&gt;, a Dictionary&lt;string, object&gt;, a double, an
     ///   integer,a string, null, true, or false
     /// </returns>
-    [PublicAPI]
-    public static object Deserialize(string json)
+    [PublicAPI] [CanBeNull]
+    public static object Deserialize([CanBeNull] string json)
     {
       // save the string for debug information
-      if (json == null)
+      if (json.IsEmpty())
         return null;
 
       return Parser.Parse(json);
@@ -48,16 +45,16 @@ namespace MiniJSON
     /// <summary>
     ///   Converts a IDictionary / IList object or a simple type (string, int, etc.) into a JSON string
     /// </summary>
-    /// <param name="json">
+    /// <param name="obj">
     ///   A Dictionary&lt;string, object&gt; / List&lt;object&gt;
     /// </param>
     /// <returns>
     ///   A JSON encoded string, or null if object 'json' is not serializable
     /// </returns>
-    [PublicAPI]
-    public static string Serialize(object obj)
+    [PublicAPI] [CanBeNull]
+    public static string Serialize([CanBeNull] object obj)
     {
-      return Serializer.Serialize(obj);
+      return Serializer.ToJson(obj);
     }
 
 
@@ -371,50 +368,51 @@ namespace MiniJSON
           return TOKEN.NONE;
         }
       }
-    }
 
-    sealed class Serializer
+    } // end nested class Parser
+
+
+    static class Serializer
     {
-      readonly StringBuilder m_Builder = new StringBuilder();
+      const int BUILDER_INIT_CAP = 256;
+      static readonly StringBuilder s_Builder = new StringBuilder(BUILDER_INIT_CAP);
 
-      public static string Serialize(object obj)
+      public static string ToJson(object obj)
       {
-        var instance = new Serializer();
+        s_Builder.Clear();
 
-        instance.SerializeValue(obj);
+        SerializeValue(obj);
 
-        return instance.m_Builder.ToString();
+        return s_Builder.ToString();
       }
 
-      void SerializeValue(object value)
+      static void SerializeValue(object value)
       {
-        IList asList;
-        IDictionary asDict;
-        string asStr;
-
         if (value == null)
         {
-          m_Builder.Append("null");
+          s_Builder.Append("null");
         }
-        else if ((asStr = value as string) != null)
+        else if (value is string str)
         {
-          SerializeString(asStr);
+          SerializeString(str);
         }
-        else if (value is bool)
+        else if (value is bool b)
         {
-          m_Builder.Append((bool) value ? "true" : "false");
+          s_Builder.Append(b ? "true" : "false");
         }
-        else if ((asList = value as IList) != null)
+        else if (value is IList list)
         {
-          SerializeArray(asList);
+          SerializeArray(list);
         }
-        else if ((asDict = value as IDictionary) != null)
+        else if (value is IDictionary dict)
         {
-          SerializeObject(asDict);
+          SerializeObject(dict);
         }
-        else if (value is char)
+        else if (value is char c)
         {
-          SerializeString(new string((char) value, 1));
+          s_Builder.Append('\"');
+          s_Builder.Append(c);
+          s_Builder.Append('\"');
         }
         else
         {
@@ -422,127 +420,149 @@ namespace MiniJSON
         }
       }
 
-      void SerializeObject(IDictionary obj)
+      static void SerializeObject(IDictionary dict)
       {
+        s_Builder.Append('{');
+
         bool first = true;
 
-        m_Builder.Append('{');
-
-        foreach (object e in obj.Keys)
+        var iter = dict.GetEnumerator();
+        while (iter.MoveNext())
         {
+          #if UNITY_ASSERTIONS
+          OAssert.NotNull(iter.Key);
+          #endif
+
           if (!first)
-            m_Builder.Append(',');
-
-          SerializeString(e.ToString());
-          m_Builder.Append(':');
-
-          SerializeValue(obj[e]);
+            s_Builder.Append(',');
 
           first = false;
+
+          // ReSharper disable once PossibleNullReferenceException
+          SerializeString(iter.Key.ToString());
+
+          s_Builder.Append(':');
+
+          SerializeValue(iter.Value);
         }
 
-        m_Builder.Append('}');
+        s_Builder.Append('}');
       }
 
-      void SerializeArray(IList anArray)
+      static void SerializeArray(IList array)
       {
-        m_Builder.Append('[');
+        s_Builder.Append('[');
 
         bool first = true;
 
-        foreach (object obj in anArray)
+        foreach (object obj in array)
         {
           if (!first)
-            m_Builder.Append(',');
+            s_Builder.Append(',');
 
           SerializeValue(obj);
 
           first = false;
         }
 
-        m_Builder.Append(']');
+        s_Builder.Append(']');
       }
 
-      void SerializeString(string str)
+      static void SerializeString(string str)
       {
-        m_Builder.Append('\"');
+        s_Builder.Append('\"');
 
         foreach (var c in str)
         {
           switch (c)
           {
             case '"':
-              m_Builder.Append("\\\"");
+              s_Builder.Append("\\\"");
               break;
             case '\\':
-              m_Builder.Append("\\\\");
+              s_Builder.Append("\\\\");
               break;
             case '\b':
-              m_Builder.Append("\\b");
+              s_Builder.Append("\\b");
               break;
             case '\f':
-              m_Builder.Append("\\f");
+              s_Builder.Append("\\f");
               break;
             case '\n':
-              m_Builder.Append("\\n");
+              s_Builder.Append("\\n");
               break;
             case '\r':
-              m_Builder.Append("\\r");
+              s_Builder.Append("\\r");
               break;
             case '\t':
-              m_Builder.Append("\\t");
+              s_Builder.Append("\\t");
               break;
             default:
               int codepoint = System.Convert.ToInt32(c);
               if ((codepoint >= 32) && (codepoint <= 126))
               {
-                m_Builder.Append(c);
+                s_Builder.Append(c);
               }
               else
               {
-                m_Builder.Append("\\u");
-                m_Builder.Append(codepoint.ToString("x4"));
+                s_Builder.Append("\\u");
+                s_Builder.Append(codepoint.ToString("x4"));
               }
               break;
           }
         }
 
-        m_Builder.Append('\"');
+        s_Builder.Append('\"');
       }
 
-      void SerializeOther(object value)
+      static void SerializeOther(object value)
       {
         // NOTE: decimals lose precision during serialization.
         // They always have, I'm just letting you know.
         // Previously floats and doubles lost precision too.
 
-        if (value is float)
+        var type = value.GetType();
+        var code = System.Type.GetTypeCode(type);
+
+        switch (code)
         {
-          m_Builder.Append(((float)value).ToString("R"));
-        }
-        else if (value is int    ||
-                 value is uint   ||
-                 value is long   ||
-                 value is sbyte  ||
-                 value is byte   ||
-                 value is short  ||
-                 value is ushort ||
-                 value is ulong)
-        {
-          m_Builder.Append(value);
-        }
-        else if (value is double ||
-                 value is decimal)
-        {
-          m_Builder.Append(System.Convert.ToDouble(value).ToString("R"));
-        }
-        else
-        {
-          SerializeString(value.ToString());
+          default:
+          case System.TypeCode.String:
+            SerializeString(value.ToString());
+            break;
+
+          case System.TypeCode.Single:
+          case System.TypeCode.Double:
+          case System.TypeCode.Decimal:
+            s_Builder.Append(System.Convert.ToDouble(value).ToString("R"));
+            break;
+
+          case System.TypeCode.Int32:
+          case System.TypeCode.Int64:
+          case System.TypeCode.UInt32:
+          case System.TypeCode.UInt64:
+          case System.TypeCode.Int16:
+          case System.TypeCode.UInt16:
+          case System.TypeCode.Byte:
+          case System.TypeCode.SByte:
+            s_Builder.Append(value);
+            break;
+
+          case System.TypeCode.DateTime:
+            s_Builder.Append(((System.DateTime)value).ToBinary());
+            break;
+
+          case System.TypeCode.Empty:
+          case System.TypeCode.DBNull:
+            s_Builder.Append("null");
+            break;
         }
       }
-    }
-  }
+
+    } // end nested class Serializer
+
+  } // end static class MiniJson
+
 }
 
 
