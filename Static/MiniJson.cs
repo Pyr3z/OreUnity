@@ -18,6 +18,7 @@ namespace Ore
 {
   /// <summary>
   ///   This class encodes and decodes JSON strings. <br/> <br/>
+  ///
   ///   JSON uses Arrays and Objects. These correspond here to the datatypes IList and IDictionary.
   ///   All numbers are parsed to doubles. <br/> <br/>
   ///

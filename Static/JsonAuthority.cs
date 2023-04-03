@@ -77,7 +77,6 @@ namespace Ore
       }
     }
 
-
     public static bool TrySetProvider(JsonProvider provider)
     {
       if (Provider == provider)
@@ -95,6 +94,20 @@ namespace Ore
       return true;
     }
 
+    public static void PushProvider(JsonProvider provider)
+    {
+      s_ProviderStack.Push(Provider);
+      _ = TrySetProvider(provider);
+    }
+
+    public static void PopProvider()
+    {
+      if (s_ProviderStack.Count == 0)
+        Provider = JsonProvider.Default;
+      else
+        Provider = s_ProviderStack.Pop();
+    }
+
 
     internal static IDictionary<string,object> DefaultMapMaker(int capacity)
     {
@@ -105,6 +118,8 @@ namespace Ore
       return new object[capacity];
     }
 
+
+    static readonly Stack<JsonProvider> s_ProviderStack = new Stack<JsonProvider>();
 
   #region DEPRECATIONS
 
