@@ -4,8 +4,104 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v5.3.1](../../tree/unstable) - UNRELEASED
-- fef
+## [v6.0.0](../../tree/unstable) - UNRELEASED
+- Note: Gonna try to do alphabetical order (by full path) here; there's a lot.
+
+<details>
+  <summary>
+  Improved: The following classes gained some XML documentation love: <b>(click expand)</b>
+  </summary>
+  _(and [Tooltip] for some, too!)_
+  <ul>
+    <!-- git diff --name-only unstable..stable -- '*.cs' | while read f; do echo "<li>[$f]($f) ($(git diff unstable..stable -- "$f" | grep -E '///' | wc -l) lines)</li>" ; done | grep -v '(0 lines)' -->
+    <li>[Abstract/OAsset.cs](Abstract/OAsset.cs) (71 lines)</li>
+    <li>[Abstract/OAssetSingleton.cs](Abstract/OAssetSingleton.cs) (74 lines)</li>
+    <li>[Abstract/OComponent.cs](Abstract/OComponent.cs) (61 lines)</li>
+    <li>[Abstract/OSingleton.cs](Abstract/OSingleton.cs) (105 lines)</li>
+    <li>[Attributes/AutoCreateAssetAttribute.cs](Attributes/AutoCreateAssetAttribute.cs) (17 lines)</li>
+    <li>[Runtime/HashMap+Collections.cs](Runtime/HashMap+Collections.cs) (5 lines)</li>
+    <li>[Runtime/HashMap.cs](Runtime/HashMap.cs) (13 lines)</li>
+    <li>[Runtime/Promise.cs](Runtime/Promise.cs) (5 lines)</li>
+    <li>[Runtime/TimeInterval.cs](Runtime/TimeInterval.cs) (20 lines)</li>
+    <li>[Runtime/VoidEvent.cs](Runtime/VoidEvent.cs) (14 lines)</li>
+    <li>[Static/DeviceSpy.cs](Static/DeviceSpy.cs) (82 lines)</li>
+    <li>[Static/OInvoke.cs](Static/OInvoke.cs) (63 lines)</li>
+    <li>[Static/WebRequests.cs](Static/WebRequests.cs) (32 lines)</li>
+  </ul>
+</details>
+
+- In `Asset<T>`:
+  - Added: methods `DestroySelf()`, `DestroyOther(Object)` (for UnityEvent sugar).
+  - Improved: `TryCreate<T>` validates that the type(s) you give it are properly assignable _before_ a `System.InvalidCast` or other exception can get thrown.
+
+- In `OAssetSingleton<T>`:
+  - Added: Instance properties: `IsRequiredOnLaunch{get;}`, `IsReplaceable{get;set;}`
+  - Added: Yet another alias for Instance: `Agent` :dizzy_face:
+  - Changed: Renamed serialized field `m_OnAfterInitialized` -> `m_OnFirstInitialized`, for clarity and parity with OSingleton.
+  - Changed: The final reason why `TryInitialize()` might return false is if both are true: (1) "On First Initialized" event has been enabled, and (2) the event was NOT able to be queued for invokation. Thus, failure here most likely indicates a configuration error.
+  - Fixed: Edge case when TryGuarantee would create a new instance, and try to initialize it twice.
+
+- In `IComparator<T>`, `UnitySavvyComparator`:
+  - Added: New interface `IUseComparator<T>` - primarily used to compare sets of HashMap\<K,V\> keys with each other, even if they come from HashMaps of different generic V types.
+  - Changed: `UnitySavvyComparator` is now generic `UnitySavvyComparator<T>`, and implements IComparator\<T\> (_in addition to_ Comparator\<object\>).
+    - Also: Added: `UnitySavvyComparator` (not generic), inherits from and de-genericizes `UnitySavvyComparator<Object>`. As before, this is likely the one you want.
+  - (detail) Added: `bool IComparator<T>.Equals(object otherComparator)`, which doesn't require explicit implementation in inheritors since the signature matches object.Equals(object).
+
+- In `OComponent`:
+  - Changed: `Destroy{Self,GameObject}()` no longer takes the optional parameter "inSeconds". OInvoke.AfterDelay(...) might help you instead.
+  - Added: `DestroyOther(Object)`
+
+- In `OSingleton`:
+  - Removed: Static properties `IsDontDestroyOnLoad{get;}`, `IsReplaceable{get;}`, `IsValidWhileDisabled{get;}`
+  - Added: Instance properties `IsDontDestroyOnLoad{get;}`, `IsReplaceable{get;set;}`, `IsValidWhileDisabled{get;set;}`
+  - Added: `OnValidate()` - toggling "Dont Destroy On Load" in play mode properly toggles which scene owns the singleton's GameObject.
+  - Fixed: The "On First Initialized" event now disables itself after its first successful invoke, to properly enforce "first"ness.
+
+- In `AutoCreateAssetAttribute`:
+  - Added: Constructor taking bool 'doIt', with default value = true.
+  - Note: This allows one to actually DISABLE the default auto asset creation associated with OAssetSingleton\<T\>s, specifically.
+
+- In `HashMap<K,V>`:
+  - Changed: Renamed nested type `KeyCollection` -> `KeySet`, which now predominantly implements ISet\<K\>.
+    - Added: ^ which means a bunch of handy new ISet methods are now available.
+  - Changed: Exposed the nested types KeySet and ValueCollection as the default (public) return types for HashMap.Keys and HashMap.Values.
+  - Added: HashMap.Keys.MakeWriteProxy() _(advanced usage)_ - allows you to treat a HashMap's set of keys as a write-enabled proxy for the HashMap itself.
+    - E.G. removing elements from the proxied KeySet also removes elements from its parent HashMap.
+    - If you forget to call MakeWriteProxy() before you modify the KeySet, expect to see NotSupportedException("KeySet is read only.") thrown.
+    - Also: Changed: KeySet ICollection methods which previously threw NotSupportedExceptions now have working implementations, iff the KeySet is a "write proxy". They still throw them if MakeWriteProxy() was never called.
+  - Added: Generic method `bool Find<VCasted>(key, out casted) where VCasted : V` - allows for much nicer handling when `V` is, say, type `object`, and you want to pull a bunch of strings, ints, bools, whatever out of the HashMap.
+  - Removed: HashMap.WithValueComparator(cmp) - nobody I know uses it, and you're better off using plain-ol' object initializer syntax ("new HashMap { ValueComparator = cmp }").
+
+- In `Orator`:
+  - Fixed: **Compilation error** when Newtonsoft.Json is unavailable.
+  - Fixed: NullReferenceException when feeding null messages to Orator.Log(...) with a non-empty OratorFilter.MessageRegex active.
+  - Changed: Renamed field "m_Filters" to "m_IgnoreFilters" for clarity.
+  - Improved: The way OratorFilters are checked is now much more efficient at runtime.
+  - Improved: Addresseed all compiler and ReSharper warnings. (Also: did the same for Static/OAssert.cs)
+
+- In `VoidEvent`:
+  - Added: Explicit constructors for specifying default enable state and/or an initial runtime listener (UnityAction).
+  - Added: Operators + and -, with right-hand operands of type UnityAction. (included for `+=` and `-=` syntax sugar.)
+  - Invoke() / TryInvoke() now catch exceptions and send them to Orator.NFE(...).
+  - Also: TryInvoke() will return false in the event of an exception. For now, this behaviour is unique to VoidEvent.
+
+- In `DeviceSpy`:
+  - Removed: DeviceSpy.PromiseCountryFromIP(...)
+  - Added: nested static class `GeoIP` (see next section).
+
+- In `DeviceSpy.GeoIP` (new):
+  - `Fetch([timeout])` - essentially just PromiseCountryFromIP(...), renamed. Still returns a Promise\<string\>.
+    - Also: Added: Fetched value gets cached, persists across sessions, and will become the new default value for DeviceSpy.CountryISOString in subsequent sessions.
+    - Also: Improved: Has better global state handling, safety, and accessibility when utilized by disjoint dependents.
+  - `FetchIfStale(staleAfter[, timeout])` - **most callers should prefer this variant of Fetch().** Won't actually spawn a new web request if we already have a cached geoip value that hasn't gone stale yet.
+  - `Reset()` - mostly a debug helper, resets the runtime and serialized state of GeoIP back to their defaults.
+  - Properties: `CachedValue`, `LastFetchedAt`, `TimeSinceLastFetched`.
+
+- In `WebRequests`:
+  - Changed: Renamed `Promise(...)` -> `PromiseText(...)` for specificity of expected usage (to download some text).
+
+- Changed: Renamed static class `SceneObjects` -> `UnityObjects`.
+  - Also: Added: Wrappers for Object.{Destroy,DestroyImmediate}() that remove the hassle of knowing which one to use.
 
 
 ## [v5.3.0](../../tags/v5.3.0) - 2023-03-17
