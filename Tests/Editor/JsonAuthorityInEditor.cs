@@ -96,7 +96,7 @@ internal static class JsonAuthorityInEditor
 
     foreach (var (test, expected) in s_TestJsons)
     {
-      object parsed = JsonAuthority.DeserializeObject(test);
+      object parsed = JsonAuthority.Deserialize(test);
 
       AssertAreEqual(expected, parsed, test);
     }
