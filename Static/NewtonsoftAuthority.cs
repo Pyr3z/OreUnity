@@ -23,6 +23,10 @@ using CultureInfo      = System.Globalization.CultureInfo;
 
 namespace Ore
 {
+  using MapMaker  = System.Func<int, IDictionary<string,object>>;
+  using ListMaker = System.Func<int, IList<object>>;
+    // using these statements because fully-qualified delegates can't participate in C# contravariance
+
   [PublicAPI]
   public static class NewtonsoftAuthority
   {
@@ -220,10 +224,36 @@ namespace Ore
     }
 
 
+    [CanBeNull]
+    public static object GenericParse(string    rawJson,
+                                      MapMaker  mapMaker  = null,
+                                      ListMaker listMaker = null)
+    {
+      var parsed = JsonConvert.DeserializeObject(rawJson);
+
+      if (parsed is null)
+        return null;
+
+      if (parsed is JValue jval)
+      {
+        return jval.Value;
+      }
+      if (parsed is JObject jobj)
+      {
+        return Genericize(jobj, map: null, mapMaker, listMaker);
+      }
+      if (parsed is JArray jarr)
+      {
+        return Genericize(jarr, list: null, mapMaker, listMaker);
+      }
+
+      return parsed;
+    }
+
     [NotNull]
-    public static IDictionary<string,object> GenericParse(string rawJson,
-                                                          System.Func<int, IDictionary<string,object>> mapMaker = null,
-                                                          System.Func<int, IList<object>> listMaker = null)
+    public static IDictionary<string,object> GenericParseObject(string    rawJson,
+                                                                MapMaker  mapMaker  = null,
+                                                                ListMaker listMaker = null)
     {
       if (mapMaker is null)
       {
@@ -238,6 +268,26 @@ namespace Ore
       }
 
       return Genericize(jobj, null, mapMaker: mapMaker, listMaker: listMaker);
+    }
+
+    [NotNull]
+    public static IList<object> GenericParseArray(string    rawJson,
+                                                  MapMaker  mapMaker  = null,
+                                                  ListMaker listMaker = null)
+    {
+      if (listMaker is null)
+      {
+        listMaker = JsonAuthority.DefaultListMaker;
+      }
+
+      var jarr = JsonConvert.DeserializeObject<JArray>(rawJson, SerializerSettings);
+
+      if (jarr is null)
+      {
+        return listMaker(1);
+      }
+
+      return Genericize(jarr, null, mapMaker: mapMaker, listMaker: listMaker);
     }
 
 
@@ -404,8 +454,8 @@ namespace Ore
 
     [NotNull]
     public static IDictionary<string,object> Genericize([NotNull] JObject jObject, [CanBeNull] IDictionary<string,object> map,
-                                                        System.Func<int, IDictionary<string,object>> mapMaker = null,
-                                                        System.Func<int, IList<object>> listMaker = null)
+                                                        MapMaker  mapMaker  = null,
+                                                        ListMaker listMaker = null)
     {
       if (mapMaker is null)
       {
@@ -443,16 +493,15 @@ namespace Ore
             break;
 
           case JObject jobj:
-            map[property.Key] = Genericize(jobj, null, mapMaker, listMaker);
+            map[property.Key] = Genericize(jobj, map: null, mapMaker, listMaker);
             break;
 
           case JArray jarr:
-            map[property.Key] = Genericize(jarr, null, listMaker, mapMaker);
+            map[property.Key] = Genericize(jarr, list: null, mapMaker, listMaker);
             break;
 
           default:
-            Orator.Reached($"ping Levi? type={property.Value.Type}");
-            break;
+            throw new UnanticipatedException($"Json.NET JToken type={property.Value.Type}");
         }
       }
 
@@ -460,8 +509,8 @@ namespace Ore
     }
 
     public static IList<object> Genericize([NotNull] JArray jArray, [CanBeNull] IList<object> list,
-                                           System.Func<int, IList<object>> listMaker = null,
-                                           System.Func<int, IDictionary<string,object>> mapMaker = null)
+                                           MapMaker  mapMaker  = null,
+                                           ListMaker listMaker = null)
     {
       if (listMaker is null)
       {
@@ -491,11 +540,11 @@ namespace Ore
             break;
 
           case JObject jobj:
-            list.Add(Genericize(jobj, null, mapMaker, listMaker));
+            list.Add(Genericize(jobj, map: null, mapMaker, listMaker));
             break;
 
           case JArray jarr:
-            list.Add(Genericize(jarr, null, listMaker, mapMaker));
+            list.Add(Genericize(jarr, list: null, mapMaker, listMaker));
             break;
 
           case null:
