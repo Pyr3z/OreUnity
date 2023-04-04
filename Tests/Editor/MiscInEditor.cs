@@ -3,124 +3,21 @@
  *  @date       2023-02-28
 **/
 
+using Ore;
+
 using NUnit.Framework;
 
 using UnityEngine;
 using UnityEngine.TestTools;
 
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
-
-#if NEWTONSOFT_JSON
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-#endif
-
-using Ore;
 
 using AssException = UnityEngine.Assertions.AssertionException;
 
 
+// ReSharper disable once CheckNamespace
 internal static class MiscInEditor
 {
-
-  #if NEWTONSOFT_JSON
-
-  [Test]
-  public static void NewtonsoftJsonFromObject()
-  {
-    var map = new HashMap<object,object>
-    {
-      ["fef"]                     = DeviceDimension.DisplayHz,
-      [DeviceDimension.OSVersion] = DeviceSpy.OSVersion,
-      ["guid"]                    = System.Guid.NewGuid(),
-      ["platform"]                = Application.platform,
-      ["platformStr"]             = Application.platform.ToInvariant(),
-    };
-
-    var serializer = JsonSerializer.CreateDefault();
-
-    Assert.DoesNotThrow(() =>
-                        {
-                          var jobj = JObject.FromObject(map, serializer);
-                          Debug.Log(jobj.ToString(Formatting.Indented));
-                        });
-
-    Assert.DoesNotThrow(() =>
-                        {
-                          var jobj = JObject.FromObject(HashMapParams.Default, serializer);
-                          Debug.Log(jobj.ToString(Formatting.Indented));
-                        });
-
-    Assert.DoesNotThrow(() =>
-                        {
-                          var jarr = new JArray(JObject.FromObject(map, serializer));
-                          Debug.Log(jarr.ToString(Formatting.Indented));
-                        });
-  }
-
-  [Test]
-  public static void NewtonsoftJsonToObject()
-  {
-    string jObj = @"{
-    ""fef"": ""fef!"",
-    ""one"": 1
-    }";
-
-    var map = JsonConvert.DeserializeObject<HashMap<string,object>>(jObj);
-
-    Assert.NotNull(map);
-    Assert.Positive(map.Count);
-    Assert.True(map.Find("fef", out var fef) && fef.ToString() == "fef!");
-    Assert.True(map.Find("one", out var one) && one.GetHashCode() == 1);
-  }
-
-  [Test]
-  public static void NewtonsoftJsonSerialize()
-  {
-    var serializer = JsonSerializer.CreateDefault();
-    var sbob = new System.Text.StringBuilder(2048);
-
-    var map = new HashMap<object,object>
-    {
-      ["fef"]                     = DeviceDimension.DisplayHz,
-      [DeviceDimension.OSVersion] = DeviceSpy.OSVersion,
-      ["guid"]                    = System.Guid.NewGuid(),
-      ["platform"]                = Application.platform,
-      ["platformStr"]             = Application.platform.ToInvariant(),
-    };
-
-    Assert.DoesNotThrow(() =>
-                        {
-                          string json = NewtonsoftAuthority.Serialize(map, serializer, sbob);
-                          Debug.Log(json);
-                        });
-
-    var list = new List<IDictionary<object,object>>
-    {
-      map
-    };
-
-    Assert.DoesNotThrow(() =>
-                        {
-                          string json = NewtonsoftAuthority.Serialize(list, serializer, sbob);
-                          Debug.Log(json);
-                        });
-
-    var map2 = new HashMap<string,object>
-    {
-      ["data"] = list
-    };
-
-    Assert.DoesNotThrow(() =>
-                        {
-                          string json = NewtonsoftAuthority.Serialize(map2, serializer, sbob);
-                          Debug.Log(json);
-                        });
-  }
-
-  #endif // NEWTONSOFT_JSON
-
 
   [Test]
   public static void MultiException()
