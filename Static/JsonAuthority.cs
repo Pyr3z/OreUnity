@@ -54,19 +54,18 @@ namespace Ore
     }
 
 
-    public static IDictionary<string,object> Deserialize(string rawJson, MapMaker  mapMaker  = null,
-                                                                         ListMaker listMaker = null)
+    public static object Deserialize(string    rawJson,
+                                     MapMaker  mapMaker  = null,
+                                     ListMaker listMaker = null)
     {
       switch (Provider)
       {
         case JsonProvider.None:
-          var dummyMap = mapMaker?.Invoke(1) ?? DefaultMapMaker(1);
-          dummyMap[nameof(rawJson)] = rawJson;
-          return dummyMap;
+          return rawJson;
 
         default:
-        case JsonProvider.MiniJson: // TODO pass mapMaker + listMaker thru
-          return MiniJson.Deserialize(rawJson) as IDictionary<string,object>;
+        case JsonProvider.MiniJson:
+          return MiniJson.Deserialize(rawJson); // TODO use mapMaker + listMaker
 
         case JsonProvider.NewtonsoftJson:
           #if NEWTONSOFT_JSON
@@ -76,6 +75,56 @@ namespace Ore
           #endif
       }
     }
+
+
+    public static IDictionary<string,object> DeserializeObject(string    rawJson,
+                                                               MapMaker  mapMaker  = null,
+                                                               ListMaker listMaker = null)
+    {
+      switch (Provider)
+      {
+        case JsonProvider.None:
+          var dummyMap = mapMaker?.Invoke(1) ?? DefaultMapMaker(1);
+          dummyMap[nameof(rawJson)] = rawJson;
+          return dummyMap;
+
+        default:
+        case JsonProvider.MiniJson: // TODO use mapMaker + listMaker
+          return MiniJson.Deserialize(rawJson) as IDictionary<string,object>;
+
+        case JsonProvider.NewtonsoftJson:
+          #if NEWTONSOFT_JSON
+          return NewtonsoftAuthority.GenericParseObject(rawJson, mapMaker, listMaker);
+          #else
+          throw new UnanticipatedException("Provider should have never been set to NewtonsoftJson if it isn't available.");
+          #endif
+      }
+    }
+
+    public static IList<object> DeserializeArray(string    rawJson,
+                                                 MapMaker  mapMaker  = null,
+                                                 ListMaker listMaker = null)
+    {
+      switch (Provider)
+      {
+        case JsonProvider.None:
+          var dummyList = listMaker?.Invoke(1) ?? DefaultListMaker(1);
+          dummyList.Add(rawJson);
+          return dummyList;
+
+        default:
+        case JsonProvider.MiniJson: // TODO use mapMaker + listMaker
+          return MiniJson.Deserialize(rawJson) as IList<object>;
+
+        case JsonProvider.NewtonsoftJson:
+          #if NEWTONSOFT_JSON
+          return NewtonsoftAuthority.GenericParseArray(rawJson, mapMaker, listMaker);
+          #else
+          throw new UnanticipatedException("Provider should have never been set to NewtonsoftJson if it isn't available.");
+          #endif
+      }
+    }
+
 
     public static bool TrySetProvider(JsonProvider provider)
     {
@@ -124,18 +173,18 @@ namespace Ore
 
   #region DEPRECATIONS
 
-    [System.Obsolete("Use JsonAuthority.Deserialize(*) instead.")]
-    public static IDictionary<string,object> GenericParse(string                                       rawJson,
-                                                          System.Func<int, IDictionary<string,object>> mapMaker  = null,
-                                                          System.Func<int, IList<object>>              listMaker = null)
+    [System.Obsolete("Use JsonAuthority.DeserializeObject(*) instead.")]
+    public static IDictionary<string,object> GenericParse(string    rawJson,
+                                                          MapMaker  mapMaker  = null,
+                                                          ListMaker listMaker = null)
     {
-      return Deserialize(rawJson, mapMaker, listMaker);
+      return DeserializeObject(rawJson, mapMaker, listMaker);
     }
 
     [System.Obsolete("Use NewtonsoftAuthority.Genericize(*) instead.")]
     public static IDictionary<string,object> Genericize([NotNull] object jObject, [CanBeNull] IDictionary<string,object> map,
-                                                        System.Func<int, IDictionary<string,object>> mapMaker = null,
-                                                        System.Func<int, IList<object>> listMaker = null)
+                                                        MapMaker  mapMaker  = null,
+                                                        ListMaker listMaker = null)
     {
       #if NEWTONSOFT_JSON
       if (jObject is Newtonsoft.Json.Linq.JObject jobj)
@@ -149,13 +198,13 @@ namespace Ore
 
     [System.Obsolete("Use NewtonsoftAuthority.Genericize(*) instead.")]
     public static IList<object> Genericize([NotNull] object jArray, [CanBeNull] IList<object> list,
-                                           System.Func<int, IList<object>> listMaker = null,
-                                           System.Func<int, IDictionary<string,object>> mapMaker = null)
+                                           ListMaker listMaker = null,
+                                           MapMaker  mapMaker  = null)
     {
       #if NEWTONSOFT_JSON
       if (jArray is Newtonsoft.Json.Linq.JArray jarr)
       {
-        return NewtonsoftAuthority.Genericize(jarr, list, listMaker, mapMaker);
+        return NewtonsoftAuthority.Genericize(jarr, list, mapMaker, listMaker);
       }
       #endif
 
