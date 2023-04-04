@@ -44,23 +44,39 @@ namespace Ore
 
 
     [SerializeField, Range(0, 64), Tooltip("Set to 0 to squelch the warning.")]
-    private int m_CoroutineWarnThreshold = 16;
+    int m_CoroutineWarnThreshold = 16;
 
     [SerializeField, Tooltip("if on, queued routines will be started once the runner is re-enabled in the Scene.")]
-    private bool m_QueueCoroutinesWhileDisabled = true;
+    bool m_QueueCoroutinesWhileDisabled = true;
 
 
     [System.NonSerialized]
-    private int m_NextCoroutineID, m_ActiveCoroutineCount;
+    int m_NextCoroutineID, m_ActiveCoroutineCount;
 
     [System.NonSerialized]
-    private readonly HashMap<object,CoroutineList> m_ActiveMap = new HashMap<object,CoroutineList>()
+    readonly HashMap<object,CoroutineList> m_ActiveMap = new HashMap<object,CoroutineList>()
     {
       KeyComparator = UnitySavvyComparator.Default
     };
 
     [System.NonSerialized]
-    private readonly CoroutineRunnerBuffer m_BufferWhileDisabled = new CoroutineRunnerBuffer();
+    readonly CoroutineRunnerBuffer m_BufferWhileDisabled = new CoroutineRunnerBuffer();
+
+
+    public bool IsRunning(object key)
+    {
+      if (isActiveAndEnabled)
+      {
+        return m_ActiveMap.ContainsKey(key);
+      }
+
+      if (m_QueueCoroutinesWhileDisabled)
+      {
+        return m_BufferWhileDisabled.IsRunning(key);
+      }
+
+      return false;
+    }
 
 
     public void Run(IEnumerator routine, Object key)
@@ -141,6 +157,7 @@ namespace Ore
       // let the garbage collector eat list since we called m_ActiveMap.Pop
     }
 
+
     public void HaltAll()
     {
       if (isActiveAndEnabled)
@@ -154,7 +171,6 @@ namespace Ore
         m_BufferWhileDisabled.HaltAll();
       }
     }
-
 
     public bool AdoptAndRun([NotNull] CoroutineRunnerBuffer buffer)
     {
@@ -187,7 +203,7 @@ namespace Ore
 
 
     [CanBeNull]
-    private Coroutine StartCoroutine([NotNull] IEnumerator routine, [NotNull] object key)
+    Coroutine StartCoroutine([NotNull] IEnumerator routine, [NotNull] object key)
     {
       #if UNITY_ASSERTIONS
       OAssert.True(isActiveAndEnabled);
@@ -222,7 +238,7 @@ namespace Ore
       return coruPair.Item1;
     }
 
-    private void CheckCoroutineThreshold()
+    void CheckCoroutineThreshold()
     {
       if (m_CoroutineWarnThreshold > 0 && m_ActiveCoroutineCount >= m_CoroutineWarnThreshold)
       {
@@ -231,20 +247,20 @@ namespace Ore
     }
 
 
-    private void OnEnable()
+    void OnEnable()
     {
       bool sane = AdoptAndRun(m_BufferWhileDisabled);
       OAssert.True(sane, this);
     }
 
-    private void OnDisable()
+    void OnDisable()
     {
       m_ActiveMap.Clear();
       m_ActiveCoroutineCount = 0;
     }
 
 
-    private struct SelfCleaningRoutine : IEnumerator
+    struct SelfCleaningRoutine : IEnumerator
     {
       public object Current => m_Routine.Current;
 
