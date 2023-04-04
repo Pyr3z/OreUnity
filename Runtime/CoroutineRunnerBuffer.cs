@@ -25,6 +25,20 @@ namespace Ore
       => m_Queue.GetEnumerator();
 
 
+    public bool IsRunning(object key)
+    {
+      int i = m_Queue.Count;
+      while (i --> 0)
+      {
+        if (Equals(m_Queue[i].key, key))
+        {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
     public void Run(IEnumerator routine, Object key)
     {
       m_Queue.Add((routine,key));
@@ -58,11 +72,11 @@ namespace Ore
       }
     }
 
+
     public void HaltAll()
     {
       m_Queue.Clear();
     }
-
 
     public void Adopt(CoroutineRunnerBuffer other)
     {
