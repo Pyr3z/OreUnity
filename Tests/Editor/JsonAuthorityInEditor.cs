@@ -39,12 +39,16 @@ internal static class JsonAuthorityInEditor
   };
 
 
-  internal static void AssertAreEqual(object expected, object actual, string message = null)
+  static void AssertAreEqual(object expected, object actual, string message = null)
   {
+    if (actual is null)
+    {
+      Assert.Null(expected, message);
+      return;
+    }
+
     if (expected is IDictionary<string,object> jobj)
     {
-      Assert.That(actual, Is.AssignableTo(typeof(IDictionary<string,object>)), message);
-
       var dict = actual as IDictionary<string,object>;
 
       Assert.NotNull(dict, message);
@@ -64,11 +68,13 @@ internal static class JsonAuthorityInEditor
     }
     else if (expected is ICollection jarr)
     {
-      Assert.That(actual, Is.AssignableTo(typeof(ICollection)), message);
+      var list = actual as ICollection;
+
+      Assert.NotNull(list, message);
 
       int countdown = jarr.Count;
 
-      foreach (var item in (ICollection)actual)
+      foreach (var item in list)
       {
         Assert.Contains(item, jarr, message);
         -- countdown;
@@ -98,7 +104,7 @@ internal static class JsonAuthorityInEditor
     {
       object parsed = JsonAuthority.Deserialize(test);
 
-      AssertAreEqual(expected, parsed, test);
+      AssertAreEqual(expected, parsed, $"'{test}' (parsed type: {parsed?.GetType().Name ?? "null"})");
     }
   }
 
