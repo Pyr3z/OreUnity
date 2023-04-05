@@ -142,7 +142,7 @@ namespace Ore
 
               // value
               table[name] = ParseValue();
-              break;
+              continue;
           }
         }
       }
@@ -195,16 +195,15 @@ namespace Ore
             return true;
           case TOKEN.FALSE:
             return false;
-          case TOKEN.NULL:
-            return null;
           default:
+          case TOKEN.NULL:
             return null;
         }
       }
 
       string ParseString()
       {
-        var s = new StringBuilder();
+        var builder = new StringBuilder();
 
         // ditch opening quote
         m_Stream.Read();
@@ -212,17 +211,18 @@ namespace Ore
         while (true)
         {
           if (m_Stream.Peek() == -1)
-            return s.ToString();
+            return builder.ToString();
 
           char c = NextChar;
 
           switch (c)
           {
             case '"':
-              return s.ToString();
+              return builder.ToString();
+
             case '\\':
               if (m_Stream.Peek() == -1)
-                return s.ToString();
+                return builder.ToString();
 
               c = NextChar;
 
@@ -231,22 +231,22 @@ namespace Ore
                 case '"':
                 case '\\':
                 case '/':
-                  s.Append(c);
+                  builder.Append(c);
                   break;
                 case 'b':
-                  s.Append('\b');
+                  builder.Append('\b');
                   break;
                 case 'f':
-                  s.Append('\f');
+                  builder.Append('\f');
                   break;
                 case 'n':
-                  s.Append('\n');
+                  builder.Append('\n');
                   break;
                 case 'r':
-                  s.Append('\r');
+                  builder.Append('\r');
                   break;
                 case 't':
-                  s.Append('\t');
+                  builder.Append('\t');
                   break;
                 case 'u':
                   var hex = new char[4];
@@ -256,13 +256,14 @@ namespace Ore
                     hex[i] = NextChar;
                   }
 
-                  s.Append((char)System.Convert.ToInt32(new string(hex), 16));
+                  builder.Append((char)System.Convert.ToInt32(new string(hex), 16));
                   break;
               }
               break;
+
             default:
-              s.Append(c);
-              return s.ToString();
+              builder.Append(c);
+              break;
           }
         }
       }
@@ -401,13 +402,13 @@ namespace Ore
         {
           s_Builder.Append(b ? "true" : "false");
         }
-        else if (value is IList list)
-        {
-          SerializeArray(list);
-        }
         else if (value is IDictionary dict)
         {
           SerializeObject(dict);
+        }
+        else if (value is IEnumerable list)
+        {
+          SerializeArray(list);
         }
         else if (value is char c)
         {
@@ -450,7 +451,7 @@ namespace Ore
         s_Builder.Append('}');
       }
 
-      static void SerializeArray(IList array)
+      static void SerializeArray(IEnumerable array)
       {
         s_Builder.Append('[');
 
