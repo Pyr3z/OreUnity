@@ -16,6 +16,8 @@ using System.Collections.Generic;
 using UnityEditor;
 #endif // UNITY_EDITOR
 
+using ConditionalAttribute = System.Diagnostics.ConditionalAttribute;
+
 
 namespace Ore
 {
@@ -32,6 +34,21 @@ namespace Ore
     #else
     public const bool IS_DEBUG = false;
     #endif
+
+
+    [Conditional("UNITY_EDITOR")]
+    public static void Ping(Object obj)
+    {
+      if (obj)
+        EditorGUIUtility.PingObject(obj);
+    }
+
+    [Conditional("UNITY_EDITOR")]
+    public static void Ping(int id)
+    {
+      if (id != 0)
+        EditorGUIUtility.PingObject(id);
+    }
 
 
     public static bool IsMainAsset(Object asset)
@@ -64,6 +81,7 @@ namespace Ore
 
 
     [MenuItem("Ore/Helpers/Browse to Persistent Data Path")]
+    [Conditional("UNITY_EDITOR")]
     public static void BrowseToPersistentDataPath()
     {
       EditorUtility.RevealInFinder(Application.persistentDataPath);
@@ -87,6 +105,16 @@ namespace Ore
     #endif
 
 
+    [Conditional("UNITY_EDITOR")]
+    public static void Ping(Object obj)
+    {
+    }
+
+    [Conditional("UNITY_EDITOR")]
+    public static void Ping(int id)
+    {
+    }
+
     public static bool IsMainAsset(Object asset)
     {
       return asset;
@@ -97,6 +125,7 @@ namespace Ore
       return true;
     }
 
+    [Conditional("UNITY_EDITOR")]
     public static void BrowseToPersistentDataPath()
     {
     }
