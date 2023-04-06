@@ -5,8 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [v6.1.0](../../tags/v6.1.0) - 2023-04-06 (the JSON update)
-- Added: a modified version of **MiniJson**! (#43)
+## [v6.1.0](../../tags/v6.1.0) - 2023-04-06
+
+#### JsonAuthority updates
 - Changed: Moved everything Newtonsoft.Json-related from JsonAuthority to a separate, conditionally-compiled class: `NewtonsoftAuthority`.
   - Note: The old method public interface remains honored, although the following signatures have been marked as Obsolete:
     - GenericParse(...) -> IDictionary
@@ -14,13 +15,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Genericize(...) -> IList
     - The new class NewtonsoftAuthority now holds the proper implementation for the above.
   - Note: The old _property_ public interface, however, could not continue to be honored. should only affect Irontown though, so it's fine :wink:
+- Added: a modified version of **MiniJson**! (#43)
 - Added: The ability to choose which JSON library you want JsonAuthority to utilize:
   - enum `JsonProvider`
   - JsonAuthority.TrySetProvider(JsonProvider)
   - using class `JsonAuthority.ProviderScope`
-- Changed: Moved the serialized property "Is Required On Launch" from the OAssetSingleton class to the parent Asset class, thus allowing even non-singleton assets to easily mark themselves for preload.
+- Added: Unit tests in `JsonAuthorityInEditor`
+
+#### the rest
+- Added: IDisposable struct `RecycledStringBuilder` - use it to safely reuse System.Text.StringBuilders and be more allocation-friendly.
+  - See smol working example in Tests/Editor/MiscInEditor.cs
+- Added: `ICoroutineRunner.IsRunning(key) -> bool`
+  - Also: Removed: ICoroutineRunner.HaltAll() - never was useful in the public interface, and posed some signficant dangers.
+- Added: `EditorBridge.Ping(object)` - useful for debugging, and you can call it anywhere without worrying about `#if UNITY_EDITOR` blocks.
+- Changed: Moved the serialized property "Is Required On Launch" from the `OAssetSingleton` class to the parent Asset class, thus allowing even non-singleton assets to easily mark themselves for preload.
 - Fixed: Edge case runtime NRE related to Preloaded Assets, and OAssetSingletons not being properly registered therewith due to someone forgetting to commit ProjectSettings.asset.
   - See also: upm/phoenix-unity#52
+
 
 
 ## [v6.0.0](../../tags/v6.0.0) - 2023-04-03
