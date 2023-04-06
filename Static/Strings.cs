@@ -504,7 +504,7 @@ namespace Ore
 
     // private section
 
-    private static IFormatter s_InvariantFormatter = System.Globalization.CultureInfo.InvariantCulture;
+    static IFormatter s_InvariantFormatter = System.Globalization.CultureInfo.InvariantCulture;
 
   } // end static class Strings
 

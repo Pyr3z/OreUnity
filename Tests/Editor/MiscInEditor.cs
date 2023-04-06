@@ -99,4 +99,25 @@ internal static class MiscInEditor
     Assert.Null(action);
   }
 
+
+  [Test]
+  public static void RecycledStringBob()
+  {
+    int precount = RecycledStringBuilder.AliveCount;
+
+    using (new RecycledStringBuilder(out var bob))
+    {
+      Assert.NotNull(bob);
+      Assert.AreEqual(precount + 1, RecycledStringBuilder.AliveCount, "in scope AliveCount");
+
+      bob.Append("fef");
+
+      Assert.AreEqual(3, bob.Length, "bob.Length");
+
+      Assert.AreEqual("fef", bob.ToString(), "bob.ToString()");
+    }
+
+    Assert.AreEqual(precount, RecycledStringBuilder.AliveCount, "post scope AliveCount");
+  }
+
 } // end class MiscInEditor
