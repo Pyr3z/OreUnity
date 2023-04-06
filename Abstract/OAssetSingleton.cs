@@ -44,7 +44,7 @@ namespace Ore
   ///   Unity message to define better defaults for this base class's instance
   ///   properties. This way, you can eliminate human configuration error when
   ///   your singleton expects and only works when, for example,
-  ///   <see cref="IsRequiredOnLaunch"/> is set to <c>true</c>. <br/><br/>
+  ///   <see cref="OAsset.IsRequiredOnLaunch"/> is set to <c>true</c>. <br/><br/>
   ///   <b>Pro Tip 2:</b> (extends Pro Tip 1) If you use <c>void OnValidate()</c>
   ///   instead of <c>Reset()</c>, you can <i>force</i> your singleton's
   ///   configuration to be certain way, as opposed to redefining default values.
@@ -98,18 +98,10 @@ namespace Ore
     }
 
 
-    private static TSelf s_Current;
+    static TSelf s_Current;
 
 
     // instance shtuff
-
-    /// <summary>
-    ///   Provided as a property for completeness, and potentially for the
-    ///   purposes of unit testing. <br/>
-    ///   If toggled in the Editor, the instance of this asset singleton will be
-    ///   added to / removed from the global "Preloaded Assets" list.
-    /// </summary>
-    public bool IsRequiredOnLaunch => m_IsRequiredOnLaunch;
 
     /// <summary>
     ///   If true at runtime: <br/>
@@ -125,17 +117,14 @@ namespace Ore
     }
 
 
-    [SerializeField]
-    [Tooltip("If toggled in the Editor, the instance of this asset singleton will be " +
-             "added to / removed from the global \"Preloaded Assets\" list.")]
-    protected bool m_IsRequiredOnLaunch = false;
+    [Header("Singleton")] // TODO custom foldout drawers instead
 
     [SerializeField]
     [Tooltip("If true at runtime:\nIn the event that a new instance of this "       +
              "class gets instantiated, the current instance will be destroyed and " +
              "replaced. Otherwise, new instances trying to replace the current "    +
              "instance will be auto-destroyed before they finish initializing.")]
-    protected bool m_IsReplaceable = false;
+    protected bool m_IsReplaceable;
 
     [SerializeField, FormerlySerializedAs("m_OnAfterInitialized")]
     protected DelayedEvent m_OnFirstInitialized = new DelayedEvent();
@@ -153,12 +142,6 @@ namespace Ore
     {
       if (s_Current == this)
         s_Current = null;
-    }
-
-    protected override void OnValidate()
-    {
-      base.OnValidate();
-      _ = EditorBridge.TrySetPreloadedAsset(this, m_IsRequiredOnLaunch);
     }
 
 
