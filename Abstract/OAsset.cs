@@ -144,6 +144,19 @@ namespace Ore
 
     // instance shminstance
 
+    /// <summary>
+    ///   This asset instance will be [added to|removed from] the global
+    ///   "Preloaded Assets" list if it [is|is not] required on launch. <br/> <br/>
+    /// </summary>
+    /// <remarks>
+    ///   Must be set at edit time to be meaningful.
+    /// </remarks>
+    public bool IsRequiredOnLaunch
+    {
+      get => m_IsRequiredOnLaunch;
+      set => m_IsRequiredOnLaunch = value;
+    }
+
 
     /// <summary>
     ///   Destroys this object relatively immediately. <br/>
@@ -180,11 +193,21 @@ namespace Ore
     }
 
 
-    [SerializeField, FormerlySerializedAs("m_AdvancedFlags")]
-    protected HideFlags m_HideFlags;
+    [Header("Ore Asset")] // TODO custom foldout drawers instead
+
+    [SerializeField]
+    [Tooltip("This asset instance will be [added to|removed from] the global " +
+             "\"Preloaded Assets\" list if it [is|is not] required on launch.")]
+    bool m_IsRequiredOnLaunch;
+
+    [SerializeField]
+    HideFlags m_HideFlags; // TODO remove and expose underlying property via custom inspector
+
 
     protected virtual void OnValidate()
     {
+      _ = EditorBridge.TrySetPreloadedAsset(this, m_IsRequiredOnLaunch);
+
       hideFlags = m_HideFlags;
     }
 
