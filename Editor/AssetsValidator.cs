@@ -93,34 +93,71 @@ namespace Ore.Editor
       set.RemoveWhere(obj => !obj);
 
       int changed = preloaded.Count - set.Count;
+
+      // add missing OAssetSingleton instances (that have "Is Required On Launch" [x])
+
+      foreach (var tasset in TypeCache.GetTypesDerivedFrom(typeof(Asset)))
+      {
+        if (tasset is null || tasset.IsAbstract || tasset.IsGenericType || tasset.IsDefined<System.ObsoleteAttribute>())
+          continue;
+
+        foreach (var instance in GetAssetInstances(tasset))
+        {
+          var asset = (Asset)instance;
+          if (asset.IsRequiredOnLaunch)
+          {
+            if (set.Add(asset))
+            {
+              // preloaded.Add(asset);
+              // will get added by asset's OnValidate after being loaded
+              ++ changed;
+            }
+          }
+          else
+          {
+            set.Remove(asset);
+          }
+        }
+      }
+
+      // update preloaded via set
+
       int i = preloaded.Count;
       while (i --> 0)
       {
-        if (!set.Contains(preloaded[i]))
+        if (set.Contains(preloaded[i]))
         {
-          preloaded.RemoveAt(i);
-          ++changed;
+          set.Remove(preloaded[i]);
         }
         else
         {
-          set.Remove(preloaded[i]);
+          preloaded.RemoveAt(i);
+          ++ changed;
         }
       }
 
       if (changed > 0)
       {
-        Orator.Log($"{nameof(EditorBridge)}: Cleaning up {changed} null / duplicate \"Preloaded Asset\" entries.");
         PlayerSettings.SetPreloadedAssets(preloaded.ToArray());
+        Orator.Log(typeof(AssetsValidator), $"Changed {changed} \"Preloaded Asset\" entries.");
       }
     }
 
 
-    private static bool AssetTypeHasInstance(System.Type tasset)
+    static bool AssetTypeHasInstance(System.Type tasset)
     {
-      string[] guids = AssetDatabase.FindAssets($"t:{tasset.Name}");
+      using (var enumu = GetAssetInstances(tasset).GetEnumerator())
+      {
+        return enumu.MoveNext();
+      }
+    }
+
+    static IEnumerable<Object> GetAssetInstances(System.Type tasset)
+    {
+      string[] guids = AssetDatabase.FindAssets("t:" + tasset.Name);
 
       if (guids.IsEmpty())
-        return false;
+        yield break;
 
       foreach (string guid in guids)
       {
@@ -128,12 +165,10 @@ namespace Ore.Editor
 
         foreach (var maybe in maybes)
         {
-          if (maybe.GetType() == tasset) // already exists elsewhere
-            return true;
+          if (maybe.GetType() == tasset)
+            yield return maybe;
         }
       }
-
-      return false;
     }
 
   } // end static calss AssetsValidator
