@@ -8,10 +8,12 @@
 using JetBrains.Annotations;
 
 using System.Collections;
-using System.Collections.Generic;
 
 using System.IO;
 using System.Text;
+
+using JsonObj = System.Collections.Generic.Dictionary<string,object>;
+using JsonArr = System.Collections.Generic.List<object>;
 
 
 namespace Ore
@@ -37,7 +39,7 @@ namespace Ore
     [PublicAPI] [CanBeNull]
     public static object Deserialize([CanBeNull] string json)
     {
-      return Parser.Parse(json);
+      return RecursiveParser.Parse(json);
     }
 
     /// <summary>
@@ -58,14 +60,14 @@ namespace Ore
 
     // beyond = impl: 
 
-    sealed class Parser : System.IDisposable
+    sealed class RecursiveParser : System.IDisposable
     {
       public static object Parse(string jsonString)
       {
         if (jsonString.IsEmpty())
           return jsonString;
 
-        using (var instance = new Parser(jsonString))
+        using (var instance = new RecursiveParser(jsonString))
         {
           return instance.ParseValue();
         }
@@ -98,7 +100,7 @@ namespace Ore
       StringReader m_Stream;
 
 
-      Parser(string jsonString)
+      RecursiveParser(string jsonString)
       {
         m_Stream = new StringReader(jsonString);
       }
@@ -109,9 +111,9 @@ namespace Ore
         m_Stream = null;
       }
 
-      Dictionary<string,object> ParseObject()
+      JsonObj ParseObject()
       {
-        var table = new Dictionary<string,object>();
+        var jobj = new JsonObj();
 
         // ditch opening brace
         m_Stream.Read();
@@ -126,7 +128,7 @@ namespace Ore
             case TOKEN.COMMA:
               continue;
             case TOKEN.CURLY_CLOSE:
-              return table;
+              return jobj;
             default:
               // name
               string name = ParseString();
@@ -141,15 +143,15 @@ namespace Ore
               m_Stream.Read();
 
               // value
-              table[name] = ParseValue();
+              jobj[name] = ParseValue();
               continue;
           }
         }
       }
 
-      List<object> ParseArray()
+      JsonArr ParseArray()
       {
-        var array = new List<object>();
+        var array = new JsonArr();
 
         // ditch opening bracket
         m_Stream.Read();
@@ -371,7 +373,7 @@ namespace Ore
         }
       }
 
-    } // end nested class Parser
+    } // end nested class RecursiveParser
 
 
     static class Serializer
