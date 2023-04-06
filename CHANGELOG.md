@@ -5,8 +5,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [v6.1.0](../../tree/unstable) - UNRELEASED
-- Added: a modified version of MiniJson!
+## [v6.1.0](../../tags/v6.1.0) - 2023-04-06 (the JSON update)
+- Added: a modified version of **MiniJson**! (#43)
+- Changed: Moved everything Newtonsoft.Json-related from JsonAuthority to a separate, conditionally-compiled class: `NewtonsoftAuthority`.
+  - Note: The old method public interface remains honored, although the following signatures have been marked as Obsolete:
+    - GenericParse(...) -> IDictionary
+    - Genericize(...) -> IDictionary
+    - Genericize(...) -> IList
+    - The new class NewtonsoftAuthority now holds the proper implementation for the above.
+  - Note: The old _property_ public interface, however, could not continue to be honored. should only affect Irontown though, so it's fine :wink:
+- Added: The ability to choose which JSON library you want JsonAuthority to utilize:
+  - enum `JsonProvider`
+  - JsonAuthority.TrySetProvider(JsonProvider)
+  - using class `JsonAuthority.ProviderScope`
+- Changed: Moved the serialized property "Is Required On Launch" from the OAssetSingleton class to the parent Asset class, thus allowing even non-singleton assets to easily mark themselves for preload.
+- Fixed: Edge case runtime NRE related to Preloaded Assets, and OAssetSingletons not being properly registered therewith due to someone forgetting to commit ProjectSettings.asset.
+  - See also: upm/phoenix-unity#52
 
 
 ## [v6.0.0](../../tags/v6.0.0) - 2023-04-03
