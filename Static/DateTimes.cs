@@ -18,7 +18,7 @@ namespace Ore
   public static class DateTimes
   {
 
-    public static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+    public static readonly DateTime Epoch            = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     public static readonly DateTime SpreadsheetEpoch = new DateTime(1899, 12, 30, 0, 0, 0, DateTimeKind.Utc);
 
@@ -29,8 +29,8 @@ namespace Ore
     public const long TicksPerDay    = 864000000000L;
 
 
-    public static DateTime Today => DateTime.UtcNow.Date; // Beware of DateTime.Today; it returns local time!
-    public static DateTime Tomorrow => DateTime.UtcNow.AddDays(1).Date;
+    public static DateTime Today     => DateTime.UtcNow.Date; // Beware of DateTime.Today; it returns local time!
+    public static DateTime Tomorrow  => DateTime.UtcNow.AddDays(1).Date;
     public static DateTime Yesterday => DateTime.UtcNow.AddDays(-1).Date;
 
 
@@ -40,11 +40,19 @@ namespace Ore
     }
 
 
+    /// <returns>
+    ///   An invariant culture string in ISO 8601 standard form,
+    ///   e.g. "2023-04-06 18:30:00.000".
+    /// </returns>
     public static string ToISO8601(this DateTime timepoint)
     {
       return timepoint.ToString("O", Strings.InvariantFormatter);
     }
 
+    /// <returns>
+    ///   An invariant culture string in RFC 1123 standard form,
+    ///   e.g. "Fri, 31 Oct 2008 17:04:32 GMT".
+    /// </returns>
     public static string ToRFC1123(this DateTime timepoint)
     {
       return timepoint.ToString("R", Strings.InvariantFormatter);
