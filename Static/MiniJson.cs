@@ -553,7 +553,7 @@ namespace Ore
             break;
 
           case System.TypeCode.DateTime:
-            s_Builder.Append(((System.DateTime)value).ToBinary());
+            s_Builder.Append(((System.DateTime)value).ToUniversalTime().ToISO8601());
             break;
 
           case System.TypeCode.Empty:
