@@ -60,7 +60,7 @@ namespace Ore
 
     // beyond = impl: 
 
-    sealed class RecursiveParser : System.IDisposable
+    struct RecursiveParser : System.IDisposable
     {
       public static object Parse(string jsonString)
       {
