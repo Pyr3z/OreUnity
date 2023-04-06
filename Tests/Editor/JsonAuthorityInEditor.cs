@@ -34,8 +34,8 @@ internal static class JsonAuthorityInEditor
     ("{\"fef\":123}", new JsonObj { ["fef"] = 123 }),
     ("{\n  \"m_Fef12\": \"feffity fef fef\\nfef.\"\n}", new JsonObj { ["m_Fef12"] = "feffity fef fef\nfef." }),
     ("[1,2,3]", new JsonArr { 1, 2, 3 }),
-    ("{\"fefArray\": ['f', 'e', 'f'], \"nothing\": true}", new JsonObj { ["fefArray"] = new JsonArr { 'f', 'e', 'f' },
-                                                                         ["nothing"]  = true }),
+    ("{\"fefArray\": [\"fef1\", \"fef2\"], \"nothing\": true}", new JsonObj { ["fefArray"] = new JsonArr { "fef1", "fef2" }, 
+                                                                              ["nothing"]  = true }),
   };
 
 
@@ -106,6 +106,18 @@ internal static class JsonAuthorityInEditor
 
       AssertAreEqual(expected, parsed, $"'{test}' (parsed type: {parsed?.GetType().Name ?? "null"})");
     }
+  }
+
+  [Test]
+  public static void DeserializeOneTest([Values(6)] int idx)
+  {
+    Assert.True(idx.IsIndexTo(s_TestJsons), "test.IsIndexTo(s_TestJsons)");
+
+    var (test, expected) = s_TestJsons[idx];
+
+    object parsed = JsonAuthority.Deserialize(test);
+
+    AssertAreEqual(expected, parsed, $"'{test}' (parsed type: {parsed?.GetType().Name ?? "null"})");
   }
 
 
