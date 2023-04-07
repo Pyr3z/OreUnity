@@ -68,6 +68,7 @@ namespace Ore.Editor
       ok = currProp.NextVisible(true) && currProp.propertyPath == "m_Script";
       OAssert.True(ok, "1st propertyPath == \"m_Script\"");
 
+      // now, draw:
       using (new LocalizationGroup(s_Cache.Type))
       {
         _ = IterateProperties(currProp);
@@ -84,7 +85,6 @@ namespace Ore.Editor
         while (propIter.NextVisible(drill))
         {
           EditorGUI.indentLevel = baseIndent + propIter.depth;
-
 
           if (propIter.propertyType != SerializedPropertyType.String && propIter.isArray)
           {
@@ -111,7 +111,10 @@ namespace Ore.Editor
             {
               drill = EditorGUILayout.PropertyField(propIter, includeChildren: true);
 
-              // TODO freeze [ReadOnly] here
+              if (propIter.IsReadOnly())
+              {
+                FreezeReorderableList(propIter, freeze: true);
+              }
             }
 
             #else // if Unity < 2020
@@ -189,8 +192,12 @@ namespace Ore.Editor
       OGUI.IndentLevel.Pop();
     }
 
+    static void FreezeReorderableList(SerializedProperty propList, bool freeze)
+    {
+      // TODO
+    }
 
-    // TODO
+
     // ReSharper disable once RedundantOverriddenMember
     protected override void OnHeaderGUI()
     {
