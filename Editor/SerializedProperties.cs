@@ -3,9 +3,12 @@
  *  @date       2022-06-15
 **/
 
-using UnityEditor;
 using UnityEngine;
-using IList = System.Collections.IList;
+using UnityEditor;
+
+using System.Collections;
+using System.Collections.Generic;
+
 using FieldInfo = System.Reflection.FieldInfo;
 
 
@@ -41,6 +44,11 @@ namespace Ore.Editor
       return prop.propertyPath.EndsWith("]");
     }
 
+    public static bool IsNonReorderable(this SerializedProperty prop)
+    {
+      return !TryGetFieldInfo(prop, out FieldInfo field) || field.IsDefined<NonReorderableAttribute>();
+    }
+
     public static uint GetPropertyHash(this SerializedProperty prop)
     {
       if (prop.IsDisposed())
@@ -51,6 +59,43 @@ namespace Ore.Editor
 
       return Hashing.MixHashes(prop.propertyPath.GetHashCode(),
                                prop.serializedObject.targetObject.GetInstanceID());
+    }
+
+
+    public static bool TryGetFieldInfo(this SerializedProperty prop, out FieldInfo field)
+    {
+      field = null;
+
+      string[] splits = prop.propertyPath.Split('.');
+      var currType = prop.serializedObject.targetObject.GetType();
+
+      for (int i = 0, ilen = splits.Length; i < ilen; ++i)
+      {
+        if (currType.TryGetSerializableField(splits[i], out field))
+        {
+          currType = field.FieldType;
+
+          if (i == ilen - 1)
+            break;
+
+          if (currType.IsArray)
+            currType = currType.GetElementType();
+          else if (currType.IsGenericType && currType.GetGenericTypeDefinition() == typeof(List<>))
+            currType = currType.GetGenericArguments()[0];
+          else // (skip the remaining block if it's just a normal field)
+            continue;
+
+          // Ignore "Array.data[idx]" slugs:
+          i += 2;
+        }
+        else
+        {
+          Orator.Reached(typeof(SerializedProperties));
+          return false;
+        }
+      }
+
+      return field != null;
     }
 
 
@@ -81,7 +126,10 @@ namespace Ore.Editor
       return TryGetUnderlyingBoxedValue(prop.propertyPath, ref boxed_value);
     }
 
-    private static bool TryGetUnderlyingBoxedValue(string prop_path, ref object boxed_value)
+
+    // private
+
+    static bool TryGetUnderlyingBoxedValue(string prop_path, ref object boxed_value)
     {
       if (boxed_value is null)
         return false;
