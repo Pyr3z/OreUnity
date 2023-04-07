@@ -49,6 +49,13 @@ namespace Ore.Editor
       return !TryGetFieldInfo(prop, out FieldInfo field) || field.IsDefined<NonReorderableAttribute>();
     }
 
+    public static bool IsReadOnly(this SerializedProperty prop)
+    {
+      bool ok = TryGetFieldInfo(prop, out FieldInfo field);
+      OAssert.True(ok, "prop.TryGetFieldInfo");
+      return field.IsDefined<ReadOnlyAttribute>();
+    }
+
     public static uint GetPropertyHash(this SerializedProperty prop)
     {
       if (prop.IsDisposed())
