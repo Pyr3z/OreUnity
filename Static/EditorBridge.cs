@@ -51,9 +51,30 @@ namespace Ore
     }
 
 
+    public static bool IsAsset(Object obj)
+    {
+      return obj && AssetDatabase.Contains(obj);
+    }
+
     public static bool IsMainAsset(Object asset)
     {
       return asset && AssetDatabase.IsMainAsset(asset.GetInstanceID());
+    }
+
+    public static bool IsPreloadedAsset(Object asset)
+    {
+      if (!IsAsset(asset))
+        return false;
+
+      var preloaded = PlayerSettings.GetPreloadedAssets();
+      int i = preloaded.Length;
+      while (i --> 0)
+      {
+        if (preloaded[i] == asset)
+          return true;
+      }
+
+      return false;
     }
 
     public static bool TrySetPreloadedAsset(Object asset, bool set)
@@ -115,9 +136,19 @@ namespace Ore
     {
     }
 
+    public static bool IsAsset(Object obj)
+    {
+      return false;
+    }
+
     public static bool IsMainAsset(Object asset)
     {
       return asset;
+    }
+
+    public static bool IsPreloadedAsset(Object asset)
+    {
+      return false;
     }
 
     public static bool TrySetPreloadedAsset(Object asset, bool set)
