@@ -52,8 +52,8 @@ namespace Ore.Editor
       EditorApplication.delayCall += DelayInitialize;
     }
 
-    private static bool s_DelayDelayTried = false;
-    private static void DelayInitialize()
+    static bool s_DelayDelayTried;
+    static void DelayInitialize()
     {
       try
       {
@@ -87,7 +87,7 @@ namespace Ore.Editor
         }
         else
         {
-          throw ex;
+          Orator.NFE(ex);
         }
       }
     }
