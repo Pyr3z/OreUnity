@@ -57,6 +57,26 @@ namespace Ore.Editor
     public const float MIN_TOGGLE_H = STD_TOGGLE_H - 2f;
 
 
+    public static float CalcWidth(string text)
+    {
+      return CalcWidth(text, EditorStyles.label);
+    }
+
+    public static float CalcWidth(string text, GUIStyle style)
+    {
+      string restore = ScratchContent.text;
+      try
+      {
+        ScratchContent.text = text;
+        return style.CalcSize(ScratchContent).x;
+      }
+      finally
+      {
+        ScratchContent.text = restore;
+      }
+    }
+
+
     public static void SliderPlus(string label, ref float current, float min, ref float max)
     {
       SliderPlus(

@@ -75,6 +75,8 @@ namespace Ore.Editor
         EditorGUIUtility.labelWidth = restore_lw;
         EditorGUIUtility.hierarchyMode = restore_hm;
 
+        InitCustomStyles();
+
         if (s_DelayDelayTried)
           EditorApplication.update -= DelayInitialize;
       }
@@ -90,6 +92,11 @@ namespace Ore.Editor
           Orator.NFE(ex);
         }
       }
+    }
+
+    static void InitCustomStyles()
+    {
+      // TODO?
     }
 
   } // end static class Styles
