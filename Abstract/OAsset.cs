@@ -153,8 +153,8 @@ namespace Ore
     /// </remarks>
     public bool IsRequiredOnLaunch
     {
-      get => m_IsRequiredOnLaunch;
-      set => m_IsRequiredOnLaunch = value;
+      get => EditorBridge.IsPreloadedAsset(this);
+      set => EditorBridge.TrySetPreloadedAsset(this, value);
     }
 
 
@@ -193,22 +193,9 @@ namespace Ore
     }
 
 
-    [Header("Ore Asset")] // TODO custom foldout drawers instead
-
-    [SerializeField]
-    [Tooltip("This asset instance will be [added to|removed from] the global " +
-             "\"Preloaded Assets\" list if it [is|is not] required on launch.")]
-    bool m_IsRequiredOnLaunch;
-
-    [SerializeField]
-    HideFlags m_HideFlags; // TODO remove and expose underlying property via custom inspector
-
-
     protected virtual void OnValidate()
     {
-      _ = EditorBridge.TrySetPreloadedAsset(this, m_IsRequiredOnLaunch);
-
-      hideFlags = m_HideFlags;
+      // empty these days
     }
 
   } // end class Asset

@@ -52,9 +52,29 @@ namespace Ore.Editor
 
     protected override void OnHeaderGUI()
     {
-      base.OnHeaderGUI(); // TODO
+      const string LABEL_FLAGS = "Hide flags";
+
+      base.OnHeaderGUI();
 
       m_Cache.Update(target as Asset);
+
+      EditorGUILayout.BeginHorizontal();
+
+      PreloadedAssetToggle(m_Cache);
+
+      float w       = OGUI.CalcWidth(LABEL_FLAGS);
+      float restore = EditorGUIUtility.fieldWidth;
+
+      EditorGUIUtility.fieldWidth = w * 2f;
+      OGUI.LabelWidth.Push( w + 2f);
+      HideFlagsDropDown(LABEL_FLAGS, m_Cache);
+      OGUI.LabelWidth.Pop();
+
+      EditorGUIUtility.fieldWidth = restore;
+
+      EditorGUILayout.EndHorizontal();
+
+      OGUI.Draw.Separator(5f);
     }
 
     public override void OnInspectorGUI()
@@ -77,7 +97,61 @@ namespace Ore.Editor
       }
     }
 
-    bool IterateProperties(SerializedProperty propIter, string terminalPropName = null)
+
+
+    static void PreloadedAssetToggle(in InspectionCache cache)
+    {
+      var label = OGUI.ScratchContent;
+      label.text    = "Preload at launch";
+      label.tooltip = "This asset will be [added to|removed from] the \"Player Settings -> Preloaded Assets\" list.";
+
+      Object target = cache.Asset;
+
+      if (!AssetDatabase.IsMainAsset(cache.IID))
+      {
+        target = AssetDatabase.LoadMainAssetAtPath(cache.Path);
+      }
+
+      bool isPreloaded = EditorBridge.IsPreloadedAsset(target);
+
+      bool edit = EditorGUILayout.ToggleLeft(label, isPreloaded);
+
+      if (isPreloaded != edit)
+      {
+        bool ok = EditorBridge.TrySetPreloadedAsset(target, edit);
+        OAssert.True(ok, "TrySetPreloadedAsset");
+      }
+
+      label.tooltip = string.Empty;
+    }
+
+    static void HideFlagsDropDown(string labelText, in InspectionCache cache)
+    {
+      GUIContent label;
+      if (labelText.IsEmpty())
+      {
+        label = GUIContent.none;
+      }
+      else
+      {
+        label = OGUI.ScratchContent;
+        label.text = labelText;
+      }
+
+      using (var check = new EditorGUI.ChangeCheckScope())
+      {
+        var edit = EditorGUILayout.EnumFlagsField(label, cache.OAsset.hideFlags);
+
+        if (check.changed)
+        {
+          Undo.RegisterCompleteObjectUndo(cache.Asset, $"Set hideFlags={edit}");
+          cache.OAsset.hideFlags = (HideFlags)edit;
+          EditorUtility.SetDirty(cache.Asset);
+        }
+      }
+    }
+
+    static bool IterateProperties(SerializedProperty propIter, string terminalPropName = null)
     {
       try
       {
