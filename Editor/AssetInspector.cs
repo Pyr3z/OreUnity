@@ -61,13 +61,11 @@ namespace Ore.Editor
 
       EditorGUILayout.BeginHorizontal();
 
-      float w = OGUI.CalcWidth(LABEL_PRELOAD);
-
-      EditorGUILayout.BeginHorizontal(GUILayout.Width(w));
+      EditorGUILayout.BeginHorizontal(GUILayout.Width(1f));
       PreloadedAssetToggle(LABEL_PRELOAD, m_Cache);
       EditorGUILayout.EndHorizontal();
 
-      w = OGUI.CalcWidth(LABEL_FLAGS);
+      float w = OGUI.CalcWidth(LABEL_FLAGS);
 
       OGUI.LabelWidth.Push( w + 2f);
       HideFlagsDropDown(LABEL_FLAGS, m_Cache);
@@ -81,7 +79,7 @@ namespace Ore.Editor
     public override void OnInspectorGUI()
     {
       bool ok = target == m_Cache.Asset;
-      OAssert.True(ok, "target == s_Cache.Asset");
+      OAssert.True(ok, "target == m_Cache.Asset");
 
       var sobj = serializedObject;
       sobj.Update();
