@@ -18,46 +18,48 @@ namespace Ore.Editor
   [CanEditMultipleObjects]
   public class AssetInspector : UnityEditor.Editor
   {
-
-    static AssetInspector()
-    {
-      Selection.selectionChanged += OnSelectionChanged;
-    }
-
-    static void OnSelectionChanged()
-    {
-      if (Selection.activeObject is Asset asset)
-      {
-        if (s_Cache.IID == asset.GetInstanceID())
-          return;
-
-        s_Cache.IID   = asset.GetInstanceID();
-        s_Cache.Asset = asset;
-        s_Cache.Type  = asset.GetType();
-        s_Cache.Path  = AssetDatabase.GetAssetPath(asset);
-      }
-      else
-      {
-        s_Cache.IID   = 0;
-        s_Cache.Asset = null;
-        s_Cache.Type  = null;
-        s_Cache.Path  = null;
-      }
-    }
-
-    struct CachedSelection
+    struct InspectionCache
     {
       public int    IID;
       public Asset  Asset;
       public Type   Type;
       public string Path;
+
+      public void Update(Asset asset)
+      {
+        if (!asset)
+        {
+          IID   = 0;
+          Asset = null;
+          Type  = null;
+          Path  = string.Empty;
+          return;
+        }
+
+        int iid = asset.GetInstanceID();
+        if (IID == iid)
+          return;
+
+        IID   = iid;
+        Asset = asset;
+        Type  = asset.GetType();
+        Path  = AssetDatabase.GetAssetPath(asset);
+      }
     }
 
-    static CachedSelection s_Cache;
+    InspectionCache m_Cache;
+
+
+    protected override void OnHeaderGUI()
+    {
+      base.OnHeaderGUI(); // TODO
+
+      m_Cache.Update(target as Asset);
+    }
 
     public override void OnInspectorGUI()
     {
-      bool ok = target == s_Cache.Asset;
+      bool ok = target == m_Cache.Asset;
       OAssert.True(ok, "target == s_Cache.Asset");
 
       var sobj = serializedObject;
@@ -69,7 +71,7 @@ namespace Ore.Editor
       OAssert.True(ok, "1st propertyPath == \"m_Script\"");
 
       // now, draw:
-      using (new LocalizationGroup(s_Cache.Type))
+      using (new LocalizationGroup(m_Cache.Type))
       {
         _ = IterateProperties(currProp);
       }
@@ -195,13 +197,6 @@ namespace Ore.Editor
     static void FreezeReorderableList(SerializedProperty propList, bool freeze)
     {
       // TODO
-    }
-
-
-    // ReSharper disable once RedundantOverriddenMember
-    protected override void OnHeaderGUI()
-    {
-      base.OnHeaderGUI(); // TODO
     }
 
   } // end class AssetInspector
