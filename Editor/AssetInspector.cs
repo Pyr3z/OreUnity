@@ -52,7 +52,8 @@ namespace Ore.Editor
 
     protected override void OnHeaderGUI()
     {
-      const string LABEL_FLAGS = "Hide flags";
+      const string LABEL_PRELOAD = "Preload at launch";
+      const string LABEL_FLAGS   = "Hide flags";
 
       base.OnHeaderGUI();
 
@@ -60,17 +61,17 @@ namespace Ore.Editor
 
       EditorGUILayout.BeginHorizontal();
 
-      PreloadedAssetToggle(m_Cache);
+      float w = OGUI.CalcWidth(LABEL_PRELOAD);
 
-      float w       = OGUI.CalcWidth(LABEL_FLAGS);
-      float restore = EditorGUIUtility.fieldWidth;
+      EditorGUILayout.BeginHorizontal(GUILayout.Width(w));
+      PreloadedAssetToggle(LABEL_PRELOAD, m_Cache);
+      EditorGUILayout.EndHorizontal();
 
-      EditorGUIUtility.fieldWidth = w * 2f;
+      w = OGUI.CalcWidth(LABEL_FLAGS);
+
       OGUI.LabelWidth.Push( w + 2f);
       HideFlagsDropDown(LABEL_FLAGS, m_Cache);
       OGUI.LabelWidth.Pop();
-
-      EditorGUIUtility.fieldWidth = restore;
 
       EditorGUILayout.EndHorizontal();
 
@@ -99,11 +100,19 @@ namespace Ore.Editor
 
 
 
-    static void PreloadedAssetToggle(in InspectionCache cache)
+    static void PreloadedAssetToggle(string labelText, in InspectionCache cache)
     {
-      var label = OGUI.ScratchContent;
-      label.text    = "Preload at launch";
-      label.tooltip = "This asset will be [added to|removed from] the \"Player Settings -> Preloaded Assets\" list.";
+      GUIContent label;
+      if (labelText.IsEmpty())
+      {
+        label = GUIContent.none;
+      }
+      else
+      {
+        label         = OGUI.ScratchContent;
+        label.text    = labelText;
+        label.tooltip = "This asset will be [added to|removed from] the \"Player Settings -> Preloaded Assets\" list.";
+      }
 
       Object target = cache.Asset;
 
@@ -122,7 +131,10 @@ namespace Ore.Editor
         OAssert.True(ok, "TrySetPreloadedAsset");
       }
 
-      label.tooltip = string.Empty;
+      if (label != GUIContent.none)
+      {
+        label.tooltip = string.Empty;
+      }
     }
 
     static void HideFlagsDropDown(string labelText, in InspectionCache cache)
