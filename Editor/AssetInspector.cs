@@ -86,6 +86,8 @@ namespace Ore.Editor
 
         while (propIter.NextVisible(drill))
         {
+          bool restore = GUI.enabled;
+
           EditorGUI.indentLevel = baseIndent + propIter.depth;
 
           if (propIter.propertyType != SerializedPropertyType.String && propIter.isArray)
@@ -142,6 +144,8 @@ namespace Ore.Editor
           {
             drill = EditorGUILayout.PropertyField(propIter, includeChildren: false);
           }
+
+          GUI.enabled = restore;
 
           if (propIter.name == terminalPropName)
             return false;
