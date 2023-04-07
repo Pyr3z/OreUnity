@@ -5,6 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [v6.2.0](../../tree/editor/asset-inspector) - UNRELEASED
+#### Added: OAssetInspector
+- Replaces the default inspector used for all `Ore.Asset` derivatives.
+- Offers various enhancements for your editing pleasure.
+- fef
+
+#### Other Editor-only features
+- Added: new extensions to `SerializedProperty`:
+  - IsNonReorderable()
+  - IsReadOnly()
+  - TryGetFieldInfo(out FieldInfo)
+- fef
+
+
 ## [v6.1.1](../../tree/unstable) - UNRELEASED
 - fef
 
