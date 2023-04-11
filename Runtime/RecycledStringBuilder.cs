@@ -93,7 +93,9 @@ namespace Ore
 
     static StringBuilder HireBuilder(string init, int initCapacity)
     {
+      #if UNITY_INCLUDE_TESTS
       ++ AliveCount;
+      #endif
 
       initCapacity = initCapacity.AtLeast(DEFAULT_BOB_SIZE);
 
@@ -119,7 +121,9 @@ namespace Ore
       if (bob == null)
         return;
 
+      #if UNITY_INCLUDE_TESTS
       -- AliveCount;
+      #endif
 
       while (UNEMPLOYED[s_Next] != null)
       {
