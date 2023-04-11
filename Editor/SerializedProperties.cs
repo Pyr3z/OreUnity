@@ -44,10 +44,12 @@ namespace Ore.Editor
       return prop.propertyPath.EndsWith("]");
     }
 
+    #if UNITY_2020_1_OR_NEWER
     public static bool IsNonReorderable(this SerializedProperty prop)
     {
       return !TryGetFieldInfo(prop, out FieldInfo field) || field.IsDefined<NonReorderableAttribute>();
     }
+    #endif
 
     public static bool IsReadOnly(this SerializedProperty prop)
     {
