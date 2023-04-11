@@ -123,11 +123,13 @@ namespace Ore
       {
         try
         {
+          #if UNITY_2020_1_OR_NEWER
           if (!downloader.error.IsEmpty())
           {
             promise.FailWith(downloader.error);
             return;
           }
+          #endif
 
           OAssert.True(downloader.isDone);
 
