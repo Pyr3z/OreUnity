@@ -5,22 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [v6.2.0](../../tree/editor/asset-inspector) - UNRELEASED
-#### Added: OAssetInspector
-- Replaces the default inspector used for all `Ore.Asset` derivatives.
-- Offers various enhancements for your editing pleasure.
-- fef
+## [v6.1.2](../../tags/v6.1.2) - 2023-04-11
 
-#### Other Editor-only features
+#### Hotfix
+- Fixed: BUILD errors in Unity 2019 (SerializedProperties.cs).
+
+
+## [v6.1.1](../../tags/v6.1.1) - 2023-04-11
+
+#### Compilation Hotfix
+- Fixed: #47 - build compilation errrors due to lazy lack of `#if UNITY_INCLUDE_TESTS` in RecycledStringsBuilder.cs.
+- Fixed: #46 - compilation errors in Unity 2019 (WebRequests.cs).
+
+#### other stuff
 - Added: new extensions to `SerializedProperty`:
   - IsNonReorderable()
   - IsReadOnly()
   - TryGetFieldInfo(out FieldInfo)
-- fef
-
-
-## [v6.1.1](../../tree/unstable) - UNRELEASED
-- fef
+  - (these become useful in v6.2)
 
 
 ## [v6.1.0](../../tags/v6.1.0) - 2023-04-06
