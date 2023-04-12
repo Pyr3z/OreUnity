@@ -19,13 +19,14 @@ namespace Ore
     protected IComparator<V> m_ValueComparator = null;
 
 
-    private Bucket[] m_Buckets;
+    Bucket[] m_Buckets;
+    Bucket   m_BadBucket;
 
-    private int m_Count, m_Collisions, m_LoadLimit;
-    private int m_LongestChain;
-    private int m_Version;
+    int m_Count, m_Collisions, m_LoadLimit;
+    int m_LongestChain;
+    int m_Version;
 
-    private int m_CachedLookup = int.MinValue;
+    int m_CachedLookup = int.MinValue;
 
 
   #if UNITY_INCLUDE_TESTS // expose more fields for unit testing purposes
@@ -33,7 +34,7 @@ namespace Ore
     internal int CachedLookup => m_CachedLookup;
     internal int Collisions   => m_Collisions;
     internal int LongestChain => m_LongestChain;
-    internal int LifetimeAllocs { get; private set; }
+    internal int LifetimeAllocs { get; set; }
   #endif
 
 
@@ -75,7 +76,7 @@ namespace Ore
     }
 
 
-    private bool TryInsert(in K key, in V val, bool overwrite, out int i)
+    bool TryInsert(in K key, in V val, bool overwrite, out int i)
     {
       if (m_KeyComparator.IsNone(key))
       {
@@ -167,7 +168,7 @@ namespace Ore
       throw new UnanticipatedException($"HashMap.TryInsert: Too many consecutive collisions! hash31={hash31}, jumps={jumps}, key={key}");
     }
 
-    private int FindBucket([CanBeNull] in K key, int hash31 = -1)
+    int FindBucket([CanBeNull] in K key, int hash31 = -1)
     {
       if (m_Count == 0 || m_KeyComparator.IsNone(key))
       {
@@ -214,7 +215,7 @@ namespace Ore
       return ~ (m_LongestChain - jumps);
     }
 
-    private int FindValue(in V value)
+    int FindValue(in V value)
     {
       var cmp = m_ValueComparator ?? Comparator<V>.Default;
 
@@ -235,7 +236,7 @@ namespace Ore
     }
 
 
-    private int Grow()
+    int Grow()
     {
       if (m_Params.IsFixedSize)
         return -1;
@@ -250,7 +251,7 @@ namespace Ore
       return m_LoadLimit;
     }
 
-    private void Rehash(int newSize)
+    void Rehash(int newSize)
     {
       if (m_Params.IsFixedSize && m_Buckets.Length != newSize)
       {
@@ -299,7 +300,7 @@ namespace Ore
     }
 
 
-    private int IntersectSlow(IEnumerable<K> keys, IEnumerable<V> values, bool overwrite)
+    int IntersectSlow(IEnumerable<K> keys, IEnumerable<V> values, bool overwrite)
     {
       int delta = 0;
 

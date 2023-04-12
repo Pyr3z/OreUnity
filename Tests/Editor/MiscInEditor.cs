@@ -120,4 +120,45 @@ internal static class MiscInEditor
     Assert.AreEqual(precount, RecycledStringBuilder.AliveCount, "post scope AliveCount");
   }
 
+  [Test]
+  public static void MappedStructIsImmutable()
+  {
+    // (a proof)
+
+    var map = new HashMap<string,Vector3>
+    {
+      ["fef"] = new Vector3(1, 2, 3)
+    };
+
+    bool sanity = map.Find("fef", out var strct);
+    Assert.True(sanity, "map[\"fef\"]");
+
+    Assert.AreEqual(1f, strct.x, "strct.x");
+
+    strct.x = 3.14f;
+
+    Debug.Log(strct);
+
+    sanity = map.Find("fef", out var again);
+    Assert.True(sanity, "map[\"fef\"] (again)");
+
+    Debug.Log(again);
+
+    Assert.AreNotEqual(3.14f, again.x, "again.x");
+
+    // new FindRef method should alleviate this:
+
+    ref var vecref = ref map.FindRef("fef", out sanity);
+    Assert.True(sanity, "map.FindRef(\"fef\")");
+
+    vecref.x = 1337f;
+
+    sanity = map.Find("fef", out again);
+    Assert.True(sanity, "map[\"fef\"] (again again)");
+
+    Debug.Log(again);
+
+    Assert.AreEqual(1337f, again.x, "again.x");
+  }
+
 } // end class MiscInEditor
