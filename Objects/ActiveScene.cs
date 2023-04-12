@@ -15,6 +15,8 @@ using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+using UnityAction = UnityEngine.Events.UnityAction;
+
 
 namespace Ore
 {
@@ -31,19 +33,56 @@ namespace Ore
 
     public static bool IsPlaying => Instance && Application.IsPlaying(Instance);
 
+    public static event UnityAction OnActiveSceneChanged
+    {
+      add
+      {
+        if (Instance)
+          Instance.m_OnActiveSceneChanged += value;
+      }
+      remove
+      {
+        if (Instance)
+          Instance.m_OnActiveSceneChanged -= value;
+      }
+    }
+
+    public static event UnityAction OnUpdate
+    {
+      add
+      {
+        if (Instance)
+          Instance.m_OnUpdate += value;
+        else
+          s_OnUpdate += value;
+      }
+      remove
+      {
+        if (Instance)
+          Instance.m_OnUpdate -= value;
+        else
+          s_OnUpdate -= value;
+      }
+    }
+
 
   [Header("[ActiveScene]"), Space]
     [SerializeField]
-    private TimeInterval m_DelayStartCoroutineRunner = TimeInterval.Frame;
+    TimeInterval m_DelayStartCoroutineRunner = TimeInterval.Frame;
     [SerializeField]
-    private VoidEvent m_OnActiveSceneChanged = new VoidEvent();
+    VoidEvent m_OnActiveSceneChanged = new VoidEvent();
+
+    [System.NonSerialized] // not yet at least
+    VoidEvent m_OnUpdate;
 
 
-    private static Scene s_ActiveScene; // only the size of an int, so why not?
+    static Scene s_ActiveScene; // only the size of an int, so why not?
 
-    private static readonly HashMap<Scene,float> s_SceneBirthdays = new HashMap<Scene,float>();
+    static UnityAction s_OnUpdate;
 
-    private static ICoroutineRunner s_Coroutiner;
+    static readonly HashMap<Scene,float> s_SceneBirthdays = new HashMap<Scene,float>();
+
+    static ICoroutineRunner s_Coroutiner;
 
 
     [Pure]
@@ -111,7 +150,7 @@ namespace Ore
       }
     }
 
-    private void SetupCoroutineRunner()
+    void SetupCoroutineRunner()
     {
       var coroutiner = GetComponent<CoroutineRunner>();
       if (!coroutiner)
@@ -128,6 +167,14 @@ namespace Ore
       s_Coroutiner = coroutiner;
     }
 
+    void Update()
+    {
+      if (m_OnUpdate is null)
+        return;
+
+      m_OnUpdate.Invoke();
+    }
+
 
     // the rest ensures this singleton is ALWAYS on the "active" scene.
 
@@ -137,13 +184,13 @@ namespace Ore
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void RegisterActiveSceneListener()
+    static void RegisterActiveSceneListener()
     {
-      SceneManager.activeSceneChanged += OnActiveSceneChanged;
-      SceneManager.sceneLoaded += OnSceneLoaded;
+      SceneManager.activeSceneChanged += UpdateActiveSceneObject;
+      SceneManager.sceneLoaded += UpdateSceneBirthday;
     }
 
-    private static void OnActiveSceneChanged(Scene prev, Scene next)
+    static void UpdateActiveSceneObject(Scene prev, Scene next)
     {
       s_ActiveScene = next;
 
@@ -158,12 +205,12 @@ namespace Ore
       curr.m_OnActiveSceneChanged.Invoke();
     }
 
-    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    static void UpdateSceneBirthday(Scene scene, LoadSceneMode mode)
     {
       s_SceneBirthdays[scene] = Time.realtimeSinceStartup;
     }
 
-    private static ActiveScene Instantiate()
+    static ActiveScene Instantiate()
     {
       var obj = new GameObject($"[{nameof(ActiveScene)}]")
       {
@@ -173,6 +220,12 @@ namespace Ore
 
       var bud = obj.AddComponent<ActiveScene>();
       bud.m_IsReplaceable = true;
+
+      if (s_OnUpdate != null)
+      {
+        bud.m_OnUpdate = new VoidEvent(s_OnUpdate);
+        s_OnUpdate     = null;
+      }
 
       OAssert.True(Current == bud);
 
