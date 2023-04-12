@@ -3,6 +3,8 @@
  *  @date       2023-04-11
 **/
 
+using UnityEngine;
+
 using JetBrains.Annotations;
 
 using Stopwatch = System.Diagnostics.Stopwatch;
@@ -11,7 +13,7 @@ using Stopwatch = System.Diagnostics.Stopwatch;
 namespace Ore
 {
   [PublicAPI]
-  public class CodeJudge : System.IDisposable
+  public struct CodeJudge : System.IDisposable
   {
     public CodeJudge([NotNull] string identifier)
     {
@@ -19,22 +21,35 @@ namespace Ore
       m_Watch = Stopwatch.StartNew();
     }
 
-    public void Dispose()
+    void System.IDisposable.Dispose()
     {
+      if (m_Identifier is null)
+        return;
+
       m_Watch.Stop();
       if (s_AllCases.Find(m_Identifier, out var kase) && kase != null)
       {
-        kase.Ticks += m_Watch.ElapsedTicks;
+        double dev = kase.Time / kase.Count;
+        double elapsed = m_Watch.ElapsedTicks;
+        dev -= elapsed;
+        dev *= dev;
+
+        kase.Time += (long)elapsed;
         ++ kase.Count;
+        kase.Deviations += dev;
       }
       else
       {
         s_AllCases.Map(m_Identifier, new Case
         {
-          Ticks = m_Watch.ElapsedTicks,
-          Count = 1
+          Time = m_Watch.ElapsedTicks,
+          Count = 1,
+          Deviations = 0,
+          OnGUILine = -1
         });
       }
+
+      m_Identifier = null;
     }
 
 
@@ -42,9 +57,20 @@ namespace Ore
     Stopwatch m_Watch;
 
 
-    public static void Report(string identifier, out long ticks, out int callCount, bool clear = true)
+    public static long GetCount([NotNull] string identifier)
     {
-      ticks     = 0L;
+      if (s_AllCases.Find(identifier, out Case kase) && kase != null)
+      {
+        return kase.Count;
+      }
+
+      return 0L;
+    }
+
+    public static void Report([NotNull] string identifier, out TimeInterval time,
+                                                           out long callCount)
+    {
+      time      = default;
       callCount = 0;
 
       if (!s_AllCases.Find(identifier, out var kase))
@@ -52,26 +78,128 @@ namespace Ore
 
       if (kase != null)
       {
-        ticks     = kase.Ticks;
-        callCount = kase.Count;
+        time.Ticks = (long)(kase.Time + 0.5);
+        callCount  = kase.Count;
       }
-
-      if (clear)
-        s_AllCases.Unmap(identifier);
     }
 
-    public static void ClearAll()
+    public static void Report([NotNull] string identifier, out double time,
+                                                           out long callCount,
+                                                           out double average,
+                                                           out double variance,
+                                                           out int guiLine)
+    {
+      time      =  0;
+      callCount =  0;
+      average   =  0;
+      variance  =  0;
+      guiLine   = -1;
+
+      if (!s_AllCases.Find(identifier, out var kase))
+        return;
+
+      if (kase != null)
+      {
+        time      = kase.Time;
+        callCount = kase.Count;
+        average   = kase.Time / callCount;
+        variance  = kase.Deviations / callCount;
+        guiLine   = kase.OnGUILine;
+      }
+    }
+
+    public static void ReportOnGUI([NotNull] string identifier, TimeInterval.Units units = TimeInterval.Units.Milliseconds)
+    {
+      Report(identifier, out double ticks, out long callCount, out double avg, out double varp, out int line);
+
+      if (line < 0)
+      {
+        var kase = s_AllCases[identifier];
+
+        OAssert.NotNull(kase);
+
+        // ReSharper disable once PossibleNullReferenceException
+        line = kase.OnGUILine = s_OnGUILine++;
+      }
+
+      var total = new TimeInterval((long)(ticks + 0.5));
+      var mean  = new TimeInterval((long)(avg + 0.5));
+      var stdev = new TimeInterval((long)(System.Math.Sqrt(varp) + 0.5));
+
+      string text;
+      using (new RecycledStringBuilder(identifier, out var bob))
+      {
+        bob.Append(": count=").Append(callCount.ToInvariant());
+        bob.Append(", total=").Append(total.ToString(units));
+        bob.Append(", mean=" ).Append(mean.ToString(units));
+        bob.Append(", stdev=").Append(stdev.ToString(units));
+        text = bob.ToString();
+      }
+
+      const float X = 5f, Y = 5f, H = 22f;
+
+      var pos = new Rect(x: X,
+                         y: Y + line * (H + 2f),
+                     width: Screen.width - 2 * X,
+                    height: H);
+
+      // const float S = 1f;
+      // var scale = new Vector2(S, S);
+      // var pivot = new Vector2(pos.x + pos.width / 2, pos.y + pos.height);
+      //
+      // GUIUtility.ScaleAroundPivot(scale, pivot);
+
+      GUI.Label(pos, text);
+    }
+
+    public static void Reset([NotNull] string identifier)
+    {
+      if (s_AllCases.Find(identifier, out Case kase))
+      {
+        if (kase is null)
+        {
+          s_AllCases.Unmap(identifier);
+          return;
+        }
+
+        kase.Time = 0;
+        kase.Count = 0;
+        kase.Deviations = 0;
+      }
+    }
+
+    public static void Remove([NotNull] string identifier)
+    {
+      if (s_AllCases.Pop(identifier, out Case pop) && pop.OnGUILine > -1)
+      {
+        // TODO hack less
+        foreach (var kase in s_AllCases.Values)
+        {
+          kase.OnGUILine = -1;
+        }
+
+        s_OnGUILine = 0;
+      }
+    }
+
+    public static void RemoveAll()
     {
       s_AllCases.Clear();
+      s_OnGUILine = 0;
     }
 
 
     class Case
     {
-      public long Ticks;
-      public int  Count;
+      public double Time;
+      public long   Count;
+      public double Deviations;
+      public int    OnGUILine;
     }
 
     static readonly HashMap<string,Case> s_AllCases = new HashMap<string,Case>();
+
+    static int s_OnGUILine;
+
   } // end class CodeJudge
 }
