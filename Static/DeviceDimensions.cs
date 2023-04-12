@@ -116,7 +116,7 @@ namespace Ore
           return DeviceSpy.IsTablet;
 
         case DeviceDimension.IsT1Graphics:
-          return Graphics.activeTier == UnityEngine.Rendering.GraphicsTier.Tier1;
+          return DeviceSpy.IsT1Graphics;
 
         case DeviceDimension.GPUVendor:
           return SystemInfo.graphicsDeviceVendor;

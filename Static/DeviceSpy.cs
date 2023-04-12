@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Rendering;
 
 #if UNITY_IOS
 using Device = UnityEngine.iOS.Device;
@@ -59,6 +60,8 @@ namespace Ore
     public static bool Is64Bit => ABI == ABI.ARM64 || s_ABI == ABI.x86_64;
 
     public static bool IsBlueStacks => (bool)(s_IsBlueStacks ?? (s_IsBlueStacks = CalcIsBlueStacks()));
+
+    public static bool IsT1Graphics => Graphics.activeTier == GraphicsTier.Tier1;
 
     public static bool IsTablet => (bool)(s_IsTablet ?? (s_IsTablet = CalcIsTablet()));
 
@@ -173,8 +176,6 @@ namespace Ore
 
       json["RAMUsageMB"]      = CalcRAMUsageMB();
       json["RAMUsagePercent"] = CalcRAMUsagePercent();
-
-      json[nameof(DeviceDimension.IsT1Graphics)] = DeviceDimension.IsT1Graphics.QueryValue();
 
       return JsonAuthority.Serialize(json);
     }
