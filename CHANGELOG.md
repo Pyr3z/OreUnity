@@ -4,12 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-
 ## [v6.1.2](../../tags/v6.1.2) - 2023-04-11
 
 #### Hotfix
 - Fixed: BUILD errors in Unity 2019 (SerializedProperties.cs).
-
 
 ## [v6.1.1](../../tags/v6.1.1) - 2023-04-11
 
@@ -18,11 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: #46 - compilation errors in Unity 2019 (WebRequests.cs).
 
 #### other stuff
-- Added: new extensions to `SerializedProperty`:
-  - IsNonReorderable()
-  - IsReadOnly()
-  - TryGetFieldInfo(out FieldInfo)
-  - (these become useful in v6.2)
+- Added: (Editor only) extension methods SerializedProperties.IsNonReorderable(), IsReadOnly().
+  - (more to come in this vein in v6.2)
 
 
 ## [v6.1.0](../../tags/v6.1.0) - 2023-04-06
