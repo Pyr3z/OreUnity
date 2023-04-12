@@ -161,4 +161,29 @@ internal static class MiscInEditor
     Assert.AreEqual(1337f, again.x, "again.x");
   }
 
+  [Test]
+  public static void StringEqualityIgnoreWhitespace()
+  {
+    string fef = "fef";
+    string[] tests =
+    {
+      " fef\n\r",
+      "\tf e f ",
+      " fe  \n f ",
+      "fef",
+    };
+
+    foreach (var test in tests)
+    {
+      Assert.True(Strings.AreEqual(fef, test, Strings.WHITESPACES));
+    }
+
+    foreach (var test in tests)
+    {
+      Assert.True(Strings.AreEqual(test, fef, Strings.WHITESPACES));
+    }
+
+    Assert.False(Strings.AreEqual(fef, "bub", Strings.WHITESPACES));
+  }
+
 } // end class MiscInEditor

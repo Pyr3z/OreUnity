@@ -50,7 +50,7 @@ namespace Ore
 
     // the following arrays are all pre-sorted (by ASCII ("ordinal") value)
 
-    public static readonly char[] WHITESPACES = { '\t', '\n', ' ' };
+    public static readonly char[] WHITESPACES = { '\t', '\n', '\r', ' ' };
 
     public static readonly char[] LOWERCASE // bash: echo \'{a..z}\'','
       = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
@@ -298,6 +298,54 @@ namespace Ore
     }
 
 
+    public static bool AreEqual(string a, string b, char[] ignoreChars)
+    {
+      if (a.IsEmpty())
+        return b is null || ContainsOnly(b, ignoreChars);
+      if (b.IsEmpty())
+        return ContainsOnly(a, ignoreChars);
+
+      int ilen = ignoreChars.Length;
+
+      bool ignoreChar(char c)
+      {
+        for (int i = 0; i < ilen; ++i)
+        {
+          if (c == ignoreChars[i])
+            return true;
+        }
+
+        return false;
+      }
+
+      int ai = 0, alen = a.Length;
+      int bi = 0, blen = b.Length;
+
+      if (alen > blen)
+      {
+        (a,b,alen,blen) = (b,a,blen,alen);
+      }
+
+      while (ai < alen)
+      {
+        // ReSharper disable EmptyEmbeddedStatement
+
+        char ac;
+        while (ignoreChar(ac = a[ai++])) ;
+
+        char bc;
+        while (ignoreChar(bc = b[bi++])) ;
+
+        // ReSharper restore EmptyEmbeddedStatement
+
+        if (ac != bc)
+          return false;
+      }
+
+      return true;
+    }
+
+
     public static string ExpandCamelCase([CanBeNull] this string str)
     {
       if (str is null || str.Length <= 1)
@@ -356,15 +404,22 @@ namespace Ore
     }
 
 
-    public static bool ContainsOnly([NotNull] string str, [NotNull] IEnumerable<char> presortedChars)
+    public static bool ContainsOnly([NotNull] string str, [CanBeNull] char[] presortedChars)
     {
-      char[] pscs = presortedChars as char[] ?? presortedChars.ToArray();
+      if (str.Length == 0)
+        return presortedChars.IsEmpty();
+      if (presortedChars.IsEmpty())
+        return false;
+
+      // TODO this is *probably* faster than a binary search... open to testing it tho.
 
       foreach (char c in str)
       {
-        // this is *probably* faster than a binary search... open to testing it tho. TODO
-        foreach (char psc in pscs)
+        // ReSharper disable once ForCanBeConvertedToForeach
+        // ReSharper disable once PossibleNullReferenceException
+        for (int i = 0; i < presortedChars.Length; ++i)
         {
+          char psc = presortedChars[i];
           if (c < psc)
             return false;
           if (c == psc)
