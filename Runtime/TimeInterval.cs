@@ -623,7 +623,7 @@ namespace Ore
       }
     }
 
-    public string ToString(Units units, string decimalFmt = "N3", IFormatProvider provider = null)
+    public string ToString(Units units, string decimalFmt = "F1", IFormatProvider provider = null)
     {
       if (provider is null)
         provider = Strings.InvariantFormatter;
