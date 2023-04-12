@@ -7,8 +7,6 @@ using UnityEngine;
 
 using JetBrains.Annotations;
 
-using Stopwatch = System.Diagnostics.Stopwatch;
-
 
 namespace Ore
 {
@@ -18,7 +16,7 @@ namespace Ore
     public CodeJudge([NotNull] string identifier)
     {
       m_Identifier = identifier;
-      m_Watch = Stopwatch.StartNew();
+      m_StartTicks = System.DateTime.UtcNow.Ticks;
     }
 
     public CodeJudge([NotNull] string identifier, int maxCount)
@@ -26,29 +24,27 @@ namespace Ore
       if (GetCount(identifier) >= maxCount)
       {
         m_Identifier = null;
-        m_Watch = null;
+        m_StartTicks = 0;
       }
       else
       {
         m_Identifier = identifier;
-        m_Watch = Stopwatch.StartNew();
+        m_StartTicks = System.DateTime.UtcNow.Ticks;
       }
     }
 
-    void System.IDisposable.Dispose()
+    public void Dispose()
     {
       if (m_Identifier is null)
         return;
 
-      m_Watch.Stop();
-
-      double elapsed = m_Watch.ElapsedTicks;
+      long elapsed = System.DateTime.UtcNow.Ticks - m_StartTicks;
 
       ref var kase = ref s_AllCases.FindRef(m_Identifier, out bool found);
-      if (found)
+      if (found && kase.Count > 0)
       {
         double deviatn = kase.Time / kase.Count - elapsed;
-        kase.Time += (long)elapsed;
+        kase.Time += elapsed;
         ++ kase.Count;
         kase.Deviations += deviatn * deviatn;
       }
@@ -67,8 +63,8 @@ namespace Ore
     }
 
 
-    string    m_Identifier;
-    Stopwatch m_Watch;
+           string m_Identifier;
+    readonly long m_StartTicks;
 
 
     public static long GetCount([NotNull] string identifier)
