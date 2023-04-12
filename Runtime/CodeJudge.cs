@@ -21,6 +21,20 @@ namespace Ore
       m_Watch = Stopwatch.StartNew();
     }
 
+    public CodeJudge([NotNull] string identifier, int maxCount)
+    {
+      if (GetCount(identifier) >= maxCount)
+      {
+        m_Identifier = null;
+        m_Watch = null;
+      }
+      else
+      {
+        m_Identifier = identifier;
+        m_Watch = Stopwatch.StartNew();
+      }
+    }
+
     void System.IDisposable.Dispose()
     {
       if (m_Identifier is null)
