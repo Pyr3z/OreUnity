@@ -113,7 +113,7 @@ namespace Ore
     /// </param>
     /// <param name="pretty">
     ///   Optionally override the default pretty-print settings (set in
-    ///   <see cref="JsonAuthority"/>.<see cref="JsonAuthority.SerializerSettings"/>)
+    ///   <see cref="JsonAuthority"/>.<see cref="NewtonsoftAuthority.SerializerSettings"/>)
     ///   (this call only).
     /// </param>
     /// <param name="encoding">
