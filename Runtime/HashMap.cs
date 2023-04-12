@@ -72,6 +72,9 @@ namespace Ore
       [CanBeNull]
       set
       {
+        if (value is null)
+          value = Comparator<K>.Default;
+
         if (m_Count > 0 && !ReferenceEquals(m_KeyComparator, value))
         {
           throw new System.InvalidOperationException(
@@ -79,7 +82,7 @@ namespace Ore
           );
         }
 
-        m_KeyComparator = value ?? Comparator<K>.Default;
+        m_KeyComparator = value;
       }
     }
 
@@ -239,6 +242,21 @@ namespace Ore
 
       value = default;
       return false;
+    }
+
+    [Pure]
+    public ref V FindRef([CanBeNull] in K key, out bool found)
+    {
+      found = false;
+
+      int i = FindBucket(in key);
+      if (i > -1)
+      {
+        found = true;
+        return ref m_Buckets[i].Value;
+      }
+
+      return ref m_BadBucket.Value;
     }
 
     /// <summary>
