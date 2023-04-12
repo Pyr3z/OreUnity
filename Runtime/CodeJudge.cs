@@ -81,10 +81,10 @@ namespace Ore
       return 0L;
     }
 
-    public static void Report([NotNull] string identifier, out TimeInterval time,
+    public static void Report([NotNull] string identifier, out TimeInterval totalTime,
                                                            out long callCount)
     {
-      time      = default;
+      totalTime = default;
       callCount = 0;
 
       if (!s_AllCases.Find(identifier, out var kase))
@@ -92,33 +92,60 @@ namespace Ore
 
       if (kase != null)
       {
-        time.Ticks = (long)(kase.Time + 0.5);
-        callCount  = kase.Count;
+        totalTime.Ticks = (long)(kase.Time + 0.5);
+        callCount = kase.Count;
       }
     }
 
-    public static void Report([NotNull] string identifier, out double time,
-                                                           out long callCount,
+    public static void Report([NotNull] string identifier, out double totalTime,
+                                                           out long   callCount,
                                                            out double average,
                                                            out double variance,
-                                                           out int guiLine)
+                                                           out int    guiLine)
     {
-      time      =  0;
+      totalTime =  0;
       callCount =  0;
       average   =  0;
       variance  =  0;
       guiLine   = -1;
 
-      if (!s_AllCases.Find(identifier, out var kase))
+      if (!s_AllCases.Find(identifier, out var kase) || kase is null)
         return;
 
-      if (kase != null)
+      totalTime = kase.Time;
+      callCount = kase.Count;
+      average   = kase.Time / callCount;
+      variance  = kase.Deviations / callCount;
+      guiLine   = kase.OnGUILine;
+    }
+
+    public static void ReportJson([NotNull] string identifier, out string json, TimeInterval.Units units = TimeInterval.Units.Milliseconds)
+    {
+      Report(identifier, out double time, out long callCount, out double avg, out double varp, out _ );
+
+      using (new RecycledStringBuilder(out var bob))
       {
-        time      = kase.Time;
-        callCount = kase.Count;
-        average   = kase.Time / callCount;
-        variance  = kase.Deviations / callCount;
-        guiLine   = kase.OnGUILine;
+        bob.Append("{\n");
+
+        bob.Append("  \"identifier\": \"").Append(identifier).Append("\",\n");
+
+        bob.Append("  \"callCount\": ").Append(callCount.ToInvariant()).Append(",\n");
+
+        var ti = new TimeInterval((long)(time + 0.5));
+        bob.Append("  \"totalTime\": \"").Append(ti.ToString(units)).Append("\",\n");
+
+        ti.Ticks = (long)(avg + 0.5);
+        bob.Append("  \"average\": \"").Append(ti.ToString(units)).Append("\",\n");
+
+        ti.Ticks = (long)(varp + 0.5);
+        bob.Append("  \"variance\": \"").Append(ti.ToString(units)).Append("\",\n");
+
+        ti.Ticks = (long)(System.Math.Sqrt(varp) + 0.5);
+        bob.Append("  \"stdev\": \"").Append(ti.ToString(units)).Append("\"\n");
+
+        bob.Append('}');
+
+        json = bob.ToString();
       }
     }
 
