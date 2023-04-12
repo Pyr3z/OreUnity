@@ -12,7 +12,7 @@ using JetBrains.Annotations;
 
 using UnityEngine;
 
-using System;
+using System; // rare allowance
 
 using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
 using MethodImplOptions   = System.Runtime.CompilerServices.MethodImplOptions;
@@ -613,7 +613,62 @@ namespace Ore
 
     public override string ToString()
     {
-      return Ticks.ToInvariant() + (m_AsFrames ? 'f' : 't');
+      using (new RecycledStringBuilder(Ticks.ToInvariant(), out var bob))
+      {
+        if (m_AsFrames)
+          bob.Append('f');
+        else
+          bob.Append('t');
+        return bob.ToString();
+      }
+    }
+
+    public string ToString(Units units, string decimalFmt = "N3", IFormatProvider provider = null)
+    {
+      if (provider is null)
+        provider = Strings.InvariantFormatter;
+
+      using (new RecycledStringBuilder(out var bob))
+      {
+        switch (units)
+        {
+          default:
+          case Units.Ticks:
+            bob.Append(WithSystemTicks().Ticks.ToString(provider));
+            bob.Append('t');
+            break;
+          case Units.Frames:
+            bob.Append(Frames.ToString(provider));
+            bob.Append('f');
+            break;
+          case Units.Milliseconds:
+            bob.Append(Millis.ToString(decimalFmt, provider));
+            bob.Append("ms");
+            break;
+          case Units.Seconds:
+            bob.Append(Seconds.ToString(decimalFmt, provider));
+            bob.Append('s');
+            break;
+          case Units.Minutes:
+            bob.Append(Minutes.ToString(decimalFmt, provider));
+            bob.Append('m');
+            break;
+          case Units.Hours:
+            bob.Append(Hours.ToString(decimalFmt, provider));
+            bob.Append('h');
+            break;
+          case Units.Days:
+            bob.Append(Days.ToString(decimalFmt, provider));
+            bob.Append('d');
+            break;
+          case Units.Weeks:
+            bob.Append((Days / 7).ToString(decimalFmt, provider));
+            bob.Append('w');
+            break;
+        }
+
+        return bob.ToString();
+      }
     }
 
 
