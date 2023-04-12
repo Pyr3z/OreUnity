@@ -580,7 +580,7 @@ namespace Ore
 
     public override string ToString()
     {
-      return Ticks.ToInvariant();
+      return Ticks.ToInvariant() + (m_AsFrames ? 'f' : 't');
     }
 
 
