@@ -8,13 +8,6 @@ using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Networking;
 
-using System.Collections;
-
-#if NEWTONSOFT_JSON
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-#endif
-
 #if UNITY_IOS
 using Device = UnityEngine.iOS.Device;
 #endif
@@ -23,6 +16,7 @@ using DateTime   = System.DateTime;
 using TimeSpan   = System.TimeSpan;
 using Encoding   = System.Text.Encoding;
 using RegionInfo = System.Globalization.RegionInfo;
+using JsonObj    = System.Collections.Generic.Dictionary<string,object>;
 
 
 namespace Ore
@@ -140,50 +134,49 @@ namespace Ore
     }
 
 
-    public static string ToJson(bool prettyPrint = EditorBridge.IS_DEBUG)
+    public static string ToJson()
     {
-      #if !NEWTONSOFT_JSON
-        // TODO
-        return "\"Newtonsoft.Json not available.\"";
-      #else
-        // TODO this is cool code -- perhaps it can be more generalized and made into a utility?
-        var json = new JObject();
+      // TODO this is cool code -- perhaps it can be more generalized and made into a utility?
 
-        foreach (var property in typeof(DeviceSpy).GetProperties(TypeMembers.STATIC))
+      var json = new JsonObj();
+
+      foreach (var property in typeof(DeviceSpy).GetProperties(TypeMembers.STATIC))
+      {
+        try
         {
-          try
+          var value = property.GetValue(null);
+          if (property.PropertyType.IsPrimitive)
           {
-            var value = property.GetValue(null);
-            if (property.PropertyType.IsPrimitive)
-            {
-              json[property.Name] = new JValue(value);
-            }
-            else if (value is TimeSpan span)
-            {
-              json[property.Name] = new JValue(span);
-            }
-            else
-            {
-              json[property.Name] = value?.ToString();
-            }
+            json[property.Name] = value;
           }
-          catch (System.Exception e)
+          else if (value is TimeSpan span)
           {
-            Orator.NFE(e);
-            json[property.Name] = JValue.CreateNull();
+            json[property.Name] = span.Ticks;
+          }
+          else
+          {
+            json[property.Name] = value?.ToString();
           }
         }
+        catch (System.Exception e)
+        {
+          Orator.NFE(e);
+          json[property.Name] = null;
+        }
+      }
 
-        json["OSVersionStripped"] = OSVersion.ToString(stripExtras: true);
+      json["OSVersionStripped"] = OSVersion.ToString(stripExtras: true);
 
-        #if !UNITY_EDITOR && UNITY_ANDROID
-        json["TargetAPI"]       = AndroidBridge.TargetAPI;
-        #endif
-        json["RAMUsageMB"]      = CalcRAMUsageMB();
-        json["RAMUsagePercent"] = CalcRAMUsagePercent();
+      #if !UNITY_EDITOR && UNITY_ANDROID
+      json["TargetAPI"]       = AndroidBridge.TargetAPI;
+      #endif
 
-        return json.ToString(prettyPrint ? Formatting.Indented : Formatting.None);
-      #endif // NEWTONSOFT_JSON
+      json["RAMUsageMB"]      = CalcRAMUsageMB();
+      json["RAMUsagePercent"] = CalcRAMUsagePercent();
+
+      json[nameof(DeviceDimension.IsT1Graphics)] = DeviceDimension.IsT1Graphics.QueryValue();
+
+      return JsonAuthority.Serialize(json);
     }
 
 
@@ -193,7 +186,7 @@ namespace Ore
     static void Menu_MakeJson()
     {
       string path = Filesystem.GetTempPath($"{nameof(DeviceSpy)}.json");
-      string json = ToJson(prettyPrint: true);
+      string json = ToJson();
 
       if (Filesystem.TryWriteText(path, json))
       {
@@ -362,7 +355,7 @@ namespace Ore
 
           #if NEWTONSOFT_JSON
 
-            var jobj = JObject.Parse(response, NewtonsoftAuthority.LoadStrict);
+            var jobj = Newtonsoft.Json.Linq.JObject.Parse(response, NewtonsoftAuthority.LoadStrict);
 
             string geoCode = jobj["result"]?["countryCode"]?.ToString();
 
