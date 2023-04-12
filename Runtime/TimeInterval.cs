@@ -177,6 +177,64 @@ namespace Ore
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TimeInterval OfTicks(long ticks)
+    {
+      // "middleman" function provided simply for API uniformity.
+      // good thing it's aggressively compiled out~
+      return new TimeInterval(ticks);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TimeInterval OfMillis(double ms)
+    {
+      return new TimeInterval((long)(ms / TICKS2MS + (ms >= 0 ? 0.5 : -0.5)));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TimeInterval OfSeconds(double s)
+    {
+      return new TimeInterval((long)(s / TICKS2SEC + (s >= 0 ? 0.5 : -0.5)));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TimeInterval OfMinutes(double m)
+    {
+      return new TimeInterval((long)(m / TICKS2MIN + (m >= 0 ? 0.5 : -0.5)));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TimeInterval OfHours(double h)
+    {
+      return new TimeInterval((long)(h / TICKS2HR + (h >= 0 ? 0.5 : -0.5)));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TimeInterval OfDays(double d)
+    {
+      return new TimeInterval((long)(d / TICKS2DAY + (d >= 0 ? 0.5 : -0.5)));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TimeInterval OfFrames(int nFrames)
+    {
+      return new TimeInterval(nFrames, areFrames: true);
+    }
+
+    public static TimeInterval OfFrames(float qFrames)
+    {
+      int rounded = qFrames.Rounded();
+      if (qFrames.Approximately(rounded))
+      {
+        return new TimeInterval(rounded, areFrames: true);
+      }
+      else
+      {
+        return new TimeInterval((long)(SmoothTicksLastFrame * qFrames));
+      }
+    }
+
+
     // instance shminstance
 
     //
@@ -329,63 +387,6 @@ namespace Ore
       m_AsFrames = false;
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TimeInterval OfTicks(long ticks)
-    {
-      // "middleman" function provided simply for API uniformity.
-      // good thing it's aggressively compiled out~
-      return new TimeInterval(ticks);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TimeInterval OfMillis(double ms)
-    {
-      return new TimeInterval((long)(ms / TICKS2MS + (ms >= 0 ? 0.5 : -0.5)));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TimeInterval OfSeconds(double s)
-    {
-      return new TimeInterval((long)(s / TICKS2SEC + (s >= 0 ? 0.5 : -0.5)));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TimeInterval OfMinutes(double m)
-    {
-      return new TimeInterval((long)(m / TICKS2MIN + (m >= 0 ? 0.5 : -0.5)));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TimeInterval OfHours(double h)
-    {
-      return new TimeInterval((long)(h / TICKS2HR + (h >= 0 ? 0.5 : -0.5)));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TimeInterval OfDays(double d)
-    {
-      return new TimeInterval((long)(d / TICKS2DAY + (d >= 0 ? 0.5 : -0.5)));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TimeInterval OfFrames(int nFrames)
-    {
-      return new TimeInterval(nFrames, areFrames: true);
-    }
-
-    public static TimeInterval OfFrames(float qFrames)
-    {
-      int rounded = qFrames.Rounded();
-      if (qFrames.Approximately(rounded))
-      {
-        return new TimeInterval(rounded, areFrames: true);
-      }
-      else
-      {
-        return new TimeInterval((long)(SmoothTicksLastFrame * qFrames));
-      }
-    }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
