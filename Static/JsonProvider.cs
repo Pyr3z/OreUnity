@@ -29,7 +29,12 @@ namespace Ore
     /// </summary>
     NewtonsoftJson,
 
+    #if NEWTONSOFT_JSON && !PREFER_MINIJSON
+    /// <inheritdoc cref="NewtonsoftJson"/>>
+    Default = NewtonsoftJson,
+    #else
     /// <inheritdoc cref="MiniJson"/>>
-    Default = MiniJson
+    Default = MiniJson,
+    #endif
   }
 }
