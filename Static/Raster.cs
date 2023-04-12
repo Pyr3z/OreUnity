@@ -110,13 +110,13 @@ namespace Ore
       {
         get
         {
-          float dx = xinc * (x - sx);
-          float dy = yinc * (y - sy);
+          float ddx = xinc * (x - sx);
+          float ddy = yinc * (y - sy);
 
-          if (dy < dx)
-            return D * (dx - dy) + D2 * dy;
+          if (ddy < ddx)
+            return D * (ddx - ddy) + D2 * ddy;
           else
-            return D * (dy - dx) + D2 * dx;
+            return D * (ddy - ddx) + D2 * ddx;
         }
       }
 
@@ -124,14 +124,15 @@ namespace Ore
       public int Count => ((dx == dy ? dx : dx + dy) / 2 - i + 1).AtLeast(0);
 
 
+      [PublicAPI]
       public int x, y;
 
 
-      private int sx, sy, dx, dy, xinc, yinc, i, error, side;
-      private int xmin, xmax, ymin, ymax;
+      int sx, sy, dx, dy, xinc, yinc, i, error, side;
+      int xmin, xmax, ymin, ymax;
 
-      private const float D  = 1f;
-      private const float D2 = Floats.Sqrt2;
+      const float D  = 1f;
+      const float D2 = Floats.Sqrt2;
 
 
       [PublicAPI]
