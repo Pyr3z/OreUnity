@@ -205,14 +205,15 @@ namespace Ore
       return FindValue(in value) >= 0;
     }
 
-    /// <summary>
-    /// Finds the value mapped to the given key, if it exists in the HashMap.
-    /// </summary>
-    /// <param name="key">A valid key to search for.</param>
-    /// <param name="value">The return parameter containing the found value (if true is returned).</param>
+    /// <param name="key">
+    ///   A valid key to search for.
+    /// </param>
+    /// <param name="value">
+    ///   The return parameter containing the found value (if true is returned).
+    /// </param>
     /// <returns>
-    /// true   if a value was found mapped to the key.
-    /// false  if no value was found.
+    ///   true   if a value was found mapped to the key. <br/>
+    ///   false  if no value was found.
     /// </returns>
     [Pure]
     public bool Find([CanBeNull] in K key, [CanBeNull] out V value)
@@ -244,6 +245,40 @@ namespace Ore
       return false;
     }
 
+    /// <summary>
+    ///   This special version of <see cref="Find"/> uses a ref return value to
+    ///   allow the caller to modify, say, fields of a struct stored by this
+    ///   map.
+    /// </summary>
+    /// <param name="key">
+    ///   The key to find a mapped value for.
+    /// </param>
+    /// <param name="found">
+    ///   If false, the returned reference should not be written to.
+    /// </param>
+    /// <returns>
+    ///   A reference to the value stored in the map. If found is false, this
+    ///   reference will refer to a dummy field initialized with default values,
+    ///   and you are advised to not write to it.
+    /// </returns>
+    ///
+    /// <remarks>
+    ///   This is quite powerful. Be careful how you use it.
+    /// </remarks>
+    ///
+    /// <example>
+    /// <code>
+    ///   map["key"] = Vector2.zero;
+    ///   ref Vector2 value = ref map.FindRef("key", out bool found);
+    ///   if (found)
+    ///   {
+    ///      value.x = 1337f;
+    ///      Assert.AreEqual(1337f, map["key"].x);
+    ///   }
+    /// </code>
+    /// </example>
+    ///
+    /// <seealso href="https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/ref#reference-return-values"/>
     [Pure]
     public ref V FindRef([CanBeNull] in K key, out bool found)
     {
