@@ -22,7 +22,7 @@ namespace Ore
       public K              CurrentKey   => m_Bucket.Key;
       public V              CurrentValue => m_Bucket.Value;
 
-      internal int          CurrentIndex => m_Pos;
+      public ref V CurrentValueRef => ref m_Parent.m_Buckets[m_Pos].Value;
 
 
       KeyValuePair<K,V> IEnumerator<KeyValuePair<K,V>>.Current => new KeyValuePair<K,V>(m_Bucket.Key, m_Bucket.Value);
@@ -36,12 +36,12 @@ namespace Ore
       object IDictionaryEnumerator.Value => m_Bucket.Value;
 
 
-      private HashMap<K,V> m_Parent;
+      HashMap<K,V> m_Parent;
 
       internal Bucket m_Bucket;
 
-      private int m_Pos, m_Count, m_Version;
-      private int m_Unmapped;
+      int m_Pos, m_Count, m_Version;
+      int m_Unmapped;
 
 
       public Enumerator([NotNull] HashMap<K,V> forMap)
@@ -128,7 +128,7 @@ namespace Ore
       }
 
 
-      private void CheckModified()
+      void CheckModified()
       {
         if (m_Parent.m_Version != m_Version)
         {
@@ -136,7 +136,7 @@ namespace Ore
         }
       }
 
-      private void ProcessChangedBuckets()
+      void ProcessChangedBuckets()
       {
         if (m_Parent is null)
           return;
