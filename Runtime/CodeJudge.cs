@@ -150,7 +150,7 @@ namespace Ore
       if (line < 0)
       {
         ref var kase = ref s_AllCases.FindRef(identifier, out bool found);
-        if (OAssert.Fails(found))
+        if (!found)
           return;
 
         kase.OnGUILine = line = s_OnGUILine++;
