@@ -41,25 +41,25 @@ namespace Ore
         return;
 
       m_Watch.Stop();
-      if (s_AllCases.Find(m_Identifier, out var kase) && kase != null)
-      {
-        double dev = kase.Time / kase.Count;
-        double elapsed = m_Watch.ElapsedTicks;
-        dev -= elapsed;
-        dev *= dev;
 
+      double elapsed = m_Watch.ElapsedTicks;
+
+      ref var kase = ref s_AllCases.FindRef(m_Identifier, out bool found);
+      if (found)
+      {
+        double deviatn = kase.Time / kase.Count - elapsed;
         kase.Time += (long)elapsed;
         ++ kase.Count;
-        kase.Deviations += dev;
+        kase.Deviations += deviatn * deviatn;
       }
       else
       {
         s_AllCases.Map(m_Identifier, new Case
         {
-          Time = m_Watch.ElapsedTicks,
-          Count = 1,
+          Time       = elapsed,
+          Count      = 1,
           Deviations = 0,
-          OnGUILine = -1
+          OnGUILine  = -1
         });
       }
 
@@ -73,28 +73,17 @@ namespace Ore
 
     public static long GetCount([NotNull] string identifier)
     {
-      if (s_AllCases.Find(identifier, out Case kase) && kase != null)
-      {
-        return kase.Count;
-      }
-
-      return 0L;
+      _ = s_AllCases.Find(identifier, out Case kase);
+      return kase.Count;
     }
 
     public static void Report([NotNull] string identifier, out TimeInterval totalTime,
                                                            out long callCount)
     {
-      totalTime = default;
-      callCount = 0;
+      _ = s_AllCases.Find(identifier, out var kase);
 
-      if (!s_AllCases.Find(identifier, out var kase))
-        return;
-
-      if (kase != null)
-      {
-        totalTime.Ticks = (long)(kase.Time + 0.5);
-        callCount = kase.Count;
-      }
+      totalTime = new TimeInterval((long)(kase.Time + 0.5));
+      callCount = kase.Count;
     }
 
     public static void Report([NotNull] string identifier, out double totalTime,
@@ -109,14 +98,19 @@ namespace Ore
       variance  =  0;
       guiLine   = -1;
 
-      if (!s_AllCases.Find(identifier, out var kase) || kase is null)
+      if (!s_AllCases.Find(identifier, out var kase))
         return;
 
       totalTime = kase.Time;
       callCount = kase.Count;
-      average   = kase.Time / callCount;
-      variance  = kase.Deviations / callCount;
-      guiLine   = kase.OnGUILine;
+
+      if (callCount > 0)
+      {
+        average  = kase.Time / callCount;
+        variance = kase.Deviations / callCount;
+      }
+
+      guiLine = kase.OnGUILine;
     }
 
     public static void ReportJson([NotNull] string identifier, out string json, TimeInterval.Units units = TimeInterval.Units.Milliseconds)
@@ -155,12 +149,11 @@ namespace Ore
 
       if (line < 0)
       {
-        var kase = s_AllCases[identifier];
+        ref var kase = ref s_AllCases.FindRef(identifier, out bool found);
+        if (OAssert.Fails(found))
+          return;
 
-        OAssert.NotNull(kase);
-
-        // ReSharper disable once PossibleNullReferenceException
-        line = kase.OnGUILine = s_OnGUILine++;
+        kase.OnGUILine = line = s_OnGUILine++;
       }
 
       var total = new TimeInterval((long)(ticks + 0.5));
@@ -195,14 +188,9 @@ namespace Ore
 
     public static void Reset([NotNull] string identifier)
     {
-      if (s_AllCases.Find(identifier, out Case kase))
+      ref var kase = ref s_AllCases.FindRef(identifier, out bool found);
+      if (found)
       {
-        if (kase is null)
-        {
-          s_AllCases.Unmap(identifier);
-          return;
-        }
-
         kase.Time = 0;
         kase.Count = 0;
         kase.Deviations = 0;
@@ -214,9 +202,12 @@ namespace Ore
       if (s_AllCases.Pop(identifier, out Case pop) && pop.OnGUILine > -1)
       {
         // TODO hack less
-        foreach (var kase in s_AllCases.Values)
+        using (var iter = s_AllCases.GetEnumerator())
         {
-          kase.OnGUILine = -1;
+          while (iter.MoveNext())
+          {
+            iter.CurrentValueRef.OnGUILine = -1;
+          }
         }
 
         s_OnGUILine = 0;
@@ -230,7 +221,7 @@ namespace Ore
     }
 
 
-    class Case
+    struct Case
     {
       public double Time;
       public long   Count;
