@@ -13,24 +13,11 @@ namespace Ore
   [PublicAPI]
   public struct CodeJudge : System.IDisposable
   {
-    public CodeJudge([NotNull] string identifier)
+    public CodeJudge([NotNull] string identifier, uint increment = 1u)
     {
       m_Identifier = identifier;
+      m_Increment  = increment;
       m_StartTicks = System.DateTime.UtcNow.Ticks;
-    }
-
-    public CodeJudge([NotNull] string identifier, int maxCount)
-    {
-      if (GetCount(identifier) >= maxCount)
-      {
-        m_Identifier = null;
-        m_StartTicks = 0;
-      }
-      else
-      {
-        m_Identifier = identifier;
-        m_StartTicks = System.DateTime.UtcNow.Ticks;
-      }
     }
 
     public void Dispose()
@@ -41,11 +28,12 @@ namespace Ore
       long elapsed = System.DateTime.UtcNow.Ticks - m_StartTicks;
 
       ref var kase = ref s_AllCases.FindRef(m_Identifier, out bool found);
-      if (found && kase.Count > 0)
+
+      if (found)
       {
-        double deviatn = kase.Time / kase.Count - elapsed;
-        kase.Time += elapsed;
-        ++ kase.Count;
+        double deviatn = kase.Count == 0 ? 0 : kase.Time / kase.Count - elapsed;
+        kase.Time       += elapsed;
+        kase.Count      += m_Increment;
         kase.Deviations += deviatn * deviatn;
       }
       else
@@ -53,7 +41,7 @@ namespace Ore
         s_AllCases.Map(m_Identifier, new Case
         {
           Time       = elapsed,
-          Count      = 1,
+          Count      = m_Increment,
           Deviations = 0,
           OnGUILine  = -1
         });
@@ -63,7 +51,8 @@ namespace Ore
     }
 
 
-           string m_Identifier;
+    string        m_Identifier;
+    readonly uint m_Increment;
     readonly long m_StartTicks;
 
 
