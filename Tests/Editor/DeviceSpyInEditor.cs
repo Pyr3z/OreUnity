@@ -41,7 +41,7 @@ internal static class DeviceSpyInEditor
 
     Assert.True(Parsing.TryParseTimezoneOffset(isoStr, out TimeSpan parsed), "TryParseTimezoneOffset(isoStr, out parsed)");
 
-    var expected = System.TimeZoneInfo.Local.BaseUtcOffset;
+    var expected = System.TimeZoneInfo.Local.GetUtcOffset(DateTimes.Today);
 
     Assert.AreEqual(expected, parsed, $"{expected:g} == {parsed:g} == \"{isoStr}\"");
   }
