@@ -8,7 +8,6 @@ using Ore;
 using NUnit.Framework;
 
 using UnityEngine;
-using UnityEngine.TestTools;
 
 using System.Collections;
 using System.Collections.Generic;
@@ -95,15 +94,21 @@ internal static class JsonAuthorityInEditor
 
 
   [Test]
-  public static void Serialize()
+  public static void Serialize([Values(true, false)] bool pretty)
   {
-    Debug.Log($"JsonAuthority.Provider: {JsonAuthority.Provider}");
-
-    foreach (var (expected, test) in s_TestJsons)
+    using (new JsonAuthority.Scope(pretty))
     {
-      string json = JsonAuthority.Serialize(test);
+      Assert.AreEqual(JsonAuthority.PrettyPrint, pretty, "pretty");
 
-      AssertAreEqual(expected, json);
+      Debug.Log($"JsonAuthority.PrettyPrint: {pretty}");
+      Debug.Log($"JsonAuthority.Provider: {JsonAuthority.Provider}");
+
+      foreach (var (expected, test) in s_TestJsons)
+      {
+        string json = JsonAuthority.Serialize(test);
+
+        AssertAreEqual(expected, json);
+      }
     }
   }
 
@@ -137,11 +142,11 @@ internal static class JsonAuthorityInEditor
   [Test]
   public static void MiniJsonSerialize([Values(true, false)] bool pretty)
   {
-    using (new JsonAuthority.Scope(JsonProvider.MiniJson, pretty))
+    using (new JsonAuthority.Scope(JsonProvider.MiniJson))
     {
       Assert.AreEqual(JsonProvider.MiniJson, JsonAuthority.Provider);
 
-      Serialize();
+      Serialize(pretty);
     }
   }
 
@@ -157,11 +162,40 @@ internal static class JsonAuthorityInEditor
   }
 
 
+  [Test]
+  public static void NewtonsoftJsonSerialize([Values(true, false)] bool pretty)
+  {
+    using (new JsonAuthority.Scope(JsonProvider.NewtonsoftJson, pretty))
+    {
+      Assert.AreEqual(JsonProvider.NewtonsoftJson, JsonAuthority.Provider);
+      Assert.AreEqual(pretty, JsonAuthority.PrettyPrint);
+
+      #if NEWTONSOFT_JSON
+      Assert.AreEqual(pretty ? Formatting.Indented : Formatting.None,
+                      NewtonsoftAuthority.SerializerSettings.Formatting,
+                      "SerializerSettings.Formatting");
+      #endif
+
+      Serialize(pretty);
+    }
+  }
+
+  [Test]
+  public static void NewtonsoftJsonDeserialize()
+  {
+    using (new JsonAuthority.Scope(JsonProvider.NewtonsoftJson))
+    {
+      Assert.AreEqual(JsonProvider.NewtonsoftJson, JsonAuthority.Provider);
+
+      Deserialize();
+    }
+  }
+
 
 #if NEWTONSOFT_JSON
 
   [Test]
-  public static void NewtonsoftJsonFromObject()
+  public static void NsoftMiscJsonFromMap()
   {
     var map = new HashMap<object,object>
     {
@@ -194,7 +228,7 @@ internal static class JsonAuthorityInEditor
   }
 
   [Test]
-  public static void NewtonsoftJsonToObject()
+  public static void NsoftMiscJsonToObject()
   {
     string jObj = @"{
     ""fef"": ""fef!"",
@@ -210,7 +244,7 @@ internal static class JsonAuthorityInEditor
   }
 
   [Test]
-  public static void NewtonsoftJsonSerialize()
+  public static void NsoftMiscJsonSerialize()
   {
     var serializer = JsonSerializer.CreateDefault();
     var sbob = new System.Text.StringBuilder(2048);
