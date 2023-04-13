@@ -15,6 +15,7 @@ using System.Text;
 using JsonObj = System.Collections.Generic.Dictionary<string,object>;
 using JsonArr = System.Collections.Generic.List<object>;
 
+using Type = System.Type;
 using TypeCode = System.TypeCode;
 using SerializeField = UnityEngine.SerializeField;
 using NonSerialized = System.NonSerializedAttribute;
@@ -36,18 +37,64 @@ namespace Ore
     /// <param name="json">
     ///   The JSON string to parse.
     /// </param>
+    /// <param name="type">
+    ///   Optionally provide a runtime type to try and construct & deserialize the
+    ///   json onto. WARNING: supplying this parameter means you agree to the
+    ///   reflection overhead. Other deserializers <i>also</i> use reflection;
+    ///   I'm just giving you fair warning.
+    /// </param>
     /// <returns>
-    ///   A List&lt;object&gt;, a Dictionary&lt;string, object&gt;, a double, an
-    ///   integer,a string, null, true, or false
+    ///   If a type was provided, returns an object of that type, the type itself
+    ///   (if it represents a static class), or null. <br/> <br/>
+    ///   Otherwise, any of the standard JSON types. That is, a <see cref="JsonArr"/>,
+    ///   a <see cref="JsonObj"/>, a double, a long, a bool, a string, or null.
     /// </returns>
-    [PublicAPI] [CanBeNull]
-    public static object Deserialize([CanBeNull] string json)
+    [CanBeNull]
+    public static object Deserialize([CanBeNull] string json, Type type = null)
     {
-      return RecursiveParser.Parse(json);
+      return RecursiveParser.Parse(json, type);
+    }
+
+    public static bool TryDeserialize<T>([CanBeNull] string json, out T obj)
+    {
+      // reflection warning!
+      var parsed = RecursiveParser.Parse(json, typeof(T));
+
+      if (parsed is T casted)
+      {
+        obj = casted;
+        return true;
+      }
+
+      obj = default;
+      return false;
+    }
+
+    public static bool TryDeserializeOverwrite<T>([CanBeNull] string json, [CanBeNull] ref T obj)
+      where T : new()
+    {
+      // reflection warning!
+      if (!TryDeserialize(json, out JsonObj dict))
+        return false;
+
+      if (obj is null)
+        obj = new T();
+
+      foreach (var field in typeof(T).GetFields(TypeMembers.INSTANCE))
+      {
+        // TODO bother checking if fields should be skipped?
+        if (dict.TryGetValue(field.Name, out object value))
+        {
+          field.SetValue(obj, value);
+        }
+      }
+
+      return true;
     }
 
     /// <summary>
-    ///   Converts a IDictionary / IList object or a simple type (string, int, etc.) into a JSON string
+    ///   Converts an IDictionary / IList object or a simple type (string, int,
+    ///   etc.) into a JSON string
     /// </summary>
     /// <param name="obj">
     ///   A Dictionary&lt;string, object&gt; / List&lt;object&gt;
@@ -58,7 +105,7 @@ namespace Ore
     /// <returns>
     ///   A JSON encoded string, or null if object 'json' is not serializable
     /// </returns>
-    [PublicAPI] [CanBeNull]
+    [CanBeNull]
     public static string Serialize([CanBeNull] object obj, bool pretty = EditorBridge.IS_DEBUG)
     {
       return RecursiveSerializer.ToJson(obj, pretty);
@@ -69,14 +116,14 @@ namespace Ore
 
     struct RecursiveParser : System.IDisposable
     {
-      public static object Parse(string jsonString)
+      public static object Parse(string jsonString, Type type)
       {
         if (jsonString.IsEmpty())
           return jsonString;
 
-        using (var instance = new RecursiveParser(jsonString))
+        using (var instance = new RecursiveParser(jsonString, type))
         {
-          return instance.ParseValue();
+          return instance.ParseByToken(instance.NextToken);
         }
       }
 
@@ -105,17 +152,20 @@ namespace Ore
 
 
       StringReader m_Stream;
+      Type         m_Type;
 
 
-      RecursiveParser(string jsonString)
+      RecursiveParser(string jsonString, Type type)
       {
         m_Stream = new StringReader(jsonString);
+        m_Type   = type;
       }
 
       void System.IDisposable.Dispose()
       {
         m_Stream.Dispose();
         m_Stream = null;
+        m_Type   = null;
       }
 
       JsonObj ParseObject()
@@ -150,7 +200,7 @@ namespace Ore
               m_Stream.Read();
 
               // value
-              jobj[name] = ParseValue();
+              jobj[name] = ParseByToken(NextToken);
               continue;
           }
         }
@@ -181,11 +231,6 @@ namespace Ore
               break;
           }
         }
-      }
-
-      object ParseValue()
-      {
-        return ParseByToken(NextToken);
       }
 
       object ParseByToken(TOKEN token)
@@ -503,7 +548,7 @@ namespace Ore
         s_Builder.Append('}');
       }
 
-      static void SerializeFields(object obj, System.Type type, bool nonPublic)
+      static void SerializeFields(object obj, Type type, bool nonPublic)
       {
         // reflection warning!
 
@@ -660,7 +705,7 @@ namespace Ore
         // Previously floats and doubles lost precision too.
 
         var type = value.GetType();
-        var code = System.Type.GetTypeCode(type);
+        var code = Type.GetTypeCode(type);
 
         switch (code)
         {
@@ -708,7 +753,7 @@ namespace Ore
             {
               SerializeString(sver.ToString());
             }
-            else if (value is System.Type ztatic)
+            else if (value is Type ztatic)
             {
               SerializeFields(null, ztatic, nonPublic: false);
             }
