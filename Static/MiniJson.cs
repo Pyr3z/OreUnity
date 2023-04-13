@@ -212,13 +212,13 @@ namespace Ore
 
       string ParseString()
       {
-        var builder = new StringBuilder();
-
         // ditch opening quote
         m_Stream.Read();
 
-        while (true)
+        using (new RecycledStringBuilder(out var builder))
         {
+          loop:
+
           if (m_Stream.Peek() == -1)
             return builder.ToString();
 
@@ -267,13 +267,15 @@ namespace Ore
 
                   builder.Append((char)System.Convert.ToInt32(new string(hex), 16));
                   break;
-              }
+              } // end inner switch
               break;
 
             default:
               builder.Append(c);
               break;
-          }
+          } // end outer switch
+
+          goto loop;
         }
       }
 
@@ -310,17 +312,18 @@ namespace Ore
       {
         get
         {
-          var word = new StringBuilder();
-
-          while (!IsWordBreak(PeekChar))
+          using (new RecycledStringBuilder(out var word))
           {
-            word.Append(NextChar);
+            while (!IsWordBreak(PeekChar))
+            {
+              word.Append(NextChar);
 
-            if (m_Stream.Peek() == -1)
-              break;
+              if (m_Stream.Peek() == -1)
+                break;
+            }
+
+            return word.ToString();
           }
-
-          return word.ToString();
         }
       }
 
