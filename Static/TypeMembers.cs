@@ -76,11 +76,13 @@ namespace Ore
 
     public static bool IsArrayOrList([NotNull] this Type type)
     {
+      // TODO migrate
       return type.IsArray || ( type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) );
     }
 
     public static bool IsUnityStruct([NotNull] this Type type)
     {
+      // TODO migrate
       while (IsArrayOrList(type))
       {
         type = type.IsArray ? type.GetElementType() : type.GetGenericArguments()[0];
@@ -89,6 +91,32 @@ namespace Ore
       }
 
       return type.IsValueType && ( type.Namespace?.StartsWith("Unity") ?? false );
+    }
+
+    public static bool HasDefaultConstructor([NotNull] this Type type)
+    {
+      // TODO migrate
+      return type.IsValueType || type.GetConstructor(Type.EmptyTypes) != null;
+    }
+
+
+    public static object ConstructDefault([NotNull] this Type type)
+    {
+      // TODO migrate
+      if (type == typeof(string))
+        return string.Empty;
+
+      if (typeof(Object).IsAssignableFrom(type))
+      {
+        return null;
+      }
+
+      if (HasDefaultConstructor(type))
+      {
+        return System.Activator.CreateInstance(type);
+      }
+
+      return null;
     }
 
 
