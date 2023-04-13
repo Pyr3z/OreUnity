@@ -69,7 +69,7 @@ namespace Ore
       if (parsed is JsonObj jobj)
       {
         // reflection warning!
-        ReflectFields(type, jobj, ref obj);
+        _ = ReflectFields(type, jobj, ref obj);
       }
 
       return obj;
@@ -106,15 +106,7 @@ namespace Ore
         else
         {
           // reflection warning!
-          try
-          {
-            ReflectFields(typeof(T), jobj, ref obj);
-          }
-          catch (System.Exception ex)
-          {
-            Orator.NFE(ex);
-            return false;
-          }
+          return ReflectFields(typeof(T), jobj, ref obj);
         }
 
         return true;
@@ -141,13 +133,8 @@ namespace Ore
 
     public static bool TryDeserializeOverwrite<T>([CanBeNull] string json, [NotNull] ref T obj)
     {
-      if (!TryDeserialize(json, out JsonObj jobj))
-        return false;
-
       // reflection warning!
-      ReflectFields(typeof(T), jobj, ref obj);
-
-      return true;
+      return TryDeserialize(json, out JsonObj jobj) && ReflectFields(typeof(T), jobj, ref obj);
     }
 
     /// <summary>
@@ -174,15 +161,25 @@ namespace Ore
     // beyond = impl: 
     //
 
-    static void ReflectFields<T>(Type type, JsonObj data, ref T target)
+    static bool ReflectFields<T>(Type type, JsonObj data, ref T target)
     {
-      foreach (var field in type.GetFields(TypeMembers.INSTANCE))
+      try
       {
-        // TODO bother checking if fields should be skipped?
-        if (data.TryGetValue(field.Name, out object value))
+        foreach (var field in type.GetFields(TypeMembers.INSTANCE))
         {
-          field.SetValue(target, value);
+          // TODO bother checking if fields should be skipped?
+          if (data.TryGetValue(field.Name, out object value))
+          {
+            field.SetValue(target, value);
+          }
         }
+
+        return true;
+      }
+      catch (System.Exception ex)
+      {
+        Orator.NFE(ex);
+        return false;
       }
     }
 
