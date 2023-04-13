@@ -8,12 +8,10 @@
 using JetBrains.Annotations;
 
 using System.Collections;
+using System.Collections.Generic;
 
 using System.IO;
 using System.Text;
-
-using JsonObj = System.Collections.Generic.Dictionary<string,object>;
-using JsonArr = System.Collections.Generic.List<object>;
 
 using Type = System.Type;
 using TypeCode = System.TypeCode;
@@ -23,6 +21,10 @@ using NonSerialized = System.NonSerializedAttribute;
 
 namespace Ore
 {
+  using JsonObj = Dictionary<string,object>;
+  using JsonArr = List<object>;
+
+
   /// <summary>
   ///   This class encodes and decodes JSON strings. <br/> <br/>
   ///
@@ -41,7 +43,8 @@ namespace Ore
     ///   Optionally provide a runtime type to try and construct & deserialize the
     ///   json onto. WARNING: supplying this parameter means you agree to the
     ///   reflection overhead. Other deserializers <i>also</i> use reflection;
-    ///   I'm just giving you fair warning.
+    ///   I'm just giving you fair warning. <br/> <br/>
+    ///   Oh, and the type must be default constructible.
     /// </param>
     /// <returns>
     ///   If a type was provided, returns an object of that type, the type itself
@@ -50,15 +53,38 @@ namespace Ore
     ///   a <see cref="JsonObj"/>, a double, a long, a bool, a string, or null.
     /// </returns>
     [CanBeNull]
-    public static object Deserialize([CanBeNull] string json, Type type = null)
+    public static object Deserialize([CanBeNull] string json, Type type)
     {
-      return RecursiveParser.Parse(json, type);
+      var parsed = RecursiveParser.Parse(json);
+      if (type is null)
+        return parsed;
+
+      var obj = type.ConstructDefault();
+      if (obj is null)
+      {
+        Orator.Warn(type, "Given type is not default constructible!");
+        return parsed;
+      }
+
+      if (parsed is JsonObj jobj)
+      {
+        // reflection warning!
+        ReflectFields(type, jobj, ref obj);
+      }
+
+      return obj;
+    }
+
+    /// <inheritdoc cref="Deserialize(string,System.Type)"/>
+    public static object Deserialize([CanBeNull] string json)
+    {
+      return RecursiveParser.Parse(json);
     }
 
     public static bool TryDeserialize<T>([CanBeNull] string json, out T obj)
+      where T : new()
     {
-      // reflection warning!
-      var parsed = RecursiveParser.Parse(json, typeof(T));
+      var parsed = RecursiveParser.Parse(json);
 
       if (parsed is T casted)
       {
@@ -66,28 +92,60 @@ namespace Ore
         return true;
       }
 
+      if (parsed is JsonObj jobj)
+      {
+        obj = new T();
+
+        if (obj is IDictionary<string,object> dict)
+        {
+          foreach (var kvp in jobj)
+          {
+            dict.Add(kvp);
+          }
+        }
+        else
+        {
+          // reflection warning!
+          try
+          {
+            ReflectFields(typeof(T), jobj, ref obj);
+          }
+          catch (System.Exception ex)
+          {
+            Orator.NFE(ex);
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      if (parsed is JsonArr jarr && typeof(IList).IsAssignableFrom(typeof(T)))
+      {
+        obj = new T();
+
+        if (!(obj is IList list))
+          return false;
+
+        foreach (var item in jarr)
+        {
+          list.Add(item);
+        }
+
+        return true;
+      }
+
       obj = default;
       return false;
     }
 
-    public static bool TryDeserializeOverwrite<T>([CanBeNull] string json, [CanBeNull] ref T obj)
-      where T : new()
+    public static bool TryDeserializeOverwrite<T>([CanBeNull] string json, [NotNull] ref T obj)
     {
-      // reflection warning!
-      if (!TryDeserialize(json, out JsonObj dict))
+      if (!TryDeserialize(json, out JsonObj jobj))
         return false;
 
-      if (obj is null)
-        obj = new T();
-
-      foreach (var field in typeof(T).GetFields(TypeMembers.INSTANCE))
-      {
-        // TODO bother checking if fields should be skipped?
-        if (dict.TryGetValue(field.Name, out object value))
-        {
-          field.SetValue(obj, value);
-        }
-      }
+      // reflection warning!
+      ReflectFields(typeof(T), jobj, ref obj);
 
       return true;
     }
@@ -112,16 +170,31 @@ namespace Ore
     }
 
 
+    //
     // beyond = impl: 
+    //
+
+    static void ReflectFields<T>(Type type, JsonObj data, ref T target)
+    {
+      foreach (var field in type.GetFields(TypeMembers.INSTANCE))
+      {
+        // TODO bother checking if fields should be skipped?
+        if (data.TryGetValue(field.Name, out object value))
+        {
+          field.SetValue(target, value);
+        }
+      }
+    }
+
 
     struct RecursiveParser : System.IDisposable
     {
-      public static object Parse(string jsonString, Type type)
+      public static object Parse(string jsonString)
       {
         if (jsonString.IsEmpty())
           return jsonString;
 
-        using (var instance = new RecursiveParser(jsonString, type))
+        using (var instance = new RecursiveParser(jsonString))
         {
           return instance.ParseByToken(instance.NextToken);
         }
@@ -152,20 +225,17 @@ namespace Ore
 
 
       StringReader m_Stream;
-      Type         m_Type;
 
 
-      RecursiveParser(string jsonString, Type type)
+      RecursiveParser(string jsonString)
       {
         m_Stream = new StringReader(jsonString);
-        m_Type   = type;
       }
 
       void System.IDisposable.Dispose()
       {
         m_Stream.Dispose();
         m_Stream = null;
-        m_Type   = null;
       }
 
       JsonObj ParseObject()
