@@ -59,6 +59,7 @@ internal static class JsonAuthorityInEditor
       {
         Assert.True(jobj.TryGetValue(kvp.Key, out var exp), $"(did not contain kvp: {kvp})");
 
+        // regrettable recursion
         AssertAreEqual(exp, kvp.Value, message);
 
         -- countdown;
@@ -82,6 +83,10 @@ internal static class JsonAuthorityInEditor
 
       Assert.Zero(countdown, message);
     }
+    else if (expected is string str)
+    {
+      Assert.True(Strings.AreEqual(str, actual as string, Strings.WHITESPACES), message);
+    }
     else
     {
       Assert.AreEqual(expected, actual, message);
@@ -92,7 +97,14 @@ internal static class JsonAuthorityInEditor
   [Test]
   public static void Serialize()
   {
-    Assert.Inconclusive("test not implemented.");
+    Debug.Log($"JsonAuthority.Provider: {JsonAuthority.Provider}");
+
+    foreach (var (expected, test) in s_TestJsons)
+    {
+      string json = JsonAuthority.Serialize(test);
+
+      AssertAreEqual(expected, json);
+    }
   }
 
   [Test]
@@ -123,9 +135,9 @@ internal static class JsonAuthorityInEditor
 
 
   [Test]
-  public static void MiniJsonSerialize()
+  public static void MiniJsonSerialize([Values(true, false)] bool pretty)
   {
-    using (new JsonAuthority.ProviderScope(JsonProvider.MiniJson))
+    using (new JsonAuthority.Scope(JsonProvider.MiniJson, pretty))
     {
       Assert.AreEqual(JsonProvider.MiniJson, JsonAuthority.Provider);
 
@@ -136,7 +148,7 @@ internal static class JsonAuthorityInEditor
   [Test]
   public static void MiniJsonDeserialize()
   {
-    using (new JsonAuthority.ProviderScope(JsonProvider.MiniJson))
+    using (new JsonAuthority.Scope(JsonProvider.MiniJson))
     {
       Assert.AreEqual(JsonProvider.MiniJson, JsonAuthority.Provider);
 
