@@ -15,6 +15,10 @@ using System.Text;
 using JsonObj = System.Collections.Generic.Dictionary<string,object>;
 using JsonArr = System.Collections.Generic.List<object>;
 
+using TypeCode = System.TypeCode;
+using SerializeField = UnityEngine.SerializeField;
+using NonSerialized = System.NonSerializedAttribute;
+
 
 namespace Ore
 {
@@ -48,13 +52,16 @@ namespace Ore
     /// <param name="obj">
     ///   A Dictionary&lt;string, object&gt; / List&lt;object&gt;
     /// </param>
+    /// <param name="pretty">
+    ///   Pretty print the JSON.
+    /// </param>
     /// <returns>
     ///   A JSON encoded string, or null if object 'json' is not serializable
     /// </returns>
     [PublicAPI] [CanBeNull]
-    public static string Serialize([CanBeNull] object obj)
+    public static string Serialize([CanBeNull] object obj, bool pretty = EditorBridge.IS_DEBUG)
     {
-      return Serializer.ToJson(obj);
+      return RecursiveSerializer.ToJson(obj, pretty);
     }
 
 
@@ -376,15 +383,42 @@ namespace Ore
     } // end nested class RecursiveParser
 
 
-    static class Serializer
+    static class RecursiveSerializer
     {
-      
+      const int INDENT = 2;
       const int BUILDER_INIT_CAP = 256;
+
       static readonly StringBuilder s_Builder = new StringBuilder(BUILDER_INIT_CAP);
 
-      public static string ToJson(object obj)
+      static bool   s_Pretty;
+      static int    s_Indent;
+      static string s_OpenObj;
+      static string s_OpenArr;
+      static string s_Comma;
+      static string s_Colon;
+
+
+      public static string ToJson(object obj, bool pretty)
       {
         s_Builder.Clear();
+
+        // ReSharper disable once AssignmentInConditionalExpression
+        if (s_Pretty = pretty)
+        {
+          s_OpenObj = "{\n";
+          s_OpenArr = "[\n";
+          s_Comma   = ",\n";
+          s_Colon   = ": ";
+        }
+        else
+        {
+          s_OpenObj = "{";
+          s_OpenArr = "[";
+          s_Comma   = ",";
+          s_Colon   = ":";
+        }
+
+        s_Indent = 0;
 
         SerializeValue(obj);
 
@@ -427,28 +461,110 @@ namespace Ore
 
       static void SerializeObject(IDictionary dict)
       {
-        s_Builder.Append('{');
+        s_Indent += INDENT;
+
+        int indent = s_Pretty ? s_Indent : 0;
+
+        s_Builder.Append(s_OpenObj);
 
         bool first = true;
 
         var iter = dict.GetEnumerator();
         while (iter.MoveNext())
         {
-          #if UNITY_ASSERTIONS
-          OAssert.NotNull(iter.Key);
-          #endif
+          if (iter.Key is null)
+            continue;
 
           if (!first)
-            s_Builder.Append(',');
+            s_Builder.Append(s_Comma);
 
           first = false;
 
-          // ReSharper disable once PossibleNullReferenceException
+          s_Builder.Append(' ', indent);
+
           SerializeString(iter.Key.ToString());
 
-          s_Builder.Append(':');
+          s_Builder.Append(s_Colon);
 
           SerializeValue(iter.Value);
+        }
+
+        s_Indent -= INDENT;
+
+        if (s_Pretty)
+        {
+          s_Builder.Append('\n')
+                   .Append(' ', s_Indent);
+        }
+
+        s_Builder.Append('}');
+      }
+
+      static void SerializeFields(object obj, System.Type type, bool nonPublic)
+      {
+        // reflection warning!
+
+        s_Indent += INDENT;
+
+        int indent = s_Pretty ? s_Indent : 0;
+
+        s_Builder.Append(s_OpenObj);
+
+        bool first = true;
+
+        var flags = obj is null ? TypeMembers.STATIC : TypeMembers.INSTANCE;
+
+        foreach (var field in type.GetFields(flags))
+        {
+          if (field.IsNotSerialized || ( !nonPublic && !field.IsPublic && !field.IsDefined<SerializeField>() ))
+            continue;
+
+          if (!first)
+            s_Builder.Append(s_Comma);
+
+          first = false;
+
+          s_Builder.Append(' ', indent);
+
+          SerializeString(field.Name);
+
+          s_Builder.Append(s_Colon);
+
+          SerializeValue(field.GetValue(obj));
+        }
+
+        if (obj is null)
+        {
+          foreach (var prop in type.GetProperties(flags))
+          {
+            if (prop.IsDefined<NonSerialized>())
+              continue;
+
+            var getter = prop.GetGetMethod(nonPublic);
+            if (getter is null || getter.IsDefined<NonSerialized>())
+              continue;
+
+            if (!first)
+              s_Builder.Append(s_Comma);
+
+            first = false;
+
+            s_Builder.Append(' ', indent);
+
+            SerializeString(prop.Name);
+
+            s_Builder.Append(s_Colon);
+
+            SerializeValue(getter.Invoke(null, System.Array.Empty<object>()));
+          }
+        }
+
+        s_Indent -= INDENT;
+
+        if (s_Pretty)
+        {
+          s_Builder.Append('\n')
+                   .Append(' ', s_Indent);
         }
 
         s_Builder.Append('}');
@@ -456,18 +572,32 @@ namespace Ore
 
       static void SerializeArray(IEnumerable array)
       {
-        s_Builder.Append('[');
+        s_Indent += INDENT;
+
+        int indent = s_Pretty ? s_Indent : 0;
+
+        s_Builder.Append(s_OpenArr);
 
         bool first = true;
 
         foreach (object obj in array)
         {
           if (!first)
-            s_Builder.Append(',');
-
-          SerializeValue(obj);
+            s_Builder.Append(s_Comma);
 
           first = false;
+
+          s_Builder.Append(' ', indent);
+
+          SerializeValue(obj);
+        }
+
+        s_Indent -= INDENT;
+
+        if (s_Pretty)
+        {
+          s_Builder.Append('\n')
+                   .Append(' ', s_Indent);
         }
 
         s_Builder.Append(']');
@@ -532,39 +662,70 @@ namespace Ore
         switch (code)
         {
           default:
-          case System.TypeCode.String:
+          case TypeCode.String:
             SerializeString(value.ToString());
             break;
 
-          case System.TypeCode.Single:
-          case System.TypeCode.Double:
-          case System.TypeCode.Decimal:
-            s_Builder.Append(System.Convert.ToDouble(value).ToString("R"));
+          case TypeCode.Single:
+          case TypeCode.Double:
+          case TypeCode.Decimal:
+            s_Builder.Append(System.Convert.ToDouble(value).ToString("R", Strings.InvariantFormatter));
             break;
 
-          case System.TypeCode.Int32:
-          case System.TypeCode.Int64:
-          case System.TypeCode.UInt32:
-          case System.TypeCode.UInt64:
-          case System.TypeCode.Int16:
-          case System.TypeCode.UInt16:
-          case System.TypeCode.Byte:
-          case System.TypeCode.SByte:
-            s_Builder.Append(value);
+          case TypeCode.Int32:
+          case TypeCode.Int64:
+          case TypeCode.UInt32:
+          case TypeCode.UInt64:
+          case TypeCode.Int16:
+          case TypeCode.UInt16:
+          case TypeCode.Byte:
+          case TypeCode.SByte:
+            string str = ((System.IConvertible)value).ToInvariant();
+            if (type.IsEnum)
+              SerializeString(str);
+            else
+              s_Builder.Append(str);
             break;
 
-          case System.TypeCode.DateTime:
+          case TypeCode.DateTime:
             s_Builder.Append(((System.DateTime)value).ToUniversalTime().ToISO8601());
             break;
 
-          case System.TypeCode.Empty:
-          case System.TypeCode.DBNull:
+          case TypeCode.Empty:
+          case TypeCode.DBNull:
             s_Builder.Append("null");
+            break;
+
+          case TypeCode.Object:
+            if (value is System.TimeSpan span)
+            {
+              s_Builder.Append(span.Ticks.ToInvariant());
+            }
+            else if (value is SerialVersion sver)
+            {
+              SerializeString(sver.ToString());
+            }
+            else if (value is System.Type ztatic)
+            {
+              SerializeFields(null, ztatic, nonPublic: false);
+            }
+            else if (type.IsSerializable)
+            {
+              SerializeFields(value, type, nonPublic: false);
+            }
+            else if (type.IsValueType)
+            {
+              SerializeFields(value, type, nonPublic: true);
+            }
+            else
+            {
+              SerializeString(value.ToString());
+            }
             break;
         }
       }
 
-    } // end nested class Serializer
+    } // end nested class RecursiveSerializer
 
   } // end static class MiniJson
 
