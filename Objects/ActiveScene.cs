@@ -8,13 +8,14 @@
 
 // ReSharper disable HeapView.DelegateAllocation
 
+using System;
 using System.Collections;
 
 using JetBrains.Annotations;
 
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
+using Object = UnityEngine.Object;
 using UnityAction = UnityEngine.Events.UnityAction;
 
 
@@ -39,11 +40,33 @@ namespace Ore
       {
         if (Instance)
           Instance.m_OnActiveSceneChanged += value;
+        else
+          s_OnActiveSceneChanged += value;
       }
       remove
       {
         if (Instance)
           Instance.m_OnActiveSceneChanged -= value;
+        else
+          s_OnActiveSceneChanged -= value;
+      }
+    }
+
+    public static event UnityAction OnFixedUpdate
+    {
+      add
+      {
+        if (Instance)
+          Instance.m_OnFixedUpdate += value;
+        else
+          s_OnFixedUpdate += value;
+      }
+      remove
+      {
+        if (Instance)
+          Instance.m_OnFixedUpdate -= value;
+        else
+          s_OnFixedUpdate -= value;
       }
     }
 
@@ -65,20 +88,45 @@ namespace Ore
       }
     }
 
+    public static event UnityAction OnLateUpdate
+    {
+      add
+      {
+        if (Instance)
+          Instance.m_OnLateUpdate += value;
+        else
+          s_OnLateUpdate += value;
+      }
+      remove
+      {
+        if (Instance)
+          Instance.m_OnLateUpdate -= value;
+        else
+          s_OnLateUpdate -= value;
+      }
+    }
+
 
   [Header("[ActiveScene]"), Space]
     [SerializeField]
     TimeInterval m_DelayStartCoroutineRunner = TimeInterval.Frame;
+
     [SerializeField]
-    VoidEvent m_OnActiveSceneChanged = new VoidEvent();
+    VoidEvent m_OnActiveSceneChanged = new VoidEvent(true);
+    [SerializeField]
+    VoidEvent m_OnFixedUpdate        = new VoidEvent(true);
+    [SerializeField]
+    VoidEvent m_OnUpdate             = new VoidEvent(true);
+    [SerializeField]
+    VoidEvent m_OnLateUpdate         = new VoidEvent(true);
 
-    [System.NonSerialized] // not yet at least
-    VoidEvent m_OnUpdate;
 
+    static Scene s_ActiveScene;
 
-    static Scene s_ActiveScene; // only the size of an int, so why not?
-
+    static UnityAction s_OnActiveSceneChanged;
+    static UnityAction s_OnFixedUpdate;
     static UnityAction s_OnUpdate;
+    static UnityAction s_OnLateUpdate;
 
     static readonly HashMap<Scene,float> s_SceneBirthdays = new HashMap<Scene,float>();
 
@@ -167,12 +215,20 @@ namespace Ore
       s_Coroutiner = coroutiner;
     }
 
+
+    void FixedUpdate()
+    {
+      m_OnFixedUpdate.Invoke();
+    }
+
     void Update()
     {
-      if (m_OnUpdate is null)
-        return;
-
       m_OnUpdate.Invoke();
+    }
+
+    void LateUpdate()
+    {
+      m_OnLateUpdate.Invoke();
     }
 
 
@@ -220,6 +276,12 @@ namespace Ore
 
       var bud = obj.AddComponent<ActiveScene>();
       bud.m_IsReplaceable = true;
+
+      if (s_OnActiveSceneChanged != null)
+      {
+        bud.m_OnActiveSceneChanged = new VoidEvent(s_OnActiveSceneChanged);
+        s_OnActiveSceneChanged     = null;
+      }
 
       if (s_OnUpdate != null)
       {
