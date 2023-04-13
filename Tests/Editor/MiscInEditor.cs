@@ -184,6 +184,8 @@ internal static class MiscInEditor
     }
 
     Assert.False(Strings.AreEqualIgnoreWhitespace(fef, "bub"));
+    Assert.False(Strings.AreEqualIgnoreWhitespace(fef, "fef1"));
+    Assert.False(Strings.AreEqualIgnoreWhitespace(fef, "fe"));
   }
 
 } // end class MiscInEditor

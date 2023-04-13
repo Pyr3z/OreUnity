@@ -331,14 +331,15 @@ namespace Ore
       int ai = 0, alen = a.Length;
       int bi = 0, blen = b.Length;
 
+      int swapped;
       if (alen > blen)
       {
-        (a,b,alen) = (b,a,blen);
-        blen = -1;
+        (a,b,alen,blen) = (b,a,blen,alen);
+        swapped = -1;
       }
       else
       {
-        blen = +1;
+        swapped = +1;
       }
 
       while (ai < alen)
@@ -354,7 +355,13 @@ namespace Ore
         // ReSharper restore EmptyEmbeddedStatement
 
         if (ac != bc)
-          return (ac - bc) * blen;
+          return (ac - bc) * swapped;
+      }
+
+      while (bi < blen)
+      {
+        if (!ignoreChar(b[bi++]))
+          return -1 * swapped;
       }
 
       return 0;
