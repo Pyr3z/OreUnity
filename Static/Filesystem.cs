@@ -41,64 +41,33 @@ namespace Ore
 
   #region FUNDAMENTAL FILE I/O
 
-    public static bool TryWriteObject([NotNull] string filepath, [CanBeNull] object obj,
-                                      bool     pretty   = EditorBridge.IS_DEBUG,
-                                      Encoding encoding = null)
+    public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object data, bool pretty, Encoding encoding = null)
     {
-      try
-      {
-        MakePathTo(filepath);
-
-        string json;
-        if (obj is null)
-        {
-          json = "{}";
-        }
-        #if NEWTONSOFT_JSON
-        else if (obj is JToken jtok)
-        {
-          json = jtok.ToString(pretty ? Formatting.Indented : Formatting.None);
-        }
-        #endif
-        else
-        {
-          json = JsonUtility.ToJson(obj, pretty);
-
-          if (json.IsEmpty() || json[0] != '{')
-          {
-            LastException = new UnanticipatedException("JsonUtility.ToJson returned a bad JSON string.");
-            return false;
-          }
-        }
-
-        File.WriteAllBytes(filepath, json.ToBytes(encoding ?? s_DefaultEncoding));
-
-        s_LastModifiedPath = filepath;
-        LastException = null;
-        return true;
-      }
-      #if NEWTONSOFT_JSON
-      catch (JsonException jex)
-      {
-        LastException = jex;
-      }
-      #endif
-      catch (IOException iox)
-      {
-        LastException = iox;
-      }
-      catch (UnauthorizedException auth)
-      {
-        LastException = auth;
-      }
-      catch (Exception ex)
-      {
-        LastException = new UnanticipatedException(ex);
-      }
-
       return false;
     }
 
+    public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object data, Encoding encoding = null)
+    {
+      return false;
+    }
+
+    public static bool TryReadJson([NotNull] string filepath, out object obj, Encoding encoding = null)
+    {
+      obj = null;
+      return false;
+    }
+
+    public static bool TryReadJsonObject([NotNull] string filepath, out IDictionary<string,object> obj, Encoding encoding = null)
+    {
+      obj = null;
+      return false;
+    }
+
+    public static bool TryReadJsonArray([NotNull] string filepath, out IList<object> arr, Encoding encoding = null)
+    {
+      arr = null;
+      return false;
+    }
 
     #if NEWTONSOFT_JSON
 
@@ -128,7 +97,7 @@ namespace Ore
     ///   TRUE iff the data was written to a file at the given path successfully.
     /// </returns>
     public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object data, bool pretty,
-                                    Encoding encoding = null, JsonSerializer serializer = null)
+                                    JsonSerializer serializer, Encoding encoding = null)
     {
       if (serializer is null)
       {
@@ -144,12 +113,12 @@ namespace Ore
         serializer.Formatting = Formatting.None;
       }
 
-      return TryWriteJson(filepath, data, encoding, serializer);
+      return TryWriteJson(filepath, data, serializer, encoding);
     }
 
-    /// <inheritdoc cref="TryWriteJson(string,object,bool,Encoding,JsonSerializer)"/>
+    /// <inheritdoc cref="TryWriteJson(string,object,bool,JsonSerializer,Encoding)"/>
     public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object data,
-                                    Encoding encoding = null, JsonSerializer serializer = null)
+                                    JsonSerializer serializer, Encoding encoding = null)
     {
       StreamWriter   stream = null;
       JsonTextWriter writer = null;
@@ -195,133 +164,8 @@ namespace Ore
       return false;
     }
 
-    #endif // NEWTONSOFT_JSON
-
-
-    public static bool TryWriteText([NotNull] string filepath, [CanBeNull] string text, Encoding encoding = null)
-    {
-      return TryWriteBinary(filepath, text.ToBytes(encoding ?? s_DefaultEncoding));
-    }
-
-    public static bool TryWriteBinary([NotNull] string filepath, [NotNull] byte[] data)
-    {
-      try
-      {
-        MakePathTo(filepath);
-
-        File.WriteAllBytes(filepath, data);
-
-        s_LastModifiedPath = filepath;
-        LastException = null;
-        return true;
-      }
-      catch (IOException iox)
-      {
-        LastException = iox;
-      }
-      catch (UnauthorizedException auth)
-      {
-        LastException = auth;
-      }
-      catch (SecurityException sec)
-      {
-        LastException = sec;
-      }
-      catch (Exception ex)
-      {
-        LastException = new UnanticipatedException(ex);
-      }
-
-      return false;
-    }
-
-
-    public static bool TryUpdateObject([NotNull] string filepath, [NotNull] object obj, Encoding encoding = null)
-    {
-      if (!TryReadText(filepath, out string json, encoding))
-      {
-        return false;
-      }
-
-      try
-      {
-        JsonUtility.FromJsonOverwrite(json, obj);
-      }
-      catch (Exception e)
-      {
-        CurrentException = new UnanticipatedException(e);
-      }
-
-      return false;
-    }
-
-
-    #if NEWTONSOFT_JSON
-
-    public static bool TryUpdateJson([NotNull] string filepath, [NotNull] JContainer objectOrArray,
-                                     Encoding encoding = null, JsonSerializer serializer = null)
-    {
-      if (!TryReadJson(filepath, out JToken token, encoding, serializer))
-      {
-        return false;
-      }
-
-      if (token.Type != objectOrArray.Type)
-      {
-        CurrentException = new ArgumentException(
-          $"Cannot update object representation from JSON: Container type mismatch.\nprevious={objectOrArray.Type}, read={token.Type}",
-          nameof(objectOrArray)
-        );
-        return false;
-      }
-
-      try
-      {
-        objectOrArray.Merge(token, NewtonsoftAuthority.MergeReplace);
-        return true;
-      }
-      catch (JsonException jex)
-      {
-        CurrentException = jex;
-      }
-      catch (Exception e)
-      {
-        CurrentException = new UnanticipatedException(e);
-      }
-
-      return false;
-    }
-
-    #endif // NEWTONSOFT_JSON
-
-
-    public static bool TryReadObject<T>([NotNull] string filepath, out T obj, Encoding encoding = null)
-    {
-      if (!TryReadText(filepath, out string json, encoding))
-      {
-        obj = default;
-        return false;
-      }
-
-      try
-      {
-        obj = JsonUtility.FromJson<T>(json);
-        return obj != null;
-      }
-      catch (Exception e)
-      {
-        LastException = new UnanticipatedException(e);
-      }
-
-      obj = default;
-      return false;
-    }
-
-
-    #if NEWTONSOFT_JSON
-
     public static bool TryReadJson<T>([NotNull] string filepath, out T token,
-                                      Encoding encoding = null, JsonSerializer serializer = null)
+                                      JsonSerializer serializer, Encoding encoding = null)
       where T : class
     {
       token = null;
@@ -411,6 +255,111 @@ namespace Ore
     #endif // NEWTONSOFT_JSON
 
 
+    public static bool TryWriteObject([NotNull] string filepath, [CanBeNull] object obj,
+                                      bool     pretty   = EditorBridge.IS_DEBUG,
+                                      Encoding encoding = null)
+    {
+      try
+      {
+        MakePathTo(filepath);
+
+        string json;
+        if (obj is null)
+        {
+          json = "{}";
+        }
+        #if NEWTONSOFT_JSON
+        else if (obj is JToken jtok)
+        {
+          json = jtok.ToString(pretty ? Formatting.Indented : Formatting.None);
+        }
+        #endif
+        else
+        {
+          json = JsonUtility.ToJson(obj, pretty);
+
+          if (json.IsEmpty() || json[0] != '{')
+          {
+            LastException = new UnanticipatedException("JsonUtility.ToJson returned a bad JSON string.");
+            return false;
+          }
+        }
+
+        File.WriteAllBytes(filepath, json.ToBytes(encoding ?? s_DefaultEncoding));
+
+        s_LastModifiedPath = filepath;
+        LastException = null;
+        return true;
+      }
+      #if NEWTONSOFT_JSON
+      catch (JsonException jex)
+      {
+        LastException = jex;
+      }
+      #endif
+      catch (IOException iox)
+      {
+        LastException = iox;
+      }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
+      }
+
+      return false;
+    }
+
+    public static bool TryUpdateObject([NotNull] string filepath, [NotNull] object obj, Encoding encoding = null)
+    {
+      if (!TryReadText(filepath, out string json, encoding))
+      {
+        return false;
+      }
+
+      try
+      {
+        JsonUtility.FromJsonOverwrite(json, obj);
+      }
+      catch (Exception e)
+      {
+        CurrentException = new UnanticipatedException(e);
+      }
+
+      return false;
+    }
+
+    public static bool TryReadObject<T>([NotNull] string filepath, out T obj, Encoding encoding = null)
+    {
+      if (!TryReadText(filepath, out string json, encoding))
+      {
+        obj = default;
+        return false;
+      }
+
+      try
+      {
+        obj = JsonUtility.FromJson<T>(json);
+        return obj != null;
+      }
+      catch (Exception e)
+      {
+        LastException = new UnanticipatedException(e);
+      }
+
+      obj = default;
+      return false;
+    }
+
+
+    public static bool TryWriteText([NotNull] string filepath, [CanBeNull] string text, Encoding encoding = null)
+    {
+      return TryWriteBinary(filepath, text.ToBytes(encoding ?? s_DefaultEncoding));
+    }
+
     public static bool TryReadText([NotNull] string filepath, [NotNull] out string text, Encoding encoding = null)
     {
       if (TryReadBinary(filepath, out byte[] data))
@@ -440,6 +389,39 @@ namespace Ore
       }
 
       lines = System.Array.Empty<string>();
+      return false;
+    }
+
+
+    public static bool TryWriteBinary([NotNull] string filepath, [NotNull] byte[] data)
+    {
+      try
+      {
+        MakePathTo(filepath);
+
+        File.WriteAllBytes(filepath, data);
+
+        s_LastModifiedPath = filepath;
+        LastException = null;
+        return true;
+      }
+      catch (IOException iox)
+      {
+        LastException = iox;
+      }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (SecurityException sec)
+      {
+        LastException = sec;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
+      }
+
       return false;
     }
 
