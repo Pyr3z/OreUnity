@@ -613,14 +613,8 @@ namespace Ore
 
     public override string ToString()
     {
-      using (new RecycledStringBuilder(Ticks.ToInvariant(), out var bob))
-      {
-        if (m_AsFrames)
-          bob.Append('f');
-        else
-          bob.Append('t');
-        return bob.ToString();
-      }
+      var units = m_AsFrames ? Units.Frames : DetectUnits(Ticks);
+      return ToString(units);
     }
 
     public string ToString(Units units, string decimalFmt = "F1", IFormatProvider provider = null)
