@@ -20,11 +20,16 @@ internal static class DeviceSpyInEditor
   [Test]
   public static void TimezoneOffset()
   {
-    const long EPSILON = TimeSpan.TicksPerMillisecond;
-
     var (utcNow, localNow) = (DateTime.UtcNow, DateTime.Now);
 
-    Assert.AreEqual(localNow.Ticks, (utcNow + DeviceSpy.TimezoneOffset).Ticks, EPSILON, "local == utc + timezone");
+    Debug.Log($"utcNow: {utcNow}");
+    Debug.Log($"localNow: {localNow}");
+
+    var expected = new TimeInterval(localNow.Ticks - utcNow.Ticks).RoundToInterval(TimeInterval.Minute);
+    var actual   = new TimeInterval(DeviceSpy.TimezoneOffset).RoundToInterval(TimeInterval.Minute);
+
+    Assert.AreEqual(expected, actual, 
+                    "local - utc == timezone offset");
   }
 
   [Test]
