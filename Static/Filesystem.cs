@@ -43,30 +43,27 @@ namespace Ore
 
     public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object data, bool pretty, Encoding encoding = null)
     {
-      return false;
+      throw new System.NotImplementedException("Levi had to leave early");
     }
 
     public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object data, Encoding encoding = null)
     {
-      return false;
+      throw new System.NotImplementedException("Levi had to leave early");
     }
 
     public static bool TryReadJson([NotNull] string filepath, out object obj, Encoding encoding = null)
     {
-      obj = null;
-      return false;
+      throw new System.NotImplementedException("Levi had to leave early");
     }
 
     public static bool TryReadJsonObject([NotNull] string filepath, out IDictionary<string,object> obj, Encoding encoding = null)
     {
-      obj = null;
-      return false;
+      throw new System.NotImplementedException("Levi had to leave early");
     }
 
     public static bool TryReadJsonArray([NotNull] string filepath, out IList<object> arr, Encoding encoding = null)
     {
-      arr = null;
-      return false;
+      throw new System.NotImplementedException("Levi had to leave early");
     }
 
     #if NEWTONSOFT_JSON
