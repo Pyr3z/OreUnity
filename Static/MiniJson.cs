@@ -378,6 +378,7 @@ namespace Ore
 
     static class Serializer
     {
+      
       const int BUILDER_INIT_CAP = 256;
       static readonly StringBuilder s_Builder = new StringBuilder(BUILDER_INIT_CAP);
 
