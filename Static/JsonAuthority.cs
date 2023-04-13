@@ -167,7 +167,7 @@ namespace Ore
     }
     internal static IList<object> DefaultListMaker(int capacity)
     {
-      return new object[capacity];
+      return new List<object>(capacity);
     }
 
 
