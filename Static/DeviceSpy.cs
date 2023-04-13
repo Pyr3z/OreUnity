@@ -61,7 +61,7 @@ namespace Ore
 
     public static bool IsBlueStacks => (bool)(s_IsBlueStacks ?? (s_IsBlueStacks = CalcIsBlueStacks()));
 
-    public static bool IsT1Graphics => Graphics.activeTier == GraphicsTier.Tier1;
+    public static bool IsT1Graphics => (bool)(s_IsT1Graphics ?? (s_IsT1Graphics = CalcIsT1Graphics()));
 
     public static bool IsTablet => (bool)(s_IsTablet ?? (s_IsTablet = CalcIsTablet()));
 
@@ -577,6 +577,19 @@ namespace Ore
         }
       }
 
+      public static bool IsT1Graphics
+      {
+        get => DeviceSpy.IsT1Graphics;
+        set
+        {
+          if (!s_IsT1Graphics.Equals(value))
+          {
+            s_IsT1Graphics = value;
+            OnCheepCheep?.Invoke(nameof(IsT1Graphics), value);
+          }
+        }
+      }
+
       public static bool IsTablet
       {
         get => DeviceSpy.IsTablet;
@@ -720,6 +733,7 @@ namespace Ore
     static string        s_IDFV;
     static bool          s_IsAdTrackingLimited;
     static bool?         s_IsBlueStacks;
+    static bool?         s_IsT1Graphics;
     static bool?         s_IsTablet;
     static string        s_LangISO6391;
     static int?          s_LowRAMThresh;
@@ -895,6 +909,11 @@ namespace Ore
         return (float)Screen.width / Screen.height;
       else
         return (float)Screen.height / Screen.width;
+    }
+
+    static bool CalcIsT1Graphics()
+    {
+      return Graphics.activeTier == GraphicsTier.Tier1;
     }
 
     static bool CalcIsTablet()
