@@ -175,15 +175,15 @@ internal static class MiscInEditor
 
     foreach (var test in tests)
     {
-      Assert.True(Strings.AreEqual(fef, test, Strings.WHITESPACES));
+      Assert.True(Strings.AreEqualIgnoreWhitespace(fef, test));
     }
 
     foreach (var test in tests)
     {
-      Assert.True(Strings.AreEqual(test, fef, Strings.WHITESPACES));
+      Assert.True(Strings.AreEqualIgnoreWhitespace(test, fef));
     }
 
-    Assert.False(Strings.AreEqual(fef, "bub", Strings.WHITESPACES));
+    Assert.False(Strings.AreEqualIgnoreWhitespace(fef, "bub"));
   }
 
 } // end class MiscInEditor

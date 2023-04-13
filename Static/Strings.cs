@@ -298,12 +298,22 @@ namespace Ore
     }
 
 
-    public static bool AreEqual(string a, string b, char[] ignoreChars)
+    public static bool AreEqualIgnoreWhitespace(string a, string b)
+    {
+      return Compare(a, b, WHITESPACES) == 0;
+    }
+
+    public static int CompareIgnoreWhitespace(string a, string b)
+    {
+      return Compare(a, b, WHITESPACES);
+    }
+
+    public static int Compare(string a, string b, char[] ignoreChars)
     {
       if (a.IsEmpty())
-        return b is null || ContainsOnly(b, ignoreChars);
+        return b is null || ContainsOnly(b, ignoreChars) ? 0 : -1;
       if (b.IsEmpty())
-        return ContainsOnly(a, ignoreChars);
+        return ContainsOnly(a, ignoreChars) ? 0 : +1;
 
       int ilen = ignoreChars.Length;
 
@@ -323,7 +333,12 @@ namespace Ore
 
       if (alen > blen)
       {
-        (a,b,alen,blen) = (b,a,blen,alen);
+        (a,b,alen) = (b,a,blen);
+        blen = -1;
+      }
+      else
+      {
+        blen = +1;
       }
 
       while (ai < alen)
@@ -339,10 +354,10 @@ namespace Ore
         // ReSharper restore EmptyEmbeddedStatement
 
         if (ac != bc)
-          return false;
+          return (ac - bc) * blen;
       }
 
-      return true;
+      return 0;
     }
 
 

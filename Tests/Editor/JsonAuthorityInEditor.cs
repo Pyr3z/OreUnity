@@ -6,6 +6,7 @@
 using Ore;
 
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 
 using UnityEngine;
 
@@ -84,7 +85,9 @@ internal static class JsonAuthorityInEditor
     }
     else if (expected is string str)
     {
-      Assert.True(Strings.AreEqual(str, actual as string, Strings.WHITESPACES), message);
+      var isExpected = new EqualConstraint(expected)
+        .Using((System.Comparison<string>)Strings.CompareIgnoreWhitespace);
+      Assert.That(str, isExpected);
     }
     else
     {
@@ -147,6 +150,36 @@ internal static class JsonAuthorityInEditor
       Assert.AreEqual(JsonProvider.MiniJson, JsonAuthority.Provider);
 
       Serialize(pretty);
+    }
+  }
+
+  [Test]
+  public static void MiniJsonReflectSerialize([Values(true, false)] bool pretty)
+  {
+    using (new JsonAuthority.Scope(JsonProvider.MiniJson, pretty))
+    {
+      var ti = TimeInterval.OfSeconds(1);
+
+      string expected = $"{{\"Ticks\":{ti.Ticks},\"m_AsFrames\":{ti.TicksAreFrames.ToInvariantLower()}}}";
+      string actual   = JsonAuthority.Serialize(ti);
+
+      AssertAreEqual(expected, actual, nameof(TimeInterval));
+
+      var ivec = new Vector2Int(3, 4);
+
+      expected = $"{{\"m_X\":{ivec.x},\"m_Y\":{ivec.y}}}";
+      actual   = JsonAuthority.Serialize(ivec);
+
+      AssertAreEqual(expected, actual, nameof(Vector2Int));
+    }
+  }
+
+  [Test]
+  public static void MiniJsonReflectSerializeStatic([Values(true, false)] bool pretty)
+  {
+    using (new JsonAuthority.Scope(JsonProvider.MiniJson, pretty))
+    {
+
     }
   }
 
