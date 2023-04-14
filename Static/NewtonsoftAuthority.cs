@@ -19,6 +19,7 @@ using System.Text;
 
 using StringComparison = System.StringComparison;
 using CultureInfo      = System.Globalization.CultureInfo;
+using Exception        = System.Exception;
 
 
 namespace Ore
@@ -31,9 +32,6 @@ namespace Ore
   public static class NewtonsoftAuthority
   {
   #if NEWTONSOFT_JSON
-
-    public static Formatting Formatting => SerializerSettings.Formatting;
-
 
     public static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings
     {
@@ -95,29 +93,6 @@ namespace Ore
       MergeArrayHandling     = MergeArrayHandling.Concat,
       MergeNullValueHandling = MergeNullValueHandling.Ignore
     };
-
-
-    [NotNull]
-    public static string Serialize(object obj, JsonSerializer serializer = null, StringBuilder cachedBuilder = null)
-    {
-      if (serializer is null)
-        serializer = JsonSerializer.CreateDefault(SerializerSettings);
-
-      if (cachedBuilder is null)
-        cachedBuilder = new StringBuilder(2048);
-      else
-        cachedBuilder.Clear();
-
-      var strWriter = new StringWriter(cachedBuilder, SerializerSettings.Culture);
-
-      using (var jsonWriter = new JsonTextWriter(strWriter))
-      {
-        jsonWriter.Formatting = Formatting;
-        serializer.Serialize(jsonWriter, obj);
-      }
-
-      return strWriter.ToString();
-    }
 
 
     [NotNull]
@@ -224,6 +199,35 @@ namespace Ore
     }
 
 
+    [NotNull]
+    public static string Serialize(object obj, JsonSerializer serializer = null, StringBuilder cachedBuilder = null)
+    {
+      const int FALLBACK_BUILDER_SIZE = 256;
+
+      if (cachedBuilder is null)
+        cachedBuilder = new StringBuilder(FALLBACK_BUILDER_SIZE);
+
+      var stream = new StringWriter(cachedBuilder, SerializerSettings.Culture);
+
+      SerializeTo(stream, obj, serializer);
+
+      return stream.ToString();
+    }
+
+    public static void SerializeTo(TextWriter stream, object data, JsonSerializer serializer = null)
+    {
+      if (serializer is null)
+      {
+        serializer = JsonSerializer.CreateDefault(SerializerSettings);
+      }
+
+      using (var writer = new JsonTextWriter(stream))
+      {
+        serializer.Serialize(writer, data);
+      }
+    }
+
+
     public static bool TryDeserializeObject(string rawJson, System.Type type, out object obj)
     {
       if (rawJson.IsEmpty())
@@ -237,16 +241,15 @@ namespace Ore
         obj = JsonConvert.DeserializeObject(rawJson, type);
         return obj != null || rawJson == JsonConvert.Null;
       }
-      catch (System.Exception ex)
+      catch (Exception ex)
       {
+        // TODO?
         if (ex is JsonException)
-        {
           Orator.NFE(ex);
-        }
-
-        obj = null;
-        return false;
       }
+
+      obj = null;
+      return false;
     }
 
     public static bool TryDeserializeObject<T>(string rawJson, out T obj)
@@ -270,15 +273,18 @@ namespace Ore
       return false;
     }
 
-    public static bool TryDeserializeOverwrite<T>(string rawJson, [NotNull] ref T obj)
+    public static bool TryDeserializeOverwrite<T>(string rawJson, [NotNull] ref T obj, JsonSerializer serializer = null)
     {
+      if (serializer is null)
+      {
+        serializer = JsonSerializer.CreateDefault(SerializerSettings);
+      }
+
       try
       {
-        var parsed = JsonConvert.DeserializeObject<JObject>(rawJson);
+        var parsed = serializer.Deserialize(new StringReader(rawJson), typeof(JObject)) as JObject;
         if (parsed is null)
           return false;
-
-        var serializer = JsonSerializer.CreateDefault(SerializerSettings);
 
         foreach (var field in typeof(T).GetFields(TypeMembers.INSTANCE))
         {
@@ -306,6 +312,60 @@ namespace Ore
         Orator.NFE(ex);
         return false;
       }
+    }
+
+    public static Exception TryDeserializeStream<T>(TextReader stream, out T obj, JsonSerializer serializer = null)
+    {
+      if (stream is null || stream.Peek() == -1)
+      {
+        obj = default;
+        return FauxException.Default;
+      }
+
+      if (serializer is null)
+      {
+        serializer = JsonSerializer.CreateDefault(SerializerSettings);
+      }
+
+      try
+      {
+        using (var reader = new JsonTextReader(stream))
+        {
+          var maybeNull = serializer.Deserialize<T>(reader);
+
+          switch (maybeNull)
+          {
+            case null:
+              break;
+
+            case IList<object> list:
+              FixupNestedContainers(list);
+              goto default;
+
+            case HashMap<string,object> map:
+              FixupNestedContainers(map);
+              goto default;
+
+            case Dictionary<string,object> dict:
+              FixupNestedContainers(dict);
+              goto default;
+
+            default:
+              obj = maybeNull;
+              return null;
+          }
+        }
+      }
+      catch (Exception ex)
+      {
+        obj = default;
+        if (ex is JsonException jex)
+          return jex;
+        throw;
+      }
+
+      obj = default;
+      return FauxException.Default;
     }
 
 
@@ -641,6 +701,12 @@ namespace Ore
       }
 
       return list;
+    }
+
+
+    internal static void SetPrettyPrint(bool pretty)
+    {
+      SerializerSettings.Formatting = pretty ? Formatting.Indented : Formatting.None;
     }
 
 
