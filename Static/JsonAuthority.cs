@@ -1,6 +1,8 @@
 /*! @file       Static/JsonAuthority.cs
  *  @author     Levi Perez (levi\@leviperez.dev)
  *  @date       2023-01-22
+ *
+ *  TODO XML documentation
 **/
 
 using JetBrains.Annotations;
@@ -9,6 +11,8 @@ using System.Text;
 using System.Collections.Generic;
 
 using Type = System.Type;
+using TextWriter = System.IO.TextWriter;
+using TextReader = System.IO.TextReader;
 
 
 namespace Ore
@@ -16,6 +20,7 @@ namespace Ore
   using MapMaker  = System.Func<int, IDictionary<string,object>>;
   using ListMaker = System.Func<int, IList<object>>;
     // using these statements because fully-qualified delegates can't participate in C# contravariance
+
 
   [PublicAPI]
   public static class JsonAuthority
@@ -39,20 +44,12 @@ namespace Ore
     }
 
 
-    public static string Serialize(object data)
+    public static string Serialize([CanBeNull] object data, object serializer = null)
     {
-      return Serialize(data, null);
-    }
-
-    public static string Serialize(object data, object serializer)
-    {
-      if (data is null)
-        return "null";
-
       switch (Provider)
       {
         case JsonProvider.None:
-          return data.ToString(); // TODO simple printer for lists / dicts
+          return data?.ToString() ?? "null";
 
         default:
         case JsonProvider.MiniJson:
@@ -92,14 +89,14 @@ namespace Ore
       }
     }
 
-    public static object Deserialize(string json, Type type,
-                                     MapMaker  mapMaker  = null,
-                                     ListMaker listMaker = null)
+    public static object DeserializeObject(string json, Type type,
+                                           MapMaker  mapMaker  = null,
+                                           ListMaker listMaker = null)
     {
       switch (Provider)
       {
         case JsonProvider.None:
-          if (!type.IsAssignableFrom(typeof(string)))
+          if (!type?.IsAssignableFrom(typeof(string)) ?? false)
             Orator.Warn(type, "JsonProvider is set to None");
           return json;
 
@@ -169,6 +166,7 @@ namespace Ore
       }
     }
 
+
     public static bool TryDeserialize<T>(string json, out T obj,
                                          MapMaker  mapMaker  = null,
                                          ListMaker listMaker = null)
@@ -227,6 +225,133 @@ namespace Ore
           throw new UnanticipatedException("Provider should have never been set to NewtonsoftJson if it isn't available.");
           #endif
       }
+    }
+
+
+    public static void SerializeTo([NotNull] TextWriter stream, object data, object serializer = null)
+    {
+      switch (Provider)
+      {
+        case JsonProvider.None:
+          stream.Write(data);
+          break;
+
+        default:
+        case JsonProvider.MiniJson:
+          MiniJson.SerializeTo(stream, data, PrettyPrint);
+          break;
+
+        case JsonProvider.NewtonsoftJson:
+          #if NEWTONSOFT_JSON
+          NewtonsoftAuthority.SerializeTo(stream, data, serializer as Newtonsoft.Json.JsonSerializer);
+          break;
+          #else
+          throw new UnanticipatedException("Provider should have never been set to NewtonsoftJson if it isn't available.");
+          #endif
+      }
+    }
+
+    [CanBeNull]
+    public static object DeserializeStream([NotNull] TextReader stream, Type type = null,
+                                           MapMaker  mapMaker  = null,
+                                           ListMaker listMaker = null)
+    {
+      switch (Provider)
+      {
+        case JsonProvider.None:
+          if (!type?.IsAssignableFrom(typeof(string)) ?? false)
+            Orator.Warn(type, "JsonProvider is set to None");
+          return stream.ReadToEnd();
+
+        default:
+        case JsonProvider.MiniJson:
+          using (new MiniJson.ParserScope(mapMaker, listMaker))
+            return MiniJson.DeserializeStream(stream, type);
+
+        case JsonProvider.NewtonsoftJson:
+          #if NEWTONSOFT_JSON
+          return NewtonsoftAuthority.DeserializeStream(stream, type);
+          #else
+          throw new UnanticipatedException("Provider should have never been set to NewtonsoftJson if it isn't available.");
+          #endif
+      }
+    }
+
+    public static bool TryDeserializeStream<T>([NotNull] TextReader stream, out T obj,
+                                               MapMaker  mapMaker  = null,
+                                               ListMaker listMaker = null)
+      where T : new()
+    {
+      switch (Provider)
+      {
+        case JsonProvider.None:
+          if (typeof(T) == typeof(string))
+          {
+            try
+            {
+              obj = (T)(object)stream.ReadToEnd();
+              return true;
+            }
+            finally
+            {
+              stream.Close();
+            }
+          }
+          break;
+
+        default:
+        case JsonProvider.MiniJson:
+          using (new MiniJson.ParserScope(mapMaker, listMaker))
+            return MiniJson.TryDeserializeStream(stream, out obj);
+
+        case JsonProvider.NewtonsoftJson:
+          #if NEWTONSOFT_JSON
+          return NewtonsoftAuthority.TryDeserializeStream(stream, out obj);
+          #else
+          throw new UnanticipatedException("Provider should have never been set to NewtonsoftJson if it isn't available.");
+          #endif
+      }
+
+      obj = default;
+      return false;
+    }
+
+    public static bool TryDeserializeStreamOverwrite<T>([NotNull] TextReader stream, ref T obj,
+                                                        MapMaker  mapMaker  = null,
+                                                        ListMaker listMaker = null)
+    {
+      switch (Provider)
+      {
+        case JsonProvider.None:
+          if (typeof(T) == typeof(string))
+          {
+            try
+            {
+              obj = (T)(object)stream.ReadToEnd();
+              return true;
+            }
+            finally
+            {
+              stream.Close();
+            }
+          }
+          break;
+
+        default:
+        case JsonProvider.MiniJson:
+          using (new MiniJson.ParserScope(mapMaker, listMaker))
+            return MiniJson.TryDeserializeStreamOverwrite(stream, ref obj);
+
+        case JsonProvider.NewtonsoftJson:
+          #if NEWTONSOFT_JSON
+          // TODO? lazy ReadToEnd()
+          return NewtonsoftAuthority.TryDeserializeOverwrite(stream.ReadToEnd(), ref obj);
+          #else
+          throw new UnanticipatedException("Provider should have never been set to NewtonsoftJson if it isn't available.");
+          #endif
+      }
+
+      return false;
     }
 
 
