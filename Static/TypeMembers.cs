@@ -93,10 +93,11 @@ namespace Ore
       return type.IsValueType && ( type.Namespace?.StartsWith("Unity") ?? false );
     }
 
-    public static bool HasDefaultConstructor([NotNull] this Type type)
+    public static bool HasDefaultConstructor([CanBeNull] this Type type)
     {
       // TODO migrate
-      return type.IsValueType || type.GetConstructor(Type.EmptyTypes) != null;
+      return !ReferenceEquals(type, null) && ( type.IsValueType ||
+                                               type.GetConstructor(Type.EmptyTypes) != null );
     }
 
 

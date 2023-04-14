@@ -39,6 +39,14 @@ namespace Ore
   public static class MiniJson
   {
 
+    /// <inheritdoc cref="Deserialize(string,System.Type)"/>
+    [CanBeNull]
+    public static object Deserialize([CanBeNull] string json)
+    {
+      // ReSharper disable once AssignNullToNotNullAttribute
+      return json.IsEmpty() ? null : RecursiveParser.Parse(new StringReader(json));
+    }
+
     /// <param name="json">
     ///   The JSON string to parse.
     /// </param>
@@ -58,7 +66,40 @@ namespace Ore
     [CanBeNull]
     public static object Deserialize([CanBeNull] string json, Type type)
     {
-      var parsed = RecursiveParser.Parse(json);
+      // ReSharper disable once AssignNullToNotNullAttribute
+      return json.IsEmpty() ? null : DeserializeStream(new StringReader(json), type);
+    }
+
+    public static bool TryDeserialize<T>([CanBeNull] string json, out T obj)
+      where T : new()
+    {
+      if (json.IsEmpty())
+      {
+        obj = default;
+        return false;
+      }
+
+      // ReSharper disable once AssignNullToNotNullAttribute
+      return TryDeserializeStream(new StringReader(json), out obj);
+    }
+
+    public static bool TryDeserializeOverwrite<T>([CanBeNull] string json, [NotNull] ref T obj)
+    {
+      // ReSharper disable once AssignNullToNotNullAttribute
+      return !json.IsEmpty() && TryDeserializeStreamOverwrite(new StringReader(json), ref obj);
+    }
+
+
+    [CanBeNull]
+    public static object DeserializeStream([NotNull] TextReader stream)
+    {
+      return RecursiveParser.Parse(stream);
+    }
+
+    [CanBeNull]
+    public static object DeserializeStream([NotNull] TextReader stream, Type type)
+    {
+      var parsed = RecursiveParser.Parse(stream);
       if (type is null)
         return parsed;
 
@@ -78,16 +119,10 @@ namespace Ore
       return obj;
     }
 
-    /// <inheritdoc cref="Deserialize(string,System.Type)"/>
-    public static object Deserialize([CanBeNull] string json)
-    {
-      return RecursiveParser.Parse(json);
-    }
-
-    public static bool TryDeserialize<T>([CanBeNull] string json, out T obj)
+    public static bool TryDeserializeStream<T>([NotNull] TextReader stream, out T obj)
       where T : new()
     {
-      var parsed = RecursiveParser.Parse(json);
+      var parsed = RecursiveParser.Parse(stream);
 
       if (parsed is T casted)
       {
@@ -105,14 +140,11 @@ namespace Ore
           {
             dict.Add(kvp);
           }
-        }
-        else
-        {
-          // reflection warning!
-          return ReflectFields(typeof(T), jobj, ref obj);
+          return true;
         }
 
-        return true;
+        // reflection warning!
+        return ReflectFields(typeof(T), jobj, ref obj);
       }
 
       if (parsed is JsonArr jarr && typeof(IList).IsAssignableFrom(typeof(T)))
@@ -134,11 +166,12 @@ namespace Ore
       return false;
     }
 
-    public static bool TryDeserializeOverwrite<T>([CanBeNull] string json, [NotNull] ref T obj)
+    public static bool TryDeserializeStreamOverwrite<T>([NotNull] TextReader stream, [NotNull] ref T obj)
     {
       // reflection warning!
-      return ReflectFields(typeof(T), RecursiveParser.Parse(json) as JsonObj, ref obj);
+      return ReflectFields(typeof(T), RecursiveParser.Parse(stream) as JsonObj, ref obj);
     }
+
 
     /// <summary>
     ///   Converts an IDictionary / IList object or a simple type (string, int,
@@ -217,12 +250,14 @@ namespace Ore
 
     struct RecursiveParser : System.IDisposable
     {
-      public static object Parse(string jsonString)
+      public static object Parse([NotNull] TextReader stream)
       {
-        if (jsonString.IsEmpty())
-          return jsonString;
+        if (stream.Peek() == -1)
+        {
+          return null;
+        }
 
-        using (var instance = new RecursiveParser(jsonString))
+        using (var instance = new RecursiveParser(stream))
         {
           return instance.ParseByToken(instance.NextToken);
         }
@@ -251,12 +286,12 @@ namespace Ore
       };
 
 
-      StringReader m_Stream;
+      TextReader m_Stream;
 
 
-      RecursiveParser(string jsonString)
+      RecursiveParser(TextReader stream)
       {
-        m_Stream = new StringReader(jsonString);
+        m_Stream = stream;
       }
 
       void System.IDisposable.Dispose()
