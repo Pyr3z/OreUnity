@@ -21,8 +21,11 @@ using NonSerialized = System.NonSerializedAttribute;
 
 namespace Ore
 {
-  using JsonObj = Dictionary<string,object>;
-  using JsonArr = List<object>;
+  using JsonObj   = IDictionary<string,object>;
+  using JsonArr   = IList<object>;
+  using MapMaker  = System.Func<int, IDictionary<string,object>>;
+  using ListMaker = System.Func<int, IList<object>>;
+    // using these statements because fully-qualified delegates can't participate in C# contravariance
 
 
   /// <summary>
@@ -134,7 +137,7 @@ namespace Ore
     public static bool TryDeserializeOverwrite<T>([CanBeNull] string json, [NotNull] ref T obj)
     {
       // reflection warning!
-      return TryDeserialize(json, out JsonObj jobj) && ReflectFields(typeof(T), jobj, ref obj);
+      return ReflectFields(typeof(T), RecursiveParser.Parse(json) as JsonObj, ref obj);
     }
 
     /// <summary>
@@ -157,18 +160,41 @@ namespace Ore
     }
 
 
+    internal struct ParserScope : System.IDisposable
+    {
+      public ParserScope(MapMaker objMaker, ListMaker arrMaker)
+      {
+        m_RestoreObjMaker = JsonObjMaker;
+        JsonObjMaker      = objMaker ?? JsonAuthority.DefaultMapMaker;
+        m_RestoreArrMaker = JsonArrMaker;
+        JsonArrMaker      = arrMaker ?? JsonAuthority.DefaultListMaker;
+      }
+
+      public void Dispose()
+      {
+        JsonObjMaker = m_RestoreObjMaker ?? JsonAuthority.DefaultMapMaker;
+        JsonArrMaker = m_RestoreArrMaker ?? JsonAuthority.DefaultListMaker;
+      }
+
+      readonly MapMaker  m_RestoreObjMaker;
+      readonly ListMaker m_RestoreArrMaker;
+
+    } // end struct ParserScope
+
     //
     // beyond = impl: 
     //
 
     static bool ReflectFields<T>(Type type, JsonObj data, ref T target)
     {
+      if (data is null)
+        return false;
+
       try
       {
         foreach (var field in type.GetFields(TypeMembers.INSTANCE))
         {
-          // TODO bother checking if fields should be skipped?
-          if (data.TryGetValue(field.Name, out object value))
+          if (field.IsDefined<NonSerialized>() && data.TryGetValue(field.Name, out object value))
           {
             field.SetValue(target, value);
           }
@@ -183,6 +209,9 @@ namespace Ore
       }
     }
 
+    static MapMaker  JsonObjMaker = JsonAuthority.DefaultMapMaker;
+    static ListMaker JsonArrMaker = JsonAuthority.DefaultListMaker;
+
 
     struct RecursiveParser : System.IDisposable
     {
@@ -196,7 +225,6 @@ namespace Ore
           return instance.ParseByToken(instance.NextToken);
         }
       }
-
 
       static bool IsWordBreak(char c)
       {
@@ -237,7 +265,7 @@ namespace Ore
 
       JsonObj ParseObject()
       {
-        var jobj = new JsonObj();
+        var jobj = JsonObjMaker(1);
 
         // ditch opening brace
         m_Stream.Read();
@@ -275,7 +303,7 @@ namespace Ore
 
       JsonArr ParseArray()
       {
-        var array = new JsonArr();
+        var array = JsonArrMaker(1);
 
         // ditch opening bracket
         m_Stream.Read();
