@@ -24,13 +24,25 @@ namespace Ore
 
     public static JsonProvider Provider { get; private set; } = JsonProvider.Default;
 
-
-    public static string Serialize(object data, StringBuilder cachedBuilder = null)
+    public static bool PrettyPrint
     {
-      return Serialize(data, null, cachedBuilder);
+      get => s_PrettyPrint;
+      set
+      {
+        s_PrettyPrint = value;
+        #if NEWTONSOFT_JSON
+        NewtonsoftAuthority.SetPrettyPrint(value);
+        #endif
+      }
     }
 
-    public static string Serialize(object data, object serializer, StringBuilder cachedBuilder = null)
+
+    public static string Serialize(object data)
+    {
+      return Serialize(data, null);
+    }
+
+    public static string Serialize(object data, object serializer)
     {
       if (data is null)
         return "null";
@@ -38,18 +50,19 @@ namespace Ore
       switch (Provider)
       {
         case JsonProvider.None:
-          return data.ToString();
+          return data.ToString(); // TODO simple printer for lists / dicts
 
         default:
         case JsonProvider.MiniJson:
-          return MiniJson.Serialize(data); // TODO utilize cachedBuilder
+          return MiniJson.Serialize(data, PrettyPrint); // TODO utilize cachedBuilder
 
         case JsonProvider.NewtonsoftJson:
-          #if NEWTONSOFT_JSON
-          return NewtonsoftAuthority.Serialize(data, serializer as Newtonsoft.Json.JsonSerializer, cachedBuilder);
-          #else
+        #if NEWTONSOFT_JSON
+          using (new RecycledStringBuilder(out var strBuilder))
+            return NewtonsoftAuthority.Serialize(data, serializer as Newtonsoft.Json.JsonSerializer, strBuilder);
+        #else
           throw new UnanticipatedException("Provider should have never been set to NewtonsoftJson if it isn't available.");
-          #endif
+        #endif
       }
     }
 
@@ -144,21 +157,52 @@ namespace Ore
     }
 
 
-    public sealed class ProviderScope : System.IDisposable
+    public struct Scope : System.IDisposable
     {
-      public ProviderScope(JsonProvider provider)
+      public Scope(JsonProvider provider)
       {
-        m_Restore = Provider;
-        _         = TrySetProvider(provider);
+        m_Disposable = true;
+        m_Restore    = Provider;
+        _            = TrySetProvider(provider);
+        m_WasPretty  = PrettyPrint;
       }
 
-      public void Dispose()
+      public Scope(bool prettyPrint)
       {
-        Provider = m_Restore;
+        m_Disposable = true;
+        m_Restore    = Provider;
+        m_WasPretty  = PrettyPrint;
+        PrettyPrint  = prettyPrint;
       }
+
+      public Scope(JsonProvider provider, bool prettyPrint)
+      {
+        m_Disposable = true;
+        m_Restore    = Provider;
+        _            = TrySetProvider(provider);
+        m_WasPretty  = PrettyPrint;
+        PrettyPrint  = prettyPrint;
+      }
+
+      void System.IDisposable.Dispose()
+      {
+        if (m_Disposable)
+        {
+          Provider     = m_Restore;
+          PrettyPrint  = m_WasPretty;
+          m_Disposable = false;
+        }
+      }
+
+      bool m_Disposable;
 
       readonly JsonProvider m_Restore;
-    } // end nested class ProviderScope
+      readonly bool         m_WasPretty;
+
+    } // end nested class Scope
+
+
+    static bool s_PrettyPrint = EditorBridge.IS_DEBUG;
 
 
     internal static IDictionary<string,object> DefaultMapMaker(int capacity)
