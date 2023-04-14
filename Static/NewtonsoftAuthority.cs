@@ -224,6 +224,91 @@ namespace Ore
     }
 
 
+    public static bool TryDeserializeObject(string rawJson, System.Type type, out object obj)
+    {
+      if (rawJson.IsEmpty())
+      {
+        obj = null;
+        return false;
+      }
+
+      try
+      {
+        obj = JsonConvert.DeserializeObject(rawJson, type);
+        return obj != null || rawJson == JsonConvert.Null;
+      }
+      catch (System.Exception ex)
+      {
+        if (ex is JsonException)
+        {
+          Orator.NFE(ex);
+        }
+
+        obj = null;
+        return false;
+      }
+    }
+
+    public static bool TryDeserializeObject<T>(string rawJson, out T obj)
+    {
+      if (TryDeserializeObject(rawJson, typeof(T), out object boxed))
+      {
+        if (boxed is T casted)
+        {
+          obj = casted;
+          return true;
+        }
+
+        if (boxed is null && !typeof(T).IsValueType)
+        {
+          obj = default;
+          return true;
+        }
+      }
+
+      obj = default;
+      return false;
+    }
+
+    public static bool TryDeserializeOverwrite<T>(string rawJson, [NotNull] ref T obj)
+    {
+      try
+      {
+        var parsed = JsonConvert.DeserializeObject<JObject>(rawJson);
+        if (parsed is null)
+          return false;
+
+        var serializer = JsonSerializer.CreateDefault(SerializerSettings);
+
+        foreach (var field in typeof(T).GetFields(TypeMembers.INSTANCE))
+        {
+          if (field.IsDefined<System.NonSerializedAttribute>())
+            continue;
+
+          if (parsed.TryGetValue(field.Name, out JToken tok))
+          {
+            if (tok.Type == JTokenType.Null)
+            {
+              field.SetValue(obj, null);
+              continue;
+            }
+
+            var value = tok.ToObject(field.FieldType, serializer);
+            if (value != null)
+              field.SetValue(obj, value);
+          }
+        }
+
+        return true;
+      }
+      catch (System.Exception ex)
+      {
+        Orator.NFE(ex);
+        return false;
+      }
+    }
+
+
     [CanBeNull]
     public static object GenericParse(string    rawJson,
                                       MapMaker  mapMaker  = null,
