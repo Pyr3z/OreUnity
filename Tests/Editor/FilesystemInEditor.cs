@@ -134,7 +134,7 @@ internal static class FilesystemInEditor
   #if NEWTONSOFT_JSON
 
   [Test]
-  public static void TryJson()
+  public static void TryNewtonsoftJson()
   {
     var intList = new List<int> { 1, 2, 3 };
     var subDict = new Dictionary<string,object>
@@ -150,7 +150,7 @@ internal static class FilesystemInEditor
       ["sub"] = subDict
     };
 
-    string path = TMPDIR + nameof(TryJson) + ".json";
+    string path = TMPDIR + nameof(TryNewtonsoftJson) + ".json";
 
     if (!Filesystem.TryWriteJson(path, dict, pretty: true))
     {
@@ -158,7 +158,7 @@ internal static class FilesystemInEditor
       throw ex;
     }
 
-    if (!Filesystem.TryReadJson(path, out JToken readToken))
+    if (!Filesystem.TryReadJson(path, out JToken readToken, serializer: null))
     {
       Assert.True(Filesystem.TryGetLastException(out var ex));
       throw ex;
@@ -176,7 +176,7 @@ internal static class FilesystemInEditor
     Assert.AreEqual(subDict["name"], readDict.Value<string>("name"), "sub['name']");
     Assert.AreEqual(subDict["fef"], readDict.Value<bool>("fef"), "sub['fef']");
 
-    if (!Filesystem.TryReadJson(path, out HashMap<string,object> readMap))
+    if (!Filesystem.TryReadJson(path, out HashMap<string,object> readMap, serializer: null))
     {
       Assert.True(Filesystem.TryGetLastException(out var ex));
       throw ex;
