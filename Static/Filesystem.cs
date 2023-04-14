@@ -156,18 +156,9 @@ namespace Ore
         s_LastReadPath = filepath;
         var stream = new StreamReader(filepath, encoding ?? s_DefaultEncoding);
 
-        LastException = NewtonsoftAuthority.TryDeserializeStream(stream, out token, serializer);
+        NewtonsoftAuthority.DeserializeStream(stream, out token, serializer);
 
-        if (token is null)
-        {
-          if (LastException is null)
-          {
-            CurrentException = new System.InvalidCastException($"Failed to cast to <{typeof(T).Name}>");
-          }
-          return false;
-        }
-
-        return true;
+        return token != null;
       }
       catch (JsonException jex)
       {

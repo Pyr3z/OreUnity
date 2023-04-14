@@ -214,7 +214,7 @@ namespace Ore
       return stream.ToString();
     }
 
-    public static void SerializeTo(TextWriter stream, object data, JsonSerializer serializer = null)
+    public static void SerializeTo([NotNull] TextWriter stream, object data, JsonSerializer serializer = null)
     {
       if (serializer is null)
       {
@@ -225,6 +225,45 @@ namespace Ore
       {
         serializer.Serialize(writer, data);
       }
+    }
+
+
+    public static void DeserializeStream<T>([NotNull] TextReader stream, out T obj, JsonSerializer serializer = null)
+    {
+      if (serializer is null)
+      {
+        serializer = JsonSerializer.CreateDefault(SerializerSettings);
+      }
+
+      using (var reader = new JsonTextReader(stream))
+      {
+        // may throw JsonException
+        var maybeNull = serializer.Deserialize<T>(reader);
+
+        switch (maybeNull)
+        {
+          case null:
+            break;
+
+          case IList<object> list:
+            FixupNestedContainers(list);
+            goto default;
+
+          case HashMap<string,object> map:
+            FixupNestedContainers(map);
+            goto default;
+
+          case Dictionary<string,object> dict:
+            FixupNestedContainers(dict);
+            goto default;
+
+          default:
+            obj = maybeNull;
+            return;
+        }
+      }
+
+      obj = default;
     }
 
 
@@ -312,60 +351,6 @@ namespace Ore
         Orator.NFE(ex);
         return false;
       }
-    }
-
-    public static Exception TryDeserializeStream<T>(TextReader stream, out T obj, JsonSerializer serializer = null)
-    {
-      if (stream is null || stream.Peek() == -1)
-      {
-        obj = default;
-        return FauxException.Default;
-      }
-
-      if (serializer is null)
-      {
-        serializer = JsonSerializer.CreateDefault(SerializerSettings);
-      }
-
-      try
-      {
-        using (var reader = new JsonTextReader(stream))
-        {
-          var maybeNull = serializer.Deserialize<T>(reader);
-
-          switch (maybeNull)
-          {
-            case null:
-              break;
-
-            case IList<object> list:
-              FixupNestedContainers(list);
-              goto default;
-
-            case HashMap<string,object> map:
-              FixupNestedContainers(map);
-              goto default;
-
-            case Dictionary<string,object> dict:
-              FixupNestedContainers(dict);
-              goto default;
-
-            default:
-              obj = maybeNull;
-              return null;
-          }
-        }
-      }
-      catch (Exception ex)
-      {
-        obj = default;
-        if (ex is JsonException jex)
-          return jex;
-        throw;
-      }
-
-      obj = default;
-      return FauxException.Default;
     }
 
 

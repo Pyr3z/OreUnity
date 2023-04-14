@@ -91,13 +91,7 @@ namespace Ore
 
 
     [CanBeNull]
-    public static object DeserializeStream([NotNull] TextReader stream)
-    {
-      return RecursiveParser.Parse(stream);
-    }
-
-    [CanBeNull]
-    public static object DeserializeStream([NotNull] TextReader stream, Type type)
+    public static object DeserializeStream([NotNull] TextReader stream, Type type = null)
     {
       var parsed = RecursiveParser.Parse(stream);
       if (type is null)
