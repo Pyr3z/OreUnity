@@ -54,7 +54,7 @@ namespace Ore
 
         default:
         case JsonProvider.MiniJson:
-          return MiniJson.Serialize(data, PrettyPrint); // TODO utilize cachedBuilder
+          return MiniJson.Serialize(data, PrettyPrint);
 
         case JsonProvider.NewtonsoftJson:
         #if NEWTONSOFT_JSON
@@ -78,7 +78,8 @@ namespace Ore
 
         default:
         case JsonProvider.MiniJson:
-          return MiniJson.Deserialize(rawJson); // TODO use mapMaker + listMaker
+          using (new MiniJson.ParserScope(mapMaker, listMaker))
+            return MiniJson.Deserialize(rawJson);
 
         case JsonProvider.NewtonsoftJson:
           #if NEWTONSOFT_JSON
@@ -102,8 +103,9 @@ namespace Ore
           return dummyMap;
 
         default:
-        case JsonProvider.MiniJson: // TODO use mapMaker + listMaker
-          return MiniJson.Deserialize(rawJson) as IDictionary<string,object>;
+        case JsonProvider.MiniJson:
+          using (new MiniJson.ParserScope(mapMaker, listMaker))
+            return MiniJson.Deserialize(rawJson) as IDictionary<string,object>;
 
         case JsonProvider.NewtonsoftJson:
           #if NEWTONSOFT_JSON
@@ -126,8 +128,9 @@ namespace Ore
           return dummyList;
 
         default:
-        case JsonProvider.MiniJson: // TODO use mapMaker + listMaker
-          return MiniJson.Deserialize(rawJson) as IList<object>;
+        case JsonProvider.MiniJson:
+          using (new MiniJson.ParserScope(mapMaker, listMaker))
+            return MiniJson.Deserialize(rawJson) as IList<object>;
 
         case JsonProvider.NewtonsoftJson:
           #if NEWTONSOFT_JSON
