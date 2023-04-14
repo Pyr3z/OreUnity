@@ -8,6 +8,8 @@ using JetBrains.Annotations;
 using System.Text;
 using System.Collections.Generic;
 
+using Type = System.Type;
+
 
 namespace Ore
 {
@@ -67,31 +69,57 @@ namespace Ore
     }
 
 
-    public static object Deserialize(string    rawJson,
+    public static object Deserialize(string    json,
                                      MapMaker  mapMaker  = null,
                                      ListMaker listMaker = null)
     {
       switch (Provider)
       {
         case JsonProvider.None:
-          return rawJson;
+          return json;
 
         default:
         case JsonProvider.MiniJson:
           using (new MiniJson.ParserScope(mapMaker, listMaker))
-            return MiniJson.Deserialize(rawJson);
+            return MiniJson.Deserialize(json);
 
         case JsonProvider.NewtonsoftJson:
           #if NEWTONSOFT_JSON
-          return NewtonsoftAuthority.GenericParse(rawJson, mapMaker, listMaker);
+          return NewtonsoftAuthority.GenericParse(json, mapMaker, listMaker);
           #else
           throw new UnanticipatedException("Provider should have never been set to NewtonsoftJson if it isn't available.");
           #endif
       }
     }
 
+    public static object Deserialize(string json, Type type,
+                                     MapMaker  mapMaker  = null,
+                                     ListMaker listMaker = null)
+    {
+      switch (Provider)
+      {
+        case JsonProvider.None:
+          if (!type.IsAssignableFrom(typeof(string)))
+            Orator.Warn(type, "JsonProvider is set to None");
+          return json;
 
-    public static IDictionary<string,object> DeserializeObject(string    rawJson,
+        default:
+        case JsonProvider.MiniJson:
+          using (new MiniJson.ParserScope(mapMaker, listMaker))
+            return MiniJson.Deserialize(json, type);
+
+        case JsonProvider.NewtonsoftJson:
+          #if NEWTONSOFT_JSON
+          // TODO? does not utilize mapMaker, listMaker
+          _ = NewtonsoftAuthority.TryDeserializeObject(json, type, out object parsed);
+          return parsed;
+          #else
+          throw new UnanticipatedException("Provider should have never been set to NewtonsoftJson if it isn't available.");
+          #endif
+      }
+    }
+
+    public static IDictionary<string,object> DeserializeObject(string    json,
                                                                MapMaker  mapMaker  = null,
                                                                ListMaker listMaker = null)
     {
@@ -99,24 +127,24 @@ namespace Ore
       {
         case JsonProvider.None:
           var dummyMap = mapMaker?.Invoke(1) ?? DefaultMapMaker(1);
-          dummyMap[nameof(rawJson)] = rawJson;
+          dummyMap[nameof(json)] = json;
           return dummyMap;
 
         default:
         case JsonProvider.MiniJson:
           using (new MiniJson.ParserScope(mapMaker, listMaker))
-            return MiniJson.Deserialize(rawJson) as IDictionary<string,object>;
+            return MiniJson.Deserialize(json) as IDictionary<string,object>;
 
         case JsonProvider.NewtonsoftJson:
           #if NEWTONSOFT_JSON
-          return NewtonsoftAuthority.GenericParseObject(rawJson, mapMaker, listMaker);
+          return NewtonsoftAuthority.GenericParseObject(json, mapMaker, listMaker);
           #else
           throw new UnanticipatedException("Provider should have never been set to NewtonsoftJson if it isn't available.");
           #endif
       }
     }
 
-    public static IList<object> DeserializeArray(string    rawJson,
+    public static IList<object> DeserializeArray(string    json,
                                                  MapMaker  mapMaker  = null,
                                                  ListMaker listMaker = null)
     {
@@ -124,17 +152,77 @@ namespace Ore
       {
         case JsonProvider.None:
           var dummyList = listMaker?.Invoke(1) ?? DefaultListMaker(1);
-          dummyList.Add(rawJson);
+          dummyList.Add(json);
           return dummyList;
 
         default:
         case JsonProvider.MiniJson:
           using (new MiniJson.ParserScope(mapMaker, listMaker))
-            return MiniJson.Deserialize(rawJson) as IList<object>;
+            return MiniJson.Deserialize(json) as IList<object>;
 
         case JsonProvider.NewtonsoftJson:
           #if NEWTONSOFT_JSON
-          return NewtonsoftAuthority.GenericParseArray(rawJson, mapMaker, listMaker);
+          return NewtonsoftAuthority.GenericParseArray(json, mapMaker, listMaker);
+          #else
+          throw new UnanticipatedException("Provider should have never been set to NewtonsoftJson if it isn't available.");
+          #endif
+      }
+    }
+
+    public static bool TryDeserialize<T>(string json, out T obj,
+                                         MapMaker  mapMaker  = null,
+                                         ListMaker listMaker = null)
+      where T : new()
+    {
+      switch (Provider)
+      {
+        case JsonProvider.None:
+          if (typeof(T).IsAssignableFrom(typeof(string)))
+          {
+            obj = (T)(object)json;
+            return true;
+          }
+          obj = default;
+          return false;
+
+        default:
+        case JsonProvider.MiniJson:
+          using (new MiniJson.ParserScope(mapMaker, listMaker))
+            return MiniJson.TryDeserialize(json, out obj);
+
+        case JsonProvider.NewtonsoftJson:
+          #if NEWTONSOFT_JSON
+          // TODO? does not utilize mapMaker, listMaker
+          return NewtonsoftAuthority.TryDeserializeObject(json, out obj);
+          #else
+          throw new UnanticipatedException("Provider should have never been set to NewtonsoftJson if it isn't available.");
+          #endif
+      }
+    }
+
+    public static bool TryDeserializeOverwrite<T>(string json, [NotNull] ref T obj,
+                                                  MapMaker  mapMaker  = null,
+                                                  ListMaker listMaker = null)
+    {
+      switch (Provider)
+      {
+        case JsonProvider.None:
+          if (typeof(T).IsAssignableFrom(typeof(string)))
+          {
+            obj = (T)(object)json;
+            return true;
+          }
+          return false;
+
+        default:
+        case JsonProvider.MiniJson:
+          using (new MiniJson.ParserScope(mapMaker, listMaker))
+            return MiniJson.TryDeserializeOverwrite(json, ref obj);
+
+        case JsonProvider.NewtonsoftJson:
+          #if NEWTONSOFT_JSON
+          // TODO? does not utilize mapMaker, listMaker
+          return NewtonsoftAuthority.TryDeserializeOverwrite(json, ref obj);
           #else
           throw new UnanticipatedException("Provider should have never been set to NewtonsoftJson if it isn't available.");
           #endif
