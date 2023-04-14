@@ -105,8 +105,8 @@ namespace Ore
     StringBuilder m_Builder;
     TextWriter    m_Writer;
 
-    System.Action<char,int> m_PutChar;
-    System.Action<string>   m_PutStr;
+    readonly System.Action<char,int> m_PutChar;
+    readonly System.Action<string>   m_PutStr;
 
 
     void BuilderPut(char c, int n)
