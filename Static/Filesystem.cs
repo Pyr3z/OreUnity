@@ -56,6 +56,22 @@ namespace Ore
       throw new System.NotImplementedException("Levi had to leave early");
     }
 
+    public static bool TryReadJson<T>([NotNull] string filepath, out T obj, Encoding encoding = null)
+      where T : new()
+    {
+      obj = default;
+
+      if (!Paths.IsValidPath(filepath))
+      {
+        LastException = new ArgumentException($"{nameof(filepath)}: invalid path \"{filepath}\"");
+        return false;
+      }
+
+      //
+
+      throw new System.NotImplementedException("Levi had to leave early");
+    }
+
     public static bool TryReadJsonObject([NotNull] string filepath, out IDictionary<string,object> obj, Encoding encoding = null)
     {
       throw new System.NotImplementedException("Levi had to leave early");
@@ -65,6 +81,7 @@ namespace Ore
     {
       throw new System.NotImplementedException("Levi had to leave early");
     }
+
 
     #if NEWTONSOFT_JSON
 
@@ -77,11 +94,6 @@ namespace Ore
     ///   Newtonsoft.Json.JContainers are valid, and so are generic IList or
     ///   IDictionary objects.
     /// </param>
-    /// <param name="pretty">
-    ///   Optionally override the default pretty-print settings (set in
-    ///   <see cref="JsonAuthority"/>.<see cref="NewtonsoftAuthority.SerializerSettings"/>)
-    ///   (this call only).
-    /// </param>
     /// <param name="encoding">
     ///   Optionally override <see cref="DefaultEncoding"/> with another encoder
     ///   (this call only).
@@ -93,44 +105,15 @@ namespace Ore
     /// <returns>
     ///   TRUE iff the data was written to a file at the given path successfully.
     /// </returns>
-    public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object data, bool pretty,
-                                    JsonSerializer serializer, Encoding encoding = null)
-    {
-      if (serializer is null)
-      {
-        serializer = JsonSerializer.CreateDefault();
-      }
-
-      if (pretty && serializer.Formatting != Formatting.Indented)
-      {
-        serializer.Formatting = Formatting.Indented;
-      }
-      else if (!pretty && serializer.Formatting != Formatting.None)
-      {
-        serializer.Formatting = Formatting.None;
-      }
-
-      return TryWriteJson(filepath, data, serializer, encoding);
-    }
-
-    /// <inheritdoc cref="TryWriteJson(string,object,bool,JsonSerializer,Encoding)"/>
     public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object data,
                                     JsonSerializer serializer, Encoding encoding = null)
     {
-      StreamWriter   stream = null;
-      JsonTextWriter writer = null;
       try
       {
         MakePathTo(filepath);
-        stream = new StreamWriter(filepath, append: false, encoding ?? s_DefaultEncoding);
-        writer = new JsonTextWriter(stream);
 
-        if (serializer is null)
-        {
-          serializer = JsonSerializer.CreateDefault();
-        }
-
-        serializer.Serialize(writer, data);
+        var stream = new StreamWriter(filepath, append: false, encoding ?? s_DefaultEncoding);
+        NewtonsoftAuthority.SerializeTo(stream, data, serializer);
 
         s_LastModifiedPath = filepath;
         LastException = null;
@@ -152,11 +135,6 @@ namespace Ore
       {
         LastException = new UnanticipatedException(ex);
       }
-      finally
-      {
-        stream?.Close();
-        writer?.Close();
-      }
 
       return false;
     }
@@ -167,54 +145,25 @@ namespace Ore
     {
       token = null;
 
-      if (!Paths.IsValidPath(filepath))
+      if (!File.Exists(filepath))
       {
-        LastException = new ArgumentException($"filepath: \"{filepath}\"");
+        LastException = new FileNotFoundException("File does not exist!", filepath);
         return false;
       }
 
-      StreamReader   stream = null;
-      JsonTextReader reader = null;
       try
       {
-        stream = new StreamReader(filepath, encoding ?? s_DefaultEncoding);
-        reader = new JsonTextReader(stream);
-
-        if (serializer is null)
-        {
-          serializer = JsonSerializer.CreateDefault();
-        }
-        
-        var maybeNull = serializer.Deserialize<T>(reader);
-        
-        LastException = null;
         s_LastReadPath = filepath;
+        var stream = new StreamReader(filepath, encoding ?? s_DefaultEncoding);
 
-        switch (maybeNull)
-        {
-          case null:
-            break;
-
-          case IList<object> list:
-            token = NewtonsoftAuthority.FixupNestedContainers(list) as T;
-            break;
-
-          case HashMap<string,object> map:
-            token = NewtonsoftAuthority.FixupNestedContainers(map) as T;
-            break;
-
-          case Dictionary<string,object> dict:
-            token = NewtonsoftAuthority.FixupNestedContainers(dict) as T;
-            break;
-
-          default:
-            token = maybeNull;
-            return true;
-        }
+        LastException = NewtonsoftAuthority.TryDeserializeStream(stream, out token, serializer);
 
         if (token is null)
         {
-          CurrentException = new System.InvalidCastException($"Failed to convert from <{maybeNull?.GetType().Name ?? "null"}> to <{typeof(T).Name}>.");
+          if (LastException is null)
+          {
+            CurrentException = new System.InvalidCastException($"Failed to cast to <{typeof(T).Name}>");
+          }
           return false;
         }
 
@@ -239,11 +188,6 @@ namespace Ore
       catch (Exception e)
       {
         LastException = new UnanticipatedException(e);
-      }
-      finally
-      {
-        stream?.Close();
-        reader?.Close();
       }
 
       return false;
@@ -751,22 +695,22 @@ namespace Ore
 
   #region PRIVATE
 
-    private static Encoding s_DefaultEncoding = Encoding.UTF8;
+    static Encoding s_DefaultEncoding = Encoding.UTF8;
 
-    private static string s_LastModifiedPath;
-    private static string s_LastReadPath;
+    static string s_LastModifiedPath;
+    static string s_LastReadPath;
 
-    private const int EXCEPTION_RING_SZ = 4;
-    private static readonly Exception[] s_ExceptionRingBuf = new Exception[EXCEPTION_RING_SZ];
-    private static int s_ExceptionRingIdx = 0;
+    const int EXCEPTION_RING_SZ = 4;
+    static readonly Exception[] s_ExceptionRingBuf = new Exception[EXCEPTION_RING_SZ];
+    static int s_ExceptionRingIdx = 0;
 
-    private static Exception LastException
+    static Exception LastException
     {
       get => s_ExceptionRingBuf[s_ExceptionRingIdx % EXCEPTION_RING_SZ];
       set => s_ExceptionRingBuf[++s_ExceptionRingIdx % EXCEPTION_RING_SZ] = value;
     }
 
-    private static Exception CurrentException
+    static Exception CurrentException
     {
       set => s_ExceptionRingBuf[s_ExceptionRingIdx % EXCEPTION_RING_SZ] = value;
     }
