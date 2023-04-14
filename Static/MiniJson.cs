@@ -181,6 +181,7 @@ namespace Ore
 
     } // end struct ParserScope
 
+
     //
     // beyond = impl: 
     //
@@ -194,7 +195,7 @@ namespace Ore
       {
         foreach (var field in type.GetFields(TypeMembers.INSTANCE))
         {
-          if (field.IsDefined<NonSerialized>() && data.TryGetValue(field.Name, out object value))
+          if (!field.IsDefined<NonSerialized>() && data.TryGetValue(field.Name, out object value))
           {
             field.SetValue(target, value);
           }
@@ -208,6 +209,7 @@ namespace Ore
         return false;
       }
     }
+
 
     static MapMaker  JsonObjMaker = JsonAuthority.DefaultMapMaker;
     static ListMaker JsonArrMaker = JsonAuthority.DefaultListMaker;
