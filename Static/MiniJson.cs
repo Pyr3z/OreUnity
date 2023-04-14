@@ -189,7 +189,12 @@ namespace Ore
     [CanBeNull]
     public static string Serialize([CanBeNull] object obj, bool pretty = EditorBridge.IS_DEBUG)
     {
-      return RecursiveSerializer.ToJson(obj, pretty);
+      return RecursiveSerializer.MakeString(obj, pretty);
+    }
+
+    public static void SerializeTo([NotNull] TextWriter stream, [CanBeNull] object obj, bool pretty = EditorBridge.IS_DEBUG)
+    {
+      RecursiveSerializer.WriteTo(stream, obj, pretty);
     }
 
 
@@ -563,89 +568,130 @@ namespace Ore
     } // end nested class RecursiveParser
 
 
-    static class RecursiveSerializer
+    struct RecursiveSerializer : System.IDisposable
     {
-      const int INDENT = 2;
-      const int BUILDER_INIT_CAP = 256;
-
-      static readonly StringBuilder s_Builder = new StringBuilder(BUILDER_INIT_CAP);
-
-      static bool   s_Pretty;
-      static int    s_Indent;
-      static string s_OpenObj;
-      static string s_OpenArr;
-      static string s_Comma;
-      static string s_Colon;
-
-
-      public static string ToJson(object obj, bool pretty)
+      public static string MakeString(object obj, bool pretty, int indentIncr = 2)
       {
-        s_Builder.Clear();
-
-        // ReSharper disable once AssignmentInConditionalExpression
-        if (s_Pretty = pretty)
+        using (var stringer = new RecursiveSerializer(pretty, indentIncr))
         {
-          s_OpenObj = "{\n";
-          s_OpenArr = "[\n";
-          s_Comma   = ",\n";
-          s_Colon   = ": ";
+          stringer.WriteValue(obj);
+          return stringer.m_Stream.ToString();
+        }
+      }
+
+      public static void WriteTo(TextWriter stream, object obj, bool pretty, int indentIncr = 2)
+      {
+        using (var writer = new RecursiveSerializer(stream, pretty, indentIncr))
+        {
+          writer.WriteValue(obj);
+        }
+      }
+
+
+      RecursiveSerializer(bool pretty, int indentIncr)
+      {
+        m_Stream     = StringStream.ForBuilder();
+        m_Indent     = 0;
+        m_Pretty     = pretty;
+        m_IndentIncr = indentIncr;
+
+        if (pretty)
+        {
+          m_OpenObj = "{\n";
+          m_OpenArr = "[\n";
+          m_Comma   = ",\n";
+          m_Colon   = ": ";
         }
         else
         {
-          s_OpenObj = "{";
-          s_OpenArr = "[";
-          s_Comma   = ",";
-          s_Colon   = ":";
+          m_OpenObj = "{";
+          m_OpenArr = "[";
+          m_Comma   = ",";
+          m_Colon   = ":";
         }
-
-        s_Indent = 0;
-
-        SerializeValue(obj);
-
-        return s_Builder.ToString();
       }
 
-      static void SerializeValue(object value)
+      RecursiveSerializer(TextWriter stream, bool pretty, int indentIncr)
+      {
+        m_Stream     = StringStream.ForWriter(stream);
+        m_Indent     = 0;
+        m_Pretty     = pretty;
+        m_IndentIncr = indentIncr;
+
+        if (pretty)
+        {
+          m_OpenObj = "{\n";
+          m_OpenArr = "[\n";
+          m_Comma   = ",\n";
+          m_Colon   = ": ";
+        }
+        else
+        {
+          m_OpenObj = "{";
+          m_OpenArr = "[";
+          m_Comma   = ",";
+          m_Colon   = ":";
+        }
+      }
+
+      void System.IDisposable.Dispose()
+      {
+        m_Stream.Dispose();
+      }
+
+
+      StringStream m_Stream;
+      int          m_Indent;
+
+      readonly bool   m_Pretty;
+      readonly int    m_IndentIncr;
+      readonly string m_OpenObj;
+      readonly string m_OpenArr;
+      readonly string m_Comma;
+      readonly string m_Colon;
+
+
+      void WriteValue(object value)
       {
         if (value == null)
         {
-          s_Builder.Append("null");
+          m_Stream.Put("null");
         }
         else if (value is string str)
         {
-          SerializeString(str);
+          WriteString(str);
         }
         else if (value is bool b)
         {
-          s_Builder.Append(b ? "true" : "false");
+          m_Stream.Put(b ? "true" : "false");
         }
         else if (value is IDictionary dict)
         {
-          SerializeObject(dict);
+          WriteObject(dict);
         }
         else if (value is IEnumerable list)
         {
-          SerializeArray(list);
+          WriteArray(list);
         }
         else if (value is char c)
         {
-          s_Builder.Append('\"');
-          s_Builder.Append(c);
-          s_Builder.Append('\"');
+          m_Stream.Put('\"');
+          m_Stream.Put(c);
+          m_Stream.Put('\"');
         }
         else
         {
-          SerializeOther(value);
+          WriteOther(value);
         }
       }
 
-      static void SerializeObject(IDictionary dict)
+      void WriteObject(IDictionary dict)
       {
-        s_Indent += INDENT;
+        m_Indent += m_IndentIncr;
 
-        int indent = s_Pretty ? s_Indent : 0;
+        int indent = m_Pretty ? m_Indent : 0;
 
-        s_Builder.Append(s_OpenObj);
+        m_Stream.Put(m_OpenObj);
 
         bool first = true;
 
@@ -656,39 +702,39 @@ namespace Ore
             continue;
 
           if (!first)
-            s_Builder.Append(s_Comma);
+            m_Stream.Put(m_Comma);
 
           first = false;
 
-          s_Builder.Append(' ', indent);
+          m_Stream.Put(' ', indent);
 
-          SerializeString(iter.Key.ToString());
+          WriteString(iter.Key.ToString());
 
-          s_Builder.Append(s_Colon);
+          m_Stream.Put(m_Colon);
 
-          SerializeValue(iter.Value);
+          WriteValue(iter.Value);
         }
 
-        s_Indent -= INDENT;
+        m_Indent -= m_IndentIncr;
 
-        if (s_Pretty)
+        if (m_Pretty)
         {
-          s_Builder.Append('\n')
-                   .Append(' ', s_Indent);
+          m_Stream.Put('\n');
+          m_Stream.Put(' ', m_Indent);
         }
 
-        s_Builder.Append('}');
+        m_Stream.Put('}');
       }
 
-      static void SerializeFields(object obj, Type type, bool nonPublic)
+      void WriteReflectedFields(object obj, Type type, bool nonPublic)
       {
         // reflection warning!
 
-        s_Indent += INDENT;
+        m_Indent += m_IndentIncr;
 
-        int indent = s_Pretty ? s_Indent : 0;
+        int indent = m_Pretty ? m_Indent : 0;
 
-        s_Builder.Append(s_OpenObj);
+        m_Stream.Put(m_OpenObj);
 
         bool first = true;
 
@@ -700,17 +746,17 @@ namespace Ore
             continue;
 
           if (!first)
-            s_Builder.Append(s_Comma);
+            m_Stream.Put(m_Comma);
 
           first = false;
 
-          s_Builder.Append(' ', indent);
+          m_Stream.Put(' ', indent);
 
-          SerializeString(field.Name);
+          WriteString(field.Name);
 
-          s_Builder.Append(s_Colon);
+          m_Stream.Put(m_Colon);
 
-          SerializeValue(field.GetValue(obj));
+          WriteValue(field.GetValue(obj));
         }
 
         if (obj is null)
@@ -725,112 +771,112 @@ namespace Ore
               continue;
 
             if (!first)
-              s_Builder.Append(s_Comma);
+              m_Stream.Put(m_Comma);
 
             first = false;
 
-            s_Builder.Append(' ', indent);
+            m_Stream.Put(' ', indent);
 
-            SerializeString(prop.Name);
+            WriteString(prop.Name);
 
-            s_Builder.Append(s_Colon);
+            m_Stream.Put(m_Colon);
 
-            SerializeValue(getter.Invoke(null, System.Array.Empty<object>()));
+            WriteValue(getter.Invoke(null, System.Array.Empty<object>()));
           }
         }
 
-        s_Indent -= INDENT;
+        m_Indent -= m_IndentIncr;
 
-        if (s_Pretty)
+        if (m_Pretty)
         {
-          s_Builder.Append('\n')
-                   .Append(' ', s_Indent);
+          m_Stream.Put('\n');
+          m_Stream.Put(' ', m_Indent);
         }
 
-        s_Builder.Append('}');
+        m_Stream.Put('}');
       }
 
-      static void SerializeArray(IEnumerable array)
+      void WriteArray(IEnumerable array)
       {
-        s_Indent += INDENT;
+        m_Indent += m_IndentIncr;
 
-        int indent = s_Pretty ? s_Indent : 0;
+        int indent = m_Pretty ? m_Indent : 0;
 
-        s_Builder.Append(s_OpenArr);
+        m_Stream.Put(m_OpenArr);
 
         bool first = true;
 
         foreach (object obj in array)
         {
           if (!first)
-            s_Builder.Append(s_Comma);
+            m_Stream.Put(m_Comma);
 
           first = false;
 
-          s_Builder.Append(' ', indent);
+          m_Stream.Put(' ', indent);
 
-          SerializeValue(obj);
+          WriteValue(obj);
         }
 
-        s_Indent -= INDENT;
+        m_Indent -= m_IndentIncr;
 
-        if (s_Pretty)
+        if (m_Pretty)
         {
-          s_Builder.Append('\n')
-                   .Append(' ', s_Indent);
+          m_Stream.Put('\n');
+          m_Stream.Put(' ', m_Indent);
         }
 
-        s_Builder.Append(']');
+        m_Stream.Put(']');
       }
 
-      static void SerializeString(string str)
+      void WriteString(string str)
       {
-        s_Builder.Append('\"');
+        m_Stream.Put('\"');
 
         foreach (var c in str)
         {
           switch (c)
           {
             case '"':
-              s_Builder.Append("\\\"");
+              m_Stream.Put("\\\"");
               break;
             case '\\':
-              s_Builder.Append("\\\\");
+              m_Stream.Put("\\\\");
               break;
             case '\b':
-              s_Builder.Append("\\b");
+              m_Stream.Put("\\b");
               break;
             case '\f':
-              s_Builder.Append("\\f");
+              m_Stream.Put("\\f");
               break;
             case '\n':
-              s_Builder.Append("\\n");
+              m_Stream.Put("\\n");
               break;
             case '\r':
-              s_Builder.Append("\\r");
+              m_Stream.Put("\\r");
               break;
             case '\t':
-              s_Builder.Append("\\t");
+              m_Stream.Put("\\t");
               break;
             default:
               int codepoint = System.Convert.ToInt32(c);
               if ((codepoint >= 32) && (codepoint <= 126))
               {
-                s_Builder.Append(c);
+                m_Stream.Put(c);
               }
               else
               {
-                s_Builder.Append("\\u");
-                s_Builder.Append(codepoint.ToString("x4"));
+                m_Stream.Put("\\u");
+                m_Stream.Put(codepoint.ToString("x4"));
               }
               break;
           }
         }
 
-        s_Builder.Append('\"');
+        m_Stream.Put('\"');
       }
 
-      static void SerializeOther(object value)
+      void WriteOther(object value)
       {
         // NOTE: decimals lose precision during serialization.
         // They always have, I'm just letting you know.
@@ -843,13 +889,13 @@ namespace Ore
         {
           default:
           case TypeCode.String:
-            SerializeString(value.ToString());
+            WriteString(value.ToString());
             break;
 
           case TypeCode.Single:
           case TypeCode.Double:
           case TypeCode.Decimal:
-            s_Builder.Append(System.Convert.ToDouble(value).ToString("R", Strings.InvariantFormatter));
+            m_Stream.Put(System.Convert.ToDouble(value).ToString("R", Strings.InvariantFormatter));
             break;
 
           case TypeCode.Int32:
@@ -862,44 +908,44 @@ namespace Ore
           case TypeCode.SByte:
             string str = ((System.IConvertible)value).ToInvariant();
             if (type.IsEnum)
-              SerializeString(str);
+              WriteString(str);
             else
-              s_Builder.Append(str);
+              m_Stream.Put(str);
             break;
 
           case TypeCode.DateTime:
-            s_Builder.Append(((System.DateTime)value).ToUniversalTime().ToISO8601());
+            m_Stream.Put(((System.DateTime)value).ToUniversalTime().ToISO8601());
             break;
 
           case TypeCode.Empty:
           case TypeCode.DBNull:
-            s_Builder.Append("null");
+            m_Stream.Put("null");
             break;
 
           case TypeCode.Object:
             if (value is System.TimeSpan span)
             {
-              s_Builder.Append(span.Ticks.ToInvariant());
+              m_Stream.Put(span.Ticks.ToInvariant());
             }
             else if (value is SerialVersion sver)
             {
-              SerializeString(sver.ToString());
+              WriteString(sver.ToString());
             }
             else if (value is Type ztatic)
             {
-              SerializeFields(null, ztatic, nonPublic: false);
+              WriteReflectedFields(null, ztatic, nonPublic: false);
             }
             else if (type.IsSerializable)
             {
-              SerializeFields(value, type, nonPublic: false);
+              WriteReflectedFields(value, type, nonPublic: false);
             }
             else if (type.IsValueType)
             {
-              SerializeFields(value, type, nonPublic: true);
+              WriteReflectedFields(value, type, nonPublic: true);
             }
             else
             {
-              SerializeString(value.ToString());
+              WriteString(value.ToString());
             }
             break;
         }
