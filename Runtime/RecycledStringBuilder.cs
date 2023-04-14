@@ -59,6 +59,17 @@ namespace Ore
 
   #region Static section
 
+    public static StringBuilder Borrow()
+    {
+      return HireBuilder(string.Empty, DEFAULT_BOB_SIZE);
+    }
+
+    public static void Return(StringBuilder bob)
+    {
+      FireBuilder(bob);
+    }
+
+
     #if UNITY_INCLUDE_TESTS
     internal static int AliveCount { get; private set; }
     #endif
