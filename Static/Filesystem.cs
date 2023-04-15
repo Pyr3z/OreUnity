@@ -58,10 +58,12 @@ namespace Ore
         LastException = null;
         return true;
       }
+      #if NEWTONSOFT_JSON
       catch (JsonException jex)
       {
         LastException = jex;
       }
+      #endif
       catch (IOException iox)
       {
         LastException = iox;
@@ -92,10 +94,12 @@ namespace Ore
         LastException      = null;
         return true;
       }
+      #if NEWTONSOFT_JSON
       catch (JsonException jex)
       {
         LastException = jex;
       }
+      #endif
       catch (IOException iox)
       {
         LastException = iox;
@@ -138,6 +142,12 @@ namespace Ore
         LastException = new UnanticipatedException("Some other squelched exception case occurred.");
         return false;
       }
+      #if NEWTONSOFT_JSON
+      catch (JsonException jex)
+      {
+        LastException = jex;
+      }
+      #endif
       catch (IOException iox)
       {
         LastException = iox;
@@ -185,6 +195,12 @@ namespace Ore
 
         LastException = new UnanticipatedException("Some other squelched exception case occurred.");
       }
+      #if NEWTONSOFT_JSON
+      catch (JsonException jex)
+      {
+        LastException = jex;
+      }
+      #endif
       catch (IOException iox)
       {
         LastException = iox;
@@ -232,6 +248,12 @@ namespace Ore
 
         LastException = new UnanticipatedException("Some other squelched exception case occurred.");
       }
+      #if NEWTONSOFT_JSON
+      catch (JsonException jex)
+      {
+        LastException = jex;
+      }
+      #endif
       catch (IOException iox)
       {
         LastException = iox;
