@@ -15,17 +15,9 @@ namespace Ore
     public DeviceFactor(DeviceDimension dim)
     {
       Dimension = dim;
-
-      if (dim.IsContinuous())
-      {
-        m_ContinuousKeys = new AnimationCurve();
-        m_DiscreteKeys   = null;
-      }
-      else
-      {
-        m_ContinuousKeys = null;
-        m_DiscreteKeys   = new HashMap<string,float>();
-      }
+      m_ContinuousKeys = new AnimationCurve();
+      m_DiscreteKeys   = new HashMap<string,float>();
+      // always make new objects here (K.I.S.S.)
     }
 
     public readonly DeviceDimension Dimension;
@@ -33,7 +25,11 @@ namespace Ore
     readonly AnimationCurve        m_ContinuousKeys;
     readonly HashMap<string,float> m_DiscreteKeys;
 
-    public bool IsEmpty => m_ContinuousKeys?.length == 0 && m_DiscreteKeys?.Count == 0;
+    public bool IsEmpty => m_ContinuousKeys.length == 0 && m_DiscreteKeys.Count == 0;
+
+    public bool IsContinuous => m_ContinuousKeys.length > 0;
+    public bool IsDiscrete   => m_DiscreteKeys.Count > 0;
+
 
     internal AnimationCurve Curve => m_ContinuousKeys;
 
@@ -41,13 +37,12 @@ namespace Ore
     [Pure]
     public float Evaluate()
     {
-      if (Dimension.TryQueryValue(out float t, out string key) &&
-          m_ContinuousKeys != null)
+      if (Dimension.TryQueryValue(out float t, out string key))
       {
         return m_ContinuousKeys.Evaluate(t);
       }
 
-      if (m_DiscreteKeys?.TryGetValue(key, out float weight) ?? false)
+      if (m_DiscreteKeys.TryGetValue(key, out float weight))
       {
         return weight;
       }
@@ -58,7 +53,7 @@ namespace Ore
 
     public DeviceFactor Key(float key, float weight) // continuous
     {
-      m_ContinuousKeys?.AddKey(key, weight);
+      m_ContinuousKeys.AddKey(key, weight);
       return this;
     }
 
@@ -66,24 +61,19 @@ namespace Ore
     {
       if (key.IsEmpty())
       {
-        if (m_DiscreteKeys != null)
-          m_DiscreteKeys[string.Empty] = weight;
+        m_DiscreteKeys[string.Empty] = weight;
         return this;
       }
 
       if (Dimension == DeviceDimension.Timezone &&
           Parsing.TryParseTimezoneOffset(key, out float offset))
       {
-        if (m_ContinuousKeys != null)
-          m_ContinuousKeys.AddKey(offset, weight);
+        m_ContinuousKeys.AddKey(offset, weight);
         return this;
       }
 
       if (Dimension == DeviceDimension.AspectRatio)
       {
-        if (m_ContinuousKeys is null)
-          return this;
-
         int colon = key.IndexOf(':');
         if (colon > 0 && float.TryParse(key.Remove(colon),      out float w) &&
                          float.TryParse(key.Substring(colon+1), out float h))
@@ -94,11 +84,11 @@ namespace Ore
         }
       }
 
-      if (m_ContinuousKeys != null && float.TryParse(key, out float f))
+      if (Dimension.IsContinuous() && float.TryParse(key, out float f))
       {
         m_ContinuousKeys.AddKey(f, weight);
       }
-      else if (m_DiscreteKeys != null)
+      else
       {
         m_DiscreteKeys[key] = weight;
       }
@@ -108,9 +98,6 @@ namespace Ore
 
     public DeviceFactor EaseCurve()
     {
-      if (m_ContinuousKeys is null)
-        return this;
-
       for (int i = 0; i < m_ContinuousKeys.length; ++i)
       {
         var key = m_ContinuousKeys[i];
@@ -124,9 +111,6 @@ namespace Ore
 
     public DeviceFactor SmoothCurve(float weight = 1f)
     {
-      if (m_ContinuousKeys is null)
-        return this;
-
       for (int i = 0; i < m_ContinuousKeys.length; ++i)
       {
         m_ContinuousKeys.SmoothTangents(i, weight);

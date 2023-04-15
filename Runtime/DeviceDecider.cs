@@ -258,7 +258,7 @@ namespace Ore
     {
       foreach (var factor in m_Factors.Values)
       {
-        if (factor.Dimension.IsContinuous() && !factor.IsEmpty)
+        if (factor.IsContinuous)
           yield return factor;
       }
     }
@@ -267,7 +267,7 @@ namespace Ore
     {
       foreach (var factor in m_Factors.Values)
       {
-        if (!factor.Dimension.IsContinuous() && !factor.IsEmpty)
+        if (factor.IsDiscrete)
           yield return factor;
       }
     }
