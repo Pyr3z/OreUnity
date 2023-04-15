@@ -43,12 +43,73 @@ namespace Ore
 
     public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object data, bool pretty, Encoding encoding = null)
     {
-      throw new System.NotImplementedException("Levi had to leave early");
+      try
+      {
+        MakePathTo(filepath);
+
+        var stream = new StreamWriter(filepath, append: false, encoding ?? s_DefaultEncoding);
+
+        using (new JsonAuthority.Scope(pretty))
+        {
+          JsonAuthority.SerializeTo(stream, data);
+        }
+
+        s_LastModifiedPath = filepath;
+        LastException = null;
+        return true;
+      }
+      catch (JsonException jex)
+      {
+        LastException = jex;
+      }
+      catch (IOException iox)
+      {
+        LastException = iox;
+      }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
+      }
+
+      return false;
     }
 
     public static bool TryWriteJson([NotNull] string filepath, [CanBeNull] object data, Encoding encoding = null)
     {
-      throw new System.NotImplementedException("Levi had to leave early");
+      try
+      {
+        MakePathTo(filepath);
+
+        var stream = new StreamWriter(filepath, append: false, encoding ?? s_DefaultEncoding);
+
+        JsonAuthority.SerializeTo(stream, data);
+
+        s_LastModifiedPath = filepath;
+        LastException      = null;
+        return true;
+      }
+      catch (JsonException jex)
+      {
+        LastException = jex;
+      }
+      catch (IOException iox)
+      {
+        LastException = iox;
+      }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
+      }
+
+      return false;
     }
 
 
