@@ -11,7 +11,7 @@ namespace Ore
   ///   Serializable proxy for a DeviceDecider.
   /// </summary>
   [System.Serializable]
-  public struct SerialDeviceDecider
+  public struct DeviceDeciderData
   {
     [System.Serializable]
     public struct Row
