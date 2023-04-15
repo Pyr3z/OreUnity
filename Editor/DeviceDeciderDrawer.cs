@@ -13,7 +13,7 @@ namespace Ore.Editor
   [CustomPropertyDrawer(typeof(SerialDeviceDecider))]
   public class DeviceDeciderDrawer : PropertyDrawer
   {
-    private DeviceDecider m_ScratchDad = new DeviceDecider();
+    readonly DeviceDecider m_ScratchDad = new DeviceDecider();
 
 
     public override void OnGUI(Rect total, SerializedProperty prop, GUIContent label)
@@ -87,7 +87,7 @@ namespace Ore.Editor
     }
 
 
-    private void UpdateScratchDaddy(SerializedProperty propRows)
+    void UpdateScratchDaddy(SerializedProperty propRows)
     {
       m_ScratchDad.ClearFactors();
 
