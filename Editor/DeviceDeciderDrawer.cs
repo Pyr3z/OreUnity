@@ -10,7 +10,7 @@ using UnityEditor;
 namespace Ore.Editor
 {
 
-  [CustomPropertyDrawer(typeof(SerialDeviceDecider))]
+  [CustomPropertyDrawer(typeof(DeviceDeciderData))]
   public class DeviceDeciderDrawer : PropertyDrawer
   {
     readonly DeviceDecider m_ScratchDad = new DeviceDecider();
@@ -18,7 +18,7 @@ namespace Ore.Editor
 
     public override void OnGUI(Rect total, SerializedProperty prop, GUIContent label)
     {
-      var propRows = prop.FindPropertyRelative(nameof(SerialDeviceDecider.Rows));
+      var propRows = prop.FindPropertyRelative(nameof(DeviceDeciderData.Rows));
 
       var pos = new Rect(total)
       {
@@ -37,7 +37,7 @@ namespace Ore.Editor
         return;
       }
 
-      var propConfigs = prop.FindPropertyRelative(nameof(SerialDeviceDecider.EaseCurves));
+      var propConfigs = prop.FindPropertyRelative(nameof(DeviceDeciderData.EaseCurves));
 
       pos.y = pos.yMax;
       pos.height = 18f;
@@ -47,7 +47,7 @@ namespace Ore.Editor
       propConfigs.boolValue = EditorGUI.Toggle(pos, label, propConfigs.boolValue);
       pos.y += 20f;
 
-      propConfigs = prop.FindPropertyRelative(nameof(SerialDeviceDecider.SmoothCurves));
+      propConfigs = prop.FindPropertyRelative(nameof(DeviceDeciderData.SmoothCurves));
 
       label.text = propConfigs.displayName;
       propConfigs.floatValue = EditorGUI.DelayedFloatField(pos, label, propConfigs.floatValue);
@@ -69,7 +69,7 @@ namespace Ore.Editor
 
     public override float GetPropertyHeight(SerializedProperty prop, GUIContent label)
     {
-      var propRows = prop.FindPropertyRelative(nameof(SerialDeviceDecider.Rows));
+      var propRows = prop.FindPropertyRelative(nameof(DeviceDeciderData.Rows));
 
       if (!propRows.isExpanded)
       {

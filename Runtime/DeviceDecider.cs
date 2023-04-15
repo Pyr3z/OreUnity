@@ -24,7 +24,7 @@ namespace Ore
       Verbose   = verbose;
     }
 
-    public DeviceDecider(SerialDeviceDecider data, float threshold = DEFAULT_THRESHOLD, bool verbose = DEFAULT_VERBOSE)
+    public DeviceDecider(DeviceDeciderData data, float threshold = DEFAULT_THRESHOLD, bool verbose = DEFAULT_VERBOSE)
     {
       m_Factors = new HashMap<DeviceDimension,DeviceFactor>();
       _         = Load(data);
@@ -32,7 +32,7 @@ namespace Ore
       Verbose   = verbose;
     }
 
-    public bool Load(SerialDeviceDecider data)
+    public bool Load(DeviceDeciderData data)
     {
       if (data.Rows == null)
         return false;

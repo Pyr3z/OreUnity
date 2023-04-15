@@ -9,7 +9,7 @@ using UnityEditor;
 namespace Ore.Editor
 {
 
-  [CustomPropertyDrawer(typeof(SerialDeviceDecider.Row))]
+  [CustomPropertyDrawer(typeof(DeviceDeciderData.Row))]
   public class DeviceDeciderRowDrawer : PropertyDrawer
   {
     private bool ValidateDimension(System.Enum dim)
@@ -19,9 +19,9 @@ namespace Ore.Editor
 
     public override void OnGUI(Rect pos, SerializedProperty prop, GUIContent label)
     {
-      var prop_dim = prop.FindPropertyRelative(nameof(SerialDeviceDecider.Row.Dimension));
-      var prop_key = prop.FindPropertyRelative(nameof(SerialDeviceDecider.Row.Key));
-      var prop_wgt = prop.FindPropertyRelative(nameof(SerialDeviceDecider.Row.Weight));
+      var prop_dim = prop.FindPropertyRelative(nameof(DeviceDeciderData.Row.Dimension));
+      var prop_key = prop.FindPropertyRelative(nameof(DeviceDeciderData.Row.Key));
+      var prop_wgt = prop.FindPropertyRelative(nameof(DeviceDeciderData.Row.Weight));
 
       pos.width = (pos.width - 4f) / 3f;
 
