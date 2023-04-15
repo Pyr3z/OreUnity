@@ -17,15 +17,55 @@ namespace Ore
   /// </summary>
   public class DeviceDecider
   {
-    public DeviceDecider()
+    public DeviceDecider(float threshold = DEFAULT_THRESHOLD, bool verbose = DEFAULT_VERBOSE)
     {
       m_Factors = new HashMap<DeviceDimension,DeviceFactor>();
+      Threshold = threshold;
+      Verbose   = verbose;
     }
 
-    public DeviceDecider(SerialDeviceDecider sdd)
+    public DeviceDecider(SerialDeviceDecider data, float threshold = DEFAULT_THRESHOLD, bool verbose = DEFAULT_VERBOSE)
     {
       m_Factors = new HashMap<DeviceDimension,DeviceFactor>();
-      _         = TryDeserialize(sdd);
+      _         = Load(data);
+      Threshold = threshold;
+      Verbose   = verbose;
+    }
+
+    public bool Load(SerialDeviceDecider data)
+    {
+      if (data.Rows == null)
+        return false;
+
+      if (data.Rows.Length == 0)
+      {
+        return true; // s'gotta be empty on purpose, right?
+      }
+
+      int count = 0;
+
+      foreach (var row in data.Rows)
+      {
+        if (ParseRow(row.Dimension, row.Key, row.Weight))
+        {
+          ++ count;
+        }
+      }
+
+      foreach (var factor in GetContinuousFactors())
+      {
+        if (data.EaseCurves)
+        {
+          factor.EaseCurve();
+        }
+
+        if (!data.SmoothCurves.ApproximatelyZero())
+        {
+          factor.SmoothCurve(data.SmoothCurves);
+        }
+      }
+
+      return count > 0;
     }
 
 
@@ -37,10 +77,10 @@ namespace Ore
 
 
     [PublicAPI]
-    public float Threshold { get; set; } = DEFAULT_THRESHOLD;
+    public float Threshold { get; set; }
 
     [PublicAPI]
-    public bool Verbose { get; set; } = DEFAULT_VERBOSE;
+    public bool Verbose { get; set; }
 
 
     public bool Decide()
@@ -134,58 +174,52 @@ namespace Ore
     }
 
 
-    public void AddFactor([NotNull] DeviceFactor factor)
+    public DeviceDecider Add([NotNull] DeviceFactor factor)
     {
       if (false == m_Factors.Map(factor.Dimension, factor, out var preexisting))
       {
-
+        preexisting.Merge(factor);
       }
+      else if (factor.Dimension.IsContinuous())
+      {
+        ++ ContinuousCount;
+      }
+
+      return this;
     }
 
-    public void ClearFactors()
+    public int AddRow(DeviceDimension dimension, [NotNull] string discreteKey, float weight)
     {
-      m_Factors.Clear();
-      ContinuousCount = 0;
+      if (!m_Factors.Find(dimension, out var factor) || factor is null)
+      {
+        m_Factors[dimension] = factor = new DeviceFactor(dimension);
+
+        if (dimension.IsContinuous())
+        {
+          ++ ContinuousCount;
+        }
+      }
+
+      string[] splits = discreteKey.Split(KEY_SEPARATORS, System.StringSplitOptions.RemoveEmptyEntries);
+      int added = 0;
+
+      if (splits.IsEmpty())
+        return added;
+
+      foreach (string split in splits)
+      {
+        string trimmed = split.Trim();
+        if (trimmed.Length > 0)
+        {
+          _ = factor.Key(trimmed, weight);
+          ++ added;
+        }
+      }
+
+      return added;
     }
 
-
-    public bool TryDeserialize(SerialDeviceDecider data)
-    {
-      if (data.Rows == null)
-        return false;
-
-      if (data.Rows.Length == 0)
-      {
-        return true; // s'gotta be empty on purpose, right?
-      }
-
-      int count = 0;
-
-      foreach (var row in data.Rows)
-      {
-        if (TryParseRow(row.Dimension, row.Key, row.Weight))
-        {
-          ++ count;
-        }
-      }
-
-      foreach (var factor in GetContinuousFactors())
-      {
-        if (data.EaseCurves)
-        {
-          factor.EaseCurve();
-        }
-
-        if (!data.SmoothCurves.ApproximatelyZero())
-        {
-          factor.SmoothCurve(data.SmoothCurves);
-        }
-      }
-
-      return count > 0;
-    }
-
-    public bool TryParseRow(string dimension, string key, string weight)
+    public bool ParseRow(string dimension, [NotNull] string key, string weight)
     {
       if (!float.TryParse(weight, out float w) ||
           !DeviceDimensions.TryParse(dimension, out DeviceDimension dim))
@@ -193,30 +227,14 @@ namespace Ore
         return false;
       }
 
-      if (!m_Factors.TryGetValue(dim, out DeviceFactor factor) || factor is null)
-      {
-        m_Factors[dim] = factor = new DeviceFactor(dim);
+      return AddRow(dim, key, w) > 0;
+    }
 
-        if (dim.IsContinuous())
-        {
-          ++ ContinuousCount;
-        }
-      }
 
-      var splits = key.Split(KEY_SEPARATORS, System.StringSplitOptions.RemoveEmptyEntries);
-
-      if (splits.IsEmpty())
-        return false;
-
-      foreach (var split in splits)
-      {
-        if (!split.IsEmpty())
-        {
-          _ = factor.Key(split.Trim(), w);
-        }
-      }
-
-      return true;
+    public void ClearFactors()
+    {
+      m_Factors.Clear();
+      ContinuousCount = 0;
     }
 
 
@@ -237,7 +255,12 @@ namespace Ore
     }
 
 
-    public void Disable(bool constantDecision)
+    public void Enable(float threshold = DEFAULT_THRESHOLD)
+    {
+      Threshold = threshold;
+    }
+
+    public void Disable(bool constantDecision = false)
     {
       Threshold = constantDecision ? 0f : MAX_THRESHOLD;
     }
@@ -254,7 +277,7 @@ namespace Ore
     }
 
 
-    public IEnumerable<DeviceFactor> GetContinuousFactors()
+    internal IEnumerable<DeviceFactor> GetContinuousFactors()
     {
       foreach (var factor in m_Factors.Values)
       {
@@ -263,7 +286,7 @@ namespace Ore
       }
     }
 
-    public IEnumerable<DeviceFactor> GetDiscreteFactors()
+    internal IEnumerable<DeviceFactor> GetDiscreteFactors()
     {
       foreach (var factor in m_Factors.Values)
       {

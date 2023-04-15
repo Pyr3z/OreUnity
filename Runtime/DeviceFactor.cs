@@ -119,6 +119,47 @@ namespace Ore
       return this;
     }
 
+    public DeviceFactor Merge([NotNull] DeviceFactor other)
+    {
+      if (ReferenceEquals(this, other))
+        return this;
+
+      OAssert.True(Dimension == other.Dimension, "Dimensions must be equal");
+
+      int ocl = other.m_ContinuousKeys.length;
+      if (ocl > 0)
+      {
+        int cl = m_ContinuousKeys.length;
+        if (cl == 0)
+        {
+          m_ContinuousKeys.keys = other.m_ContinuousKeys.keys;
+        }
+        else
+        {
+          var merged = new Keyframe[cl + ocl];
+
+          m_ContinuousKeys.keys.CopyTo(merged, 0);
+          other.m_ContinuousKeys.keys.CopyTo(merged, cl);
+
+          // TODO sort keys?
+
+          m_ContinuousKeys.keys = merged;
+        }
+      }
+
+      if (other.m_DiscreteKeys.Count > 0)
+      {
+        // wanted to use HashMap.Union here, if not for the special additive behaviour
+        foreach (var (key,val) in other.m_DiscreteKeys)
+        {
+          _ = m_DiscreteKeys.Find(key, out float pre);
+          m_DiscreteKeys[key] = pre + val;
+        }
+      }
+
+      return this;
+    }
+
 
     public override string ToString()
     {

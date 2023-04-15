@@ -104,7 +104,7 @@ namespace Ore.Editor
 
         string weight = row.stringValue;
 
-        if (!m_ScratchDad.TryParseRow(dimension, key, weight))
+        if (!m_ScratchDad.ParseRow(dimension, key, weight))
         {
           Orator.ReachedOnce(propRows.serializedObject.targetObject);
         }
