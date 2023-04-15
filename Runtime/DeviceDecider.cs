@@ -1,44 +1,9 @@
 /*! @file     Runtime/DeviceDecider.cs
  *  @author   Levi Perez (levi\@leviperez.dev)
  *  @date     2022-06-01
- *
- *  @details  Here's a complete example of how to use this class:
-```csharp
-private class ExampleUsage_DeviceDecider
-{
-
-  [SerializeField] // NOTICE: this doesn't need to be a serialized field if coming from flights!
-  private SerialDeviceDecider m_DeviceDeciderRawData;
-    // (...however, it being serialized here means it's super easy to view values in the Inspector.)
-
-
-  [System.NonSerialized]
-  private bool? m_CachedDecision = null; // optional optimization suggestion.
-
-  private bool GetDecision()
-  {
-    if (m_CachedDecision != null)
-      return (bool)m_CachedDecision;
-
-    var decider = new DeviceDecider(m_DeviceDeciderRawData);
-      // ( you can also use `TryDeserialize(...)` or `TryParseRow(...)`
-      //   instead of this constructor to implement more defensive coding! )
-
-    // you can use either this form, probably for extra logging:
-    bool decision = decider.Decide(out float total_weight);
-    Debug.Log($"decision={decision}; total_weight={total_weight}");
-
-    // or you can use this form, which can short-circuit to be slightly faster at runtime.
-    bool decision_fast = decider.DecideShort();
-
-    Debug.Assert(decision == decision_fast, "decision == decision_fast");
-
-    m_CachedDecision = decision;
-    return decision;
-  }
-}
-```
 **/
+
+using JetBrains.Annotations;
 
 using System.Collections.Generic;
 
@@ -48,56 +13,131 @@ using UnityEngine;
 namespace Ore
 {
   /// <summary>
-  ///   A.K.A. DeviceDaddy
+  ///   A.K.A. DeviceDaddy; A.K.A. the data structure that drove LAUD.
   /// </summary>
   public class DeviceDecider
   {
-    public float Threshold
-    {
-      get => m_Threshold;
-      set => m_Threshold = value;
-    }
-    public bool Verbose
-    {
-      get => m_Verbose;
-      set => m_Verbose = value;
-    }
-
-
-    internal int FactorCount => m_Factors.Count;
-
-    internal int ContinuousCount => m_ContinuousCount;
-
-
-    private static readonly char[] KEY_SEPARATORS = new char[] { '|' };
-
-    private const float MAX_THRESHOLD = float.MaxValue / 2f;
-
-
-    private float m_Threshold = DEFAULT_THRESHOLD;
-    private const float DEFAULT_THRESHOLD = 1f;
-
-    private readonly HashMap<DeviceDimension,DeviceFactor> m_Factors
-      = new HashMap<DeviceDimension,DeviceFactor>();
-
-    private int m_ContinuousCount;
-
-    private bool m_Verbose = false;
-
-
     public DeviceDecider()
     {
+      m_Factors = new HashMap<DeviceDimension,DeviceFactor>();
     }
+
     public DeviceDecider(SerialDeviceDecider sdd)
     {
-      _ = TryDeserialize(sdd);
+      m_Factors = new HashMap<DeviceDimension,DeviceFactor>();
+      _         = TryDeserialize(sdd);
+    }
+
+
+    const float DEFAULT_THRESHOLD = 1f;
+    const float MAX_THRESHOLD     = float.MaxValue / 2f;
+    const bool  DEFAULT_VERBOSE   = false;
+
+    static readonly char[] KEY_SEPARATORS = { '|' };
+
+
+    [PublicAPI]
+    public float Threshold { get; set; } = DEFAULT_THRESHOLD;
+
+    [PublicAPI]
+    public bool Verbose { get; set; } = DEFAULT_VERBOSE;
+
+
+    public bool Decide()
+    {
+      return Decide(out _ );
+    }
+
+    public bool Decide(out float sum)
+    {
+      // this version doesn't short-circuit.
+
+      sum = 0f;
+
+      if (IsDisabled(out bool decision))
+      {
+        if (Verbose)
+        {
+          Orator.Log<DeviceDecider>($" is disabled. Default decision: {decision}");
+        }
+
+        return decision;
+      }
+
+      if (Verbose)
+      {
+        foreach (var factor in m_Factors.Values)
+        {
+          float f = factor.Evaluate();
+          Orator.Log<DeviceDecider>($"{factor} evaluated to weight {f}");
+          sum += f;
+        }
+
+        decision = sum >= Threshold;
+
+        Orator.Log<DeviceDecider>($"FINAL SUM = {sum:F2}; (decision = {decision})");
+
+        return decision;
+      }
+
+      foreach (var factor in m_Factors.Values)
+      {
+        sum += factor.Evaluate();
+      }
+
+      return sum >= Threshold;
+    }
+
+    public bool DecideShort()
+    {
+      // this version "earlies out" by short-circuiting on exceeding the threshold.
+
+      if (IsDisabled(out bool decision))
+      {
+        if (Verbose)
+        {
+          Orator.Log<DeviceDecider>($" is disabled. Default decision: {decision}");
+        }
+
+        return decision;
+      }
+
+      float sum = 0f;
+      decision = false;
+
+      if (Verbose)
+      {
+        foreach (var factor in m_Factors.Values)
+        {
+          float f = factor.Evaluate();
+          Orator.Log<DeviceDecider>($"{factor} evaluated to weight {f}");
+
+          sum      += f;
+          decision =  sum >= Threshold;
+
+          if (decision)
+            break;
+        }
+
+        Orator.Log<DeviceDecider>($"FINAL SUM = {sum}; (decision = {decision})");
+        return decision;
+      }
+
+      foreach (var factor in m_Factors.Values)
+      {
+        sum += factor.Evaluate();
+        if (sum >= Threshold)
+          return true;
+      }
+
+      return false;
     }
 
 
     public void ClearFactors()
     {
       m_Factors.Clear();
-      m_ContinuousCount = 0;
+      ContinuousCount = 0;
     }
 
 
@@ -151,7 +191,7 @@ namespace Ore
 
         if (dim.IsContinuous())
         {
-          ++ m_ContinuousCount;
+          ++ ContinuousCount;
         }
       }
 
@@ -191,105 +231,18 @@ namespace Ore
 
     public void Disable(bool constantDecision)
     {
-      m_Threshold = constantDecision ? 0f : MAX_THRESHOLD;
-    }
-
-
-    public bool IsDisabled(out bool decision)
-    {
-      decision = m_Threshold < MAX_THRESHOLD;
-      return m_Threshold < Floats.Epsilon || m_Threshold >= MAX_THRESHOLD;
+      Threshold = constantDecision ? 0f : MAX_THRESHOLD;
     }
 
     public bool IsDisabled()
     {
-      return m_Threshold < Floats.Epsilon || m_Threshold >= MAX_THRESHOLD;
+      return Threshold < Floats.Epsilon || Threshold >= MAX_THRESHOLD;
     }
 
-
-    public bool Decide()
+    public bool IsDisabled(out bool defaultDecision)
     {
-      return Decide(out _ );
-    }
-
-    public bool Decide(out float sum)
-    {
-      // this version doesn't short-circuit.
-
-      sum = 0f;
-
-      if (IsDisabled(out bool decision))
-      {
-        if (m_Verbose)
-        {
-          Debug.Log($"<{nameof(DeviceDecider)}>  is disabled. Default decision: {decision}");
-        }
-
-        return decision;
-      }
-
-      if (m_Verbose)
-      {
-        foreach (var factor in m_Factors.Values)
-        {
-          float f = factor.Evaluate();
-          Debug.Log($"<{nameof(DeviceDecider)}>  {factor} evaluated to weight {f}");
-          sum += f;
-        }
-
-        Debug.Log($"<{nameof(DeviceDecider)}>  FINAL SUM = {sum}; (decision = {sum >= m_Threshold})");
-      }
-      else
-      {
-        foreach (var factor in m_Factors.Values)
-        {
-          sum += factor.Evaluate();
-        }
-      }
-
-      return sum >= m_Threshold;
-    }
-
-    public bool DecideShort()
-    {
-      // this version "earlies out" by short-circuiting on exceeding the threshold.
-
-      if (IsDisabled(out bool decision))
-      {
-        if (m_Verbose)
-        {
-          Debug.Log($"<{nameof(DeviceDecider)}>  is disabled. Default decision: {decision}");
-        }
-
-        return decision;
-      }
-
-      float sum = 0f;
-
-      if (m_Verbose)
-      {
-        foreach (var factor in m_Factors.Values)
-        {
-          float f = factor.Evaluate();
-          Debug.Log($"<{nameof(DeviceDecider)}>  {factor} evaluated to weight {f}");
-          sum += f;
-
-          if (sum >= m_Threshold)
-            break;
-        }
-
-        Debug.Log($"<{nameof(DeviceDecider)}>  FINAL SUM = {sum}; (decision = {sum >= m_Threshold})");
-        return sum >= m_Threshold;
-      }
-
-      foreach (var factor in m_Factors.Values)
-      {
-        sum += factor.Evaluate();
-        if (sum >= m_Threshold)
-          return true;
-      }
-
-      return false;
+      defaultDecision = Threshold < MAX_THRESHOLD;
+      return Threshold < Floats.Epsilon || Threshold >= MAX_THRESHOLD;
     }
 
 
@@ -310,6 +263,14 @@ namespace Ore
           yield return factor;
       }
     }
+
+
+    internal int FactorCount => m_Factors.Count;
+
+    internal int ContinuousCount { get; private set; }
+
+
+    readonly HashMap<DeviceDimension,DeviceFactor> m_Factors;
 
   } // end class DeviceDecider
 
