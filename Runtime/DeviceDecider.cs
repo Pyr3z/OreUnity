@@ -134,6 +134,14 @@ namespace Ore
     }
 
 
+    public void AddFactor([NotNull] DeviceFactor factor)
+    {
+      if (false == m_Factors.Map(factor.Dimension, factor, out var preexisting))
+      {
+
+      }
+    }
+
     public void ClearFactors()
     {
       m_Factors.Clear();
@@ -141,19 +149,19 @@ namespace Ore
     }
 
 
-    public bool TryDeserialize(SerialDeviceDecider sdd)
+    public bool TryDeserialize(SerialDeviceDecider data)
     {
-      if (sdd.Rows == null)
+      if (data.Rows == null)
         return false;
 
-      if (sdd.Rows.Length == 0)
+      if (data.Rows.Length == 0)
       {
         return true; // s'gotta be empty on purpose, right?
       }
 
       int count = 0;
 
-      foreach (var row in sdd.Rows)
+      foreach (var row in data.Rows)
       {
         if (TryParseRow(row.Dimension, row.Key, row.Weight))
         {
@@ -163,14 +171,14 @@ namespace Ore
 
       foreach (var factor in GetContinuousFactors())
       {
-        if (sdd.EaseCurves)
+        if (data.EaseCurves)
         {
           factor.EaseCurve();
         }
 
-        if (!sdd.SmoothCurves.ApproximatelyZero())
+        if (!data.SmoothCurves.ApproximatelyZero())
         {
-          factor.SmoothCurve(sdd.SmoothCurves);
+          factor.SmoothCurve(data.SmoothCurves);
         }
       }
 
@@ -250,7 +258,7 @@ namespace Ore
     {
       foreach (var factor in m_Factors.Values)
       {
-        if (factor.IsContinuous)
+        if (factor.Dimension.IsContinuous() && !factor.IsEmpty)
           yield return factor;
       }
     }
@@ -259,7 +267,7 @@ namespace Ore
     {
       foreach (var factor in m_Factors.Values)
       {
-        if (factor.IsDiscrete)
+        if (!factor.Dimension.IsContinuous() && !factor.IsEmpty)
           yield return factor;
       }
     }
