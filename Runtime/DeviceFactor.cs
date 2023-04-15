@@ -3,64 +3,87 @@
  *  @date     2022-05-10
 **/
 
-using System.Collections.Generic;
+using JetBrains.Annotations;
 
 using UnityEngine;
 
 
 namespace Ore
 {
-
   public class DeviceFactor
   {
-    public DeviceDimension Dimension => m_Dimension;
+    public DeviceFactor(DeviceDimension dim)
+    {
+      Dimension = dim;
 
-    public bool IsContinuous => m_ContinuousKeys.length > 0;
-    public bool IsDiscrete   => m_DiscreteKeys.Count > 0;
+      if (dim.IsContinuous())
+      {
+        m_ContinuousKeys = new AnimationCurve();
+        m_DiscreteKeys   = null;
+      }
+      else
+      {
+        m_ContinuousKeys = null;
+        m_DiscreteKeys   = new HashMap<string,float>();
+      }
+    }
 
-    public int Count => (m_ContinuousKeys?.length ?? 0) + (m_DiscreteKeys?.Count ?? 0);
+    public readonly DeviceDimension Dimension;
 
+    readonly AnimationCurve        m_ContinuousKeys;
+    readonly HashMap<string,float> m_DiscreteKeys;
+
+    public bool IsEmpty => m_ContinuousKeys?.length == 0 && m_DiscreteKeys?.Count == 0;
 
     internal AnimationCurve Curve => m_ContinuousKeys;
 
 
-    private readonly DeviceDimension       m_Dimension;
-    private readonly AnimationCurve        m_ContinuousKeys = new AnimationCurve();
-    private readonly HashMap<string,float> m_DiscreteKeys   = new HashMap<string,float>();
-
-
-    public DeviceFactor(DeviceDimension dim)
+    [Pure]
+    public float Evaluate()
     {
-      m_Dimension = dim;
+      if (Dimension.TryQueryValue(out float t, out string key) &&
+          m_ContinuousKeys != null)
+      {
+        return m_ContinuousKeys.Evaluate(t);
+      }
+
+      if (m_DiscreteKeys?.TryGetValue(key, out float weight) ?? false)
+      {
+        return weight;
+      }
+
+      return 0f;
     }
 
 
     public DeviceFactor Key(float key, float weight) // continuous
     {
-      Debug.Assert(m_Dimension.IsContinuous());
-
-      m_ContinuousKeys.AddKey(key, weight);
-
+      m_ContinuousKeys?.AddKey(key, weight);
       return this;
     }
 
-    public DeviceFactor Key(string key, float weight) // discrete (unless Timezone or float key)
+    public DeviceFactor Key(string key, float weight) // discrete (unless Timezone, AspectRatio)
     {
       if (key.IsEmpty())
       {
-        m_DiscreteKeys[string.Empty] = weight;
+        if (m_DiscreteKeys != null)
+          m_DiscreteKeys[string.Empty] = weight;
         return this;
       }
 
-      if (m_Dimension == DeviceDimension.Timezone &&
+      if (Dimension == DeviceDimension.Timezone &&
           Parsing.TryParseTimezoneOffset(key, out float offset))
       {
-        m_ContinuousKeys.AddKey(offset, weight);
+        if (m_ContinuousKeys != null)
+          m_ContinuousKeys.AddKey(offset, weight);
         return this;
       }
 
-      if (m_Dimension == DeviceDimension.AspectRatio)
+      if (Dimension == DeviceDimension.AspectRatio)
       {
+        if (m_ContinuousKeys is null)
+          return this;
+
         int colon = key.IndexOf(':');
         if (colon > 0 && float.TryParse(key.Remove(colon),      out float w) &&
                          float.TryParse(key.Substring(colon+1), out float h))
@@ -71,11 +94,11 @@ namespace Ore
         }
       }
 
-      if (m_Dimension.IsContinuous() && float.TryParse(key, out float f))
+      if (m_ContinuousKeys != null && float.TryParse(key, out float f))
       {
         m_ContinuousKeys.AddKey(f, weight);
       }
-      else // add discrete:
+      else if (m_DiscreteKeys != null)
       {
         m_DiscreteKeys[key] = weight;
       }
@@ -85,7 +108,8 @@ namespace Ore
 
     public DeviceFactor EaseCurve()
     {
-      Debug.Assert(m_Dimension.IsContinuous());
+      if (m_ContinuousKeys is null)
+        return this;
 
       for (int i = 0; i < m_ContinuousKeys.length; ++i)
       {
@@ -100,7 +124,8 @@ namespace Ore
 
     public DeviceFactor SmoothCurve(float weight = 1f)
     {
-      Debug.Assert(m_Dimension.IsContinuous());
+      if (m_ContinuousKeys is null)
+        return this;
 
       for (int i = 0; i < m_ContinuousKeys.length; ++i)
       {
@@ -113,26 +138,7 @@ namespace Ore
 
     public override string ToString()
     {
-      if (m_Dimension == DeviceDimension.None)
-        return "\"None\"";
-      else
-        return $"\"{m_Dimension}\" ({m_Dimension.QueryValue()})";
-    }
-
-
-    public float Evaluate()
-    {
-      if (m_Dimension.TryQueryValue(out float t, out string key))
-      {
-        return m_ContinuousKeys.Evaluate(t);
-      }
-
-      if (m_DiscreteKeys.TryGetValue(key, out float weight))
-      {
-        return weight;
-      }
-
-      return 0f;
+      return $"\"{Dimension}\" ({Dimension.QueryValue()})";
     }
 
   } // end class Evaluator
