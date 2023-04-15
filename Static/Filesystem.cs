@@ -51,35 +51,145 @@ namespace Ore
       throw new System.NotImplementedException("Levi had to leave early");
     }
 
-    public static bool TryReadJson([NotNull] string filepath, out object obj, Encoding encoding = null)
-    {
-      throw new System.NotImplementedException("Levi had to leave early");
-    }
 
     public static bool TryReadJson<T>([NotNull] string filepath, out T obj, Encoding encoding = null)
       where T : new()
     {
-      obj = default;
-
-      if (!Paths.IsValidPath(filepath))
+      if (!File.Exists(filepath))
       {
-        LastException = new ArgumentException($"{nameof(filepath)}: invalid path \"{filepath}\"");
+        LastException = new FileNotFoundException("File does not exist!", filepath);
+        obj = default;
         return false;
       }
 
-      //
+      try
+      {
+        var stream = new StreamReader(filepath, encoding ?? s_DefaultEncoding);
 
-      throw new System.NotImplementedException("Levi had to leave early");
+        s_LastReadPath = filepath;
+
+        if (JsonAuthority.TryDeserializeStream(stream, out obj))
+        {
+          LastException = null;
+          return true;
+        }
+
+        LastException = new UnanticipatedException("Some other squelched exception case occurred.");
+        return false;
+      }
+      catch (IOException iox)
+      {
+        LastException = iox;
+      }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (SecurityException sec)
+      {
+        LastException = sec;
+      }
+      catch (Exception e)
+      {
+        LastException = new UnanticipatedException(e);
+      }
+
+      obj = default;
+      return false;
     }
 
     public static bool TryReadJsonObject([NotNull] string filepath, out IDictionary<string,object> obj, Encoding encoding = null)
     {
-      throw new System.NotImplementedException("Levi had to leave early");
+      if (!File.Exists(filepath))
+      {                
+        LastException = new FileNotFoundException("File does not exist!", filepath);
+        obj = null;
+        return false;
+      }
+
+      try
+      {
+        var stream = new StreamReader(filepath, encoding ?? s_DefaultEncoding);
+
+        s_LastReadPath = filepath;
+
+        var boxed = JsonAuthority.DeserializeStream(stream);
+
+        if (boxed is IDictionary<string,object> casted)
+        {
+          LastException = null;
+          obj = casted;
+          return true;
+        }
+
+        LastException = new UnanticipatedException("Some other squelched exception case occurred.");
+      }
+      catch (IOException iox)
+      {
+        LastException = iox;
+      }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (SecurityException sec)
+      {
+        LastException = sec;
+      }
+      catch (Exception e)
+      {
+        LastException = new UnanticipatedException(e);
+      }
+
+      obj = null;
+      return false;
     }
 
     public static bool TryReadJsonArray([NotNull] string filepath, out IList<object> arr, Encoding encoding = null)
     {
-      throw new System.NotImplementedException("Levi had to leave early");
+      if (!File.Exists(filepath))
+      {                
+        LastException = new FileNotFoundException("File does not exist!", filepath);
+        arr = null;
+        return false;
+      }
+
+      try
+      {
+        var stream = new StreamReader(filepath, encoding ?? s_DefaultEncoding);
+
+        s_LastReadPath = filepath;
+
+        var boxed = JsonAuthority.DeserializeStream(stream);
+
+        if (boxed is IList<object> casted)
+        {
+          LastException = null;
+          arr = casted;
+          return true;
+        }
+
+        LastException = new UnanticipatedException("Some other squelched exception case occurred.");
+      }
+      catch (IOException iox)
+      {
+        LastException = iox;
+      }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (SecurityException sec)
+      {
+        LastException = sec;
+      }
+      catch (Exception e)
+      {
+        LastException = new UnanticipatedException(e);
+      }
+
+      arr = null;
+      return false;
     }
 
 
@@ -143,22 +253,27 @@ namespace Ore
                                       JsonSerializer serializer, Encoding encoding = null)
       where T : class
     {
-      token = null;
-
       if (!File.Exists(filepath))
       {
         LastException = new FileNotFoundException("File does not exist!", filepath);
+        token = null;
         return false;
       }
 
       try
       {
-        s_LastReadPath = filepath;
         var stream = new StreamReader(filepath, encoding ?? s_DefaultEncoding);
 
-        NewtonsoftAuthority.DeserializeStream(stream, out token, serializer);
+        s_LastReadPath = filepath;
 
-        return token != null;
+        if (NewtonsoftAuthority.TryDeserializeStream(stream, out token, serializer) && token != null)
+        {
+          LastException = null;
+          return true;
+        }
+
+        LastException = new UnanticipatedException("Some other squelched exception case occurred.");
+        return false;
       }
       catch (JsonException jex)
       {
@@ -181,6 +296,7 @@ namespace Ore
         LastException = new UnanticipatedException(e);
       }
 
+      token = null;
       return false;
     }
 
