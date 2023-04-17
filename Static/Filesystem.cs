@@ -689,6 +689,40 @@ namespace Ore
       return false;
     }
 
+    public static bool TryDelete(FileInfo file)
+    {
+      try
+      {
+        if (file?.Exists ?? false)
+        {
+          string path = file.FullName;
+          file.Delete();
+          s_LastModifiedPath = path;
+        }
+
+        LastException = null;
+        return true;
+      }
+      catch (IOException iox)
+      {
+        LastException = iox;
+      }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (SecurityException sec)
+      {
+        LastException = sec;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
+      }
+
+      return false;
+    }
+
     public static bool TryTouch([NotNull] string filepath)
     {
       try
