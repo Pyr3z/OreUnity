@@ -34,7 +34,7 @@ namespace Ore
     internal int CachedLookup => m_CachedLookup;
     internal int Collisions   => m_Collisions;
     internal int LongestChain => m_LongestChain;
-    internal int LifetimeAllocs { get; set; }
+    internal int LifetimeAllocs { get; private set; }
   #endif
 
 
