@@ -243,6 +243,14 @@ namespace Ore
 
         switch (maybeNull)
         {
+          case JObject jobj:
+            maybeNull = Genericize(jobj, map: null);
+            break;
+
+          case JArray jarr:
+            maybeNull = Genericize(jarr, list: null);
+            break;
+
           case IList<object> list:
             FixupNestedContainers(list);
             break;
