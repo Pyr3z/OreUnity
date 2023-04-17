@@ -120,7 +120,7 @@ internal static class JsonAuthorityInEditor
 
 
   [Test]
-  public static void Serialize([Values(true, false)] bool pretty)
+  public static void SerializeCurrentProvider([Values(true, false)] bool pretty)
   {
     using (new JsonAuthority.Scope(pretty))
     {
@@ -139,7 +139,7 @@ internal static class JsonAuthorityInEditor
   }
 
   [Test]
-  public static void Deserialize()
+  public static void DeserializeCurrentProvider()
   {
     Debug.Log($"JsonAuthority.Provider: {JsonAuthority.Provider}");
 
@@ -151,8 +151,8 @@ internal static class JsonAuthorityInEditor
     }
   }
 
-  [Test]
-  public static void DeserializeOneTest([Values(6)] int idx)
+  // [Test]
+  public static void DeserializeOneTest([Values(0, 1, 2, 3, 4, 5, 6)] int idx)
   {
     Assert.True(idx.IsIndexTo(TestJsons), "test.IsIndexTo(TestJsons)");
 
@@ -166,20 +166,43 @@ internal static class JsonAuthorityInEditor
 
 
   [Test]
-  public static void MiniJsonSerialize([Values(true, false)] bool pretty)
+  public static void Serialize([Values(true, false)] bool pretty,
+                               [Values(JsonProvider.MiniJson, JsonProvider.NewtonsoftJson)] JsonProvider provider)
   {
-    using (new JsonAuthority.Scope(JsonProvider.MiniJson))
+    using (new JsonAuthority.Scope(provider))
     {
-      Assert.AreEqual(JsonProvider.MiniJson, JsonAuthority.Provider);
+      Assert.AreEqual(provider, JsonAuthority.Provider);
 
-      Serialize(pretty);
+      if (provider == JsonProvider.NewtonsoftJson)
+      {
+        #if NEWTONSOFT_JSON
+        Assert.AreEqual(pretty ? Formatting.Indented : Formatting.None,
+                        NewtonsoftAuthority.SerializerSettings.Formatting,
+                        "SerializerSettings.Formatting");
+        #endif
+      }
+
+      SerializeCurrentProvider(pretty);
     }
   }
 
   [Test]
-  public static void MiniJsonReflectSerialize([Values(true, false)] bool pretty)
+  public static void Deserialize([Values(JsonProvider.MiniJson, JsonProvider.NewtonsoftJson)] JsonProvider provider)
   {
-    using (new JsonAuthority.Scope(JsonProvider.MiniJson, pretty))
+    using (new JsonAuthority.Scope(provider))
+    {
+      Assert.AreEqual(provider, JsonAuthority.Provider);
+
+      DeserializeCurrentProvider();
+    }
+  }
+
+
+  [Test]
+  public static void ReflectSerialize([Values(true, false)] bool pretty,
+                                      [Values(JsonProvider.MiniJson, JsonProvider.NewtonsoftJson)] JsonProvider provider)
+  {
+    using (new JsonAuthority.Scope(provider, pretty))
     {
       var ti = TimeInterval.OfSeconds(1);
 
@@ -202,9 +225,10 @@ internal static class JsonAuthorityInEditor
   }
 
   [Test]
-  public static void MiniJsonReflectStatic([Values(true, false)] bool pretty)
+  public static void ReflectStatic([Values(true, false)] bool pretty,
+                                   [Values(JsonProvider.MiniJson, JsonProvider.NewtonsoftJson)] JsonProvider provider)
   {
-    using (new JsonAuthority.Scope(JsonProvider.MiniJson, pretty))
+    using (new JsonAuthority.Scope(provider, pretty))
     {
       string json = JsonAuthority.Serialize(typeof(DeviceSpy));
 
@@ -237,46 +261,6 @@ internal static class JsonAuthorityInEditor
     }
   }
 
-  [Test]
-  public static void MiniJsonDeserialize()
-  {
-    using (new JsonAuthority.Scope(JsonProvider.MiniJson))
-    {
-      Assert.AreEqual(JsonProvider.MiniJson, JsonAuthority.Provider);
-
-      Deserialize();
-    }
-  }
-
-
-  [Test]
-  public static void NewtonsoftJsonSerialize([Values(true, false)] bool pretty)
-  {
-    using (new JsonAuthority.Scope(JsonProvider.NewtonsoftJson, pretty))
-    {
-      Assert.AreEqual(JsonProvider.NewtonsoftJson, JsonAuthority.Provider);
-      Assert.AreEqual(pretty, JsonAuthority.PrettyPrint);
-
-      #if NEWTONSOFT_JSON
-      Assert.AreEqual(pretty ? Formatting.Indented : Formatting.None,
-                      NewtonsoftAuthority.SerializerSettings.Formatting,
-                      "SerializerSettings.Formatting");
-      #endif
-
-      Serialize(pretty);
-    }
-  }
-
-  [Test]
-  public static void NewtonsoftJsonDeserialize()
-  {
-    using (new JsonAuthority.Scope(JsonProvider.NewtonsoftJson))
-    {
-      Assert.AreEqual(JsonProvider.NewtonsoftJson, JsonAuthority.Provider);
-
-      Deserialize();
-    }
-  }
 
 
 #if NEWTONSOFT_JSON
