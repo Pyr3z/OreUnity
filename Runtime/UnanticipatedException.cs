@@ -18,7 +18,7 @@ namespace Ore
     }
 
     public UnanticipatedException(string message) :
-      this(new System.InvalidOperationException(message))
+      base(message)
     {
     }
 
