@@ -26,7 +26,7 @@ using JsonArr = System.Collections.Generic.List<object>;
 internal static class JsonAuthorityInEditor
 {
 
-  static readonly (string json, object expected)[] s_TestJsons = new (string json, object expected)[]
+  internal static readonly (string json, object expected)[] TestJsons =
   {
     ("null", null),
     ("true", true),
@@ -39,15 +39,13 @@ internal static class JsonAuthorityInEditor
   };
 
 
-  static void AssertAreEqual(object expected, object actual, string message = null)
+  internal static void AssertAreEqual(object expected, object actual, string message = null)
   {
-    if (actual is null)
+    if (expected is null)
     {
-      Assert.Null(expected, message);
-      return;
+      Assert.Null(actual, message);
     }
-
-    if (expected is IDictionary<string,object> jobj)
+    else if (expected is IDictionary<string,object> jobj)
     {
       var dict = actual as IDictionary<string,object>;
 
@@ -83,14 +81,39 @@ internal static class JsonAuthorityInEditor
 
       Assert.Zero(countdown, message);
     }
-    else if (expected is string str)
+    else if (expected is string)
     {
       var isExpected = new EqualConstraint(expected)
         .Using((System.Comparison<string>)Strings.CompareIgnoreWhitespace);
-      Assert.That(str, isExpected);
+      Assert.That(actual, isExpected);
+    }
+    else if (expected is System.TimeSpan span)
+    {
+      expected = span.Ticks;
+
+      Assert.AreEqual(expected, actual, message);
     }
     else
     {
+      var enumType = expected.GetType();
+      if (enumType.IsEnum)
+      {
+        if (actual is string enumStr)
+        {
+          actual = System.Enum.Parse(enumType, enumStr);
+        }
+        else if (actual is long enumVal)
+        {
+          actual = System.Enum.ToObject(enumType, enumVal);
+        }
+        else
+        {
+          Assert.Fail($"enum conversion: from \"{actual}\" to {enumType.Name}.{expected}");
+        }
+
+        Assert.NotNull(actual, "actual");
+      }
+
       Assert.AreEqual(expected, actual, message);
     }
   }
@@ -106,7 +129,7 @@ internal static class JsonAuthorityInEditor
       Debug.Log($"JsonAuthority.PrettyPrint: {pretty}");
       Debug.Log($"JsonAuthority.Provider: {JsonAuthority.Provider}");
 
-      foreach (var (expected, test) in s_TestJsons)
+      foreach (var (expected, test) in TestJsons)
       {
         string json = JsonAuthority.Serialize(test);
 
@@ -120,7 +143,7 @@ internal static class JsonAuthorityInEditor
   {
     Debug.Log($"JsonAuthority.Provider: {JsonAuthority.Provider}");
 
-    foreach (var (test, expected) in s_TestJsons)
+    foreach (var (test, expected) in TestJsons)
     {
       object parsed = JsonAuthority.Deserialize(test);
 
@@ -131,9 +154,9 @@ internal static class JsonAuthorityInEditor
   [Test]
   public static void DeserializeOneTest([Values(6)] int idx)
   {
-    Assert.True(idx.IsIndexTo(s_TestJsons), "test.IsIndexTo(s_TestJsons)");
+    Assert.True(idx.IsIndexTo(TestJsons), "test.IsIndexTo(TestJsons)");
 
-    var (test, expected) = s_TestJsons[idx];
+    var (test, expected) = TestJsons[idx];
 
     object parsed = JsonAuthority.Deserialize(test);
 
@@ -163,6 +186,8 @@ internal static class JsonAuthorityInEditor
       string expected = $"{{\"Ticks\":{ti.Ticks},\"m_AsFrames\":{ti.TicksAreFrames.ToInvariantLower()}}}";
       string actual   = JsonAuthority.Serialize(ti);
 
+      Debug.Log(actual);
+
       AssertAreEqual(expected, actual, nameof(TimeInterval));
 
       var ivec = new Vector2Int(3, 4);
@@ -170,16 +195,45 @@ internal static class JsonAuthorityInEditor
       expected = $"{{\"m_X\":{ivec.x},\"m_Y\":{ivec.y}}}";
       actual   = JsonAuthority.Serialize(ivec);
 
+      Debug.Log(actual);
+
       AssertAreEqual(expected, actual, nameof(Vector2Int));
     }
   }
 
   [Test]
-  public static void MiniJsonReflectSerializeStatic([Values(true, false)] bool pretty)
+  public static void MiniJsonReflectStatic([Values(true, false)] bool pretty)
   {
     using (new JsonAuthority.Scope(JsonProvider.MiniJson, pretty))
     {
+      string json = JsonAuthority.Serialize(typeof(DeviceSpy));
 
+      Debug.Log(json);
+
+      Assert.IsNotEmpty(json);
+      Assert.Greater(json.Length, 2);
+
+      var parsed = JsonAuthority.DeserializeObject(json);
+
+      Assert.NotNull(parsed, "parsed");
+      Assert.Positive(parsed.Count, "parsed.Count");
+
+      foreach (var kvp in parsed)
+      {
+        var prop = typeof(DeviceSpy).GetProperty(kvp.Key);
+
+        Assert.NotNull(prop, $"DeviceSpy.{kvp.Key}");
+
+        var expected = prop.GetMethod.Invoke(null, System.Array.Empty<object>());
+
+        Assert.NotNull(expected, "expected");
+
+        var actual = kvp.Value;
+
+        Assert.NotNull(actual, "actual");
+
+        AssertAreEqual(expected, actual, $"DeviceSpy.{prop.Name}");
+      }
     }
   }
 
