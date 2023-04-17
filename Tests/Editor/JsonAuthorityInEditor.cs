@@ -199,19 +199,24 @@ internal static class JsonAuthorityInEditor
 
 
   [Test]
-  public static void ReflectSerialize([Values(true, false)] bool pretty,
-                                      [Values(JsonProvider.MiniJson, JsonProvider.NewtonsoftJson)] JsonProvider provider)
+  public static void ReflectFields([Values(true, false)] bool pretty,
+                                   [Values(JsonProvider.MiniJson, JsonProvider.NewtonsoftJson)] JsonProvider provider)
   {
     using (new JsonAuthority.Scope(provider, pretty))
     {
       var ti = TimeInterval.OfSeconds(1);
 
-      string expected = $"{{\"Ticks\":{ti.Ticks},\"m_AsFrames\":{ti.TicksAreFrames.ToInvariantLower()}}}";
-      string actual   = JsonAuthority.Serialize(ti);
+      object expected = $"{{\"Ticks\":{ti.Ticks},\"m_AsFrames\":{ti.TicksAreFrames.ToInvariantLower()}}}";
+      object actual   = JsonAuthority.Serialize(ti);
 
       Debug.Log(actual);
 
-      AssertAreEqual(expected, actual, nameof(TimeInterval));
+      AssertAreEqual(expected, actual, "Serializing TimeInterval");
+
+      expected = ti;
+      actual   = JsonAuthority.DeserializeObject((string)actual, typeof(TimeInterval));
+
+      AssertAreEqual(expected, actual, "Deserializing TimeInterval");
 
       var ivec = new Vector2Int(3, 4);
 
@@ -220,7 +225,12 @@ internal static class JsonAuthorityInEditor
 
       Debug.Log(actual);
 
-      AssertAreEqual(expected, actual, nameof(Vector2Int));
+      AssertAreEqual(expected, actual, "Serializing Vector2Int");
+
+      expected = ivec;
+      actual   = JsonAuthority.DeserializeObject((string)actual, typeof(Vector2Int));
+
+      AssertAreEqual(expected, actual, "Deserializing Vector2Int");
     }
   }
 
