@@ -4,11 +4,71 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v7.0.0](../../tree/unstable) - UNRELEASED
+#### Breaking API changes
+- Changed: `JsonAuthority` and `Filesystem.Try*Json` no longer work the same way w.r.t. using Newtonsoft.Json types.
+  - All the same behaviour is available as before, but some now has to be accomplished via using the JsonProvider + NewtonsoftAuthority APIs.
+  - If Newtonsoft is available, **it is still the default JsonProvider,** unless you add the scripting define symbol `PREFER_MINIJSON`.
+  - (You can also change the default JsonProvider at runtime; see JsonAuthority.{Scope,TrySetProvider}.)
+- Changed: renamed `JsonAuthority.ProviderScope` -> `JsonAuthority.Scope`.
+- Changed: renamed `SerialDeviceDecider` -> `DeviceDeciderData`.
+- Changed: renamed several methods in `DeviceDecider`.
+  - Also: Changed: access modifiers for several members.
+
+#### JsonAuthority updates
+- Added: static APIs that support reflecting on custom types
+  - DeserializeObject(string, Type)
+  - TryDeserialize\<T\>(string, out T)
+  - TryDeserializeOverwrite\<T\>(string, ref T)
+- Added: static APIs that support dealing with streams (TextReader, TextWriter) instead of raw strings
+  - SerializeTo(stream, data)
+  - DeserializeStream(stream[, Type])
+  - TryDeserializeStream\<T\>(stream, out T)
+  - TryDeserializeStreamOverwrite\<T\>(stream, ref T)
+- Added: static property `bool PrettyPrint`
+- Added: new constructors & functionality in JsonAuthority.Scope: now supports prettyPrint scopes.
+- Also: cleaned up the code in `Filesystem.Try*Json`; the default APIs utilize JsonAuthority instead of Newtonsoft.
+- Note: again, if you have Newtonsoft.Json linked, compile with `PREFER_MINIJSON` to _not_ use Newtonsoft by default.
+
+#### Added: OAssetInspector
+- Replaces the default inspector used for all `Ore.Asset` derivatives.
+- Offers various enhancements for your editing pleasure.
+- Removed: fields from the `Asset` base class are now handled by the new inspector:
+  - m_IsRequiredOnLaunch
+  - m_HideFlags
+
+#### Added: struct CodeJudge
+- Allows you to easily measure blocks of code speed, and associate + aggregate the results by a given identifier string.
+- Easiest method of reading results:
+
+#### the rest
+- Added: new struct StringStream - Serves as a proxy interface joining the StringBuilder and TextWriter APIs.
+- Added: new APIs in `HashMap` support ref-returns:
+  - method FindRef(key, out bool found) -> ref V
+  - property in HashMap.Enumerator: CurrentValueRef -> ref V
+- Added: event hooks in `ActiveScene`:
+  - OnActiveSceneChanged
+  - OnFixedUpdate
+  - OnUpdate
+  - OnLateUpdate
+- Added: static API in `Filesystem`: TryDelete(FileInfo)
+- Added: static APIs in `RecycledStringBuilder`: Borrow(), Return(builder)
+- Added: static APIs in `Strings`:
+  - AreEqualIgnoreWhitespace(a, b)
+  - CompareIgnoreWhitespace(a, b)
+  - Compare(a, b, ignoreChars[])
+- Added: `TimeInterval`.ToString(units[, numberFormat, formatProvider]) - converts the interval to a string with the given unit conversion and format options.
+- Changed: TimeInterval.ToString() now detects units and returns a string in those units.
+  - Note: this string could be parsed back into a TimeInterval using the static helper TimeInterval.SmolParse(string).
+- Fixed: TimeInterval property setters now work properly when m_AsFrames=true
+- Improved: cleaned up `DeviceDecider`
+
 
 ## [v6.1.2](../../tags/v6.1.2) - 2023-04-11
 
 #### Hotfix
-- Fixed: BUILD errors in Unity 2019 (SerializedProperties.cs).
+- Fixed: compilation errors in Unity 2019 (SerializedProperties.cs).
+
 
 ## [v6.1.1](../../tags/v6.1.1) - 2023-04-11
 
@@ -17,8 +77,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: #46 - compilation errors in Unity 2019 (WebRequests.cs).
 
 #### other stuff
-- Added: (Editor only) extension methods SerializedProperties.IsNonReorderable(), IsReadOnly().
-  - (more to come in this vein in v6.2)
+- Added: new extensions to `SerializedProperty`:
+  - IsNonReorderable()
+  - IsReadOnly()
+  - TryGetFieldInfo(out FieldInfo)
+  - (these become useful in v6.2)
 
 
 ## [v6.1.0](../../tags/v6.1.0) - 2023-04-06
