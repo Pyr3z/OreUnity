@@ -90,10 +90,18 @@ namespace Ore.Editor
       OAssert.True(ok, "1st propertyPath == \"m_Script\"");
 
       // now, draw:
+      #if UNITY_2020_1_OR_NEWER
+
       using (new LocalizationGroup(m_Cache.Type))
       {
         _ = IterateProperties(currProp);
       }
+
+      #else
+
+      _ = IterateProperties(currProp);
+
+      #endif
     }
 
 
