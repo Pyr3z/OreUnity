@@ -304,6 +304,11 @@ namespace Ore
         {
           if (m_Runner.m_ActiveMap.Pop(m_Key, out list))
           {
+            foreach (var (coru,_) in list)
+            {
+              m_Runner.StopCoroutine(coru);
+            }
+
             m_Runner.m_ActiveCoroutineCount -= list.Count;
           }
 
@@ -311,9 +316,16 @@ namespace Ore
           return false;
         }
 
-        if (m_Routine.MoveNext())
+        try
         {
-          return true;
+          if (m_Routine.MoveNext())
+          {
+            return true;
+          }
+        }
+        catch (System.Exception ex)
+        {
+          Orator.NFE(ex);
         }
 
         m_Routine = null;
