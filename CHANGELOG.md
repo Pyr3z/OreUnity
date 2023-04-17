@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v7.0.0](../../tree/unstable) - UNRELEASED
+## [v7.0.0](../../tags/v7.0.0) - 2023-04-17
 #### Breaking API changes
 - Changed: `JsonAuthority` and `Filesystem.Try*Json` no longer work the same way w.r.t. using Newtonsoft.Json types.
   - All the same behaviour is available as before, but some now has to be accomplished via using the JsonProvider + NewtonsoftAuthority APIs.
