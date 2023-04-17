@@ -20,6 +20,7 @@ using System.Text;
 using StringComparison = System.StringComparison;
 using CultureInfo      = System.Globalization.CultureInfo;
 using Exception        = System.Exception;
+using Type             = System.Type;
 
 
 namespace Ore
@@ -228,7 +229,7 @@ namespace Ore
     }
 
 
-    public static void DeserializeStream<T>([NotNull] TextReader stream, out T obj, JsonSerializer serializer = null)
+    public static object DeserializeStream([NotNull] TextReader stream, Type type, JsonSerializer serializer = null)
     {
       if (serializer is null)
       {
@@ -238,36 +239,42 @@ namespace Ore
       using (var reader = new JsonTextReader(stream))
       {
         // may throw JsonException
-        var maybeNull = serializer.Deserialize<T>(reader);
+        var maybeNull = serializer.Deserialize(reader, type);
 
         switch (maybeNull)
         {
-          case null:
-            break;
-
           case IList<object> list:
             FixupNestedContainers(list);
-            goto default;
+            break;
 
           case HashMap<string,object> map:
             FixupNestedContainers(map);
-            goto default;
+            break;
 
           case Dictionary<string,object> dict:
             FixupNestedContainers(dict);
-            goto default;
-
-          default:
-            obj = maybeNull;
-            return;
+            break;
         }
+
+        return maybeNull;
+      }
+    }
+
+    public static bool TryDeserializeStream<T>([NotNull] TextReader stream, out T obj, JsonSerializer serializer = null)
+    {
+      var boxed = DeserializeStream(stream, typeof(T), serializer);
+      if (boxed is T casted)
+      {
+        obj = casted;
+        return true;
       }
 
       obj = default;
+      return typeof(T) == typeof(object);
     }
 
 
-    public static bool TryDeserializeObject(string rawJson, System.Type type, out object obj)
+    public static bool TryDeserializeObject(string rawJson, Type type, out object obj)
     {
       if (rawJson.IsEmpty())
       {
@@ -346,7 +353,7 @@ namespace Ore
 
         return true;
       }
-      catch (System.Exception ex)
+      catch (Exception ex)
       {
         Orator.NFE(ex);
         return false;
