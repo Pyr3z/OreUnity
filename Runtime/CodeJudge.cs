@@ -98,7 +98,7 @@ namespace Ore
       guiLine = kase.OnGUILine;
     }
 
-    public static void ReportJson([NotNull] string identifier, out string json, TimeInterval.Units units = TimeInterval.Units.Milliseconds)
+    public static void ReportJson([NotNull] string identifier, out string json, TimeInterval.Units units = TimeInterval.Units.Milliseconds, string fmt = "F1")
     {
       Report(identifier, out double time, out long callCount, out double avg, out double varp, out _ );
 
@@ -111,16 +111,16 @@ namespace Ore
         bob.Append("  \"callCount\": ").Append(callCount.ToInvariant()).Append(",\n");
 
         var ti = new TimeInterval((long)(time + 0.5));
-        bob.Append("  \"totalTime\": \"").Append(ti.ToString(units)).Append("\",\n");
+        bob.Append("  \"totalTime\": \"").Append(ti.ToString(units, fmt)).Append("\",\n");
 
         ti.Ticks = (long)(avg + 0.5);
-        bob.Append("  \"average\": \"").Append(ti.ToString(units)).Append("\",\n");
+        bob.Append("  \"average\": \"").Append(ti.ToString(units, fmt)).Append("\",\n");
 
         ti.Ticks = (long)(varp + 0.5);
-        bob.Append("  \"variance\": \"").Append(ti.ToString(units)).Append("\",\n");
+        bob.Append("  \"variance\": \"").Append(ti.ToString(units, fmt)).Append("\",\n");
 
         ti.Ticks = (long)(System.Math.Sqrt(varp) + 0.5);
-        bob.Append("  \"stdev\": \"").Append(ti.ToString(units)).Append("\"\n");
+        bob.Append("  \"stdev\": \"").Append(ti.ToString(units, fmt)).Append("\"\n");
 
         bob.Append('}');
 
@@ -128,7 +128,7 @@ namespace Ore
       }
     }
 
-    public static void ReportOnGUI([NotNull] string identifier, TimeInterval.Units units = TimeInterval.Units.Milliseconds)
+    public static void ReportOnGUI([NotNull] string identifier, TimeInterval.Units units = TimeInterval.Units.Milliseconds, string fmt = "F1")
     {
       Report(identifier, out double ticks, out long callCount, out double avg, out double varp, out int line);
 
@@ -149,9 +149,9 @@ namespace Ore
       using (new RecycledStringBuilder(identifier, out var bob))
       {
         bob.Append(": count=").Append(callCount.ToInvariant());
-        bob.Append(", total=").Append(total.ToString(units));
-        bob.Append(", mean=" ).Append(mean.ToString(units));
-        bob.Append(", stdev=").Append(stdev.ToString(units));
+        bob.Append(", total=").Append(total.ToString(units, fmt));
+        bob.Append(", mean=" ).Append(mean.ToString(units, fmt));
+        bob.Append(", stdev=").Append(stdev.ToString(units, fmt));
         text = bob.ToString();
       }
 
