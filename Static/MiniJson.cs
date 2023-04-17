@@ -223,23 +223,28 @@ namespace Ore
       if (data is null)
         return false;
 
-      try
+      int count = 0;
+
+      foreach (var field in type.GetFields(TypeMembers.INSTANCE))
       {
-        foreach (var field in type.GetFields(TypeMembers.INSTANCE))
+        if (field.IsDefined<NonSerialized>() || !data.TryGetValue(field.Name, out object value))
+          continue;
+
+        try
         {
-          if (!field.IsDefined<NonSerialized>() && data.TryGetValue(field.Name, out object value))
-          {
-            field.SetValue(target, value);
-          }
+          field.SetValue(target, System.Convert.ChangeType(value, field.FieldType));
+          ++ count;
+        }
+        catch (System.Exception ex)
+        {
+          Orator.NFE(ex);
         }
 
-        return true;
+        if (count >= data.Count)
+          break;
       }
-      catch (System.Exception ex)
-      {
-        Orator.NFE(ex);
-        return false;
-      }
+
+      return count > 0;
     }
 
 
