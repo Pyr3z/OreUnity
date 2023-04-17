@@ -157,13 +157,13 @@ namespace Ore
       }
 
       obj = default;
-      return false;
+      return typeof(T) == typeof(object);
     }
 
     public static bool TryDeserializeStreamOverwrite<T>([NotNull] TextReader stream, [NotNull] ref T obj)
     {
       // reflection warning!
-      return ReflectFields(typeof(T), RecursiveParser.Parse(stream) as JsonObj, ref obj);
+      return ReflectFields(obj.GetType(), RecursiveParser.Parse(stream) as JsonObj, ref obj);
     }
 
 
