@@ -493,30 +493,72 @@ namespace Ore
 
     public static bool TryReadText([NotNull] string filepath, [NotNull] out string text, Encoding encoding = null)
     {
-      if (TryReadBinary(filepath, out byte[] data))
+      if (!Paths.IsValidPath(filepath))
       {
-        try
-        {
-          text = Strings.FromBytes(data, encoding ?? s_DefaultEncoding);
-          return true;
-        }
-        catch (ArgumentException ex)
-        {
-          CurrentException = ex;
-        }
+        LastException = new ArgumentException($"filepath: \"{filepath}\"");
+        text = string.Empty;
+        return false;
+      }
+
+      try
+      {
+        text = File.ReadAllText(filepath, encoding ?? s_DefaultEncoding);
+        s_LastReadPath = filepath;
+        LastException = null;
+        return true;
+      }
+      catch (IOException iox)
+      {
+        LastException = iox;
+      }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (SecurityException sec)
+      {
+        LastException = sec;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
       }
 
       text = string.Empty;
       return false;
     }
 
-    public static bool TryReadLines([NotNull] string filepath, [NotNull] out string[] lines, char newline = '\n', Encoding encoding = null)
+    public static bool TryReadLines([NotNull] string filepath, [NotNull] out string[] lines, Encoding encoding = null)
     {
-      if (TryReadText(filepath, out string text, encoding))
+      if (!Paths.IsValidPath(filepath))
       {
-        // maybe this is slow?
-        lines = text.Split(newline);
-        return lines.Length > 0;
+        LastException = new ArgumentException($"filepath: \"{filepath}\"");
+        lines = System.Array.Empty<string>();
+        return false;
+      }
+
+      try
+      {
+        lines = File.ReadAllLines(filepath, encoding ?? s_DefaultEncoding);
+        s_LastReadPath = filepath;
+        LastException = null;
+        return true;
+      }
+      catch (IOException iox)
+      {
+        LastException = iox;
+      }
+      catch (UnauthorizedException auth)
+      {
+        LastException = auth;
+      }
+      catch (SecurityException sec)
+      {
+        LastException = sec;
+      }
+      catch (Exception ex)
+      {
+        LastException = new UnanticipatedException(ex);
       }
 
       lines = System.Array.Empty<string>();
@@ -568,8 +610,8 @@ namespace Ore
       try
       {
         data = File.ReadAllBytes(filepath);
-        LastException = null;
         s_LastReadPath = filepath;
+        LastException = null;
         return true;
       }
       catch (IOException iox)
