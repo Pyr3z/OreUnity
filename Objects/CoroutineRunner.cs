@@ -60,6 +60,9 @@ namespace Ore
     };
 
     [System.NonSerialized]
+    CoroutineList m_NextList = new CoroutineList();
+
+    [System.NonSerialized]
     readonly CoroutineRunnerBuffer m_BufferWhileDisabled = new CoroutineRunnerBuffer();
 
 
@@ -219,10 +222,15 @@ namespace Ore
         contract = this;
       }
 
-      if (null == m_ActiveMap.Map(key, new CoroutineList(), out CoroutineList list))
+      bool? tri = m_ActiveMap.Map(key, m_NextList, out CoroutineList list);
+      if (!tri.HasValue)
       {
         Orator.Error($"Failed to start coroutine for \"{key}\"; HashMap state error.");
         return null;
+      }
+      if (tri.Value)
+      {
+        m_NextList = new CoroutineList();
       }
 
       var scr = new SelfCleaningRoutine(this, routine, key, m_NextCoroutineID, contract);
@@ -290,11 +298,13 @@ namespace Ore
           return false;
         }
 
+        CoroutineList list;
+
         if (!m_Contract)
         {
-          if (m_Runner.m_ActiveMap.Unmap(m_Key))
+          if (m_Runner.m_ActiveMap.Pop(m_Key, out list))
           {
-            -- m_Runner.m_ActiveCoroutineCount;
+            m_Runner.m_ActiveCoroutineCount -= list.Count;
           }
 
           m_Routine = null;
@@ -310,14 +320,15 @@ namespace Ore
 
         -- m_Runner.m_ActiveCoroutineCount;
 
-        if (!m_Runner.m_ActiveMap.Pop(m_Key, out CoroutineList list))
+        if (!m_Runner.m_ActiveMap.Pop(m_Key, out list))
         {
-          Orator.Reached(m_Runner);
+          Orator.NFE(new UnanticipatedException("CoroutineRunner state error"));
           return false;
         }
 
         int i = list.Count;
 
+        // ReSharper disable once EmptyEmbeddedStatement
         while (i --> 0 && list[i].id != m_ID) ;
 
         if (i >= 0)
