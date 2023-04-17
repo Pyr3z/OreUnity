@@ -230,6 +230,8 @@ namespace Ore
         if (field.IsDefined<NonSerialized>() || !data.TryGetValue(field.Name, out object value))
           continue;
 
+        // TODO this does not currently handle nested custom types
+
         try
         {
           field.SetValue(target, System.Convert.ChangeType(value, field.FieldType));
